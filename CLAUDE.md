@@ -177,6 +177,9 @@ Metro/webpack picks the right file automatically.
 ### Web static render and hydration
 The web export pre-renders HTML at build time, with no viewport, session, clock or device storage. On web the root layout (`app/_layout.tsx`) renders only the splash until the client has hydrated, then mounts the app tree (still under the splash). So screens may branch on window size, `useSession()`, `Date` or `localStorage` freely; don't move app UI outside that gate, or React error #418 (hydration mismatch) comes back. The guest e2e spec checks for it.
 
+### Scroll position on web
+Coming back to a screen on web used to land at the top: the browser's back (and the iPhone swipe-back, which is the same thing) remounts the tab screens, display:none on a hidden screen zeroes its scrollTop, and leaving document-scroll mode scrolls the window to 0. `DocScrollView` takes a `memoryKey` (`'tab:profile:<section>'`, `'tab:clubs'`) and the Events feed uses `useDocScrollMemory('tab:events', ...)`: the offset is kept in a module-level map (`utils/scrollMemory.ts`, cleared on sign-out) and restored when the screen mounts or is shown again. Give a new long tab screen a key; `e2e/scrollRestore.spec.ts` covers Profile.
+
 ### Sentry
 Import `Sentry` from `lib/sentry`, never `@sentry/react-native` directly. On web, `lib/sentry.web.ts` loads the SDK in its own chunk after first paint and queues calls until then; `components/SentryErrorBoundary.web.tsx` is the matching boundary. Native uses `lib/sentry.ts` unchanged.
 
