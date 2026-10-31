@@ -9,7 +9,12 @@
  * When the Terms change materially, update the text and bump TERMS_VERSION.
  */
 
-/** Version of the Terms (and Privacy Policy) a new account agrees to. */
+/**
+ * Version of the Terms (and Privacy Policy) a new account agrees to. Email
+ * sign-up sends it in the auth metadata; `handle_new_user` stores it on
+ * `profiles.terms_version` with `terms_accepted_at`. Google sign-in can't send
+ * metadata, so the trigger falls back to a copy of this value: bump both.
+ */
 export const TERMS_VERSION = '2026-10-27'
 
 export const TERMS_MARKDOWN = String.raw`# vteam Terms and Conditions
