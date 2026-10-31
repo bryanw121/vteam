@@ -4,6 +4,7 @@ import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, Refres
 import { DocPullToRefresh } from './RefreshControl'
 import { useDocScrollMemory } from '../hooks/useDocScrollMemory'
 import { isShown, recallScroll, rememberScroll, restoreWhenReady } from '../utils/scrollMemory'
+import type { WebScrollableRef } from '../types'
 
 type Props = ScrollViewProps & {
   /**
@@ -20,8 +21,6 @@ type Props = ScrollViewProps & {
   memoryKey?: string
   children?: React.ReactNode
 }
-
-type ScrollableRef = { getScrollableNode?: () => HTMLElement } | null
 
 /**
  * Web scroll memory (with `memoryKey`). Coming back to a screen on web used to
@@ -40,7 +39,7 @@ export function DocScrollView({ docScroll, memoryKey, children, style, contentCo
   const wasShown = useRef(false)
   const docLayout = useDocScrollMemory(memoryKey, docScroll, docRef, onLayout)
 
-  const scrollNode = () => (scrollRef.current as unknown as ScrollableRef)?.getScrollableNode?.() ?? null
+  const scrollNode = () => (scrollRef.current as unknown as WebScrollableRef)?.getScrollableNode?.() ?? null
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (remember && memoryKey && isShown(scrollNode())) rememberScroll(memoryKey, e.nativeEvent.contentOffset.y)
