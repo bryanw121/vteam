@@ -177,6 +177,9 @@ Metro/webpack picks the right file automatically.
 ### Web static render and hydration
 The web export pre-renders HTML at build time, with no viewport, session, clock or device storage. On web the root layout (`app/_layout.tsx`) renders only the splash until the client has hydrated, then mounts the app tree (still under the splash). So screens may branch on window size, `useSession()`, `Date` or `localStorage` freely; don't move app UI outside that gate, or React error #418 (hydration mismatch) comes back. The guest e2e spec checks for it.
 
+### Scroll position on web
+Coming back to a screen on web used to land at the top: the browser's back (and the iPhone swipe-back, which is the same thing) remounts the tab screens, display:none on a hidden screen zeroes its scrollTop, and leaving document-scroll mode scrolls the window to 0. `DocScrollView` takes a `memoryKey` (`'tab:profile:<section>'`, `'tab:clubs'`) and the Events feed uses `useDocScrollMemory('tab:events', ...)`: the offset is kept in a module-level map (`utils/scrollMemory.ts`, cleared on sign-out) and restored when the screen mounts or is shown again. Give a new long tab screen a key; `e2e/scrollRestore.spec.ts` covers Profile.
+
 ### Sentry
 Import `Sentry` from `lib/sentry`, never `@sentry/react-native` directly. On web, `lib/sentry.web.ts` loads the SDK in its own chunk after first paint and queues calls until then; `components/SentryErrorBoundary.web.tsx` is the matching boundary. Native uses `lib/sentry.ts` unchanged.
 
@@ -384,7 +387,7 @@ Live and beta have the same schema, except while an open PR is testing a change 
 3. **When the PR merges**: apply the same up SQL to live (Supabase MCP `apply_migration`), regenerate `types/database.ts` from live, then run `select beta_meta.complete_pr(<PR number>);` on beta.
 4. **If the PR is closed without merging**: run `select beta_meta.rollback_pr(<PR number>);` on beta. It runs the recorded `.down.sql` (newest first) and clears the ledger, so nothing the PR tried survives anywhere. Live never had it.
 
-The drift check enforces this: `public.schema_fingerprint()` (both projects) returns an md5 per schema object, `public.schema_pending_changes()` (both; returns `[]` on live) exposes beta's ledger, and `npm run db:drift` (`scripts/schema-drift.mjs`) compares them. It runs in CI's Web build job on every PR and push, and daily (`.github/workflows/schema-drift.yml`; GitHub emails on failure). It fails on any difference not owned by an open PR, on a merged PR whose migration is not on live yet, and on a closed PR whose change is still on beta, and names the command to run. Intentional permanent differences are listed in `ALLOWED` in that script (today only the `kudos-reminders` cron job, which notifies real people and must not run on beta). Never "fix" drift by adding to `ALLOWED`, and never edit either project's schema in the Supabase dashboard or with ad-hoc SQL outside `apply_pr_migration` (beta) or a merged migration (live). Reference-table rows (`tags`, `major_cities`, `app_config`) are part of the fingerprint.
+The drift check enforces this: `public.schema_fingerprint()` (both projects) returns an md5 per schema object, `public.schema_pending_changes()` (both; returns `[]` on live) exposes beta's ledger, and `npm run db:drift` (`scripts/schema-drift.mjs`) compares them. It runs in CI's Web build job on every PR and push, and daily (`.github/workflows/schema-drift.yml`; GitHub emails on failure). It fails on any difference not owned by an open PR, on a merged PR whose migration is not on live yet, and on a closed PR whose change is still on beta, and names the command to run. Intentional permanent differences are listed in `ALLOWED` in that script (today the `kudos-reminders` cron job and the `send_notification_push` webhook trigger, which notify real people and must not run on beta). Never "fix" drift by adding to `ALLOWED`, and never edit either project's schema in the Supabase dashboard or with ad-hoc SQL outside `apply_pr_migration` (beta) or a merged migration (live). Reference-table rows (`tags`, `major_cities`, `app_config`) are part of the fingerprint.
 
 Beta is shared: an open PR's change is visible to every other PR's e2e run. Keep test changes additive, and if two open PRs change the same object, land one before testing the other.
 
@@ -398,6 +401,7 @@ Schema changes are usually applied directly via the Supabase MCP (`apply_migrati
 - Storage bucket creation
 - Auth settings (email templates, OAuth providers)
 - Edge function secrets (`GOOGLE_MAPS_KEY`, push credentials)
+- The Database Webhook `send_notification_push` (live only): table `notifications`, event Insert, type Supabase Edge Functions → `send-notification-push`, with the service-role auth header. It needs `pg_net` (enabled by migration `20261031180000_enable_pg_net.sql`) and the Database Webhooks integration installed. The drift check allows it on live only (`ALLOWED` in `scripts/schema-drift.mjs`).
 
 ## Things to Avoid
 - Don't use `react-native-pager-view` — it's native-only. The custom `Pager` component is the cross-platform replacement.

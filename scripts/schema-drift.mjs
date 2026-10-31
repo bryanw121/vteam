@@ -40,6 +40,10 @@ const PROJECTS = {
 const ALLOWED = {
   // Sends kudos reminder notifications to real attendees; beta must never notify anyone.
   'cron:kudos-reminders': 'live',
+  // Database Webhook notifications INSERT -> send-notification-push (#132). Created in the live
+  // dashboard because it embeds live's service-role key and pushes to real phones; beta has no
+  // push credentials and must never notify anyone.
+  'trigger:public.notifications.send_notification_push': 'live',
 }
 
 async function rpc(name, fn) {

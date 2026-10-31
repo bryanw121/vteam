@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { invalidate, removeQueries } from '../lib/query'
 import { useSession } from '../contexts/session'
+import { clearScrollMemory } from '../utils/scrollMemory'
 
 /**
  * Cache prefixes whose rows depend on who is signed in (RSVP state, unread
@@ -27,5 +28,7 @@ export function useCacheUserScope(): void {
     if (previous === undefined || previous === userId) return
     USER_SCOPED_PREFIXES.forEach(p => removeQueries(p))
     USER_SCOPED_PREFIXES.forEach(p => invalidate(p))
+    // Remembered scroll offsets belong to the previous user's screens too.
+    clearScrollMemory()
   }, [userId, loading])
 }

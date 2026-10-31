@@ -89,6 +89,7 @@ function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, upda
     <View style={[shared.screen, { position: 'relative' }, docScrollActive && ({ flex: undefined } as object)]}>
       <DocScrollView
         docScroll={docScrollActive}
+        memoryKey={`tab:profile:${section}`}
         contentContainerStyle={[shared.scrollContent, { paddingBottom: tabBarHeight + 32 }]}
         onScroll={handleScroll}
         scrollEventThrottle={100}

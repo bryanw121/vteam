@@ -5,6 +5,7 @@ import { Text } from '../../../../components/ui/Text'
 import { DocPullToRefresh, RefreshControl } from '../../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFeedRsvp, useMonthEvents } from '../../../../hooks/useMonthEvents'
+import { useDocScrollMemory } from '../../../../hooks/useDocScrollMemory'
 import { useNotifications } from '../../../../hooks/useNotifications'
 import { useIsNarrowWeb } from '../../../../hooks/useIsNarrowWeb'
 import { EventCard, RowEventCard } from '../../../../components/EventCard'
@@ -202,6 +203,9 @@ export default function EventsScreen() {
   const docScrollRef        = useRef(docScrollActive)
   docScrollRef.current      = docScrollActive
   const feedContentRef      = useRef<View>(null)
+  // Narrow web: come back to the same place in the feed after an event page
+  // (the browser's back remounts this screen; see hooks/useDocScrollMemory).
+  const feedDocLayout       = useDocScrollMemory('tab:events', docScrollActive, feedContentRef)
 
   useEffect(() => {
     if (!docScrollActive || typeof window === 'undefined') return
@@ -636,7 +640,7 @@ export default function EventsScreen() {
         // Keep full tree mounted so Safari/Chrome can collapse URL bars.
         if (docScrollActive) {
           return (
-            <View ref={feedContentRef} style={{ paddingBottom: tabBarHeight + 32 }}>
+            <View ref={feedContentRef} onLayout={feedDocLayout} style={{ paddingBottom: tabBarHeight + 32 }}>
               <DocPullToRefresh {...refreshControl.props} />
               <View style={{ paddingHorizontal: theme.spacing.lg }}>{railNode}</View>
               <View testID="events-feed">
