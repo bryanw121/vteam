@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `8e5e75cb0c73`
+> Inventory fingerprint: `0448719f4db5`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -584,7 +584,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Schelagg court availability and session checks (lib/schelagg, utils/courts) | [`HHMM`](../types/index.ts#L1477), [`HHMMRange`](../types/index.ts#L1480), [`MinuteRange`](../types/index.ts#L1483), [`CourtsCourt`](../types/index.ts#L1485), [`CourtsFacility`](../types/index.ts#L1491), [`CourtsVenue`](../types/index.ts#L1500), [`CourtsError`](../types/index.ts#L1517), [`CourtsResponse`](../types/index.ts#L1520), [`CourtsData`](../types/index.ts#L1530), [`AustinNow`](../types/index.ts#L1533), [`CourtLane`](../types/index.ts#L1535), [`FacilityDay`](../types/index.ts#L1544), [`DayOption`](../types/index.ts#L1563), [`SessionCheckStatus`](../types/index.ts#L1565), [`SessionCheckResult`](../types/index.ts#L1568), [`SessionLinkDecision`](../types/index.ts#L1589), [`SessionLinkNotice`](../types/index.ts#L1604), [`CreateMenuSectionKey`](../types/index.ts#L1608) |
 | Usage metrics (lib/analytics.ts) | [`AnalyticsEventName`](../types/index.ts#L1612), [`AnalyticsProps`](../types/index.ts#L1615) |
 | Legal pages (/terms, /privacy) | [`LegalSpan`](../types/index.ts#L1620), [`LegalBlock`](../types/index.ts#L1623), [`VenmoLinks`](../types/index.ts#L1631) |
-| Text size (#43) | [`TextSizeId`](../types/index.ts#L1641), [`TextSizeOption`](../types/index.ts#L1643), [`TextScaleContextValue`](../types/index.ts#L1650) |
+| Text size (#43) | [`TextSizeId`](../types/index.ts#L1641), [`TextSizeOption`](../types/index.ts#L1643), [`TextScaleContextValue`](../types/index.ts#L1650), [`WebScrollableRef`](../types/index.ts#L1661) |
 
 ### Constrained string values
 

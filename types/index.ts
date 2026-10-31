@@ -1656,3 +1656,6 @@ export type TextScaleContextValue = {
   osScale: number
   setSize: (size: TextSizeId) => void
 }
+
+/** react-native-web's ScrollView instance: exposes the DOM node that scrolls (web only). */
+export type WebScrollableRef = { getScrollableNode?: () => HTMLElement } | null
