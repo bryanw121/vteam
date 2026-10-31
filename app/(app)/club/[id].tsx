@@ -29,9 +29,12 @@ import { resolveClubAvatarUri, profileDisplayName, confirmDestructive } from '..
 import { routes } from '../../../utils/routes'
 import { EventCard } from '../../../components/EventCard'
 import { MajorCityAutocomplete } from '../../../components/MajorCityAutocomplete'
+import { ClubLocationField } from '../../../components/ClubLocationField'
+import { ClubLocationCard } from '../../../components/ClubLocationCard'
+import { clubLocationFromPicker, pickerFromClubLocation } from '../../../utils/clubLocation'
 import { ClubPostCard, ClubPostComposerModal } from '../../../components/ClubPostCard'
 import { ScreenState } from '../../../components/ui'
-import type { ClubDetailData, ClubWithDetails, MajorCity, Profile } from '../../../types'
+import type { ClubDetailData, ClubWithDetails, LocationValue, MajorCity, Profile } from '../../../types'
 
 const COVER_HEIGHT = 200
 const AVATAR_SIZE = 80
@@ -82,6 +85,7 @@ export default function ClubDetailScreen() {
   const [editName, setEditName] = useState('')
   const [editDescription, setEditDescription] = useState('')
   const [editMajorCity, setEditMajorCity] = useState<MajorCity | null>(null)
+  const [editLocation, setEditLocation] = useState<LocationValue | null>(null)
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
@@ -192,6 +196,7 @@ export default function ClubDetailScreen() {
         name: editName.trim(),
         description: editDescription.trim() || null,
         major_city_id: editMajorCity.id,
+        ...clubLocationFromPicker(editLocation),
       })
       .eq('id', club.id)
     setSaving(false)
@@ -364,6 +369,7 @@ export default function ClubDetailScreen() {
                         setEditName(club.name)
                         setEditDescription(club.description ?? '')
                         setEditMajorCity(club.major_cities ?? null)
+                        setEditLocation(pickerFromClubLocation(club))
                         setEditMode(true)
                       }}
                       style={styles.floatingBtn}
@@ -517,6 +523,7 @@ export default function ClubDetailScreen() {
                   numberOfLines={4}
                 />
               </View>
+              <ClubLocationField value={editLocation} onChange={setEditLocation} userId={userId} />
               <MajorCityAutocomplete label="Metro area" value={editMajorCity} onChange={setEditMajorCity} />
               <TouchableOpacity
                 onPress={handleSaveEdit}
@@ -527,6 +534,11 @@ export default function ClubDetailScreen() {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* ── Home court (#13) ── */}
+          {!editMode && club.location_name ? (
+            <ClubLocationCard club={club} />
+          ) : null}
 
           {/* ── About ── */}
           {!editMode && club.description && (

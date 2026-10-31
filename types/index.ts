@@ -92,6 +92,8 @@ export const NOTIFICATION_PREF_TYPES = [
   'join_request',
   'request_approved',
   'request_denied',
+  'event_reminder',
+  'late_dropout',
 ] as const
 
 /** Must match the `notifications_notification_type_check` constraint in Supabase exactly. */
@@ -124,6 +126,17 @@ export type NotificationData = {
   cheer_id?: string
   deep_link?: string
   badge_type?: string
+  /** late_dropout: the player who left. */
+  user_id?: string
+}
+
+/** The `data` of a push as the app receives it (send-notification-push / send-chat-push). */
+export type PushData = {
+  deep_link?: unknown
+  event_id?: unknown
+  conversation_id?: unknown
+  notification_id?: unknown
+  notification_type?: unknown
 }
 
 /**
@@ -154,6 +167,26 @@ export type Event = Pick<EventRow,
   | 'max_attendees' | 'created_at' | 'club_id'>
   & Partial<Pick<EventRow,
     'cancelled_at' | 'price' | 'venmo_handle' | 'latitude' | 'longitude' | 'requires_approval' | 'skill_levels' | 'surface'>>
+
+// ─── Share links and previews (#130) ──────────────────────────────────────────
+
+/** The guest-visible `events` columns a link preview reads (`EVENT_PREVIEW_COLUMNS`). */
+export type EventPreviewRow = Pick<EventRow, 'id' | 'title' | 'event_date' | 'location' | 'max_attendees'>
+  & Partial<Pick<EventRow, 'cancelled_at' | 'price' | 'duration_minutes'>>
+
+/** What a preview describes: an open event, a cancelled or finished one, or none (generic card). */
+export type EventPreviewState = 'upcoming' | 'cancelled' | 'ended' | 'missing'
+
+/** Plain-text preview copy (`utils/eventShare.buildEventMeta`); escaped when written into HTML. */
+export type EventPreviewMeta = {
+  state: EventPreviewState
+  /** `og:title` / `<title>`. */
+  title: string
+  /** `og:description`; the only place with the time-stamped "as of" spots count. */
+  description: string
+  /** `og:image:alt`. */
+  imageAlt: string
+}
 
 /** Court surface. Same values on club events (`events.surface`) and outside sessions (`external_sessions.surface`). */
 export type Surface = 'indoor' | 'sand' | 'grass'
@@ -390,9 +423,25 @@ export type MembershipType = 'open' | 'invite'
 export type MajorCity = Tables<'major_cities'>
 
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
-export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners'> & {
+export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
   home_city: MajorCity | null
 }
+
+/** Allowed values of `user_settings.reminder_lead_minutes` (its check constraint): 1 hour, 2 hours, a day. */
+export type ReminderLeadMinutes = 60 | 120 | 1440
+
+/** A row of Settings → Notifications: label, optional subtitle and a switch. */
+export type NotificationSettingRowProps = {
+  label: string
+  subtitle?: string
+  value: boolean
+  disabled?: boolean
+  onValueChange: (v: boolean) => void
+  testID?: string
+}
+
+/** Title and body of an event reminder (`event_reminder_text` in the database; `utils/reminders.ts` mirrors it). */
+export type ReminderCopy = { title: string; body: string }
 
 /**
  * A one-time banner (constants/banners.ts): shown the first time someone opens
@@ -413,6 +462,36 @@ export type BannerDef = {
  * Add a member here (and a case in OneTimeBanner) for a new kind of action.
  */
 export type BannerAction = { label: string; type: 'startTour'; tourId: TourId }
+
+// ─── Ads (constants/ads.ts, hooks/useFeedAds.ts, utils/feedAds.ts) ──────────
+
+/** An active house banner (`ad_banners`), as the feed renders it. */
+export type AdBanner = Pick<Tables<'ad_banners'>, 'id' | 'title' | 'body' | 'image_url' | 'link_url' | 'display_order'>
+
+/** What the feed may show as ads: active banners and the ids of events with an active sponsorship. */
+export type FeedAds = {
+  banners: AdBanner[]
+  sponsoredEventIds: string[]
+}
+
+/** One ad rendered after a feed item (utils/feedAds.ts `planFeedAds`). */
+export type FeedAdPlacement =
+  | { kind: 'banner'; banner: AdBanner }
+  | { kind: 'sponsored'; event: EventWithDetails }
+
+/** `get_ad_free_status()`: the offer (cost in points, days) plus the caller's balance and ad-free expiry. */
+export type AdFreeStatus = {
+  cost: number
+  days: number
+  balance: number
+  ad_free_until: string | null
+}
+
+/** `redeem_ad_free()`: the new status, and whether the points were spent. */
+export type AdFreeRedeemResult = AdFreeStatus & {
+  ok: boolean
+  reason?: 'insufficient_points'
+}
 
 // ─── Tours (constants/tours.ts, contexts/tour.tsx) ───────────────────────────
 
@@ -916,6 +995,8 @@ export type ChipProps = {
   onPress: () => void
   badge?: number | string
   variant?: ChipVariant
+  /** 'radio' for one choice out of a set (inside a `role="radiogroup"`): exposes `aria-checked`, which web and native both read. Default 'button' (a filter). */
+  role?: 'button' | 'radio'
   testID?: string
 }
 
@@ -1163,6 +1244,7 @@ export type ZoneLayout = { top: number; bottom: number }
 export type EventData = ReturnType<typeof import('../hooks/event/useEventData').useEventData>
 export type EventAttendanceApi = ReturnType<typeof import('../hooks/event/useEventAttendance').useEventAttendance>
 export type EventCommentsApi = ReturnType<typeof import('../hooks/event/useEventComments').useEventComments>
+export type EventPaymentsApi = ReturnType<typeof import('../hooks/event/useEventPayments').useEventPayments>
 export type EventCheersApi = ReturnType<typeof import('../hooks/event/useEventCheers').useEventCheers>
 export type CohostsApi = ReturnType<typeof import('../hooks/event/useCohosts').useCohosts>
 export type EventTeamsApi = ReturnType<typeof import('../hooks/event/useEventTeams').useEventTeams>
@@ -1338,7 +1420,16 @@ export type LocationValue = {
   display: string
   latitude: number | null
   longitude: number | null
+  /** Set by LocationPickerField: the place's own name (Places `main_text`, or a curated venue label). */
+  name?: string
+  /** Set by LocationPickerField: a readable address, when known. */
+  address?: string | null
+  /** Google Places place_id, when the location came from Places search. */
+  placeId?: string | null
 }
+
+/** The `clubs` location columns (#13), as written on create / edit. All null = no fixed location. */
+export type ClubLocationFields = Pick<Tables<'clubs'>, 'location_name' | 'location_address' | 'latitude' | 'longitude' | 'place_id'>
 
 // ─── Badges, previews, tournament tabs ─────────────────────────────────────────
 
@@ -1574,3 +1665,6 @@ export type TextScaleContextValue = {
   osScale: number
   setSize: (size: TextSizeId) => void
 }
+
+/** react-native-web's ScrollView instance: exposes the DOM node that scrolls (web only). */
+export type WebScrollableRef = { getScrollableNode?: () => HTMLElement } | null

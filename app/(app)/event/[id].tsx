@@ -15,12 +15,14 @@ import {
   forgetDeletedEvent,
   guestRemoveTarget,
   isEventOver,
+  paymentVisibility,
   reportEventError,
   useCohosts,
   useEventAttendance,
   useEventCheers,
   useEventComments,
   useEventData,
+  useEventPayments,
   useEventTeams,
   useKeyboardInset,
   useRemoveDialog,
@@ -43,7 +45,7 @@ import { CohostsDialog } from '../../../components/event/CohostsDialog'
 import { DenyRequestDialog } from '../../../components/event/DenyRequestDialog'
 import { DeleteEventDialog } from '../../../components/event/DeleteEventDialog'
 import { RemoveParticipantDialog } from '../../../components/event/RemoveParticipantDialog'
-import { theme } from '../../../constants'
+import { theme, SWIPE_NAVIGATION } from '../../../constants'
 import type { MentionUser, Profile } from '../../../types'
 import { profileDisplayName } from '../../../utils'
 import { routes, isAppPath, toRoute } from '../../../utils/routes'
@@ -173,6 +175,12 @@ export default function EventDetail() {
     userId,
     isHostOrCohost,
   })
+  // "I've paid" (#6): paid events only, for the attendee and the hosts.
+  const paymentAccess = paymentVisibility({ event, userId, status: eventStatus, isHostOrCohost })
+  const payments = useEventPayments(id, userId, {
+    enabled: paymentAccess.canToggle || paymentAccess.canSeeAll,
+    onRoster: eventStatus.isAttending || eventStatus.isWaitlisted,
+  })
   // An explicit host setting; never inferred from price.
   const requiresApproval = event?.requires_approval === true
   const [footerHeight, setFooterHeight] = useState(80)
@@ -218,6 +226,7 @@ export default function EventDetail() {
     <EventHeaderActions
       eventId={id}
       title={event?.title}
+      eventDate={event?.event_date}
       canManage={isHostOrCohost}
       deleting={deleteEvent.isPending}
       onBack={goBack}
@@ -241,7 +250,7 @@ export default function EventDetail() {
       pointerEvents={removeDialog.target !== null || denyTarget !== null ? 'none' : 'auto'}
       onLayout={drag.measureContainerOffset}
     >
-      <Stack.Screen options={{ headerShown: false, gestureEnabled: true }} />
+      <Stack.Screen options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
 
       {/* Web: in-flow header row (back + actions; the banner shows the title) */}
       {Platform.OS === 'web' && headerActions}
@@ -277,6 +286,7 @@ export default function EventDetail() {
                   onOpenProfile={openProfile}
                   onMessageHost={hostId => { void openDm(hostId) }}
                   onManageCohosts={cohostsApi.open}
+                  payments={paymentAccess.canToggle ? payments : null}
                 />
               ) : placeholder}
 
@@ -297,6 +307,7 @@ export default function EventDetail() {
                   onDeny={(uid, displayName) => setDenyTarget({ userId: uid, displayName })}
                   onMessage={uid => { void openDm(uid) }}
                   silencedUserIds={silencedUserIds}
+                  payments={paymentAccess.canSeeAll ? payments : null}
                 />
               ) : placeholder}
 

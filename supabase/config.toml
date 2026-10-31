@@ -12,6 +12,11 @@ project_id = "vteam"
 [functions.send-chat-push]
 verify_jwt = false
 
+# Called by a Database Webhook on notifications INSERT (push for every inbox
+# notification). Same self-authentication as send-chat-push.
+[functions.send-notification-push]
+verify_jwt = false
+
 # Called by pg_cron. Same self-authentication as above (service-role bearer).
 [functions.check-push-receipts]
 verify_jwt = false

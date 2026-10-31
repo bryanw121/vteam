@@ -3,6 +3,7 @@
 | Function | Caller | Auth | `verify_jwt` |
 | --- | --- | --- | --- |
 | `send-chat-push` | Database Webhook on `messages` INSERT | service-role bearer or `x-webhook-secret` | `false` |
+| `send-notification-push` | Database Webhook on `notifications` INSERT | service-role bearer or `x-webhook-secret` | `false` |
 | `check-push-receipts` | pg_cron every 30 min (migration `20261024120500_push_receipts.sql`) | service-role bearer or `x-webhook-secret` | `false` |
 | `places-proxy` | the app, via `supabase.functions.invoke('places-proxy')` | user JWT checked by the gateway | `true` |
 | `send-feedback-email` | the app, after inserting `feedback_submissions` (`lib/feedback.ts`) | user JWT checked by the gateway; the function emails only a fresh row the caller owns | `true` |
@@ -14,7 +15,7 @@ Shared code lives in `_shared/` (`supabase.ts`: service-role client, Expo consta
 
 ## Webhook authentication
 
-`send-chat-push` and `check-push-receipts` run with `verify_jwt = false`, so they
+`send-chat-push`, `send-notification-push` and `check-push-receipts` run with `verify_jwt = false`, so they
 check the request themselves with `requireWebhookAuth` (`_shared/webhook.ts`).
 A request is accepted when **either**
 
@@ -43,6 +44,32 @@ pg_cron keeps using the service-role bearer from Vault (`service_role_key`).
 `send-chat-push` skips a message id it handled in the last 10 minutes, to absorb
 webhook retries. The memory is per function instance and is lost on cold start, so
 it is best effort only; a durable guarantee would need a column on `messages`.
+
+## `send-notification-push`
+
+Pushes every `notifications` row (event reminders, cancellations, waitlist,
+cheers, join requests, late dropouts, and any type added later) to the
+recipient's devices, unless they turned push off for that type
+(`profiles.notification_prefs.push.<type> = false`). The push carries the row's
+`data.deep_link`, which the app opens on tap. `chat_mention` rows are skipped:
+`send-chat-push` already pushed the message. Same chunking, dead-token cleanup
+and `push_receipts` bookkeeping as `send-chat-push`, and the same best-effort,
+per-instance dedupe of webhook retries (keyed on the notification id).
+
+**Manual setup per project (not captured by migrations):**
+
+1. `supabase functions deploy send-notification-push` (applies `verify_jwt = false`).
+2. Dashboard → Database → Webhooks → Create: table `notifications`, event
+   `INSERT`, type "Supabase Edge Functions", function `send-notification-push`,
+   method POST, header `x-webhook-secret: <WEBHOOK_SECRET>` (set the secret first,
+   see above) or `Authorization: Bearer <service-role key>`.
+3. Check: a new inbox row shows up in the function's logs within seconds; a
+   `401` there means the header doesn't match.
+
+Event reminders themselves are written by the `event-reminders` pg_cron job
+(`public.send_event_reminders()`, migration `20261101090000_event_reminders.sql`).
+It runs on beta as well, but beta has no edge functions or webhook, so nothing
+is pushed there.
 
 ## `places-proxy`
 
@@ -93,6 +120,7 @@ From the repo root, logged in with `supabase login` and linked with
 
 ```bash
 supabase functions deploy send-chat-push
+supabase functions deploy send-notification-push
 supabase functions deploy check-push-receipts
 supabase functions deploy places-proxy
 supabase functions deploy send-feedback-email
@@ -101,7 +129,7 @@ supabase functions deploy
 ```
 
 Deploy applies `verify_jwt` from `config.toml`. After the first deploy from this
-config, check Dashboard → Edge Functions that the two push functions show JWT
+config, check Dashboard → Edge Functions that the three push functions show JWT
 verification off and `places-proxy` on.
 
 Quick check of a deployed push function (expect `401`, then not `401`):

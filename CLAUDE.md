@@ -154,9 +154,9 @@ signatures. Regenerate it after every schema change; never hand-edit it. Key dom
 - **conversations** / **conversation_members** / **messages** / **message_reactions** / **chat_silences**
 - **tournaments** and its children (`tournament_teams`, `_team_members`, `_matches`, `_pools`, `_rules`, `_prizes`, invitations, join requests, comments)
 - **cheers**, **user_badges**, **notifications**, **push_tokens**, **feedback_submissions**
-- **app_events**: insert-only usage metrics (see "Usage metrics")
+- **app_events**: insert-only usage metrics (see "Usage metrics"); **app_events_daily**: their per-day totals, kept forever
 
-Also **user_settings** (private per-user settings: home city, seen banners).
+Also **user_settings** (private per-user settings: home city, seen banners, reminder lead time) and **event_reminder_log** (service-only reminder dedupe).
 
 Custom RPCs include `get_email_by_username` (username login), `get_my_conversations`,
 `get_event_card_attendee_previews`, `get_feed_span` (the Events feed for a date range in one call; `useMonthEvents` falls back to separate queries if it is missing), `mark_conversation_read`, `mark_notification_read`.
@@ -167,7 +167,7 @@ Custom RPCs include `get_email_by_username` (username login), `get_my_conversati
 Only React hooks (`useState`, `useRef`, `useContext`). Server state lives in `lib/query` (module-level cache behind `useQuery`/`useMutation`); global UI state lives in context (`SessionProvider` for auth, `TabsShellContext`/`TabsActiveContext` for the pager).
 
 ### Custom tab navigation
-The app does NOT use Expo Router's built-in `<Tabs>`. Instead: a custom `<Pager>` (`(tabs)/(main)/_layout.tsx`) + a custom bottom bar (`(tabs)/_layout.tsx`) on mobile and a sidebar (`(app)/_layout.tsx`) on wide web. This enables swipe animations that work on web too. All three derive from `TABS` / `CREATE_MENU` in `constants/navigation.ts`: add, reorder or rename a tab there and nowhere else. `useTabsShell()` (`contexts/tabs.ts`) lets child screens call `goToTab(index)` without circular imports; use `useTabsActive()` only where the active index is needed (it re-renders on every switch).
+The app does NOT use Expo Router's built-in `<Tabs>`. Instead: a custom `<Pager>` (`(tabs)/(main)/_layout.tsx`) + a custom bottom bar (`(tabs)/_layout.tsx`) on mobile and a sidebar (`(app)/_layout.tsx`) on wide web. Swiping between tabs, and iOS swipe-back on stack screens, are off in the native apps (they kept navigating by accident) and live behind `SWIPE_NAVIGATION` in `constants/navigation.ts`: flip `tabs` or `back` to bring either back, and give every new `<Stack>` `gestureEnabled: SWIPE_NAVIGATION.back` (`__tests__/swipeNavigation.test.ts` checks). Narrow web renders the tabs statically, and the browser's own swipe-back is the browser's. All three derive from `TABS` / `CREATE_MENU` in `constants/navigation.ts`: add, reorder or rename a tab there and nowhere else. `useTabsShell()` (`contexts/tabs.ts`) lets child screens call `goToTab(index)` without circular imports; use `useTabsActive()` only where the active index is needed (it re-renders on every switch).
 
 ### Cross-platform components use `.web.tsx`
 `DatePickerField.tsx` = native (`@react-native-community/datetimepicker`).
@@ -177,6 +177,9 @@ Metro/webpack picks the right file automatically.
 ### Web static render and hydration
 The web export pre-renders HTML at build time, with no viewport, session, clock or device storage. On web the root layout (`app/_layout.tsx`) renders only the splash until the client has hydrated, then mounts the app tree (still under the splash). So screens may branch on window size, `useSession()`, `Date` or `localStorage` freely; don't move app UI outside that gate, or React error #418 (hydration mismatch) comes back. The guest e2e spec checks for it.
 
+### Scroll position on web
+Coming back to a screen on web used to land at the top: the browser's back (and the iPhone swipe-back, which is the same thing) remounts the tab screens, display:none on a hidden screen zeroes its scrollTop, and leaving document-scroll mode scrolls the window to 0. `DocScrollView` takes a `memoryKey` (`'tab:profile:<section>'`, `'tab:clubs'`) and the Events feed uses `useDocScrollMemory('tab:events', ...)`: the offset is kept in a module-level map (`utils/scrollMemory.ts`, cleared on sign-out) and restored when the screen mounts or is shown again. Give a new long tab screen a key; `e2e/scrollRestore.spec.ts` covers Profile.
+
 ### Sentry
 Import `Sentry` from `lib/sentry`, never `@sentry/react-native` directly. On web, `lib/sentry.web.ts` loads the SDK in its own chunk after first paint and queues calls until then; `components/SentryErrorBoundary.web.tsx` is the matching boundary. Native uses `lib/sentry.ts` unchanged.
 
@@ -184,7 +187,7 @@ Import `Sentry` from `lib/sentry`, never `@sentry/react-native` directly. On web
 Import icons per family (`import Ionicons from '@expo/vector-icons/Ionicons'`), never from the `@expo/vector-icons` barrel: that pulls every icon set's glyph map into the main bundle.
 
 ### Gesture layering
-The `Pager` uses `onMoveShouldSetPanResponder` (bubble phase) to claim tab swipes. Inner components (WeekStrip, Calendar wrapper) also use bubble phase — since they're more inner, their handlers fire first and absorb the gesture before it reaches Pager. Do not use capture phase (`onMoveShouldSetPanResponderCapture`) for inner gesture handlers; that breaks the layering.
+(Applies while `SWIPE_NAVIGATION.tabs` is on; the layering is kept for when it is.) The `Pager` uses `onMoveShouldSetPanResponder` (bubble phase) to claim tab swipes. Inner components (WeekStrip, Calendar wrapper) also use bubble phase — since they're more inner, their handlers fire first and absorb the gesture before it reaches Pager. Do not use capture phase (`onMoveShouldSetPanResponderCapture`) for inner gesture handlers; that breaks the layering.
 
 ### Guest browsing
 Nobody has to sign in to look around. Guests see Events, Clubs, event pages, club pages and other players' profiles; the Chat and Profile tabs render `SignInPrompt`, and the Events/Clubs headers show `SignInButton` (top right) instead of the bell / Create.
@@ -210,7 +213,7 @@ For information someone needs once, the first time they open a screen (e.g. "we'
 A tour is an ordered list of steps in `TOURS` (`constants/tours.ts`): target id, title, a short plain body (at most three short sentences, 140 characters), optional `tab` (the tour switches there first) and `placement`. Mark what a step points at with `<TourTarget id={TOUR_TARGETS.x}>` (`components/tour/TourTarget`) or `useTourTarget(id)` on an existing view; register the same id on every surface that shows it (mobile tab bar and desktop sidebar), and a step whose target isn't on screen is skipped. `TourProvider` (in `app/(app)/_layout.tsx`) draws the overlay as an absolute layer (no Modal); the tabs layout hands it tab switching via `useTourShell`. Start one with `useTour().start('intro', source)`. A banner can start one through its `action` (`{ type: 'startTour', tourId }`). Finishing records `tour-<id>-done` next to seen banners; tours can always be restarted ("Take the tour" on Profile).
 
 ### Usage metrics
-`track(name, props)` from `lib/analytics` records a small event (names in `ANALYTICS_EVENTS`, `constants/analytics.ts`; flat props only, at most about 1 KB). Events are buffered and sent to `app_events` in one insert every 10s, or when the app goes to the background or the page is hidden. It never throws, drops a batch the server rejects, and turns itself off if the table is missing. It is off under Jest and in automated browsers (`navigator.webdriver`) unless localStorage `vteam.analytics = 'on'`, which `e2e/metrics.spec.ts` sets before intercepting the insert. `app_events` is insert-only for clients: there is no SELECT policy, and `user_id` comes from the `auth.uid()` default. pg_cron (`prune-app-events`) deletes rows older than 180 days. Currently instrumented: one-time banners (shown / action / dismissed) and tours (started / step viewed / completed / skipped). Read counts in the SQL editor (or with the Supabase MCP `execute_sql`):
+`track(name, props)` from `lib/analytics` records a small event (names in `ANALYTICS_EVENTS`, `constants/analytics.ts`; flat props only, at most about 1 KB). Events are buffered and sent to `app_events` in one insert every 10s, or when the app goes to the background or the page is hidden. It never throws, drops a batch the server rejects, and turns itself off if the table is missing. It is off under Jest and in automated browsers (`navigator.webdriver`) unless localStorage `vteam.analytics = 'on'`, which `e2e/metrics.spec.ts` sets before intercepting the insert. `app_events` is insert-only for clients: there is no SELECT policy, and `user_id` comes from the `auth.uid()` default. pg_cron (`prune-app-events`, 03:17 UTC) first runs `rollup_app_events()`, which writes the last 7 completed UTC days into `app_events_daily` (one row per day, event name and platform: `events`, and `people` = distinct user or device that day, so don't sum it across days), then deletes rows older than 180 days. So per-event detail (props, funnels) lasts 180 days and daily totals last forever; for all-time counts read `app_events_daily`. Currently instrumented: one-time banners (shown / action / dismissed) and tours (started / step viewed / completed / skipped). Read counts in the SQL editor (or with the Supabase MCP `execute_sql`):
 ```sql
 -- Daily counts per event, last 30 days
 select date_trunc('day', created_at)::date as day, name, count(*) as events,
@@ -225,6 +228,9 @@ select (props->>'step')::int as step, props->>'target' as target,
 from app_events where props->>'tour' = 'intro' and name in ('tour_step_viewed', 'tour_skipped')
 group by 1, 2 order by 1;
 
+-- All-time totals per event (survive the 180-day prune; today isn't rolled up yet)
+select name, sum(events) as events, min(day) as since from app_events_daily group by 1 order by 2 desc;
+
 -- Started vs completed vs skipped, per source
 select props->>'source' as source, count(*) as started from app_events where name = 'tour_started' group by 1;
 select name, count(*) from app_events where name in ('tour_completed', 'tour_skipped') group by 1;
@@ -238,6 +244,25 @@ Every font size is a token in `theme.font` (`size`, `heading`, `emoji`, `waterma
 
 ### Badge art
 Badge definitions live in `constants/badges.ts`. Art for a tier comes from, in order: a `badge_art` row (generated, #10), `tierImageUris`/`imageUri` in code, else the gradient + Ionicon. Generate art with `node scripts/generate-badge-art.mjs <badge> [tier] | --missing` (admin account; calls the `generate-badge-art` edge function, see `supabase/functions/README.md`). The look is defined once, in `supabase/functions/_shared/badgeArt.ts`; never call an image model from the app.
+
+### Notifications, push and reminders
+Inbox rows (`notifications`) are written by database triggers and jobs (clients never insert them, except the few event flows RLS allows). Every row is also pushed: a Database Webhook on `notifications` INSERT calls the `send-notification-push` edge function, which honours `profiles.notification_prefs.push.<type>` and sends the row's `data.deep_link` (`chat_mention` is skipped; `send-chat-push` covers chat). Tapping any push opens its deep link through `isAppPath` (`subscribeToPushTaps` in `utils/pushNotifications.ts`, wired in `app/_layout.tsx`). So a new notification type needs only its row, a `deep_link`, and an entry in `NOTIFICATION_TYPES` plus the check constraint. Event reminders come from the `event-reminders` pg_cron job (`send_event_reminders()`, informational only: "<title> at 4:00 PM" / "Starts in 2 hours · <location>"), at `user_settings.reminder_lead_minutes` (Settings → Notifications → Reminders), once per player per event (`event_reminder_log`). Hosts and co-hosts get `late_dropout` when an attending player leaves within 24h.
+
+### Points
+`point_events` is an append-only ledger (one row per change, server-written only: clients have SELECT on their own rows and nothing else); `point_balances` holds each user's total, kept by an AFTER INSERT trigger and readable by everyone (profiles show it via `usePointsBalance`). The CHECK `balance >= 0` makes any overspend fail. `award_event_points()` (pg_cron `award-event-points`, every 15 min, idempotent through unique `(user_id, event_id, reason)` / `(user_id, tournament_id, reason)`) awards attendees still `attending` once `event_date + duration_minutes` has passed: 5 for an event tagged Tournament, otherwise 2; members of approved teams in a `completed` tournament get 5. The job runs on beta too (harmless: only test accounts there), so the drift check needs no exception. Spending writes a negative row from a SECURITY DEFINER function; never update or delete ledger rows.
+
+### Ads (house banners and sponsored events)
+No ad network: two admin-managed tables. `ad_banners` (title, body, https image/link, `is_active`, `starts_at`/`ends_at`) and `sponsored_events` (`event_id` + window). RLS shows everyone only the rows inside their window; writes need `current_user_is_admin()` (checks `app_admins` once #102 is in, else `profiles.is_admin`, for `auth.uid()` server-side). `useFeedAds` reads both; `planFeedAds` (`utils/feedAds.ts`, slots in `FEED_ADS`, `constants/ads.ts`) puts the soonest sponsored event in a promoted slot after the 2nd feed item and a banner after the 5th, then every 10th. Sponsored events also keep their normal place, with `SponsoredLabel`. Every ad surface reads `useAdsEnabled()` and nothing else: guests always see ads; signed-in users see none while an ad-free period bought with points runs (`ad_free_passes`, owner-read only; `get_ad_free_status()` / `redeem_ad_free()`, price in `ad_free_offer()`: 100 points for 30 days, renewing extends from the current expiry; screen: Settings → Go ad-free). The feed screen only asks "is this sponsored?" and "what follows this item?"; keep ad logic out of cards and out of Profile. Admins manage rows in SQL for now:
+```sql
+insert into ad_banners (title, body, image_url, link_url, ends_at) values ('Title', 'One line', 'https://…/img.jpg', 'https://…', now() + interval '14 days');
+insert into sponsored_events (event_id, ends_at) values ('<event id>', now() + interval '7 days');
+```
+
+
+### Share links and link previews
+Sharing an event always sends an https link to the web app, `shareUrl(routes.event(id))` from `constants/share.ts` (`WEB_ORIGIN`: `EXPO_PUBLIC_WEB_ORIGIN`, else `https://vteamvolleyball.com`; on web with no env, the page's own origin), never `Linking.createURL` (`vteam://` opens nothing for people without the app). The text comes from `eventShareMessage` in `utils/eventShare.ts`, which writes times in `SHARE_TIME_ZONE` (America/Chicago).
+
+On Vercel, `vercel.json` routes `/event/<uuid>` to `api/event-page.ts`, which serves `dist/index.html` with `<title>`, `og:*` and `twitter:*` tags in the head (body untouched, so hydration is unaffected), reading the event with the anon key (`EVENT_PREVIEW_COLUMNS`) and building the copy with `buildEventMeta`. `og:image` is `api/og/event.tsx` (Edge, `@vercel/og`), drawn from `theme` with fonts from `public/og-fonts`; render it locally with `npm run og:render`. Everything `api/` imports from the app (`constants/share`, `constants/selects`, `constants/theme`, `utils/eventShare`, `utils/eventDate`, `utils/price`, `types`) must stay free of React Native / Supabase imports (a unit test checks). `serve.json` in CI has no functions, so previews are covered by `__tests__/eventPage.test.ts`. To preview clubs or tournaments later, generalize `api/event-page.ts`.
 
 ### Login accepts email or username
 If the login field doesn't look like an email, `login.tsx` calls the `get_email_by_username` RPC, then signs in with the resolved email.
@@ -259,7 +284,9 @@ Stored in `.env` (not committed):
 ```
 EXPO_PUBLIC_SUPABASE_URL=...
 EXPO_PUBLIC_SUPABASE_ANON_KEY=...
+EXPO_PUBLIC_WEB_ORIGIN=https://vteamvolleyball.com   # optional; where shared links point
 ```
+On Vercel the link-preview functions also read `SUPABASE_URL` / `SUPABASE_ANON_KEY` (server-side copies of the public values; they fall back to the `EXPO_PUBLIC_*` pair).
 
 ## Running the App
 ```bash
@@ -352,6 +379,8 @@ Test each surface mentally when building. If a component behaves differently acr
 - **Unit (Jest)**: `npm test`; CI runs it with `--coverage`, posts the totals and least-covered folders to the job summary (`scripts/coverage-summary.mjs`) and uploads `coverage/` as an artifact. `jest.coverageThreshold` in `package.json` is a floor a little under the current numbers: raise it when coverage grows, never lower it to get a PR through.
 - **RLS / RPC integration** (`e2e/rls.spec.ts`, the `api` e2e shard): supabase-js against beta with the anon key and the e2e account, no browser. It asserts what guests can and can't read, that a user can't write rows for someone else, and the DM RPCs. Read-only: every insert is one RLS must reject. A PR that changes a policy updates its expectations there.
 - **e2e (Playwright)**: specs must be listed in a shard in `ci.yml` to run. Signed-in specs that need data create it in `beforeAll` and delete it in `afterAll` under this run's `[e2e <tag>]` prefix (`eventsFixtures.ts`, `surfaceFixtures.ts`). For network flakes use `e2e/retry.ts`: `gotoReady(page, url, locator)` reloads only if a Supabase request failed during the load, and `withNetworkRetry(fn)` retries Node-side calls only on network errors. Real failures still fail on the first try. Playwright also retries each failed test once (`retries: 1`, with a trace).
+- **Before/after screenshots** (`scripts/shots/`, see its README): `npm run shots:compare -- --before <ref> --after <ref> --out shots` exports both refs for web and captures the affected screens with all Supabase traffic mocked from `scripts/shots/fixtures/` (no secrets, no network), writing `<screen>-compare.png` for each one that changed. When you add a route, add it to `SCREENS` in `scripts/shots/screens.mjs`; when a screen reads a new table or RPC, add fixture rows or a handler (unknown ones answer `[]`).
+- **Accessibility (axe)** (`scripts/shots/a11y.mjs`, CI's `a11y` job): axe-core (pinned devDependency; tags `wcag2a`, `wcag2aa`, `wcag21aa`) on every `SCREENS` entry, mobile and desktop, through the same mocked harness as the screenshots. Serious and critical findings are compared with `scripts/shots/a11y-baseline.json` (screen → viewport → rule → node count): a rule new to a screen or a count above the baseline fails, and the job summary names the rule, screen and help link. Minor/moderate findings are reported only. When you fix findings (counts drop; the run passes with a note), run `npm run a11y:baseline` (or, if local counts differ from CI's, copy `a11y-baseline.next.json` from the CI `a11y-report` artifact: the baseline is CI's environment) and commit the smaller baseline; never raise it to get a PR through unless the finding is accepted on purpose and the PR says why. Locally: build the mock export (`EXPO_PUBLIC_SUPABASE_URL=https://shotsmock.supabase.co EXPO_PUBLIC_SUPABASE_ANON_KEY=shots-mock-anon-key npx expo export -p web --clear --output-dir dist-mock`), then `npm run a11y` (report in `a11y-report/index.html`). New screens are scanned automatically and enter the baseline only through `a11y:baseline`.
 
 ### Schema migrations
 Live and beta have the same schema, except while an open PR is testing a change on beta. The lifecycle of every schema change:
@@ -361,7 +390,7 @@ Live and beta have the same schema, except while an open PR is testing a change 
 3. **When the PR merges**: apply the same up SQL to live (Supabase MCP `apply_migration`), regenerate `types/database.ts` from live, then run `select beta_meta.complete_pr(<PR number>);` on beta.
 4. **If the PR is closed without merging**: run `select beta_meta.rollback_pr(<PR number>);` on beta. It runs the recorded `.down.sql` (newest first) and clears the ledger, so nothing the PR tried survives anywhere. Live never had it.
 
-The drift check enforces this: `public.schema_fingerprint()` (both projects) returns an md5 per schema object, `public.schema_pending_changes()` (both; returns `[]` on live) exposes beta's ledger, and `npm run db:drift` (`scripts/schema-drift.mjs`) compares them. It runs in CI's Web build job on every PR and push, and daily (`.github/workflows/schema-drift.yml`; GitHub emails on failure). It fails on any difference not owned by an open PR, on a merged PR whose migration is not on live yet, and on a closed PR whose change is still on beta, and names the command to run. Intentional permanent differences are listed in `ALLOWED` in that script (today only the `kudos-reminders` cron job, which notifies real people and must not run on beta). Never "fix" drift by adding to `ALLOWED`, and never edit either project's schema in the Supabase dashboard or with ad-hoc SQL outside `apply_pr_migration` (beta) or a merged migration (live). Reference-table rows (`tags`, `major_cities`, `app_config`) are part of the fingerprint.
+The drift check enforces this: `public.schema_fingerprint()` (both projects) returns an md5 per schema object, `public.schema_pending_changes()` (both; returns `[]` on live) exposes beta's ledger, and `npm run db:drift` (`scripts/schema-drift.mjs`) compares them. It runs in CI's Web build job on every PR and push, and daily (`.github/workflows/schema-drift.yml`; GitHub emails on failure). It fails on any difference not owned by an open PR, on a merged PR whose migration is not on live yet, and on a closed PR whose change is still on beta, and names the command to run. Intentional permanent differences are listed in `ALLOWED` in that script (today the `kudos-reminders` cron job and the `send_notification_push` webhook trigger, which notify real people and must not run on beta). Never "fix" drift by adding to `ALLOWED`, and never edit either project's schema in the Supabase dashboard or with ad-hoc SQL outside `apply_pr_migration` (beta) or a merged migration (live). Reference-table rows (`tags`, `major_cities`, `app_config`) are part of the fingerprint.
 
 Beta is shared: an open PR's change is visible to every other PR's e2e run. Keep test changes additive, and if two open PRs change the same object, land one before testing the other.
 
@@ -375,6 +404,7 @@ Schema changes are usually applied directly via the Supabase MCP (`apply_migrati
 - Storage bucket creation
 - Auth settings (email templates, OAuth providers)
 - Edge function secrets (`GOOGLE_MAPS_KEY`, push credentials)
+- The Database Webhook `send_notification_push` (live only): table `notifications`, event Insert, type Supabase Edge Functions → `send-notification-push`, with the service-role auth header. It needs `pg_net` (enabled by migration `20261031180000_enable_pg_net.sql`) and the Database Webhooks integration installed. The drift check allows it on live only (`ALLOWED` in `scripts/schema-drift.mjs`).
 
 ## Things to Avoid
 - Don't use `react-native-pager-view` — it's native-only. The custom `Pager` component is the cross-platform replacement.

@@ -1,0 +1,11 @@
+-- Club creation: any signed-in user may create a club (Bryan's call, from the
+-- #111 review). Two permissive INSERT policies on clubs were OR'd together:
+--   * "Authenticated users create clubs" (authenticated, created_by = auth.uid())
+--     from 20260419120000_club_creation_and_location.sql: the intended rule.
+--   * "Admins insert clubs" (role public, profiles.is_admin), left over from the
+--     original admin-only club feature.
+-- Admins are signed-in users too, so they keep creating clubs through the first
+-- policy; this only removes the leftover.
+-- contract: the app's only clubs insert (app/(app)/club/create.tsx) runs as the
+-- signed-in user with created_by = their own id, which the remaining policy allows.
+drop policy if exists "Admins insert clubs" on public.clubs;

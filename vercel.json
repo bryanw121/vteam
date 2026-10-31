@@ -11,11 +11,16 @@
       "continue": true
     },
     { "handle": "filesystem" },
+    { "src": "/event/(?<id>[0-9a-fA-F-]{36})/?", "dest": "/api/event-page?id=$id" },
     { "src": "/.*", "dest": "/index.html" }
   ],
   "functions": {
     "api/tunnel.ts": {
       "memory": 128
+    },
+    "api/event-page.ts": {
+      "memory": 128,
+      "includeFiles": "dist/index.html"
     }
   }
 }

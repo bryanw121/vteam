@@ -132,7 +132,7 @@ export default function NotificationsScreen() {
                   <Text
                     style={{
                       fontSize: theme.font.size.sm,
-                      color: theme.colors.subtext,
+                      color: theme.colors.subtextStrong,
                       marginTop: theme.spacing.xs,
                       lineHeight: 20,
                     }}
@@ -140,7 +140,7 @@ export default function NotificationsScreen() {
                   >
                     {item.body}
                   </Text>
-                  <Text style={[shared.caption, { marginTop: theme.spacing.sm }]}>
+                  <Text style={[shared.captionStrong, { marginTop: theme.spacing.sm }]}>
                     {formatShortTime(item.created_at)}
                   </Text>
                 </View>

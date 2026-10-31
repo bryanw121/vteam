@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+import type { StyleProp, ViewStyle } from 'react-native'
 import { Text, TextInput } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -14,6 +15,7 @@ import { supabase } from '../lib/supabase'
 import { theme } from '../constants'
 import { LOCATIONS } from '../constants/events'
 import { formatVenueDisplay } from '../utils'
+import { placeAddress } from '../utils/clubLocation'
 import type { GooglePlacePrediction, LocationValue } from '../types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -25,6 +27,12 @@ type Props = {
   onChange: (loc: LocationValue) => void
   userId: string | null
   recentVenues?: LocationValue[]
+  /** Trigger text when nothing is chosen. */
+  placeholder?: string
+  /** Hide the curated "Other" pseudo-venue (it has no address; meaningless outside the event form). */
+  hideOtherVenue?: boolean
+  /** Extra style for the trigger row, e.g. to make it look and tap like a form input. */
+  triggerStyle?: StyleProp<ViewStyle>
 }
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -155,7 +163,7 @@ function ResultRow({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function LocationPickerField({ value, onChange, recentVenues = [] }: Props) {
+export function LocationPickerField({ value, onChange, recentVenues = [], placeholder = 'Search for a venue…', hideOtherVenue = false, triggerStyle }: Props) {
   const [open, setOpen]           = useState(false)
   const [query, setQuery]         = useState('')
   const [results, setResults]     = useState<GooglePrediction[]>([])
@@ -217,6 +225,9 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
         display: formatVenueDisplay(prediction),
         latitude: coords?.lat ?? null,
         longitude: coords?.lng ?? null,
+        name: prediction.structured_formatting.main_text?.trim() || prediction.description,
+        address: placeAddress(prediction),
+        placeId: prediction.place_id,
       })
     } finally {
       setSelecting(false)
@@ -234,7 +245,8 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
   }
 
   const filteredCommon = LOCATIONS.filter(loc =>
-    !query || loc.label.toLowerCase().includes(query.toLowerCase()),
+    (!hideOtherVenue || loc.address) &&
+    (!query || loc.label.toLowerCase().includes(query.toLowerCase())),
   )
 
   const hasContent = recentVenues.length > 0 || filteredCommon.length > 0 || results.length > 0
@@ -242,7 +254,7 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
   return (
     <>
       {/* ── Trigger ── */}
-      <TouchableOpacity testID="location-picker-trigger" onPress={openSheet} activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+      <TouchableOpacity testID="location-picker-trigger" onPress={openSheet} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel={value?.display || placeholder} style={[{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }, triggerStyle]}>
         <Ionicons
           name="location-outline"
           size={16}
@@ -255,7 +267,7 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
           color: value?.display ? theme.colors.text : theme.colors.subtext,
           fontWeight: '500',
         }}>
-          {value?.display || 'Search for a venue…'}
+          {value?.display || placeholder}
         </Text>
         {value?.display ? (
           <TouchableOpacity hitSlop={8} onPress={clear}>
@@ -349,7 +361,7 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
                     icon="business-outline"
                     title={loc.label}
                     subtitle={loc.address}
-                    onPress={() => selectDirect({ display: loc.label, latitude: null, longitude: null })}
+                    onPress={() => selectDirect({ display: loc.label, latitude: null, longitude: null, name: loc.label, address: loc.address ?? null, placeId: null })}
                   />
                 ))}
               </>

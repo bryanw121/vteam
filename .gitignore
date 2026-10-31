@@ -7,6 +7,12 @@ node_modules/
 .expo/
 dist/
 web-build/
+
+# Screenshot tool output (scripts/shots)
+/shots/
+# Accessibility check (scripts/shots/a11y.mjs): mock export and report
+/dist-mock/
+/a11y-report/
 expo-env.d.ts
 
 # Native

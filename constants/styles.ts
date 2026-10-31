@@ -415,7 +415,7 @@ export const shared = StyleSheet.create({
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: theme.font.size.smd,
     fontWeight: font.weight.semibold,
-    color: colors.subtext,
+    color: colors.subtextStrong,
   },
   chipLabelActive:     { color: colors.onPrimary },
   chipLabelActiveTint: { color: colors.primary },
@@ -582,6 +582,20 @@ export const shared = StyleSheet.create({
 
   // ── Wrapping row of Chips (forms) ─────────────────────────
   chipRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs, marginTop: theme.spacing.xs, marginBottom: theme.spacing.xs },
+  // Settings → Notifications: example of the reminder a player will get.
+  reminderPreview: {
+    marginTop: theme.spacing.sm,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 2,
+  },
+  reminderPreviewTitle: { fontFamily: theme.fonts.bodySemiBold, fontWeight: '600', fontSize: theme.font.size.md, color: theme.colors.text },
+  // Secondary text on settings cards and in the inbox: `caption`/`label` in a colour that passes WCAG AA there.
+  captionStrong: { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong },
+  labelStrong: { fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong, marginBottom: theme.spacing.xs },
 
   // ── One-time banner (components/ui/OneTimeBanner) ────────
   oneTimeBanner: {

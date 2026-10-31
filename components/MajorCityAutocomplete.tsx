@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { View, TouchableOpacity, Platform } from 'react-native'
 import { Text, TextInput } from './ui/Text'
-import { supabase } from '../lib/supabase'
+import { useMajorCities } from '../hooks/useMajorCities'
 import { shared, theme } from '../constants'
 import type { MajorCity } from '../types'
 
@@ -13,32 +13,15 @@ type Props = {
 }
 
 const MAX_SUGGESTIONS = 12
+const NO_CITIES: MajorCity[] = []
 
 export function MajorCityAutocomplete({ label = 'Metro area', value, onChange, error }: Props) {
-  const [catalog, setCatalog] = useState<MajorCity[]>([])
+  const cities = useMajorCities()
+  const catalog = cities.data ?? NO_CITIES
+  const loadError = cities.error && !cities.data ? cities.error.message : null
   const [inputText, setInputText] = useState(value?.display_name ?? '')
   const [open, setOpen] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
   const blurCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      const { data, error: e } = await supabase
-        .from('major_cities')
-        .select('id, display_name, city_name, admin_region, country_code')
-        .order('display_name', { ascending: true })
-      if (cancelled) return
-      if (e) {
-        setLoadError(e.message)
-        return
-      }
-      setCatalog((data ?? []) as MajorCity[])
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   useEffect(() => {
     setInputText(value?.display_name ?? '')

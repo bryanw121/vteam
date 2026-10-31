@@ -1,0 +1,33 @@
+-- Undo 20261028160000_definer_search_path.sql: original grants, no fixed search_path.
+alter function public.auto_join_club_conversation() reset search_path;
+alter function public.create_club_conversation() reset search_path;
+alter function public.find_or_create_dm(uuid) reset search_path;
+alter function public.get_chat_unread_count() reset search_path;
+alter function public.get_my_conversations() reset search_path;
+alter function public.handle_new_user() reset search_path;
+alter function public.is_club_owner(uuid) reset search_path;
+alter function public.is_conversation_member(uuid) reset search_path;
+alter function public.mark_conversation_read(uuid) reset search_path;
+alter function public.notify_on_kudo_received() reset search_path;
+alter function public.notify_user_mentioned() reset search_path;
+alter function public.send_kudos_reminders() reset search_path;
+
+grant execute on function public.auto_join_club_conversation() to public, anon, authenticated;
+grant execute on function public.create_club_conversation() to public, anon, authenticated;
+grant execute on function public.handle_new_user() to public, anon, authenticated;
+grant execute on function public.notify_on_kudo_received() to public, anon, authenticated;
+grant execute on function public.notify_user_mentioned() to public, anon, authenticated;
+grant execute on function public.add_club_owner_after_insert() to public, anon, authenticated;
+grant execute on function public.notify_on_event_announcement() to public, anon, authenticated;
+grant execute on function public.notify_on_event_material_change() to public, anon, authenticated;
+grant execute on function public.notify_on_waitlist_promoted() to public, anon, authenticated;
+grant execute on function public.send_kudos_reminders() to public, anon, authenticated;
+grant execute on function public.rls_auto_enable() to public, anon, authenticated;
+grant execute on function public.notification_pref_enabled(uuid, text, text) to public, anon, authenticated;
+grant execute on function public.find_or_create_dm(uuid) to public, anon;
+grant execute on function public.get_chat_unread_count() to public, anon;
+grant execute on function public.get_my_conversations() to public, anon;
+grant execute on function public.mark_conversation_read(uuid) to public, anon;
+grant execute on function public.mark_all_notifications_read() to anon;
+grant execute on function public.mark_notification_read(uuid) to anon;
+grant execute on function public.is_conversation_member(uuid) to public, anon;

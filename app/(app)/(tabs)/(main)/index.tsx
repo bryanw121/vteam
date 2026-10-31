@@ -5,6 +5,7 @@ import { Text } from '../../../../components/ui/Text'
 import { DocPullToRefresh, RefreshControl } from '../../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFeedRsvp, useMonthEvents } from '../../../../hooks/useMonthEvents'
+import { useDocScrollMemory } from '../../../../hooks/useDocScrollMemory'
 import { useNotifications } from '../../../../hooks/useNotifications'
 import { useIsNarrowWeb } from '../../../../hooks/useIsNarrowWeb'
 import { EventCard, RowEventCard } from '../../../../components/EventCard'
@@ -35,6 +36,11 @@ import { SignInButton } from '../../../../components/SignInButton'
 import { addMonths } from '../../../../utils/monthKeys'
 import { routes, isAppPath, toRoute } from '../../../../utils/routes'
 import { eventLocalDateKey, localDateKey, surfaceOf } from '../../../../utils'
+import { useAdsEnabled } from '../../../../hooks/useAdsEnabled'
+import { useFeedAds } from '../../../../hooks/useFeedAds'
+import { planFeedAds } from '../../../../utils/feedAds'
+import { FeedBanner } from '../../../../components/ads/FeedBanner'
+import { SponsoredLabel } from '../../../../components/ads/SponsoredLabel'
 
 const _now = new Date()
 const TODAY = localDateKey(_now)
@@ -197,6 +203,9 @@ export default function EventsScreen() {
   const docScrollRef        = useRef(docScrollActive)
   docScrollRef.current      = docScrollActive
   const feedContentRef      = useRef<View>(null)
+  // Narrow web: come back to the same place in the feed after an event page
+  // (the browser's back remounts this screen; see hooks/useDocScrollMemory).
+  const feedDocLayout       = useDocScrollMemory('tab:events', docScrollActive, feedContentRef)
 
   useEffect(() => {
     if (!docScrollActive || typeof window === 'undefined') return
@@ -335,6 +344,13 @@ export default function EventsScreen() {
   // "Next up" links to an event page, so it skips sessions at other venues.
   const nextClubEvent = useMemo(() => allEvents.find(e => !e._external), [allEvents])
 
+  // Ads: everything goes through useAdsEnabled + planFeedAds; the render paths
+  // below only ask "is this sponsored?" and "what follows this item?".
+  const showAds = useAdsEnabled()
+  const feedAds = useFeedAds(showAds)
+  const adPlan = useMemo(() => planFeedAds(allEvents, feedAds, showAds), [allEvents, feedAds, showAds])
+  const sponsoredIds = useMemo(() => new Set(showAds ? feedAds?.sponsoredEventIds ?? [] : []), [showAds, feedAds])
+
   const headerRight = isGuest ? <SignInButton /> : (
     <IconButton
       icon={notifOpen ? 'notifications' : 'notifications-outline'}
@@ -460,16 +476,34 @@ export default function EventsScreen() {
                       {label}
                     </Text>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                      {monthEvents.map(item => (
-                        <View key={item.id} style={{ width: 'calc(50% - 5px)' as any }}>
-                          {item._external ? <ExternalSessionCard session={item._external} /> : <RowEventCard
-                            event={item}
+                      {monthEvents.map(item => {
+                        const renderRowCard = (event: EventWithDetails) => (
+                          <RowEventCard
+                            event={event}
                             currentUserId={currentUserId}
-                            onRsvp={item._isTournament ? undefined : handleRsvp}
-                            rsvpPending={isRsvpPending(item.id)}
-                          />}
-                        </View>
-                      ))}
+                            onRsvp={event._isTournament ? undefined : handleRsvp}
+                            rsvpPending={isRsvpPending(event.id)}
+                          />
+                        )
+                        return (
+                          <React.Fragment key={item.id}>
+                            <View style={{ width: 'calc(50% - 5px)' as any }}>
+                              {sponsoredIds.has(item.id) && <SponsoredLabel />}
+                              {item._external ? <ExternalSessionCard session={item._external} /> : renderRowCard(item)}
+                            </View>
+                            {adPlan.get(item.id)?.map(ad => ad.kind === 'banner' ? (
+                              <View key={`ad-${ad.banner.id}`} style={{ width: '100%' }}>
+                                <FeedBanner banner={ad.banner} />
+                              </View>
+                            ) : (
+                              <View key={`sponsored-${ad.event.id}`} style={{ width: 'calc(50% - 5px)' as any }}>
+                                <SponsoredLabel />
+                                {renderRowCard(ad.event)}
+                              </View>
+                            ))}
+                          </React.Fragment>
+                        )
+                      })}
                     </View>
                   </View>
                 )
@@ -567,8 +601,9 @@ export default function EventsScreen() {
           </View>
         )
 
-        const renderEvent = (item: EventWithDetails) => (
+        const renderCard = (item: EventWithDetails) => (
           <View style={{ paddingHorizontal: theme.spacing.lg }}>
+            {sponsoredIds.has(item.id) && <SponsoredLabel />}
             {item._external ? (
               <ExternalSessionCard session={item._external} />
             ) : (
@@ -582,12 +617,30 @@ export default function EventsScreen() {
           </View>
         )
 
+        // The card, then any ads planned after it (planFeedAds).
+        const renderEvent = (item: EventWithDetails) => {
+          const ads = adPlan.get(item.id)
+          if (!ads) return renderCard(item)
+          return (
+            <>
+              {renderCard(item)}
+              {ads.map(ad => ad.kind === 'banner' ? (
+                <View key={`ad-${ad.banner.id}`} style={{ paddingHorizontal: theme.spacing.lg }}>
+                  <FeedBanner banner={ad.banner} />
+                </View>
+              ) : (
+                <React.Fragment key={`sponsored-${ad.event.id}`}>{renderCard(ad.event)}</React.Fragment>
+              ))}
+            </>
+          )
+        }
+
         // Doc-scroll mode: plain View in document flow — the BODY scrolls
         // (window scroll listener above handles load-more + tab bar hide).
         // Keep full tree mounted so Safari/Chrome can collapse URL bars.
         if (docScrollActive) {
           return (
-            <View ref={feedContentRef} style={{ paddingBottom: tabBarHeight + 32 }}>
+            <View ref={feedContentRef} onLayout={feedDocLayout} style={{ paddingBottom: tabBarHeight + 32 }}>
               <DocPullToRefresh {...refreshControl.props} />
               <View style={{ paddingHorizontal: theme.spacing.lg }}>{railNode}</View>
               <View testID="events-feed">

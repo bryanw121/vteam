@@ -8,7 +8,7 @@ import { Slot } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabsActiveContext, TabsContext, TabsShellContext } from "../../../contexts/tabs";
 import { useWebNav } from "../../../contexts/webNav";
-import { theme, BREAKPOINTS, TABS, TIGHT_TEXT_SCALE, tabIndexFromPath } from "../../../constants";
+import { theme, BREAKPOINTS, TABS, TIGHT_TEXT_SCALE, tabIndexFromPath, SWIPE_NAVIGATION } from "../../../constants";
 import type { CreateMenuOption } from "../../../constants";
 import { CreateMenuList } from "../../../components/CreateMenuList";
 import { useChatUnread } from "../../../hooks/useChatUnread";
@@ -213,9 +213,9 @@ export default function TabsLayout() {
               headerShadowVisible: false,
               headerTintColor: theme.colors.primary,
               headerStyle: { backgroundColor: theme.colors.background },
-              gestureEnabled: true,
+              gestureEnabled: SWIPE_NAVIGATION.back,
               animation: "slide_from_right",
-              ...(Platform.OS === "ios" && !isMain
+              ...(SWIPE_NAVIGATION.back && Platform.OS === "ios" && !isMain
                 ? { fullScreenGestureEnabled: true }
                 : {}),
               contentStyle: {

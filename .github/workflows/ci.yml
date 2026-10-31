@@ -60,7 +60,7 @@ jobs:
           name: coverage
           path: coverage/
           retention-days: 14
-      - run: node --test scripts/*.test.mjs
+      - run: node --test scripts/*.test.mjs scripts/shots/*.test.mjs
 
   # The web build runs in parallel with docs/unit, outside the shared e2e lock,
   # so the serialized e2e job only installs and runs tests.
@@ -94,6 +94,72 @@ jobs:
           name: web-dist
           path: dist/
           retention-days: 1
+      # Second export against the scripts/shots mock project (same env as
+      # scripts/shots/compare.mjs), for the a11y job: every Supabase call is
+      # answered from fixtures, so it needs no secrets and never touches beta.
+      - name: Web build (shots mock, for a11y)
+        # --clear: the first export warmed the Metro cache with the beta URL inlined.
+        run: npx expo export -p web --clear --output-dir dist-mock
+        env:
+          CI: '1'
+          EXPO_NO_TELEMETRY: '1'
+          EXPO_PUBLIC_SUPABASE_URL: https://shotsmock.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: shots-mock-anon-key
+          EXPO_PUBLIC_SENTRY_DSN: ''
+          EXPO_PUBLIC_APP_ENV: development
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist-mock
+          path: dist-mock/
+          retention-days: 1
+
+  # axe-core (WCAG 2.1 AA) on every scripts/shots screen, mobile and desktop,
+  # against the mock export: no secrets, no Supabase, so it is not in the e2e
+  # concurrency groups. Fails on a serious/critical violation that is not in
+  # scripts/shots/a11y-baseline.json (see CLAUDE.md "Test layers").
+  a11y:
+    name: Accessibility (axe)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Install Chromium system deps
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist-mock
+          path: dist-mock/
+      - name: axe scan vs baseline
+        run: npm run a11y -- --dist dist-mock --out a11y-report
+      - name: Job summary
+        if: always() && hashFiles('a11y-report/summary.md') != ''
+        run: cat a11y-report/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload a11y report
+        if: always() && hashFiles('a11y-report/a11y-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report
+          path: a11y-report/
+          retention-days: 14
 
   e2e-shard:
     name: E2E (${{ matrix.shard }})
@@ -128,7 +194,7 @@ jobs:
           - shard: api
             specs: e2e/rls.spec.ts
           - shard: other
-            specs: e2e/guest.spec.ts e2e/legal.guest.spec.ts e2e/tour.guest.spec.ts e2e/pull-to-refresh.guest.spec.ts e2e/metrics.guest.spec.ts e2e/profile.spec.ts e2e/book.guest.spec.ts e2e/book.spec.ts e2e/textSize.spec.ts e2e/surfaces.spec.ts
+            specs: e2e/guest.spec.ts e2e/legal.guest.spec.ts e2e/tour.guest.spec.ts e2e/pull-to-refresh.guest.spec.ts e2e/metrics.guest.spec.ts e2e/profile.spec.ts e2e/reminders.spec.ts e2e/book.guest.spec.ts e2e/book.spec.ts e2e/textSize.spec.ts e2e/surfaces.spec.ts e2e/scrollRestore.spec.ts
     # Credentials of the dedicated e2e account (repository secrets). Required:
     # e2e/env.ts fails fast with a clear message when they are missing, which is
     # also what happens on PRs from forks (secrets are not exposed to them).

@@ -22,4 +22,6 @@ export const STALE = {
   conversations: 30_000,
   /** Court availability from Schelagg (Book a court). Its API caches 60s, so refetching sooner gains nothing. */
   courts: 60_000,
+  /** Curated reference lists that change only by migration (major_cities). */
+  reference: 60 * 60_000,
 } as const

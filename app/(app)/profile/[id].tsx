@@ -16,6 +16,7 @@ import { normalizeProfileRow, PROFILE_BRIEF_SELECT } from '../../../hooks/useMyP
 import { routes } from '../../../utils/routes'
 import { useSilencedUsers } from '../../../hooks/useSilencedUsers'
 import { useOpenDm } from '../../../hooks/useOpenDm'
+import { usePointsBalance } from '../../../hooks/usePoints'
 import {
   resolveProfileAvatarUriWithError,
   volleyballSkillLevelLabel,
@@ -48,6 +49,7 @@ export default function UserProfileDetail() {
   const [refreshing, setRefreshing] = useState(false)
   const [toast, setToast] = useState<{ message: string; variant: 'error' | 'success' | 'info' } | null>(null)
   const { silencedUserIds, silenceUser, unsilenceUser } = useSilencedUsers()
+  const points = usePointsBalance(id)
 
   const loadProfile = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true)
@@ -90,7 +92,7 @@ export default function UserProfileDetail() {
   async function handleRefresh() {
     setRefreshing(true)
     try {
-      await loadProfile({ silent: true })
+      await Promise.all([loadProfile({ silent: true }), points.refetch({ force: true })])
     } finally {
       setRefreshing(false)
     }
@@ -255,7 +257,7 @@ export default function UserProfileDetail() {
               </Text>
             ) : null}
 
-            {/* Stat trio */}
+            {/* Stats */}
             <View style={{
               flexDirection: 'row', gap: 1, marginTop: 14,
               borderRadius: 14, overflow: 'hidden',
@@ -270,6 +272,10 @@ export default function UserProfileDetail() {
               <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
                 <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{totalCheers}</Text>
                 <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Cheers</Text>
+              </View>
+              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
+                <Text testID="user-profile-points-count" style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{points.data ?? 0}</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Points</Text>
               </View>
               <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
                 <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>0</Text>
