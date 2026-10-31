@@ -1,3 +1,4 @@
+// TODO regenerate from live at merge: event_reminder_log, user_settings.reminder_lead_minutes, event_reminder_text and send_event_reminders were added by hand to match `supabase gen types` (PR for #129, migration 20261101090000_event_reminders).
 export type Json =
   | string
   | number
@@ -636,6 +637,39 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_reminder_log: {
+        Row: {
+          event_id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reminder_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reminder_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1852,18 +1886,21 @@ export type Database = {
       user_settings: {
         Row: {
           home_city_id: string | null
+          reminder_lead_minutes: number
           seen_banners: string[]
           updated_at: string
           user_id: string
         }
         Insert: {
           home_city_id?: string | null
+          reminder_lead_minutes?: number
           seen_banners?: string[]
           updated_at?: string
           user_id: string
         }
         Update: {
           home_city_id?: string | null
+          reminder_lead_minutes?: number
           seen_banners?: string[]
           updated_at?: string
           user_id?: string
@@ -2015,6 +2052,18 @@ export type Database = {
         Args: { p_invite_id: string }
         Returns: string
       }
+      event_reminder_text: {
+        Args: {
+          p_location: string
+          p_now?: string
+          p_starts_at: string
+          p_title: string
+        }
+        Returns: {
+          body: string
+          title: string
+        }[]
+      }
       find_or_create_dm: { Args: { other_user_id: string }; Returns: string }
       get_chat_unread_count: { Args: never; Returns: number }
       get_email_by_username: { Args: { p_username: string }; Returns: string }
@@ -2092,6 +2141,7 @@ export type Database = {
       rollup_app_events: { Args: { p_days?: number }; Returns: number }
       schema_fingerprint: { Args: never; Returns: Json }
       schema_pending_changes: { Args: never; Returns: Json }
+      send_event_reminders: { Args: never; Returns: number }
       send_kudos_reminders: { Args: never; Returns: undefined }
     }
     Enums: {

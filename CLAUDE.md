@@ -156,7 +156,7 @@ signatures. Regenerate it after every schema change; never hand-edit it. Key dom
 - **cheers**, **user_badges**, **notifications**, **push_tokens**, **feedback_submissions**
 - **app_events**: insert-only usage metrics (see "Usage metrics"); **app_events_daily**: their per-day totals, kept forever
 
-Also **user_settings** (private per-user settings: home city, seen banners).
+Also **user_settings** (private per-user settings: home city, seen banners, reminder lead time) and **event_reminder_log** (service-only reminder dedupe).
 
 Custom RPCs include `get_email_by_username` (username login), `get_my_conversations`,
 `get_event_card_attendee_previews`, `get_feed_span` (the Events feed for a date range in one call; `useMonthEvents` falls back to separate queries if it is missing), `mark_conversation_read`, `mark_notification_read`.
@@ -238,6 +238,9 @@ The policy text lives in `constants/legal.ts` (Markdown subset, rendered by `com
 
 ### Text size
 Every font size is a token in `theme.font` (`size`, `heading`, `emoji`, `watermark`; nothing below 11px), and every `Text` / `TextInput` is imported from `components/ui/Text`, never from `react-native` (`__tests__/textSizeFloor.test.ts` enforces both). That wrapper multiplies the style's own `fontSize` and `lineHeight` by the text size setting (Settings → Display: Small 0.9×, Default, Large 1.15×, Extra large 1.3×; `TextScaleProvider` in `contexts/textScale.tsx`, stored on the device) and the OS/browser text size: on native React Native applies Dynamic Type itself and the wrapper caps it through `maxFontSizeMultiplier`; on web, where react-native-web emits fixed px, it reads the root font size. `maxFontSizeMultiplier` on the wrapper caps the combined scale (default `MAX_TEXT_SCALE`, 2×); pass `TIGHT_TEXT_SCALE` (1.3×) for fixed-size UI (tab bar labels, unread pips) and `COMPACT_TEXT_SCALE` (1.15×) for rows of equal cells on a 320px phone (week strip dates, event tabs). Non-`Text` sizes (SVG labels) use `useScaledFontSize(token)`. Check new layouts at Extra large.
+
+### Notifications, push and reminders
+Inbox rows (`notifications`) are written by database triggers and jobs (clients never insert them, except the few event flows RLS allows). Every row is also pushed: a Database Webhook on `notifications` INSERT calls the `send-notification-push` edge function, which honours `profiles.notification_prefs.push.<type>` and sends the row's `data.deep_link` (`chat_mention` is skipped; `send-chat-push` covers chat). Tapping any push opens its deep link through `isAppPath` (`subscribeToPushTaps` in `utils/pushNotifications.ts`, wired in `app/_layout.tsx`). So a new notification type needs only its row, a `deep_link`, and an entry in `NOTIFICATION_TYPES` plus the check constraint. Event reminders come from the `event-reminders` pg_cron job (`send_event_reminders()`, informational only: "<title> at 4:00 PM" / "Starts in 2 hours · <location>"), at `user_settings.reminder_lead_minutes` (Settings → Notifications → Reminders), once per player per event (`event_reminder_log`). Hosts and co-hosts get `late_dropout` when an attending player leaves within 24h.
 
 ### Share links and link previews
 Sharing an event always sends an https link to the web app, `shareUrl(routes.event(id))` from `constants/share.ts` (`WEB_ORIGIN`: `EXPO_PUBLIC_WEB_ORIGIN`, else `https://vteamvolleyball.com`; on web with no env, the page's own origin), never `Linking.createURL` (`vteam://` opens nothing for people without the app). The text comes from `eventShareMessage` in `utils/eventShare.ts`, which writes times in `SHARE_TIME_ZONE` (America/Chicago).

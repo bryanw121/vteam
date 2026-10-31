@@ -92,6 +92,8 @@ export const NOTIFICATION_PREF_TYPES = [
   'join_request',
   'request_approved',
   'request_denied',
+  'event_reminder',
+  'late_dropout',
 ] as const
 
 /** Must match the `notifications_notification_type_check` constraint in Supabase exactly. */
@@ -124,6 +126,17 @@ export type NotificationData = {
   cheer_id?: string
   deep_link?: string
   badge_type?: string
+  /** late_dropout: the player who left. */
+  user_id?: string
+}
+
+/** The `data` of a push as the app receives it (send-notification-push / send-chat-push). */
+export type PushData = {
+  deep_link?: unknown
+  event_id?: unknown
+  conversation_id?: unknown
+  notification_id?: unknown
+  notification_type?: unknown
 }
 
 /**
@@ -410,9 +423,25 @@ export type MembershipType = 'open' | 'invite'
 export type MajorCity = Tables<'major_cities'>
 
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
-export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners'> & {
+export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
   home_city: MajorCity | null
 }
+
+/** Allowed values of `user_settings.reminder_lead_minutes` (its check constraint): 1 hour, 2 hours, a day. */
+export type ReminderLeadMinutes = 60 | 120 | 1440
+
+/** A row of Settings → Notifications: label, optional subtitle and a switch. */
+export type NotificationSettingRowProps = {
+  label: string
+  subtitle?: string
+  value: boolean
+  disabled?: boolean
+  onValueChange: (v: boolean) => void
+  testID?: string
+}
+
+/** Title and body of an event reminder (`event_reminder_text` in the database; `utils/reminders.ts` mirrors it). */
+export type ReminderCopy = { title: string; body: string }
 
 /**
  * A one-time banner (constants/banners.ts): shown the first time someone opens
@@ -927,6 +956,8 @@ export type ChipProps = {
   onPress: () => void
   badge?: number | string
   variant?: ChipVariant
+  /** 'radio' for one choice out of a set (inside a `role="radiogroup"`): exposes `aria-checked`, which web and native both read. Default 'button' (a filter). */
+  role?: 'button' | 'radio'
   testID?: string
 }
 

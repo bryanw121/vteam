@@ -18,6 +18,8 @@ export const theme = {
     // Text
     text:         '#EDEAFF',   // near-white with violet tint
     subtext:      '#7A7699',   // muted lavender-grey
+    /** Secondary text that must stay readable: at least 4.5:1 on `card` and `background`, even inside a row dimmed to 72% (a read notification). */
+    subtextStrong: '#B5B1D4',
     // Borders
     border:       '#2C2848',   // dark purple border
     borderSoft:   '#211D3A',   // very subtle

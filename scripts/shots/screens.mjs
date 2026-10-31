@@ -79,7 +79,10 @@ export const SCREENS = {
   // ── Settings ────────────────────────────────────────────────────────────
   'settings-account': { route: '/settings/account', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/account.tsx'] },
   'settings-display': { route: '/settings/display', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/display.tsx', 'contexts/textScale.tsx'] },
-  'settings-notifications': { route: '/settings/notifications', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/notifications.tsx'] },
+  'settings-notifications': {
+    route: '/settings/notifications', ready: 'Reminders',
+    sources: [...SETTINGS, 'app/(app)/(tabs)/settings/notifications.tsx', 'constants/notifications.ts', 'utils/notificationPrefs.ts', 'utils/reminders.ts', 'hooks/useUserSettings.ts'],
+  },
   'settings-history': { route: '/settings/history', ready: 'Halloween Warm-up', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/history.tsx'] },
   'settings-hosted': { route: '/settings/hosted', ready: 'Sand Doubles at Butler', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hosted.tsx'] },
   'settings-cheers': { route: '/settings/cheers', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/cheers.tsx', 'components/CheerRadarChart.tsx'] },

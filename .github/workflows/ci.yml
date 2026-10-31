@@ -194,7 +194,7 @@ jobs:
           - shard: api
             specs: e2e/rls.spec.ts
           - shard: other
-            specs: e2e/guest.spec.ts e2e/legal.guest.spec.ts e2e/tour.guest.spec.ts e2e/pull-to-refresh.guest.spec.ts e2e/metrics.guest.spec.ts e2e/profile.spec.ts e2e/book.guest.spec.ts e2e/book.spec.ts e2e/textSize.spec.ts e2e/surfaces.spec.ts
+            specs: e2e/guest.spec.ts e2e/legal.guest.spec.ts e2e/tour.guest.spec.ts e2e/pull-to-refresh.guest.spec.ts e2e/metrics.guest.spec.ts e2e/profile.spec.ts e2e/reminders.spec.ts e2e/book.guest.spec.ts e2e/book.spec.ts e2e/textSize.spec.ts e2e/surfaces.spec.ts
     # Credentials of the dedicated e2e account (repository secrets). Required:
     # e2e/env.ts fails fast with a clear message when they are missing, which is
     # also what happens on PRs from forks (secrets are not exposed to them).

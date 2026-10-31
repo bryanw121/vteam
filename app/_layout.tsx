@@ -20,13 +20,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider, useSession } from '../contexts/session'
 import { TextScaleProvider } from '../contexts/textScale'
-import { routes, toRoute } from '../utils/routes'
+import { isAppPath, routes, toRoute } from '../utils/routes'
 import { isProtectedPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
 import { supabase } from '../lib/supabase'
 import { theme } from '../constants'
 import { initSentry, Sentry } from '../lib/sentry'
 import { SentryErrorBoundary } from '../components/SentryErrorBoundary'
-import { registerPushToken } from '../utils/pushNotifications'
+import { registerPushToken, subscribeToPushTaps } from '../utils/pushNotifications'
 import { useMinVersion } from '../hooks/useMinVersion'
 import { useCacheUserScope } from '../hooks/useCacheUserScope'
 import { UpdateRequiredScreen } from '../components/UpdateRequiredScreen'
@@ -137,6 +137,18 @@ function RootNavigator() {
     void prefetchUserAvatar()
     void registerPushToken()
   }, [userId])
+
+  // Tapping a push (any type, chat included) opens its deep link. Paths are
+  // checked again here: only in-app paths reach the router. Waits for the
+  // navigator and the restored session (so a cold-start tap isn't bounced to
+  // login); the auth gate still applies to whatever opens.
+  const navReady = hydrated && !loading
+  useEffect(() => {
+    if (!navReady) return
+    return subscribeToPushTaps(path => {
+      if (isAppPath(path)) router.push(toRoute(path))
+    })
+  }, [navReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keep Sentry user context in sync with auth state
   useEffect(() => {

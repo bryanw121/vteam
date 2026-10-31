@@ -2,7 +2,8 @@
  * Integration tests for row level security and key RPCs (#12), run against the
  * CI Supabase project (vteam beta) with its public anon key and the e2e
  * account. No browser. Nothing here writes: every insert is one RLS must
- * reject, and `find_or_create_dm` finds the existing seed DM.
+ * reject, `find_or_create_dm` finds the existing seed DM, and the reminder
+ * lead-time check writes back the account's current value.
  *
  * Asserts the policies as they are on main; drafts that tighten them (#100+)
  * update these expectations in their own PRs.
@@ -19,6 +20,8 @@ const BUDDY_ID = 'b0dd1e00-0000-4000-8000-0000000e2e02'
 const SEED_DM_ID = '1e473b01-c06a-48b0-9308-21b3f593f603'
 /** Postgres "insufficient_privilege": what PostgREST returns when a policy rejects a row. */
 const RLS_DENIED = '42501'
+/** Postgres "check_violation". */
+const CHECK_FAILED = '23514'
 
 type Result<T> = { data: T | null; error: { message: string; code?: string } | null; count?: number | null }
 
@@ -81,6 +84,15 @@ test.describe('anon (guest browsing)', () => {
     expect(dm.data ?? []).toEqual([])
   })
 
+  test('cannot run the reminder job or read its ledger (#129)', async () => {
+    const run = await q(() => anon.rpc('send_event_reminders'), 'anon send_event_reminders')
+    expect(run.error, 'anon may not run send_event_reminders').not.toBeNull()
+    expect(run.data).toBeNull()
+    const log = await q(() => anon.from('event_reminder_log').select('*').limit(1), 'anon event_reminder_log')
+    if (log.error) expect(log.error.code).toBe(RLS_DENIED)
+    else expect(log.data).toEqual([])
+  })
+
   test('cannot write events or RSVPs', async () => {
     const ev = await q(() => anon.from('events').insert({ title: '[e2e rls] must fail', event_date: new Date().toISOString(), created_by: BUDDY_ID }).select('id'), 'anon insert event')
     expect(ev.error?.code).toBe(RLS_DENIED)
@@ -130,6 +142,45 @@ test.describe('signed in as the e2e account', () => {
     const profile = await q(() => me.from('profiles').update({ first_name: 'E2E' }).eq('id', BUDDY_ID).select('id'), "update buddy's profile")
     // UPDATE with a USING policy filters the row out: no error, zero rows changed.
     expect(profile.data ?? []).toEqual([])
+  })
+
+  test('event reminders (#129): the job and its ledger are server-only', async () => {
+    const run = await q(() => me.rpc('send_event_reminders'), 'send_event_reminders')
+    expect(run.error, 'a signed-in user may not run send_event_reminders').not.toBeNull()
+    expect(run.data).toBeNull()
+
+    const log = await q(() => me.from('event_reminder_log').select('*').limit(1), 'event_reminder_log')
+    if (log.error) expect(log.error.code).toBe(RLS_DENIED)
+    else expect(log.data).toEqual([])
+    const event = await q(() => me.from('events').select('id').limit(1), 'any event')
+    const eventId = (event.data as { id: string }[] | null)?.[0]?.id ?? crypto.randomUUID()
+    const logInsert = await q(() => me.from('event_reminder_log').insert({ event_id: eventId, user_id: myId }), 'insert reminder log')
+    expect(logInsert.error?.code).toBe(RLS_DENIED)
+
+    // Clients still never insert notifications, the new types included.
+    const fake = await q(() => me.from('notifications').insert({
+      user_id: myId, notification_type: 'event_reminder', title: '[e2e rls] must fail', body: 'x', data: { event_id: eventId },
+    }), 'insert event_reminder notification')
+    expect(fake.error?.code).toBe(RLS_DENIED)
+  })
+
+  test('reminder lead time (#129): only 1h / 2h / a day, own row only', async () => {
+    const mine = await q(() => me.from('user_settings').select('reminder_lead_minutes').eq('user_id', myId).maybeSingle(), 'my lead time')
+    expect(mine.error).toBeNull()
+    const current = (mine.data as { reminder_lead_minutes: number } | null)?.reminder_lead_minutes ?? 120
+    expect([60, 120, 1440]).toContain(current)
+
+    // An insert-or-update of an invalid value fails the check, so nothing is written either way.
+    const bad = await q(() => me.from('user_settings').upsert({ user_id: myId, reminder_lead_minutes: 5 }, { onConflict: 'user_id' }), 'lead 5')
+    expect(bad.error?.code).toBe(CHECK_FAILED)
+
+    // A valid value is accepted (writes back the current one: no change).
+    const ok = await q(() => me.from('user_settings').update({ reminder_lead_minutes: current }).eq('user_id', myId), 'lead valid')
+    expect(ok.error).toBeNull()
+
+    // Someone else's row: filtered out by RLS, zero rows changed.
+    const buddy = await q(() => me.from('user_settings').update({ reminder_lead_minutes: 60 }).eq('user_id', BUDDY_ID).select('user_id'), "buddy's lead")
+    expect(buddy.data ?? []).toEqual([])
   })
 
   test('find_or_create_dm returns the existing DM with e2ebuddy, every time', async () => {
