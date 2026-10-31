@@ -94,6 +94,29 @@ test.describe('anon (guest browsing)', () => {
   })
 })
 
+test.describe('event_payments ("I\'ve paid", #6)', () => {
+  test('anon reads nothing and cannot write', async () => {
+    const res = await q(() => anon.from('event_payments').select('*').limit(1), 'anon event_payments')
+    if (res.error) expect(res.error.code, `anon event_payments: ${res.error.message}`).toBe(RLS_DENIED)
+    else expect(res.data).toEqual([])
+    const ins = await q(() => anon.from('event_payments').insert({ event_id: crypto.randomUUID(), user_id: BUDDY_ID }), 'anon insert event_payments')
+    expect(ins.error?.code).toBe(RLS_DENIED)
+  })
+
+  test('a signed-in user cannot mark someone else paid, and sees no one else\'s flags', async () => {
+    const ins = await q(() => me.from('event_payments').insert({ event_id: crypto.randomUUID(), user_id: BUDDY_ID }), 'insert for buddy')
+    expect(ins.error?.code).toBe(RLS_DENIED)
+    const others = await q(() => me.from('event_payments').select('user_id').neq('user_id', myId).limit(1), 'others flags')
+    expect(others.error).toBeNull()
+    expect(others.data).toEqual([])
+  })
+
+  test('cannot mark yourself paid on an event you are not on', async () => {
+    const ins = await q(() => me.from('event_payments').insert({ event_id: crypto.randomUUID(), user_id: myId }), 'insert self, no RSVP')
+    expect(ins.error?.code).toBe(RLS_DENIED)
+  })
+})
+
 test.describe('signed in as the e2e account', () => {
   test("reads its own DM, not other people's private rows", async () => {
     const msgs = await q(() => me.from('messages').select('id', { count: 'exact', head: true }).eq('conversation_id', SEED_DM_ID), 'my seed messages')

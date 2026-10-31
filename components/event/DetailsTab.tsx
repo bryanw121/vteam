@@ -9,9 +9,10 @@ import { ProfileAvatar } from '../ProfileAvatar'
 import { DocScrollView } from '../DocScrollView'
 import { LinkedText } from '../LinkedText'
 import { VenmoPayButton } from '../VenmoPayButton'
+import { PaidToggle } from './PaidToggle'
 import { shared, theme, LOCATIONS } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
-import type { EventData } from '../../types'
+import type { EventData, EventPaymentsApi } from '../../types'
 import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, profileAvatarSmallUri } from '../../utils'
 
 function formatEndTime(startIso: string, durationMinutes: number): string {
@@ -116,6 +117,8 @@ type Props = {
   onOpenProfile: (userId: string) => void
   onMessageHost: (hostId: string) => void
   onManageCohosts: () => void
+  /** "I've paid" toggle; null when the viewer can't set one (free event, not on the roster, the creator). */
+  payments: EventPaymentsApi | null
 }
 
 export function DetailsTab({
@@ -129,6 +132,7 @@ export function DetailsTab({
   onOpenProfile,
   onMessageHost,
   onManageCohosts,
+  payments,
 }: Props) {
   const { refreshing, refresh: onRefresh, cohosts, userId } = data
   const totalAttending = eventStatus.count
@@ -408,6 +412,9 @@ export function DetailsTab({
               label={`Pay $${formatPriceAmount(event.price)} via Venmo`}
             />
           </View>
+        )}
+        {payments && (
+          <PaidToggle paid={payments.iPaid} saving={payments.saving} onChange={payments.setPaid} />
         )}
 
       </View>

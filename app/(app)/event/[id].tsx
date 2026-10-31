@@ -15,12 +15,14 @@ import {
   forgetDeletedEvent,
   guestRemoveTarget,
   isEventOver,
+  paymentVisibility,
   reportEventError,
   useCohosts,
   useEventAttendance,
   useEventCheers,
   useEventComments,
   useEventData,
+  useEventPayments,
   useEventTeams,
   useKeyboardInset,
   useRemoveDialog,
@@ -173,6 +175,12 @@ export default function EventDetail() {
     userId,
     isHostOrCohost,
   })
+  // "I've paid" (#6): paid events only, for the attendee and the hosts.
+  const paymentAccess = paymentVisibility({ event, userId, status: eventStatus, isHostOrCohost })
+  const payments = useEventPayments(id, userId, {
+    enabled: paymentAccess.canToggle || paymentAccess.canSeeAll,
+    onRoster: eventStatus.isAttending || eventStatus.isWaitlisted,
+  })
   // An explicit host setting; never inferred from price.
   const requiresApproval = event?.requires_approval === true
   const [footerHeight, setFooterHeight] = useState(80)
@@ -278,6 +286,7 @@ export default function EventDetail() {
                   onOpenProfile={openProfile}
                   onMessageHost={hostId => { void openDm(hostId) }}
                   onManageCohosts={cohostsApi.open}
+                  payments={paymentAccess.canToggle ? payments : null}
                 />
               ) : placeholder}
 
@@ -298,6 +307,7 @@ export default function EventDetail() {
                   onDeny={(uid, displayName) => setDenyTarget({ userId: uid, displayName })}
                   onMessage={uid => { void openDm(uid) }}
                   silencedUserIds={silencedUserIds}
+                  payments={paymentAccess.canSeeAll ? payments : null}
                 />
               ) : placeholder}
 

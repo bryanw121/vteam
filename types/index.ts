@@ -1174,6 +1174,7 @@ export type ZoneLayout = { top: number; bottom: number }
 export type EventData = ReturnType<typeof import('../hooks/event/useEventData').useEventData>
 export type EventAttendanceApi = ReturnType<typeof import('../hooks/event/useEventAttendance').useEventAttendance>
 export type EventCommentsApi = ReturnType<typeof import('../hooks/event/useEventComments').useEventComments>
+export type EventPaymentsApi = ReturnType<typeof import('../hooks/event/useEventPayments').useEventPayments>
 export type EventCheersApi = ReturnType<typeof import('../hooks/event/useEventCheers').useEventCheers>
 export type CohostsApi = ReturnType<typeof import('../hooks/event/useCohosts').useCohosts>
 export type EventTeamsApi = ReturnType<typeof import('../hooks/event/useEventTeams').useEventTeams>
