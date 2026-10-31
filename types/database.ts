@@ -1300,6 +1300,8 @@ export type Database = {
           selected_border: string | null
           selected_card_bg: string | null
           skill_level: string | null
+          terms_accepted_at: string | null
+          terms_version: string | null
           username: string | null
         }
         Insert: {
@@ -1315,6 +1317,8 @@ export type Database = {
           selected_border?: string | null
           selected_card_bg?: string | null
           skill_level?: string | null
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           username?: string | null
         }
         Update: {
@@ -1330,6 +1334,8 @@ export type Database = {
           selected_border?: string | null
           selected_card_bg?: string | null
           skill_level?: string | null
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           username?: string | null
         }
         Relationships: []
