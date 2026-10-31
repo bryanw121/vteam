@@ -30,3 +30,8 @@ verify_jwt = true
 # verifies the user JWT and the function checks the caller owns the row.
 [functions.send-feedback-email]
 verify_jwt = true
+
+# Admin-only (#10): called by scripts/generate-badge-art.mjs with an admin's
+# session. The gateway verifies the JWT; the function checks admin itself.
+[functions.generate-badge-art]
+verify_jwt = true

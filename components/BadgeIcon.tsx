@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { badgeTierLabel, BADGE_CATEGORY_GRADIENTS, type BadgeDef } from '../constants/badges'
 import { theme } from '../constants/theme'
+import { useBadgeArt } from '../hooks/useBadgeArt'
 
 type Props = {
   def: BadgeDef
@@ -35,10 +36,13 @@ export function BadgeIcon({ def, tier, size = 'sm', showLabel = false, slotNumbe
   const [topColor, bottomColor] = BADGE_CATEGORY_GRADIENTS[def.type] ?? ['#888', '#444']
   const label = earned ? badgeTierLabel(def, tier!) : def.tiers[0].label
 
-  // Resolve image URI: per-tier image takes precedence over a single imageUri
-  const resolvedImageUri = (earned && def.tierImageUris?.[tier!]) || def.imageUri
+  // Resolve image URI: generated art for the earned tier (badge_art, #10), then
+  // the per-tier image in code, then a single imageUri, else the gradient icon.
+  const art = useBadgeArt()
+  const generatedUri = earned ? art[def.type]?.[tier!] : undefined
+  const resolvedImageUri = generatedUri || (earned && def.tierImageUris?.[tier!]) || def.imageUri
   // Tiered image badges (e.g. spike) render larger since they're detailed artwork
-  const imageScale = def.tierImageUris ? 1.4 : 1.2
+  const imageScale = generatedUri || def.tierImageUris ? 1.4 : 1.2
 
   return (
     <View style={{ alignItems: 'center', gap }}>

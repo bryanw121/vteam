@@ -807,6 +807,15 @@ export type BadgeType =
  */
 export type UserBadge = Override<Tables<'user_badges'>, { badge_type: BadgeType }>
 
+/**
+ * `badge_art` table (#10): generated art for one badge tier, written by the
+ * admin-only generate-badge-art edge function. Clients may read only these columns.
+ */
+export type BadgeArt = Pick<Tables<'badge_art'>, 'badge_type' | 'tier' | 'image_url'>
+
+/** Generated art URL by badge type, then tier. */
+export type BadgeArtMap = Record<string, Record<number, string>>
+
 // ─── Tournament Types ─────────────────────────────────────────────────────────
 
 export type TournamentStatus = 'draft' | 'published' | 'in_progress' | 'completed' | 'cancelled'
