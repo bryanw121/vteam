@@ -167,7 +167,7 @@ Custom RPCs include `get_email_by_username` (username login), `get_my_conversati
 Only React hooks (`useState`, `useRef`, `useContext`). Server state lives in `lib/query` (module-level cache behind `useQuery`/`useMutation`); global UI state lives in context (`SessionProvider` for auth, `TabsShellContext`/`TabsActiveContext` for the pager).
 
 ### Custom tab navigation
-The app does NOT use Expo Router's built-in `<Tabs>`. Instead: a custom `<Pager>` (`(tabs)/(main)/_layout.tsx`) + a custom bottom bar (`(tabs)/_layout.tsx`) on mobile and a sidebar (`(app)/_layout.tsx`) on wide web. This enables swipe animations that work on web too. All three derive from `TABS` / `CREATE_MENU` in `constants/navigation.ts`: add, reorder or rename a tab there and nowhere else. `useTabsShell()` (`contexts/tabs.ts`) lets child screens call `goToTab(index)` without circular imports; use `useTabsActive()` only where the active index is needed (it re-renders on every switch).
+The app does NOT use Expo Router's built-in `<Tabs>`. Instead: a custom `<Pager>` (`(tabs)/(main)/_layout.tsx`) + a custom bottom bar (`(tabs)/_layout.tsx`) on mobile and a sidebar (`(app)/_layout.tsx`) on wide web. Swiping between tabs, and iOS swipe-back on stack screens, are off in the native apps (they kept navigating by accident) and live behind `SWIPE_NAVIGATION` in `constants/navigation.ts`: flip `tabs` or `back` to bring either back, and give every new `<Stack>` `gestureEnabled: SWIPE_NAVIGATION.back` (`__tests__/swipeNavigation.test.ts` checks). Narrow web renders the tabs statically, and the browser's own swipe-back is the browser's. All three derive from `TABS` / `CREATE_MENU` in `constants/navigation.ts`: add, reorder or rename a tab there and nowhere else. `useTabsShell()` (`contexts/tabs.ts`) lets child screens call `goToTab(index)` without circular imports; use `useTabsActive()` only where the active index is needed (it re-renders on every switch).
 
 ### Cross-platform components use `.web.tsx`
 `DatePickerField.tsx` = native (`@react-native-community/datetimepicker`).
@@ -187,7 +187,7 @@ Import `Sentry` from `lib/sentry`, never `@sentry/react-native` directly. On web
 Import icons per family (`import Ionicons from '@expo/vector-icons/Ionicons'`), never from the `@expo/vector-icons` barrel: that pulls every icon set's glyph map into the main bundle.
 
 ### Gesture layering
-The `Pager` uses `onMoveShouldSetPanResponder` (bubble phase) to claim tab swipes. Inner components (WeekStrip, Calendar wrapper) also use bubble phase — since they're more inner, their handlers fire first and absorb the gesture before it reaches Pager. Do not use capture phase (`onMoveShouldSetPanResponderCapture`) for inner gesture handlers; that breaks the layering.
+(Applies while `SWIPE_NAVIGATION.tabs` is on; the layering is kept for when it is.) The `Pager` uses `onMoveShouldSetPanResponder` (bubble phase) to claim tab swipes. Inner components (WeekStrip, Calendar wrapper) also use bubble phase — since they're more inner, their handlers fire first and absorb the gesture before it reaches Pager. Do not use capture phase (`onMoveShouldSetPanResponderCapture`) for inner gesture handlers; that breaks the layering.
 
 ### Guest browsing
 Nobody has to sign in to look around. Guests see Events, Clubs, event pages, club pages and other players' profiles; the Chat and Profile tabs render `SignInPrompt`, and the Events/Clubs headers show `SignInButton` (top right) instead of the bell / Create.

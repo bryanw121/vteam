@@ -23,7 +23,7 @@ import { TextScaleProvider } from '../contexts/textScale'
 import { isAppPath, routes, toRoute } from '../utils/routes'
 import { isProtectedPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
 import { supabase } from '../lib/supabase'
-import { theme } from '../constants'
+import { theme, SWIPE_NAVIGATION } from '../constants'
 import { initSentry, Sentry } from '../lib/sentry'
 import { SentryErrorBoundary } from '../components/SentryErrorBoundary'
 import { registerPushToken, subscribeToPushTaps } from '../utils/pushNotifications'
@@ -190,7 +190,7 @@ function RootNavigator() {
             headerStyle: { backgroundColor: theme.colors.background },
             headerTintColor: theme.colors.primary,
             headerShadowVisible: false,
-            gestureEnabled: true,
+            gestureEnabled: SWIPE_NAVIGATION.back,
           }}
         >
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />

@@ -45,7 +45,7 @@ import { CohostsDialog } from '../../../components/event/CohostsDialog'
 import { DenyRequestDialog } from '../../../components/event/DenyRequestDialog'
 import { DeleteEventDialog } from '../../../components/event/DeleteEventDialog'
 import { RemoveParticipantDialog } from '../../../components/event/RemoveParticipantDialog'
-import { theme } from '../../../constants'
+import { theme, SWIPE_NAVIGATION } from '../../../constants'
 import type { MentionUser, Profile } from '../../../types'
 import { profileDisplayName } from '../../../utils'
 import { routes, isAppPath, toRoute } from '../../../utils/routes'
@@ -250,7 +250,7 @@ export default function EventDetail() {
       pointerEvents={removeDialog.target !== null || denyTarget !== null ? 'none' : 'auto'}
       onLayout={drag.measureContainerOffset}
     >
-      <Stack.Screen options={{ headerShown: false, gestureEnabled: true }} />
+      <Stack.Screen options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
 
       {/* Web: in-flow header row (back + actions; the banner shows the title) */}
       {Platform.OS === 'web' && headerActions}
