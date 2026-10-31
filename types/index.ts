@@ -1349,7 +1349,16 @@ export type LocationValue = {
   display: string
   latitude: number | null
   longitude: number | null
+  /** Set by LocationPickerField: the place's own name (Places `main_text`, or a curated venue label). */
+  name?: string
+  /** Set by LocationPickerField: a readable address, when known. */
+  address?: string | null
+  /** Google Places place_id, when the location came from Places search. */
+  placeId?: string | null
 }
+
+/** The `clubs` location columns (#13), as written on create / edit. All null = no fixed location. */
+export type ClubLocationFields = Pick<Tables<'clubs'>, 'location_name' | 'location_address' | 'latitude' | 'longitude' | 'place_id'>
 
 // ─── Badges, previews, tournament tabs ─────────────────────────────────────────
 
