@@ -31,6 +31,7 @@ export function TeamsTab({ teams, myTeam, viewerId, isCreator, registrationOpen,
   const approved = teams.filter(t => t.status === 'registered' && t.is_approved)
   const pending = teams.filter(t => t.status === 'registered' && !t.is_approved)
   const freeAgents = teams.filter(t => t.status === 'free_agent')
+  const waitlisted = teams.filter(t => t.status === 'waitlisted')
 
   const card = (t: TournamentTeamWithRoster) => (
     <TeamCard
@@ -65,6 +66,9 @@ export function TeamsTab({ teams, myTeam, viewerId, isCreator, registrationOpen,
 
       {pending.length > 0 && <TeamSectionLabel title="Pending Approval" count={pending.length} />}
       {pending.map(card)}
+
+      {waitlisted.length > 0 && <TeamSectionLabel title="Waitlist" count={waitlisted.length} />}
+      {waitlisted.map(card)}
 
       {freeAgents.length > 0 && <TeamSectionLabel title="Free Agents" count={freeAgents.length} />}
       {freeAgents.map(card)}
