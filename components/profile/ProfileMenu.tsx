@@ -27,6 +27,7 @@ const MENU_ITEMS: readonly MenuItem[] = [
   { title: 'History', icon: 'time-outline', section: 'history' },
   { title: 'Cheers', icon: 'star-outline', section: 'cheers' },
   { title: 'Badges', icon: 'ribbon-outline', section: 'badges' },
+  { title: 'Go ad-free', icon: 'sparkles-outline', section: 'ad-free' },
   { title: 'Submit Feedback', icon: 'chatbubble-ellipses-outline', section: 'feedback' },
 ]
 

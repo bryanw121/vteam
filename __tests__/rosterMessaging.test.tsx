@@ -271,7 +271,7 @@ function profile(id: string, first: string): Profile {
   return { id, username: id, first_name: first, last_name: 'Test', avatar_url: null } as unknown as Profile
 }
 
-function renderPeople(opts: { viewer: string; isOwner: boolean; isHostOrCohost: boolean; silenced?: string[] }) {
+function renderPeople(opts: { viewer: string; isOwner: boolean; isHostOrCohost: boolean; silenced?: string[]; paid?: string[] }) {
   const amy = profile('amy', 'Amy')
   const host = profile('host', 'Hank')
   const guest = { id: 'g1', added_by: 'amy', first_name: 'Gus', last_name: 'Guest' } as EventGuest
@@ -307,6 +307,7 @@ function renderPeople(opts: { viewer: string; isOwner: boolean; isHostOrCohost: 
     onDeny: jest.fn(),
     onMessage,
     silencedUserIds: new Set(opts.silenced ?? []),
+    payments: opts.paid ? { paidUserIds: new Set(opts.paid), refetch: jest.fn() } as never : null,
   }
   render(<PeopleTab {...props} />)
   return { onMessage, onOpenProfile, onRemoveAttendee }
@@ -357,5 +358,19 @@ describe('PeopleTab roster menu', () => {
     fireEvent.press(screen.getByLabelText('Actions for Amy Test'))
     expect(screen.getByLabelText('Message')).toBeTruthy()
     expect(screen.queryByLabelText('Remove from event')).toBeNull()
+  })
+})
+
+describe('PeopleTab "I\'ve paid" badges (#6)', () => {
+  it('shows nothing about payment when payments is null (free event / not a host)', () => {
+    renderPeople({ viewer: 'zed', isOwner: false, isHostOrCohost: false })
+    expect(screen.queryByTestId('roster-paid-summary')).toBeNull()
+    expect(screen.queryByTestId('roster-paid-badge')).toBeNull()
+  })
+
+  it('hosts see a Paid badge on exactly the players who marked paid, and a count', () => {
+    renderPeople({ viewer: 'host', isOwner: true, isHostOrCohost: true, paid: ['amy'] })
+    expect(screen.getAllByTestId('roster-paid-badge')).toHaveLength(1)
+    expect(screen.getByText(/1 of 2 marked paid/)).toBeTruthy()
   })
 })

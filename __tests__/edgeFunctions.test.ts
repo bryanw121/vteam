@@ -11,6 +11,7 @@ const root = join(__dirname, '..')
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
 const sendPush = read('supabase/functions/send-chat-push/index.ts')
+const notificationPush = read('supabase/functions/send-notification-push/index.ts')
 const checkReceipts = read('supabase/functions/check-push-receipts/index.ts')
 const places = read('supabase/functions/places-proxy/index.ts')
 const shared = read('supabase/functions/_shared/supabase.ts')
@@ -19,6 +20,7 @@ const config = read('supabase/config.toml')
 describe('push functions authenticate callers themselves', () => {
   it.each([
     ['send-chat-push', sendPush],
+    ['send-notification-push', notificationPush],
     ['check-push-receipts', checkReceipts],
   ])('%s calls requireWebhookAuth before touching the database', (_name, source) => {
     expect(source).toMatch(/import \{ requireWebhookAuth \} from '\.\.\/_shared\/webhook\.ts'/)
@@ -28,8 +30,11 @@ describe('push functions authenticate callers themselves', () => {
     expect(clientAt).toBeGreaterThan(authAt)
   })
 
-  it('send-chat-push answers malformed JSON with 400', () => {
-    expect(sendPush).toMatch(/catch \{\s*return new Response\('Invalid JSON', \{ status: 400 \}\)/)
+  it.each([
+    ['send-chat-push', sendPush],
+    ['send-notification-push', notificationPush],
+  ])('%s answers malformed JSON with 400', (_name, source) => {
+    expect(source).toMatch(/catch \{\s*return new Response\('Invalid JSON', \{ status: 400 \}\)/)
   })
 })
 
@@ -46,7 +51,7 @@ describe('shared supabase-js import', () => {
   })
 
   it('is the only place functions import it from a URL', () => {
-    for (const source of [sendPush, checkReceipts, places]) {
+    for (const source of [sendPush, notificationPush, checkReceipts, places]) {
       expect(source).not.toMatch(/esm\.sh/)
     }
   })
@@ -58,6 +63,7 @@ describe('supabase/config.toml', () => {
 
   it('turns JWT verification off only for the self-authenticating push functions', () => {
     expect(verifyJwt('send-chat-push')).toBe('false')
+    expect(verifyJwt('send-notification-push')).toBe('false')
     expect(verifyJwt('check-push-receipts')).toBe('false')
   })
 

@@ -397,6 +397,7 @@ export default function ClubsScreen() {
       ) : docScrollActive ? (
         <DocScrollView
           docScroll
+          memoryKey="tab:clubs"
           style={shared.screen}
           contentContainerStyle={{ paddingBottom: tabBarHeight + 32 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={theme.colors.primary} />}

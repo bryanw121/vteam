@@ -41,6 +41,7 @@ export type SettingsSection =
   | 'display'
   | 'feedback'
   | 'badges'
+  | 'ad-free'
 
 export type HostRouteOptions = {
   /** Event id to edit. */

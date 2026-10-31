@@ -23,7 +23,7 @@ export const CLUB_POST_FEED_SELECT = `
 const MY_LIKES_EMBED = 'my_likes:club_post_likes (club_post_id)'
 
 export const CLUB_DETAIL_SELECT =
-  'id, name, description, membership_type, created_by, avatar_url, cover_url, created_at, major_city_id, major_cities (id, display_name, city_name, admin_region, country_code), club_members (club_id, user_id, role, joined_at, profiles (id, username, first_name, last_name, avatar_url))'
+  'id, name, description, membership_type, created_by, avatar_url, cover_url, created_at, major_city_id, location_name, location_address, latitude, longitude, place_id, major_cities (id, display_name, city_name, admin_region, country_code), club_members (club_id, user_id, role, joined_at, profiles (id, username, first_name, last_name, avatar_url))'
 
 /** Cache key of a club page's header + events for one viewer (guests share `_`). */
 export function clubDetailKey(clubId: string, userId: string | null): string {

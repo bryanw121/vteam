@@ -26,6 +26,7 @@ export {
   CLUBS_TAB_INDEX,
   CHAT_TAB_INDEX,
   PROFILE_TAB_INDEX,
+  SWIPE_NAVIGATION,
 } from './navigation'
 export type { Tab, TabKey, CreateMenuOption, CreateMenuSection } from './navigation'
 export { formatEventDate, eventAttendeeDisplayCount } from '../utils'

@@ -314,6 +314,8 @@ export function buildFixtures(now) {
     { id: id('f3000000', 2), user_id: ME, notification_type: 'event_announcement', title: 'Announcement: Rec Center 6s Night', body: 'Court 3 tonight, enter through the side door.', data: { event_id: E.fridayNight }, read_at: null, created_at: t.ago(60 * 3) },
     { id: id('f3000000', 3), user_id: ME, notification_type: 'event_comment', title: 'New comment on Sand Doubles at Butler', body: 'Marcus: Running 10 minutes late, save me a spot', data: { event_id: E.sundaySand }, read_at: null, created_at: t.ago(45) },
     { id: id('f3000000', 4), user_id: ME, notification_type: 'badge_earned', title: 'Badge earned: Host', body: 'You hosted 10 events. Thanks for running games!', data: { badge_type: 'event_host', tier: 2 }, read_at: t.ago(60 * 20), created_at: t.ago(60 * 24) },
+    { id: id('f3000000', 6), user_id: ME, notification_type: 'event_reminder', title: 'Indoor Open Gym at 7:30 PM', body: 'Tomorrow at 7:30 PM · Dittmar Recreation Center', data: { event_id: E.tuesdayIndoor, deep_link: `/event/${E.tuesdayIndoor}` }, read_at: null, created_at: t.ago(30) },
+    { id: id('f3000000', 7), user_id: ME, notification_type: 'late_dropout', title: 'Olivia Davis dropped out of Setter Footwork Drills', body: 'Starts at 8:00 AM. A spot is open.', data: { event_id: E.morningDrills, deep_link: `/event/${E.morningDrills}?tab=1` }, read_at: t.ago(60 * 5), created_at: t.ago(60 * 6) },
     { id: id('f3000000', 5), user_id: ME, notification_type: 'cohost_added', title: 'You are a co-host', body: 'Jordan added you as a co-host of Indoor Open Gym', data: { event_id: E.tuesdayIndoor }, read_at: t.ago(60 * 40), created_at: t.ago(60 * 48) },
   ]
   const user_badges = [
@@ -324,7 +326,7 @@ export function buildFixtures(now) {
     { id: id('f4000000', 5), user_id: P.jordanr, badge_type: 'spike_cheer', tier: 2, awarded_at: t.iso(-6), display_order: 1, display_tier: null },
     { id: id('f4000000', 6), user_id: P.jordanr, badge_type: 'event_host', tier: 3, awarded_at: t.iso(-60), display_order: 2, display_tier: null },
   ]
-  const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], updated_at: t.iso(-3) }]
+  const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, updated_at: t.iso(-3) }]
   const chat_silences = [{ user_id: ME, silenced_user_id: P.hannahs, created_at: t.iso(-8) }]
 
   return {

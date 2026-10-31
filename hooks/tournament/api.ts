@@ -96,7 +96,8 @@ export async function fetchTournamentCore(id: string): Promise<TournamentCore> {
   return {
     // `status`/`format`/… come back as `string`; the DB CHECK constraints guarantee the unions.
     tournament: tournament as Tournament | null,
-    rules: rules satisfies TournamentRules | null,
+    // A cast, not `satisfies`: the generated row may carry columns this select leaves out (another PR's, on beta).
+    rules: rules as TournamentRules | null,
     prizes: (prizes ?? []) satisfies TournamentPrize[],
   }
 }

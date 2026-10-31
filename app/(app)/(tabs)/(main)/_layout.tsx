@@ -40,7 +40,8 @@ function nextMountedTabs(prev: Set<number>, active: number): Set<number> {
 
 /**
  * Wide web: Slot renders /, /clubs, /profile, or /chat as separate routes.
- * Mobile / narrow web: Pager swipes between Events, Clubs, Profile, Chat (tab index from TabsContext).
+ * Mobile apps: Pager holds Events, Clubs, Chat, Profile (tab index from TabsContext); swiping between them follows SWIPE_NAVIGATION.tabs.
+ * Narrow web: the tabs render statically, no pager.
  */
 export default function MainLayout() {
   const { width } = useWindowDimensions()
