@@ -148,6 +148,25 @@ test.describe('signed in as the e2e account', () => {
   })
 })
 
+test.describe('points (#4)', () => {
+  test('anon reads point balances but no ledger rows', async () => {
+    const balances = await q(() => anon.from('point_balances').select('user_id, balance').limit(1), 'anon point_balances')
+    expect(balances.error).toBeNull()
+    const ledger = await q(() => anon.from('point_events').select('id').limit(1), 'anon point_events')
+    if (ledger.error) expect(ledger.error.code, `anon point_events: ${ledger.error.message}`).toBe(RLS_DENIED)
+    else expect(ledger.data).toEqual([])
+  })
+
+  test('nobody writes points from the client', async () => {
+    const own = await q(() => me.from('point_events').insert({ user_id: myId, amount: 1000, reason: 'e2e_rls' }), 'insert own points')
+    expect(own.error?.code).toBe(RLS_DENIED)
+    const bal = await q(() => me.from('point_balances').insert({ user_id: myId, balance: 1000 }), 'insert own balance')
+    expect(bal.error?.code).toBe(RLS_DENIED)
+    const ledger = await q(() => me.from('point_events').select('user_id').neq('user_id', myId).limit(1), "others' ledger")
+    expect(ledger.data ?? []).toEqual([])
+  })
+})
+
 /**
  * #111: signed-in RPCs are no longer executable by anon. Skips while the
  * migration is not on beta (anon can still call them then).
