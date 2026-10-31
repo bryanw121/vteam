@@ -1,4 +1,3 @@
-// TODO regenerate from live at merge: app_events_daily and rollup_app_events were added by hand to match `supabase gen types` (migration 20261031050000_app_events_daily).
 export type Json =
   | string
   | number
