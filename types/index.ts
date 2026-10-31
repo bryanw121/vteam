@@ -434,6 +434,22 @@ export type BannerDef = {
  */
 export type BannerAction = { label: string; type: 'startTour'; tourId: TourId }
 
+// ─── Ads (constants/ads.ts, hooks/useFeedAds.ts, utils/feedAds.ts) ──────────
+
+/** An active house banner (`ad_banners`), as the feed renders it. */
+export type AdBanner = Pick<Tables<'ad_banners'>, 'id' | 'title' | 'body' | 'image_url' | 'link_url' | 'display_order'>
+
+/** What the feed may show as ads: active banners and the ids of events with an active sponsorship. */
+export type FeedAds = {
+  banners: AdBanner[]
+  sponsoredEventIds: string[]
+}
+
+/** One ad rendered after a feed item (utils/feedAds.ts `planFeedAds`). */
+export type FeedAdPlacement =
+  | { kind: 'banner'; banner: AdBanner }
+  | { kind: 'sponsored'; event: EventWithDetails }
+
 // ─── Tours (constants/tours.ts, contexts/tour.tsx) ───────────────────────────
 
 export type TourId = 'intro'

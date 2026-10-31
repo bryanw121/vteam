@@ -242,6 +242,13 @@ Every font size is a token in `theme.font` (`size`, `heading`, `emoji`, `waterma
 ### Points
 `point_events` is an append-only ledger (one row per change, server-written only: clients have SELECT on their own rows and nothing else); `point_balances` holds each user's total, kept by an AFTER INSERT trigger and readable by everyone (profiles show it via `usePointsBalance`). The CHECK `balance >= 0` makes any overspend fail. `award_event_points()` (pg_cron `award-event-points`, every 15 min, idempotent through unique `(user_id, event_id, reason)` / `(user_id, tournament_id, reason)`) awards attendees still `attending` once `event_date + duration_minutes` has passed: 5 for an event tagged Tournament, otherwise 2; members of approved teams in a `completed` tournament get 5. The job runs on beta too (harmless: only test accounts there), so the drift check needs no exception. Spending writes a negative row from a SECURITY DEFINER function; never update or delete ledger rows.
 
+### Ads (house banners and sponsored events)
+No ad network: two admin-managed tables. `ad_banners` (title, body, https image/link, `is_active`, `starts_at`/`ends_at`) and `sponsored_events` (`event_id` + window). RLS shows everyone only the rows inside their window; writes need `current_user_is_admin()` (checks `app_admins` once #102 is in, else `profiles.is_admin`, for `auth.uid()` server-side). `useFeedAds` reads both; `planFeedAds` (`utils/feedAds.ts`, slots in `FEED_ADS`, `constants/ads.ts`) puts the soonest sponsored event in a promoted slot after the 2nd feed item and a banner after the 5th, then every 10th. Sponsored events also keep their normal place, with `SponsoredLabel`. Every ad surface reads `useAdsEnabled()` and nothing else, so turning ads off for someone is a change in that one hook. The feed screen only asks "is this sponsored?" and "what follows this item?"; keep ad logic out of cards and out of Profile. Admins manage rows in SQL for now:
+```sql
+insert into ad_banners (title, body, image_url, link_url, ends_at) values ('Title', 'One line', 'https://…/img.jpg', 'https://…', now() + interval '14 days');
+insert into sponsored_events (event_id, ends_at) values ('<event id>', now() + interval '7 days');
+```
+
 ### Share links and link previews
 Sharing an event always sends an https link to the web app, `shareUrl(routes.event(id))` from `constants/share.ts` (`WEB_ORIGIN`: `EXPO_PUBLIC_WEB_ORIGIN`, else `https://vteamvolleyball.com`; on web with no env, the page's own origin), never `Linking.createURL` (`vteam://` opens nothing for people without the app). The text comes from `eventShareMessage` in `utils/eventShare.ts`, which writes times in `SHARE_TIME_ZONE` (America/Chicago).
 
