@@ -1,0 +1,27 @@
+sequenceDiagram
+    autonumber
+    actor P as Player leaving (App)
+    participant API as PostgREST/RLS
+    participant F as offer_next_spot(event) trigger fn
+    participant O as event_spot_offers
+    participant N as notifications + send-notification-push
+    actor W as Next on waitlist (App)
+    participant C as pg_cron expire-spot-offers (every min)
+    P->>API: DELETE event_attendees (leave), or host raises max_attendees
+    API->>F: AFTER trigger, only if events.waitlist_offers is on
+    F->>F: capacity lock, open = max − attending − guests − pending offers
+    F->>O: INSERT pending offer for oldest waitlisted not already holding one<br/>expires_at = now + hold (10 min within 2h of start)
+    F->>N: waitlist_spot_offer row: "Held for you until 3:35 PM"
+    N-->>W: push
+    alt Accept
+        W->>API: rpc accept_spot_offer(event_id)
+        API->>O: SECURITY DEFINER: pending and not expired, caller owns it
+        O-->>API: status accepted, attendee row waitlisted to attending
+        API-->>W: You're going (waitlist_promoted notice as today)
+    else Pass
+        W->>API: rpc decline_spot_offer(event_id)
+        API->>F: status declined, stays on waitlist, offer_next_spot again
+    else No answer
+        C->>O: pending offers past expires_at become expired
+        C->>F: offer_next_spot(event) for each, player stays on the waitlist
+    end

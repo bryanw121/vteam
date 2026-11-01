@@ -65,25 +65,28 @@
   {
     "date": "2026-11-01",
     "n": 1,
-    "title": "Auto-fill from the waitlist: the next person moves in, and near start the first to tap gets it",
+    "title": "Waitlist spot offers: the next person gets the spot held, and joins only if they accept",
     "bucket": "competitor-gap",
     "status": "proposed",
-    "summary": "Server-side FIFO promotion when a spot opens (fill_event_from_waitlist trigger under the capacity lock), host toggle + cutoff (default 2h); inside the cutoff all waitlisted get waitlist_spot_open and claim_waitlist_spot RPC, first tap wins. Replaces host.tsx client promotion loop that ignores guests. Meetup, BenchApp, CourtReserve."
+    "summary": "Revised at review: host opt-in (off by default); when a spot opens the next waitlisted player gets a timed hold (15/30/60 min, 10 within 2h of start) and joins only by accepting; pass/expiry moves the offer on (expired players go after never-offered ones). event_spot_offers table, accept/decline RPCs, per-minute expire cron, capacity counts holds; replaces host.tsx client promotion. Bryan rejected auto-adding without consent (fees, forgotten waitlists).",
+    "review_note": "2026-11-01: Bryan disliked auto-adding people last minute without consent (fee, forgot they were waitlisted); chose host opt-in + timed offer. Awaiting approval of the revision."
   },
   {
     "date": "2026-11-01",
     "n": 2,
     "title": "Player card setup after sign-up: position, level, home city in three skippable steps",
     "bucket": "end-user-experience",
-    "status": "proposed",
-    "summary": "/welcome stack screen shown once after first sign-in when position, skill_level and home city are empty; level options get one-line hints (SKILL_LEVEL_HINTS); marker in user_settings.seen_banners; analytics funnel. No schema. Feeds balanced teams (#149) and regional feed."
+    "status": "approved",
+    "summary": "/welcome stack screen shown once after first sign-in when position, skill_level and home city are empty; level options get one-line hints (SKILL_LEVEL_HINTS); marker in user_settings.seen_banners; analytics funnel. No schema. Feeds balanced teams (#149) and regional feed.",
+    "issue": 156
   },
   {
     "date": "2026-11-01",
     "n": 3,
     "title": "Background job health check: catch a silent pg_cron or push failure within hours",
     "bucket": "testing",
-    "status": "proposed",
-    "summary": "Anon SECURITY DEFINER job_health() RPC (cron last success/failures, Schelagg freshness, ended events with no points, push webhook non-2xx) + scripts/job-health.mjs EXPECTATIONS + job-health.yml every 3h on live and beta; GitHub emails on failure; CI requires an expectation for every cron job."
+    "status": "approved",
+    "summary": "Anon SECURITY DEFINER job_health() RPC (cron last success/failures, Schelagg freshness, ended events with no points, push webhook non-2xx) + scripts/job-health.mjs EXPECTATIONS + job-health.yml every 3h on live and beta; GitHub emails on failure; CI requires an expectation for every cron job.",
+    "issue": 157
   }
 ]
