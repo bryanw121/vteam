@@ -61,5 +61,29 @@
     "status": "tabled",
     "reason": "Bryan tabled it at review on 2026-10-31. Don't re-propose unless he raises it. Unfiled prerequisites from the same discussion: points-farming limits (hosts keep earning; min 4 other attendees, created 2h+ ahead / 30min+, daily cap, 5 pts only for real tournaments) and a Points section in the Terms.",
     "summary": "Shop-only cosmetics separate from earned borders; no pay-to-win or transfers; real prizes only after farming limits and Terms update."
+  },
+  {
+    "date": "2026-11-01",
+    "n": 1,
+    "title": "Auto-fill from the waitlist: the next person moves in, and near start the first to tap gets it",
+    "bucket": "competitor-gap",
+    "status": "proposed",
+    "summary": "Server-side FIFO promotion when a spot opens (fill_event_from_waitlist trigger under the capacity lock), host toggle + cutoff (default 2h); inside the cutoff all waitlisted get waitlist_spot_open and claim_waitlist_spot RPC, first tap wins. Replaces host.tsx client promotion loop that ignores guests. Meetup, BenchApp, CourtReserve."
+  },
+  {
+    "date": "2026-11-01",
+    "n": 2,
+    "title": "Player card setup after sign-up: position, level, home city in three skippable steps",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "/welcome stack screen shown once after first sign-in when position, skill_level and home city are empty; level options get one-line hints (SKILL_LEVEL_HINTS); marker in user_settings.seen_banners; analytics funnel. No schema. Feeds balanced teams (#149) and regional feed."
+  },
+  {
+    "date": "2026-11-01",
+    "n": 3,
+    "title": "Background job health check: catch a silent pg_cron or push failure within hours",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "Anon SECURITY DEFINER job_health() RPC (cron last success/failures, Schelagg freshness, ended events with no points, push webhook non-2xx) + scripts/job-health.mjs EXPECTATIONS + job-health.yml every 3h on live and beta; GitHub emails on failure; CI requires an expectation for every cron job."
   }
 ]

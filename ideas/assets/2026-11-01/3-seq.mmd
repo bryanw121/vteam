@@ -1,0 +1,17 @@
+sequenceDiagram
+    autonumber
+    participant GH as GitHub Actions (job-health.yml, every 3h)
+    participant S as scripts/job-health.mjs
+    participant API as PostgREST (anon key)
+    participant H as public.job_health() SECURITY DEFINER
+    participant C as cron.job / cron.job_run_details
+    participant D as external_sessions, net._http_response, point_events
+    GH->>S: node scripts/job-health.mjs (live, then beta)
+    S->>API: POST /rest/v1/rpc/job_health
+    API->>H: runs as definer: anon has EXECUTE, no table access
+    H->>C: last run + last success per jobname, failures in 24h
+    H->>D: freshness: newest external_sessions.updated_at,<br/>non-2xx push webhook responses in 24h,<br/>ended events older than 1h with no point_events
+    H-->>S: rows: check, ok, last_ok_at, detail (no secrets)
+    S->>S: compare to EXPECTATIONS (max age per job)
+    S-->>GH: job summary table, exit 1 if any check fails
+    GH->>GH: failed scheduled run, so GitHub emails the owner

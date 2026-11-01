@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    actor P as Player leaving (App)
+    participant API as PostgREST/RLS
+    participant T as Trigger fill_from_waitlist
+    participant F as fill_event_from_waitlist(event)
+    participant N as notifications + send-notification-push
+    actor W as Waitlisted players
+    P->>API: DELETE event_attendees (leave) / host removes / host raises max_attendees
+    API->>T: AFTER DELETE/UPDATE on event_attendees, event_guests, events
+    T->>F: perform fill_event_from_waitlist(event_id)
+    F->>F: pg_advisory_xact_lock('event_capacity:'+id)<br/>(same lock as enforce_event_capacity)
+    F->>F: open = max_attendees − attending players − attending guests
+    alt waitlist_autofill on AND start − now > cutoff
+        F->>F: UPDATE oldest waitlisted rows (joined_at) to attending, up to open
+        F-->>N: existing notify_on_waitlist_promoted trigger: "you're in" (+ price line)
+        N-->>W: push to the promoted player
+    else autofill on, inside the cutoff
+        F->>N: one waitlist_spot_open row per waitlisted player (deduped per spot)
+        N-->>W: push "A spot opened. First to take it plays."
+        W->>API: rpc claim_waitlist_spot(event_id)
+        API->>F: SECURITY DEFINER: same lock, recount, caller must be waitlisted
+        F-->>W: attending, or "Someone beat you to it" (still waitlisted)
+    end
