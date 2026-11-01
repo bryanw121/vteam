@@ -413,6 +413,9 @@ function step(ctx: Ctx, ev: ScoreEvent) {
       )
       return award(ctx, set, other(ev.team), 'rally', ev)
     }
+    case 'rotation_fault':
+      remark(ctx, set, `${label(ctx, ev.team)} out of rotation (positional fault); point to ${label(ctx, other(ev.team))}.`)
+      return award(ctx, set, other(ev.team), 'rally', ev)
     case 'override':
       return applyOverride(ctx, set, ev)
     case 'end_set':

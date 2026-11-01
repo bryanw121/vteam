@@ -216,6 +216,22 @@ describe('wrong server', () => {
     expect(set.serving).toBe('B')
   })
 
+  it('positional fault by the receiving team: the server keeps serving and scores', () => {
+    const s = stateOf(play(docOf(), start('A'), { type: 'rotation_fault', team: 'B' }))
+    const set = s.sets[0]
+    expect([set.teams.A.score, set.teams.B.score]).toEqual([1, 0])
+    expect(set.serving).toBe('A')
+    expect(set.teams.A.turns[0][0].points).toBe(1)
+    expect(s.remarks[0]).toMatch(/out of rotation/)
+  })
+
+  it('positional fault by the serving team: side-out, the other team rotates', () => {
+    const set = stateOf(play(docOf(), start('A'), rally('A'), { type: 'rotation_fault', team: 'A' })).sets[0]
+    expect([set.teams.A.score, set.teams.B.score]).toEqual([1, 1])
+    expect(set.serving).toBe('B')
+    expect(set.teams.B.rotation).toBe(1)
+  })
+
   it('caught before the serve: a note, no penalty', () => {
     const s = stateOf(play(docOf(), start('A'), { type: 'wrong_server', team: 'A', when: 'before-serve' }))
     expect(s.sets[0].teams.B.score).toBe(0)

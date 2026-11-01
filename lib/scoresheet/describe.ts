@@ -58,6 +58,8 @@ export function describeEvent(setup: MatchSetup, ev: ScoreEvent): string {
       return ev.when === 'before-serve'
         ? `${nameOf(setup, ev.team)}: wrong server caught before the serve`
         : `${nameOf(setup, ev.team)}: wrong server${ev.when === 'discovered-later' ? ' (found later, points cancelled)' : ''}`
+    case 'rotation_fault':
+      return `${nameOf(setup, ev.team)}: out of rotation, point ${nameOf(setup, ev.team === 'A' ? 'B' : 'A')}`
     case 'override':
       return `Corrected: ${ev.reason}`
     case 'end_set':

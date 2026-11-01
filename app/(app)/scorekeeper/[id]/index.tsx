@@ -137,12 +137,12 @@ export default function ScoreMatchScreen() {
                     })}
                   </View>
 
-                  <Pressable onPress={() => openSheet('wrong')} accessibilityRole="button" accessibilityLabel="Who should be serving; tap to report a wrong server" style={styles.serverRow} testID="server-row">
+                  <Pressable onPress={() => openSheet('wrong')} accessibilityRole="button" accessibilityLabel="Who should be serving; tap to record an out-of-rotation fault" style={styles.serverRow} testID="server-row">
                     <Ionicons name="tennisball-outline" size={18} color={TEAM_COLORS[set.serving].fill} />
                     <Text style={[shared.body, { flex: 1 }]}>
                       Serving: <Text style={{ fontFamily: theme.fonts.bodySemiBold }}>{playerLabel(m.doc.setup, set.serving, serverOf(set.teams[set.serving]))}</Text> · {teamName(m.doc, set.serving)}
                     </Text>
-                    <Text style={[shared.caption, { color: theme.colors.warning }]}>Wrong server?</Text>
+                    <Text style={[shared.caption, { color: theme.colors.warning }]}>Out of rotation?</Text>
                   </Pressable>
 
                   {set.courtSwitchAt != null && Math.max(set.teams.A.score, set.teams.B.score) === set.courtSwitchAt && (
@@ -250,7 +250,7 @@ export default function ScoreMatchScreen() {
             <View style={{ gap: theme.spacing.sm }}>
               <Button label="Scoresheet" icon="document-text-outline" variant="secondary" onPress={() => { close(); router.push(routes.scorekeeperSheet(m.doc!.id)) }} testID="more-sheet" />
               <Button label="Timeline: fix a past rally" icon="list" variant="secondary" onPress={() => setSheet('timeline')} />
-              {set && <Button label="Wrong server / out of rotation" icon="alert-circle-outline" variant="secondary" onPress={() => setSheet('wrong')} />}
+              {set && <Button label="Out of rotation (point or wrong server)" icon="alert-circle-outline" variant="secondary" onPress={() => setSheet('wrong')} />}
               {set && <Button label="Match the scoreboard" icon="construct-outline" variant="secondary" onPress={() => setSheet('fix')} testID="more-fix" />}
               {set && <Button label="Rally replayed (no point)" icon="refresh" variant="secondary" onPress={() => { m.add({ type: 'replay' }); close() }} />}
               <Button label="Add a remark" icon="create-outline" variant="secondary" onPress={() => setSheet('note')} />

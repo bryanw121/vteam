@@ -133,6 +133,11 @@ export type WrongServerEvent = EventBase & {
   sinceEventId?: string
 }
 /**
+ * Out of rotation at the moment of the serve (players out of position / overlapping), by either
+ * team. The other team gets the point (and the serve, if it didn't have it).
+ */
+export type RotationFaultEvent = EventBase & { type: 'rotation_fault'; team: TeamSide }
+/**
  * Last resort: make the app match the court (the official scoreboard, who is serving, who is
  * standing where). Every override is written into Remarks with its reason.
  */
@@ -158,6 +163,7 @@ export type ScoreEvent =
   | TimeoutEvent
   | SanctionEvent
   | WrongServerEvent
+  | RotationFaultEvent
   | OverrideEvent
   | EndSetEvent
   | NoteEvent

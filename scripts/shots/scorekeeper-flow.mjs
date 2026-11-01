@@ -150,7 +150,17 @@ try {
   await page.getByTestId('wrong-confirm').waitFor()
   await tap(page, 'wrong-discovered-later')
   await shot(page, 'wrong-server')
-  await page.getByTestId('bottom-sheet-backdrop').first().click()
+  // The receiving team was out of position at the serve: point to the serving team.
+  const servingTeam = (await page.getByTestId('server-row').innerText()).includes('Blockers') ? 'B' : 'A'
+  const receiver = servingTeam === 'A' ? 'B' : 'A'
+  const scoreBefore = await page.getByTestId(`score-${servingTeam}`).innerText()
+  await tap(page, `fault-team-${receiver}`)
+  await tap(page, 'wrong-positional')
+  await shot(page, 'rotation-fault')
+  await tap(page, 'wrong-confirm')
+  await page.waitForTimeout(400)
+  const n = s => Number((s.match(/\n(\d+)\n/) ?? [])[1])
+  check(n(await page.getByTestId(`score-${servingTeam}`).innerText()) === n(scoreBefore) + 1, 'receiving team out of rotation gives the server a point')
   await tap(page, 'score-more')
   await tap(page, 'more-fix')
   await page.getByTestId('fix-confirm').waitFor()
