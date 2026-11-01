@@ -78,6 +78,9 @@ export const SCREENS = {
 
   // ── Settings ────────────────────────────────────────────────────────────
   'settings-account': { route: '/settings/account', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/account.tsx'] },
+  'settings-experimental': { route: '/settings/experimental', ready: 'Scorekeeper', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/experimental.tsx', 'constants/experiments.ts', 'components/scoresheet/MatchRow.tsx'] },
+  scorekeeper: { route: '/scorekeeper', ready: 'New match', sources: ['app/(app)/scorekeeper/index.tsx', 'components/scoresheet/MatchRow.tsx', 'hooks/useSavedMatches.ts'] },
+  'scorekeeper-new': { route: '/scorekeeper/new', ready: 'Roster', sources: ['app/(app)/scorekeeper/new.tsx', 'lib/scoresheet/roster.ts', 'lib/scoresheet/rules.ts'] },
   'settings-display': { route: '/settings/display', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/display.tsx', 'contexts/textScale.tsx'] },
   'settings-notifications': {
     route: '/settings/notifications', ready: 'Reminders',
