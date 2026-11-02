@@ -35,10 +35,37 @@ export function setTarget(format: MatchFormat, setIndex: number): number {
   return format.setPoints[Math.min(setIndex, format.setPoints.length - 1)]
 }
 
-/** True when `a` wins a set against `b` at this target. */
-export function setIsWon(format: MatchFormat, target: number, a: number, b: number): boolean {
-  if (format.cap != null && a >= format.cap) return true
+/** Cap for a set (0-based index): its own entry in `setCaps`, else the match-wide `cap`. */
+export function setCap(format: MatchFormat, setIndex: number): number | null {
+  const own = format.setCaps?.[setIndex]
+  return own !== undefined ? own : format.cap
+}
+
+/** Score both teams start a set from (0 unless `setStarts` says otherwise). */
+export function setStart(format: MatchFormat, setIndex: number): number {
+  return Math.max(0, format.setStarts?.[setIndex] ?? 0)
+}
+
+/** True when `a` wins a set against `b` at this target and cap. */
+export function setIsWon(format: Pick<MatchFormat, 'winBy'>, target: number, a: number, b: number, cap: number | null = null): boolean {
+  if (cap != null && a >= cap) return true
   return a >= target && a - b >= format.winBy
+}
+
+/**
+ * A format with tournament options applied: sets to 21+ start at `start` and stop at `cap`;
+ * shorter (deciding) sets start at 0 with no cap.
+ */
+export function withOptions(format: MatchFormat, opts: { start?: number; cap?: number | null; timeLimitMinutes?: number | null }): MatchFormat {
+  const long = (p: number) => p >= 21
+  return {
+    ...format,
+    setPoints: [...format.setPoints],
+    cap: null,
+    setStarts: format.setPoints.map(p => (long(p) ? opts.start ?? 0 : 0)),
+    setCaps: format.setPoints.map(p => (long(p) ? opts.cap ?? null : null)),
+    timeLimitMinutes: opts.timeLimitMinutes ?? null,
+  }
 }
 
 /**

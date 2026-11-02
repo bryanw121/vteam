@@ -50,6 +50,12 @@ export type MatchFormat = {
   winBy: number
   /** A set ends at this score even without a 2-point lead; null = no cap. */
   cap: number | null
+  /** Starting score per set index, both teams (NAGVA pool play starts at 4-4); missing = 0. */
+  setStarts?: number[]
+  /** Cap per set index, overriding `cap` (e.g. 27 for sets to 25, none for the deciding set). */
+  setCaps?: (number | null)[]
+  /** Match time limit in minutes, counted from the first serve; null/missing = untimed. */
+  timeLimitMinutes?: number | null
 }
 
 export type ScoreRules = {
@@ -153,6 +159,11 @@ export type OverrideEvent = EventBase & {
 }
 /** End the set now (forfeit, default, time limit), naming the winner. */
 export type EndSetEvent = EventBase & { type: 'end_set'; winner: TeamSide; reason: string }
+/**
+ * The match clock ran out. The set in progress goes to the team ahead; if tied, the next point
+ * decides it. No further sets are played.
+ */
+export type TimeUpEvent = EventBase & { type: 'time_up' }
 export type NoteEvent = EventBase & { type: 'note'; text: string }
 
 export type ScoreEvent =
@@ -168,6 +179,7 @@ export type ScoreEvent =
   | RotationFaultEvent
   | OverrideEvent
   | EndSetEvent
+  | TimeUpEvent
   | NoteEvent
 
 /** An event before the log stamps it with an id and time. */
@@ -206,7 +218,8 @@ export type MatchSummary = {
 // ─── Derived state ────────────────────────────────────────────────────────────
 
 /** How a point is drawn on the running score. */
-export type PointMark = 'rally' | 'penalty' | 'cancelled'
+/** `start`: points a set began with (sets starting at 4-4). */
+export type PointMark = 'rally' | 'penalty' | 'cancelled' | 'start'
 
 export type ServiceTurn = {
   /** Team score when this turn ended (written in the service-round box); null while serving. */
@@ -246,6 +259,7 @@ export type WarningCode =
   | 'sub-reentry'
   | 'sub-libero'
   | 'timeout-limit'
+  | 'timeout-late'
   | 'libero-front-row'
   | 'libero-serve'
   | 'libero-not-libero'
@@ -294,6 +308,11 @@ export type SetState = {
   endReason: string | null
   /** The set point target and whether a court switch is due (deciding set at the halfway point). */
   target: number
+  /** Cap for this set (null = none) and the score both teams started from. */
+  cap: number | null
+  startScore: number
+  /** Time ran out with the set tied: the next point wins it. */
+  nextPointWins: boolean
   courtSwitchAt: number | null
   courtSwitched: boolean
   rallies: number
@@ -307,6 +326,8 @@ export type MatchState = {
   winner: TeamSide | null
   /** True when the match is decided (or every set of a pool-play match is played). */
   over: boolean
+  /** The match clock ran out (time_up recorded). */
+  timeExpired: boolean
   sanctions: SanctionRecord[]
   /** Improper requests per team (the IMPROPER REQUEST box). */
   improperRequests: Record<TeamSide, boolean>

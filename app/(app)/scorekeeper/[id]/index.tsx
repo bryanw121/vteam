@@ -18,6 +18,7 @@ import { FixSheet } from '../../../../components/scoresheet/FixSheet'
 import { TextSheet } from '../../../../components/scoresheet/TextSheet'
 import { TimelineSheet } from '../../../../components/scoresheet/TimelineSheet'
 import { TimeoutTimer } from '../../../../components/scoresheet/TimeoutTimer'
+import { MatchClock } from '../../../../components/scoresheet/MatchClock'
 import { TEAM_COLORS } from '../../../../components/scoresheet/teamColors'
 import { useScoreMatch } from '../../../../hooks/useScoreMatch'
 import { useScorekeeperKeys } from '../../../../hooks/useScorekeeperKeys'
@@ -78,7 +79,7 @@ export default function ScoreMatchScreen() {
         <Text style={styles.topTitle} numberOfLines={1}>{m.doc ? `${teamName(m.doc, 'A')} vs ${teamName(m.doc, 'B')}` : 'Match'}</Text>
         {m.state && (
           <Text style={shared.caption}>
-            {set ? `Set ${set.index + 1} · to ${set.target}` : m.state.over ? 'Final' : `Set ${m.state.sets.length + 1} next`} · Sets {m.state.setsWon.A}–{m.state.setsWon.B}
+            {set ? `Set ${set.index + 1} · to ${set.target}${set.cap != null ? ` (cap ${set.cap})` : ''}` : m.state.over ? 'Final' : `Set ${m.state.sets.length + 1} next`} · Sets {m.state.setsWon.A}–{m.state.setsWon.B}
           </Text>
         )}
       </View>
@@ -114,6 +115,13 @@ export default function ScoreMatchScreen() {
                 </View>
               )}
 
+              <MatchClock doc={m.doc} state={m.state} onTimeUp={() => m.add({ type: 'time_up' })} />
+              {set?.nextPointWins && (
+                <View style={[styles.banner, { borderColor: theme.colors.warning }]} accessibilityRole="alert" testID="next-point-wins">
+                  <Ionicons name="flash-outline" size={18} color={theme.colors.warning} />
+                  <Text style={[shared.body, { flex: 1 }]}>Time's up with the set tied: the next point wins it.</Text>
+                </View>
+              )}
               {set && <TimeoutTimer doc={m.doc} />}
 
               {set && (

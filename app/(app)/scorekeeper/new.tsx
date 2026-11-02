@@ -14,7 +14,7 @@ import { PlayerSheet } from '../../../components/scoresheet/PlayerSheet'
 import { TEAM_COLORS } from '../../../components/scoresheet/teamColors'
 import { createMatch } from '../../../hooks/useScoreMatch'
 import { POSITION_LABELS } from '../../../lib/scoresheet/engine'
-import { MATCH_FORMATS, makeRules, type MatchFormatKey } from '../../../lib/scoresheet/rules'
+import { MATCH_FORMATS, makeRules, withOptions, type MatchFormatKey } from '../../../lib/scoresheet/rules'
 import { shared, theme } from '../../../constants'
 import { routes } from '../../../utils/routes'
 import type { Lineup, MatchInfo, RosterPlayer, RulesPreset, TeamSide } from '../../../types'
@@ -29,6 +29,18 @@ const RULE_OPTIONS: { key: RulesPreset; label: string; hint: string }[] = [
   { key: 'usav', label: 'USA Volleyball', hint: '12 subs a set, players keep their spot in the order, libero serves in one spot' },
   { key: 'international', label: 'International', hint: '6 subs a set, starters out and back once, libero never serves' },
   { key: 'casual', label: 'Rec', hint: 'No sub limits or re-entry warnings' },
+]
+const START_OPTIONS = [0, 4] as const
+const TIME_OPTIONS: { value: number | null; label: string }[] = [
+  { value: null, label: 'No time limit' },
+  { value: 35, label: '35 min' },
+  { value: 40, label: '40 min' },
+  { value: 45, label: '45 min' },
+]
+/** Tournament shortcuts: NAGVA pool play and bracket formats. */
+const QUICK_SETUPS: { key: string; label: string; hint: string; format: MatchFormatKey; start: number; cap: number | null; time: number | null }[] = [
+  { key: 'nagva-pool', label: 'NAGVA pool play', hint: '2 sets to 25 from 4–4, cap 27, 40-minute clock', format: 'twoSets', start: 4, cap: 27, time: 40 },
+  { key: 'nagva-bracket', label: 'NAGVA bracket', hint: 'Best of 3: two sets to 25 from 4–4 (cap 27), third to 15 from 0', format: 'bestOf3', start: 4, cap: 27, time: null },
 ]
 const CAP_OPTIONS: { value: number | null; label: string }[] = [
   { value: null, label: 'No cap' },
@@ -59,6 +71,8 @@ export default function NewScoreMatchScreen() {
   const [format, setFormat] = useState<MatchFormatKey>('bestOf3')
   const [preset, setPreset] = useState<RulesPreset>('usav')
   const [cap, setCap] = useState<number | null>(null)
+  const [startAt, setStartAt] = useState<number>(0)
+  const [timeLimit, setTimeLimit] = useState<number | null>(null)
   // null: the rules preset's own length.
   const [timeoutSeconds, setTimeoutSeconds] = useState<number | null>(null)
   const [info, setInfo] = useState<MatchInfo>({ date: today() })
@@ -141,7 +155,7 @@ export default function NewScoreMatchScreen() {
             A: { name: teamLabel('A'), players: allPlayers('A').sort((a, b) => a.number - b.number) },
             B: { name: teamLabel('B'), players: allPlayers('B').sort((a, b) => a.number - b.number) },
           },
-          rules: { ...makeRules(preset, { ...MATCH_FORMATS[format], cap }), ...(timeoutSeconds ? { timeoutSeconds } : {}) },
+          rules: { ...makeRules(preset, withOptions(MATCH_FORMATS[format], { start: startAt, cap, timeLimitMinutes: timeLimit })), ...(timeoutSeconds ? { timeoutSeconds } : {}) },
         },
         { type: 'set_start', lineups: { A: lineup('A'), B: lineup('B') }, firstServe, liberos: { A: liberos('A'), B: liberos('B') } },
       )
@@ -231,13 +245,41 @@ export default function NewScoreMatchScreen() {
 
             <View style={[shared.card, { marginTop: theme.spacing.md, gap: theme.spacing.sm }]}>
               <Text style={shared.subheading}>Format</Text>
-              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+              <Text style={[shared.label, { marginBottom: 0 }]}>Quick setup</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                {QUICK_SETUPS.map(q => {
+                  const on = format === q.format && startAt === q.start && cap === q.cap && timeLimit === q.time && preset === 'usav'
+                  return (
+                    <Chip
+                      key={q.key}
+                      label={q.label}
+                      variant="tint"
+                      active={on}
+                      onPress={() => { setFormat(q.format); setStartAt(q.start); setCap(q.cap); setTimeLimit(q.time); setPreset('usav'); setTimeoutSeconds(null) }}
+                      testID={`quick-${q.key}`}
+                    />
+                  )
+                })}
+              </View>
+              {QUICK_SETUPS.filter(q => format === q.format && startAt === q.start && cap === q.cap && timeLimit === q.time).map(q => (
+                <Text key={q.key} style={shared.caption}>{q.hint}. NAGVA plays USA Volleyball rules.</Text>
+              ))}
+              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginTop: theme.spacing.xs }}>
                 {FORMAT_OPTIONS.map(o => <Chip key={o.key} label={o.label} role="radio" active={format === o.key} onPress={() => setFormat(o.key)} testID={`format-${o.key}`} />)}
               </View>
-              <Text style={shared.caption}>{FORMAT_OPTIONS.find(o => o.key === format)?.hint}. Win by 2.</Text>
+              <Text style={shared.caption}>{FORMAT_OPTIONS.find(o => o.key === format)?.hint}. Win by 2. Caps apply to sets to 25.</Text>
               <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
                 {CAP_OPTIONS.map(o => <Chip key={o.label} label={o.label} role="radio" variant="tint" active={cap === o.value} onPress={() => setCap(o.value)} />)}
               </View>
+              <Text style={[shared.label, { marginBottom: 0 }]}>Sets to 25 start at</Text>
+              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                {START_OPTIONS.map(v => <Chip key={v} label={`${v}–${v}`} role="radio" variant="tint" active={startAt === v} onPress={() => setStartAt(v)} testID={`start-${v}`} />)}
+              </View>
+              <Text style={[shared.label, { marginBottom: 0 }]}>Match clock</Text>
+              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                {TIME_OPTIONS.map(o => <Chip key={o.label} label={o.label} role="radio" variant="tint" active={timeLimit === o.value} onPress={() => setTimeLimit(o.value)} testID={`time-${o.value ?? 'none'}`} />)}
+              </View>
+              {timeLimit != null && <Text style={shared.caption}>Counts from the first serve. No time-outs in the last 2 minutes; at time the leader takes the set, and a tied set goes to the next point.</Text>}
               <Text style={[shared.subheading, { marginTop: theme.spacing.sm }]}>Rules</Text>
               <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
                 {RULE_OPTIONS.map(o => <Chip key={o.key} label={o.label} role="radio" active={preset === o.key} onPress={() => { setPreset(o.key); setTimeoutSeconds(null) }} testID={`rules-${o.key}`} />)}
