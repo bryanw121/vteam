@@ -49,6 +49,12 @@ const MENU_GROUPS: readonly MenuGroup[] = [
     ],
   },
   {
+    title: 'Try new things',
+    rows: [
+      { title: 'Experimental features', icon: 'flask-outline', section: 'experimental' },
+    ],
+  },
+  {
     title: 'Help and legal',
     rows: [
       { title: 'Take the tour', icon: 'compass-outline', action: 'tour' },

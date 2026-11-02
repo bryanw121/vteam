@@ -42,6 +42,7 @@ export type SettingsSection =
   | 'feedback'
   | 'badges'
   | 'ad-free'
+  | 'experimental'
 
 export type HostRouteOptions = {
   /** Event id to edit. */
@@ -94,6 +95,12 @@ export const routes = {
   privacy: () => href('/privacy'),
 
   notifications: () => href('/notifications'),
+
+  /** Experimental scorekeeper (Settings → Experimental features). Matches live on the device. */
+  scorekeeper: () => href('/scorekeeper'),
+  scorekeeperNew: () => href('/scorekeeper/new'),
+  scorekeeperMatch: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}`),
+  scorekeeperSheet: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/sheet`),
   settings: (section?: SettingsSection) => href(section ? `/settings/${section}` : '/settings'),
 
   // ── Groups ──────────────────────────────────────────────────────────────

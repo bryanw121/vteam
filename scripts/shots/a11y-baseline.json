@@ -295,6 +295,26 @@
       "document-title": 1
     }
   },
+  "scorekeeper": {
+    "mobile": {
+      "color-contrast": 1,
+      "document-title": 1
+    },
+    "desktop": {
+      "color-contrast": 3,
+      "document-title": 1
+    }
+  },
+  "scorekeeper-new": {
+    "mobile": {
+      "color-contrast": 1,
+      "document-title": 1
+    },
+    "desktop": {
+      "color-contrast": 3,
+      "document-title": 1
+    }
+  },
   "settings-account": {
     "mobile": {
       "aria-progressbar-name": 1,
@@ -340,6 +360,16 @@
     },
     "desktop": {
       "color-contrast": 14,
+      "document-title": 1
+    }
+  },
+  "settings-experimental": {
+    "mobile": {
+      "color-contrast": 1,
+      "document-title": 1
+    },
+    "desktop": {
+      "color-contrast": 3,
       "document-title": 1
     }
   },

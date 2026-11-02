@@ -1091,6 +1091,7 @@ export type OwnedClubOption = { id: string; name: string }
 // ─── Tournament detail screen + schedule generator ────────────────────────────
 
 export * from './tournament'
+export * from './scoresheet'
 
 // ─── Schedule generator ───────────────────────────────────────────────────────
 
