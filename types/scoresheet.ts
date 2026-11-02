@@ -329,6 +329,3 @@ export type ScoresheetPreviewProps = {
   /** Native summary shown under the export button (web shows the sheet itself). */
   children?: import('react').ReactNode
 }
-
-/** What "Scan roster" read from a photo (read-roster edge function). */
-export type RosterScanResult = { teamName: string | null; players: RosterPlayer[] }

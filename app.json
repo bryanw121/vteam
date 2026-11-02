@@ -46,8 +46,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow vteam to access your photos to set your profile picture or read a team roster.",
-          "cameraPermission": "Allow vteam to use the camera to photograph a team roster for the scorekeeper."
+          "photosPermission": "Allow vteam to access your photos to set your profile picture."
         }
       ],
       [
