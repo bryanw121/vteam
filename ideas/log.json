@@ -94,8 +94,9 @@
     "n": 1,
     "title": "Calendar sync: a private feed of your games that stays up to date in Apple / Google / Outlook",
     "bucket": "competitor-gap",
-    "status": "proposed",
-    "summary": "Per-user secret iCal URL (calendar_feeds table + SECURITY DEFINER calendar_feed(token) RPC served by Vercel api/calendar.ts) listing attending/waitlisted/hosted events; moves and cancellations propagate. Settings → Calendar sync, reset/stop. TeamSnap, Spond, Meetup, Luma."
+    "status": "tabled",
+    "summary": "Per-user secret iCal URL (calendar_feeds table + SECURITY DEFINER calendar_feed(token) RPC served by Vercel api/calendar.ts) listing attending/waitlisted/hosted events; moves and cancellations propagate. Settings → Calendar sync, reset/stop. TeamSnap, Spond, Meetup, Luma.",
+    "reason": "Bryan skipped it for now at review on 2026-11-02, after asking whether sync is one-time (setup is one tap, then automatic), cost (free for players; well within Vercel/Supabase limits) and permissions (none in-app; one confirm in the calendar app). Not rejected on merit: don't re-propose unless he raises it. If revived, add a one-time 'add your games to your calendar' prompt on first join."
   },
   {
     "date": "2026-11-02",
