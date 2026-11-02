@@ -4,7 +4,7 @@ import { deleteEvent, editEvent, insertBefore, newId, record, redo as redoDoc, u
 import { loadMatch, saveMatch } from '../lib/scoresheet/storage'
 import { matchSummary } from '../lib/scoresheet/summary'
 import { Sentry } from '../lib/sentry'
-import type { MatchDoc, MatchState, ScoreEventInput, Warning } from '../types'
+import type { MatchDoc, MatchInfo, MatchState, ScoreEventInput, Warning } from '../types'
 
 export type ScoreMatchApi = {
   doc: MatchDoc | null
@@ -21,6 +21,10 @@ export type ScoreMatchApi = {
   edit: (eventId: string, patch: Partial<ScoreEventInput>) => void
   remove: (eventId: string) => void
   insert: (beforeEventId: string, input: ScoreEventInput) => void
+  /** Edit the match details (sheet header, officials). Not part of undo. */
+  updateInfo: (patch: Partial<MatchInfo>) => void
+  /** Tick or untick a "Copy to paper" step. Not part of undo. */
+  setCopied: (stepId: string, done: boolean) => void
 }
 
 /**
@@ -97,6 +101,11 @@ export function useScoreMatch(id: string | undefined): ScoreMatchApi {
     insert: useCallback((beforeEventId, input) => withDoc(d => {
       const next = insertBefore(d, beforeEventId, input)
       return { doc: next, eventId: next.log.find(e => !d.log.includes(e))?.id }
+    }), [withDoc]),
+    updateInfo: useCallback(patch => withDoc(d => ({ ...d, updatedAt: Date.now(), setup: { ...d.setup, info: { ...d.setup.info, ...patch } } })), [withDoc]),
+    setCopied: useCallback((stepId, done) => withDoc(d => {
+      const copied = (d.copied ?? []).filter(x => x !== stepId)
+      return { ...d, copied: done ? [...copied, stepId] : copied }
     }), [withDoc]),
   }
 }

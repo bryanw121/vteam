@@ -13,7 +13,7 @@ export function ScoresheetPreview({ html, title }: ScoresheetPreviewProps) {
         label="Print or save as PDF"
         icon="print-outline"
         onPress={() => frame.current?.contentWindow?.print()}
-        testID="sheet-print"
+        variant="secondary" testID="sheet-print"
       />
       <iframe
         ref={frame}

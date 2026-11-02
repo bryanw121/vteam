@@ -5,11 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from '../../../../components/ui/Text'
 import { ScreenContainer, ScreenHeader, ScreenState } from '../../../../components/ui'
 import { Button } from '../../../../components/Button'
+import { MatchDetailsCard } from '../../../../components/scoresheet/MatchDetailsCard'
 import { OfficialSheetButton } from '../../../../components/scoresheet/OfficialSheetButton'
 import { ScoresheetPreview } from '../../../../components/scoresheet/ScoresheetPreview'
 import { useScoreMatch } from '../../../../hooks/useScoreMatch'
 import { scoresheetHtml } from '../../../../lib/scoresheet/sheetHtml'
 import { matchTitle, shareText, teamName } from '../../../../lib/scoresheet/summary'
+import { rememberInfo } from '../../../../lib/scoresheet/teamStore'
 import { shared, theme } from '../../../../constants'
 import { routes } from '../../../../utils/routes'
 
@@ -18,7 +20,7 @@ export default function ScoresheetScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const { doc, state, loading } = useScoreMatch(id)
+  const { doc, state, loading, updateInfo } = useScoreMatch(id)
   const html = useMemo(() => (doc && state ? scoresheetHtml(doc, state) : ''), [doc, state])
 
   return (
@@ -35,6 +37,23 @@ export default function ScoresheetScreen() {
                 onBack={() => (router.canGoBack() ? router.back() : router.replace(routes.scorekeeperMatch(doc.id)))}
               />
               <Text style={[shared.body, { color: theme.colors.subtextStrong, marginBottom: theme.spacing.md }]}>{matchTitle(doc)}</Text>
+              <Button
+                label={doc.copied?.length ? 'Copy to paper (continue)' : 'Copy to paper (guided)'}
+                icon="create-outline"
+                onPress={() => router.push(routes.scorekeeperCopy(doc.id))}
+                style={{ marginBottom: theme.spacing.xs }}
+                testID="sheet-copy"
+              />
+              <Text style={[shared.caption, { marginBottom: theme.spacing.md }]}>
+                Walks you through the paper form box by box, in its own order. Tick parts off as you go.
+              </Text>
+              <MatchDetailsCard
+                info={doc.setup.info}
+                onChange={patch => {
+                  updateInfo(patch)
+                  void rememberInfo({ ...doc.setup.info, ...patch })
+                }}
+              />
               <Button
                 label="Share result"
                 icon="share-outline"
