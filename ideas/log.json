@@ -102,15 +102,17 @@
     "n": 2,
     "title": "Weather on outdoor games: forecast chip on sand and grass cards, hourly row on the event",
     "bucket": "new-feature",
-    "status": "proposed",
-    "summary": "NWS hourly forecast via a cached Vercel Edge proxy (api/forecast.ts), useForecast keyed by rounded coords; chip on EventCard and ForecastRow in DetailsTab for sand/grass events within 7 days; rain ≥40% / heat index ≥95°F warnings. No schema."
+    "status": "approved",
+    "summary": "NWS hourly forecast via a cached Vercel Edge proxy (api/forecast.ts), useForecast keyed by rounded coords; chip on EventCard and ForecastRow in DetailsTab for sand/grass events within 7 days; rain ≥40% / heat index ≥95°F warnings. No schema.",
+    "issue": 165
   },
   {
     "date": "2026-11-02",
     "n": 3,
     "title": "Native app smoke tests: Maestro flows on an Android emulator, nightly and on native PRs",
     "bucket": "testing",
-    "status": "proposed",
-    "summary": "native-smoke.yml builds the release APK against beta, runs Maestro flows (guest browse, sign-in, RSVP, scorekeeper restore after kill, native date picker, no tab swipe) on an API 34 emulator, logcat crash scan, fixtures swept. Android first, iOS later."
+    "status": "approved",
+    "summary": "native-smoke.yml builds the release APK against beta, runs Maestro flows (guest browse, sign-in, RSVP, scorekeeper restore after kill, native date picker, no tab swipe) on an API 34 emulator, logcat crash scan, fixtures swept. Android first, iOS later.",
+    "issue": 166
   }
 ]
