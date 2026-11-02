@@ -131,7 +131,7 @@ export default function BadgesScreen() {
             </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          <View testID="badges-grid" style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             {BADGE_DEFINITIONS.map(def => {
               const badge = badges.find(b => b.badge_type === def.type)
               const isSelected = detailDef?.type === def.type

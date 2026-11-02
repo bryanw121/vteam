@@ -68,12 +68,12 @@ export const SCREENS = {
   // ── Profile ─────────────────────────────────────────────────────────────
   'profile-own': {
     route: '/profile', ready: 'Maya',
-    sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'hooks/useMyProfile.ts', 'hooks/useBadges.ts', 'constants/badges.ts'],
+    sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'hooks/useMyProfile.ts', 'hooks/useBadges.ts', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
   },
   'profile-own-guest': { route: '/profile', signedIn: false, sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/SignInPrompt.tsx'] },
   'profile-other': {
     route: `/profile/${P.jordanr}`, ready: 'Jordan',
-    sources: ['app/(app)/profile/**', 'app/(app)/(tabs)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts'],
+    sources: ['app/(app)/profile/**', 'app/(app)/(tabs)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
   },
 
   // ── Settings ────────────────────────────────────────────────────────────
@@ -89,7 +89,7 @@ export const SCREENS = {
   'settings-history': { route: '/settings/history', ready: 'Halloween Warm-up', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/history.tsx'] },
   'settings-hosted': { route: '/settings/hosted', ready: 'Sand Doubles at Butler', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hosted.tsx'] },
   'settings-cheers': { route: '/settings/cheers', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/cheers.tsx', 'components/CheerRadarChart.tsx'] },
-  'settings-badges': { route: '/settings/badges', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'hooks/useBadges.ts'] },
+  'settings-badges': { route: '/settings/badges', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**', 'hooks/useBadges.ts'] },
   'settings-feedback': { route: '/settings/feedback', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/feedback.tsx'] },
   'settings-silenced': { route: '/settings/silenced', ready: 'Hannah', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/silenced.tsx', 'hooks/useSilencedUsers.ts'] },
 
