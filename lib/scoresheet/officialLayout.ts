@@ -52,6 +52,43 @@ const POINTS_ON_FORM = 36
 /** Time-out boxes ("Time Outs"), centre x per side, centre y of the two rows. */
 const TIMEOUT_X: Record<'left' | 'right', number> = { left: 291.4, right: 333.3 }
 const TIMEOUT_Y = [306.6, 326.3]
+/** Centres of the two Libero# boxes per side. */
+const LIBERO_BOXES: Record<'left' | 'right', number[]> = { left: [224.4, 242.4], right: [384.1, 402.1] }
+
+type ServiceBox = { score: number | null; checked: boolean; final: boolean }
+
+/**
+ * What goes in each service-round box of one position: an X in box 1 for the receiving team's
+ * server I, then one box per service turn. A turn opened by the set's last rally (the team
+ * sided out to win) was never served, so its box gets the final score without a check; each
+ * team's last exit score is circled once the set is over.
+ */
+export function serviceBoxes(t: TeamSetState, team: TeamSide, slot: number, set: SetState): (ServiceBox | 'x')[] {
+  const out: (ServiceBox | 'x')[] = []
+  if (slot === 0 && set.firstServe !== team) out.push('x')
+  const finished = set.winner != null
+  const last = lastTurn(t, team, set)
+  t.turns[slot].forEach((turn, i) => {
+    const isLast = last?.slot === slot && last.index === i
+    const unserved = finished && isLast && set.winner === team && turn.points === 0 && set.serving === team
+    out.push({ score: turn.endScore, checked: !unserved, final: finished && isLast && turn.endScore != null })
+  })
+  return out
+}
+
+/** The team's most recent service turn: turns go round the rotation from the first server. */
+function lastTurn(t: TeamSetState, team: TeamSide, set: SetState): { slot: number; index: number } | null {
+  const firstSlot = set.firstServe === team ? 0 : 1
+  let best: { slot: number; index: number } | null = null
+  let bestOrder = -1
+  for (let slot = 0; slot < 6; slot++) {
+    for (let index = 0; index < t.turns[slot].length; index++) {
+      const order = index * 6 + ((slot - firstSlot + 6) % 6)
+      if (order > bestOrder) { bestOrder = order; best = { slot, index } }
+    }
+  }
+  return best
+}
 
 const INK_SIZE = 8
 
@@ -80,6 +117,11 @@ const ellipse = (c: Ctx, cx: number, cy: number, rx: number, ry = rx, width = 0.
 const cross = (c: Ctx, cx: number, cy: number, r: number) => {
   line(c, cx - r, cy - r, cx + r, cy + r)
   line(c, cx - r, cy + r, cx + r, cy - r)
+}
+/** A small check mark through a service-round box number (top left of the mark at x, y). */
+const tick = (c: Ctx, x: number, y: number) => {
+  line(c, x - 1, y + 2.4, x + 0.7, y + 4.2, 0.7)
+  line(c, x + 0.7, y + 4.2, x + 3.8, y - 0.6, 0.7)
 }
 /** "a : b" around a printed colon. */
 function scorePair(c: Ctx, colonX: number, y: number, a: number, b: number, size = 7.5) {
@@ -153,12 +195,20 @@ function setBlock(c: Ctx, doc: MatchDoc, set: SetState, block: number, overflow:
     const cols = COLS[side]
     const players = doc.setup.teams[team].players
     // Captain, team name, liberos, serve / receive.
+    // Game captain's number in the CAPTAIN circle; an X when there is none (S3.9.1, S3.5.1).
     const captain = players.find(p => p.captain)
-    if (captain) text(c, side === 'left' ? 89 : 451.7, 116.5 + dy, captain.number, INK_SIZE, { align: 'center' })
+    const capX = side === 'left' ? 103 : 465.7
+    if (captain) text(c, capX, 115 + dy, captain.number, captain.number > 9 ? 6.5 : 7.5, { align: 'center', bold: true })
+    else cross(c, capX, 112.45 + dy, 3.2)
     text(c, side === 'left' ? 97 : 427, 131 + dy, teamName(doc, team), INK_SIZE, { maxWidth: side === 'left' ? 126 : 116, bold: true })
-    if (t.liberos.length) text(c, side === 'left' ? 227 : 386, 131.5 + dy, t.liberos.join(', '), 7, { maxWidth: 24 })
-    const srX = side === 'left' ? 267.55 : 358.65
-    ellipse(c, srX, (set.firstServe === team ? 122.25 : 129.25) + dy, 3.9, 3.6)
+    // Two Libero# boxes; an empty one gets an X (S3.7.3).
+    LIBERO_BOXES[side].forEach((bx, i) => {
+      const n = t.liberos[i]
+      if (n != null) text(c, bx, 131.6 + dy, n, 7, { align: 'center', bold: true })
+      else cross(c, bx, 129.3 + dy, 2.6)
+    })
+    // X through the S of the team serving first and through the R of the team receiving (S3.3).
+    cross(c, side === 'left' ? 267.55 : 358.65, (set.firstServe === team ? 122.25 : 129.25) + dy, 2.6)
 
     for (let slot = 0; slot < 6; slot++) {
       const x0 = cols[slot]
@@ -175,16 +225,28 @@ function setBlock(c: Ctx, doc: MatchDoc, set: SetState, block: number, overflow:
       if (subs.length > SUB_ROWS) {
         overflow.push(`${label}, ${teamName(doc, team)} position ${slot + 1}: more substitutions than fit — ${subs.slice(SUB_ROWS).map(s => `${s.in} in at ${s.score[0]}:${s.score[1]}`).join(', ')}.`)
       }
-      // Service rounds: team score when each of this server's turns ended (1–3 left, 4–6 right).
-      const turns = t.turns[slot]
-      turns.slice(0, SERVICE_ROUNDS).forEach((turn, round) => {
-        if (turn.endScore == null) return
-        const x = x0 + (round < 3 ? COL_W / 4 + 1.5 : (COL_W * 3) / 4 + 1.5)
-        text(c, x, SERVICE_ROW_TOPS[round % 3] + SERVICE_ROW_H - 5 + dy, turn.endScore, 8, { align: 'center' })
+      // Service rounds (S3.3.2, S6.1, S17): the receiving team's server I starts with an X in box
+      // 1. Each turn takes the next box: a check through the box number once the server has
+      // served, the team's score when the serve was lost, and the final exit score circled.
+      const boxes = serviceBoxes(t, team, slot, set)
+      boxes.slice(0, SERVICE_ROUNDS).forEach((b, box) => {
+        const bx = x0 + (box < 3 ? 0 : COL_W / 2)
+        const by = SERVICE_ROW_TOPS[box % 3] + dy
+        if (b === 'x') {
+          cross(c, bx + COL_W / 4, by + SERVICE_ROW_H / 2 + 1, 4)
+          return
+        }
+        if (b.checked) tick(c, x0 + (box < 3 ? 16 : 35.5), by + 1.3)
+        if (b.score != null) {
+          const cx = bx + COL_W / 4 + 1.5
+          const cy = by + SERVICE_ROW_H - 5
+          text(c, cx, cy, b.score, 8, { align: 'center' })
+          if (b.final) ellipse(c, cx, cy - 2.8, 6, 5.2)
+        }
       })
-      const late = turns.slice(SERVICE_ROUNDS).filter(turn => turn.endScore != null)
+      const late = boxes.slice(SERVICE_ROUNDS).filter((b): b is ServiceBox => b !== 'x' && b.score != null)
       if (late.length) {
-        overflow.push(`${label}, ${teamName(doc, team)} server ${slot + 1}: service rounds 7+ ended at ${late.map(turn => turn.endScore).join(', ')}.`)
+        overflow.push(`${label}, ${teamName(doc, team)} server ${slot + 1}: service rounds 7+ ended at ${late.map(b => b.score).join(', ')}.`)
       }
     }
 
@@ -212,8 +274,11 @@ function setBlock(c: Ctx, doc: MatchDoc, set: SetState, block: number, overflow:
 }
 
 /**
- * The running score: rally points slashed, penalty points circled, the points a set started from
- * crossed out, the final score circled boldly and the unused numbers closed with a line.
+ * The running score, as the USAV scoring instructions mark it: every point slashed (S6.1.3),
+ * penalty points slashed and circled (S1.6), the final point slashed but not circled (S17.4.1),
+ * and the unused numbers closed with a "T-bar": a line under the last point, a line down the
+ * rest of that column, and a line through each unused column (S17.4.2-3). A set that starts at
+ * 4–4 gets the same T-bar over 1–4 (a line from the top of the column to a line under 4, S2.5).
  */
 function runningScore(c: Ctx, marks: PointMark[], score: number, finished: boolean, colX: number, dy: number) {
   const cell = (n: number) => {
@@ -224,25 +289,34 @@ function runningScore(c: Ctx, marks: PointMark[], score: number, finished: boole
     const y = POINT_ROW_TOP + row * POINT_ROW_H + dy
     return { x, y, cx: x + POINT_COL_W / 2, cy: y + POINT_ROW_H / 2 }
   }
-  for (let n = 1; n <= Math.min(marks.length, POINTS_ON_FORM); n++) {
+  const under = (n: number) => {
+    const { x, y } = cell(n)
+    line(c, x + 0.8, y + POINT_ROW_H, x + POINT_COL_W - 0.8, y + POINT_ROW_H, 0.9)
+  }
+  const bottom = POINT_ROW_TOP + 12 * POINT_ROW_H + dy - 0.8
+  const startScore = marks.filter(m => m === 'start').length
+  if (startScore > 0) {
+    under(startScore)
+    for (let col = 0; col * 12 < startScore; col++) {
+      const last = Math.min(startScore, col * 12 + 12)
+      const x = cell(col * 12 + 1).cx
+      line(c, x, cell(col * 12 + 1).y + 0.8, x, cell(last).y + POINT_ROW_H, 0.9)
+    }
+  }
+  for (let n = startScore + 1; n <= Math.min(marks.length, POINTS_ON_FORM); n++) {
     const { x, y, cx, cy } = cell(n)
-    const mark = marks[n - 1]
-    if (mark === 'start') cross(c, cx, cy, 3.4)
-    else if (mark === 'penalty') ellipse(c, cx, cy, 4.6, 4.6)
-    else line(c, x + 1.8, y + POINT_ROW_H - 1.8, x + POINT_COL_W - 1.8, y + 1.8)
+    line(c, x + 1.8, y + POINT_ROW_H - 1.8, x + POINT_COL_W - 1.8, y + 1.8)
+    if (marks[n - 1] === 'penalty') ellipse(c, cx, cy, 4.6, 4.6)
   }
   if (!finished || score >= POINTS_ON_FORM) return
-  if (score > 0) {
-    const last = cell(score)
-    ellipse(c, last.cx, last.cy, 5.2, 5.4, 1.4)
-  }
-  // Close the rest of the column and any empty columns after it.
+  // T-bar: a line under the last point, then down the rest of its column; full lines through
+  // the columns after it.
+  if (score > 0) under(score)
   const firstUnused = score + 1
-  for (let col = Math.floor((firstUnused - 1) / 12); col < 3 && firstUnused <= POINTS_ON_FORM; col++) {
+  for (let col = Math.floor((firstUnused - 1) / 12); col < 3; col++) {
     const from = Math.max(firstUnused, col * 12 + 1)
-    const top = cell(from).y + 1
-    const x = cell(from).cx
-    line(c, x, top, x, POINT_ROW_TOP + 12 * POINT_ROW_H + dy - 1, 0.8)
+    const top = from === firstUnused && score > 0 && (score % 12 !== 0 || from !== col * 12 + 1) ? cell(from).y : cell(from).y + 0.8
+    line(c, cell(from).cx, top, cell(from).cx, bottom, 0.9)
   }
 }
 
