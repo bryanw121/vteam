@@ -9,6 +9,7 @@ import type { CopySection, CopyStep, MatchDoc, MatchState, SetState, SheetRegion
 import { POSITION_LABELS, other } from './engine'
 import { SANCTION_CODES } from './describe'
 import { teamName } from './summary'
+import { serviceBoxes } from './officialLayout'
 
 /** Set 2's block is this far below set 1's on the form. */
 const SET_DY = 244.5
@@ -29,16 +30,25 @@ const or = (v: string | undefined | null) => (v && v.trim() ? v.trim() : '—')
 
 const leftTeam = (block: number): TeamSide => (block === 0 ? 'A' : 'B')
 
-/** "Slash 1–25, circle 25, line off 26–36", with the crossed-out start points if any. */
-export function pointsInstruction(score: number, startScore: number, finished: boolean): string {
+/**
+ * How to mark one team's POINTS column, the USAV way: a T-bar over the points a set started
+ * from, every point slashed, penalty points also circled, and a T-bar to close the rest once
+ * the set is over (the final point is not circled).
+ */
+export function pointsInstruction(score: number, startScore: number, finished: boolean, penalties: number[] = []): string {
   const parts: string[] = []
-  if (startScore > 0) parts.push(`Cross out 1–${startScore} (the set started at ${startScore})`)
+  if (startScore > 0) parts.push(`T-bar over 1–${startScore}: a line down from the top and a line under ${startScore}`)
   const from = startScore + 1
   if (score >= from) parts.push(from === score ? `slash ${score}` : `slash ${from}–${score}`)
-  if (finished && score > 0) parts.push(`circle ${score}`)
-  if (finished && score < 36) parts.push(`line off ${score + 1}–36`)
+  if (penalties.length) parts.push(`circle ${penalties.join(', ')} (penalty point${penalties.length > 1 ? 's' : ''})`)
+  if (finished && score < 36) parts.push(score > 0 ? `then a line under ${score} and down through ${score + 1}–36` : 'then a line down through every column')
   const text = parts.join(', ') || 'Nothing to mark yet'
   return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** One position's service-round boxes as text: "X", "✓13", final scores in brackets (circle them). */
+export function serviceText(boxes: ReturnType<typeof serviceBoxes>): string {
+  return boxes.map(b => (b === 'x' ? 'X' : `${b.checked ? '✓' : ''}${b.score == null ? '' : b.final ? `(${b.score})` : b.score}`)).filter(Boolean).join(' · ') || '—'
 }
 
 function header(doc: MatchDoc, state: MatchState): CopyStep {
@@ -96,9 +106,9 @@ function setSteps(doc: MatchDoc, state: MatchState, set: SetState): CopyStep[] {
         title: `${t === L ? 'Left' : 'Right'} · ${name(t)} (${t})`,
         rows: [
           { label: 'Team', value: name(t) },
-          { label: 'Circle', value: set.firstServe === t ? 'S (serves first)' : 'R (receives first)' },
-          { label: 'Captain', value: captain(t) != null ? `#${captain(t)}` : '—' },
-          { label: 'Libero #', value: set.teams[t].liberos.join(', ') || '—' },
+          { label: 'Serve', value: set.firstServe === t ? 'X through the S' : 'X through the R' },
+          { label: 'CAPTAIN circle', value: captain(t) != null ? `${captain(t)}` : 'X (no captain)' },
+          { label: 'Libero# boxes', value: [0, 1].map(i => set.teams[t].liberos[i] ?? 'X').join(' and ') },
         ],
       })),
       { kind: 'rows', rows: [{ label: 'Start time (left box)', value: hhmm(set.startedAt) }] },
@@ -146,7 +156,7 @@ function setSteps(doc: MatchDoc, state: MatchState, set: SetState): CopyStep[] {
         kind: 'big' as const,
         title: `${t === L ? 'Left' : 'Right'} column · ${name(t)}`,
         value: String(set.teams[t].score),
-        detail: pointsInstruction(set.teams[t].score, set.startScore, finished),
+        detail: pointsInstruction(set.teams[t].score, set.startScore, finished, set.teams[t].marks.flatMap((m, i) => (m === 'penalty' ? [i + 1] : []))),
       })),
       {
         kind: 'rows',
@@ -163,14 +173,22 @@ function setSteps(doc: MatchDoc, state: MatchState, set: SetState): CopyStep[] {
     where: where('"Service Rounds": the score when each server lost the serve (boxes 1–6 under each position)'),
     sheet,
     regions: [R(LEFT.x, 274.1 + dy, LEFT.w, 60.9), R(RIGHT.x, 274.1 + dy, RIGHT.w, 60.9)],
-    sections: ([L, Rt] as const).map(t => ({
-      kind: 'grid',
-      title: `${t === L ? 'Left' : 'Right'} · ${name(t)}`,
-      cells: POSITION_LABELS.map((label, slot) => ({
-        label,
-        value: set.teams[t].turns[slot].map(turn => turn.endScore).filter((v): v is number => v != null).join(' · ') || '—',
+    sections: [
+      ...([L, Rt] as const).map((t): CopySection => ({
+        kind: 'grid',
+        title: `${t === L ? 'Left' : 'Right'} · ${name(t)}`,
+        cells: POSITION_LABELS.map((label, slot) => ({
+          label,
+          value: serviceText(serviceBoxes(set.teams[t], t, slot, set)),
+        })),
       })),
-    })),
+      { kind: 'rows', title: 'How to read it', rows: [
+        { label: 'Order', value: 'Boxes 1, 2, 3 down the left, then 4, 5, 6' },
+        { label: '✓', value: 'Check the small box number' },
+        { label: '( )', value: 'Circle it: the final score' },
+        { label: 'X', value: 'An X in box 1 (team received first)' },
+      ] },
+    ],
   })
 
   steps.push({
