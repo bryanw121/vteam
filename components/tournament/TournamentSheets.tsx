@@ -16,13 +16,15 @@ const sheetInput = { backgroundColor: theme.colors.background } as const
 type RegisterProps = {
   visible: boolean
   onDismiss: () => void
-  tournament: Pick<Tournament, 'min_roster_size' | 'max_roster_size'>
+  tournament: Pick<Tournament, 'min_roster_size' | 'max_roster_size' | 'max_teams'>
+  /** Every team spot is taken: a new team joins the waitlist (the server decides). */
+  full: boolean
   busy: boolean
   /** Resolves true when registered (the sheet then resets). */
   onSubmit: (v: { name: string; freeAgent: boolean }) => Promise<boolean>
 }
 
-export function RegisterSheet({ visible, onDismiss, tournament, busy, onSubmit }: RegisterProps) {
+export function RegisterSheet({ visible, onDismiss, tournament, full, busy, onSubmit }: RegisterProps) {
   const [freeAgent, setFreeAgent] = useState(false)
   const [name, setName] = useState('')
   useEffect(() => { if (!visible) { setFreeAgent(false); setName('') } }, [visible])
@@ -50,6 +52,11 @@ export function RegisterSheet({ visible, onDismiss, tournament, busy, onSubmit }
           <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.subtext, marginBottom: 20 }}>
             Roster size: {tournament.min_roster_size}–{tournament.max_roster_size} players. You'll be the captain.
           </Text>
+          {full && (
+            <Text testID="register-waitlist-note" style={{ fontSize: theme.font.size.sm, color: theme.colors.warning, marginTop: -12, marginBottom: 20 }}>
+              All {tournament.max_teams} team spots are taken. Your team joins the waitlist and moves up if a team withdraws.
+            </Text>
+          )}
         </>
       ) : (
         <Text style={{ fontSize: theme.font.size.smd, color: theme.colors.subtext, marginBottom: 20 }}>

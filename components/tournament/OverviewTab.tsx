@@ -63,7 +63,7 @@ export function OverviewTab(p: Props) {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
               <Ionicons name="checkmark-circle" size={14} color={theme.colors.primary} />
               <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.primary }}>
-                {myTeam.status === 'free_agent' ? 'Registered as Free Agent' : 'Registered'}
+                {myTeam.status === 'free_agent' ? 'Registered as Free Agent' : myTeam.status === 'waitlisted' ? 'On the waitlist' : 'Registered'}
               </Text>
             </View>
             <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.lgm, letterSpacing: -0.3, color: theme.colors.text }}>{myTeam.name}</Text>
@@ -90,6 +90,11 @@ export function OverviewTab(p: Props) {
       {/* Registration CTA (organizers can enter a team of their own too) */}
       {!myTeam && p.registrationOpen && (
         <Button label="Register Team" testID="register-team" onPress={p.onRegister} style={{ marginBottom: 12 }} />
+      )}
+      {!isCreator && !myTeam && !p.registrationOpen && tournament.status === 'published' && (
+        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext, marginBottom: 12, textAlign: 'center' }}>
+          Registration is closed: the deadline has passed.
+        </Text>
       )}
 
       {/* Pay via Venmo — non-creators, when there is a fee and a handle */}
