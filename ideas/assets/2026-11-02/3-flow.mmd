@@ -1,0 +1,14 @@
+flowchart TD
+  T["Trigger: nightly 08:47 UTC · workflow_dispatch ·<br/>PRs touching native paths (app.json, package.json, *.native.tsx,<br/>lib/scoresheet/storage.ts, DatePickerField.tsx, .maestro/**)"] --> B
+  B["build-android (ubuntu)<br/>expo prebuild -p android → gradlew assembleRelease<br/>EXPO_PUBLIC_SUPABASE_URL = vteam beta · Gradle + node caches"] --> A[(app-release.apk artifact)]
+  A --> R
+  F["scripts/native/fixtures.mjs<br/>creates '[e2e native run-id] Sand Sixes' on beta as e2ebot"] --> R
+  R["android-emulator-runner API 34 · pixel_6<br/>adb install · maestro test .maestro/ --format junit"] --> G1 & G2 & G3 & G4 & G5
+  G1["guest-browse.yaml<br/>feed renders, open event, back, Profile → SignInPrompt"]
+  G2["sign-in.yaml<br/>username login (E2E_* secrets) → Events"]
+  G3["rsvp.yaml<br/>join fixture event → 'You're going' rail → leave"]
+  G4["scorekeeper-restore.yaml<br/>tap 3 points → stopApp → launchApp → score still 3–0"]
+  G5["host-date-picker.yaml<br/>native DateTimePicker opens, pick 7:00 PM, form shows it"]
+  G1 & G2 & G3 & G4 & G5 --> L["logcat scan: FATAL EXCEPTION / ReactNativeJS error → fail"]
+  L --> S["Job summary: flow table + screenshots/video artifact"]
+  S --> SW["sweep: delete this run's [e2e native] rows (always)"]

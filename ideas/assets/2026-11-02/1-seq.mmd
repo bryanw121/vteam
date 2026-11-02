@@ -1,0 +1,23 @@
+sequenceDiagram
+  autonumber
+  actor P as Player
+  participant App
+  participant RLS as PostgREST/RLS
+  participant DB as Postgres functions
+  participant Cal as Calendar app (Apple / Google / Outlook)
+  participant V as Vercel api/calendar.ts
+  P->>App: Settings → Calendar sync → Subscribe
+  App->>RLS: rpc rotate_calendar_feed() (authenticated)
+  RLS->>DB: SECURITY DEFINER, user = auth.uid()
+  DB-->>App: token (uuid) — upserted into calendar_feeds
+  App->>Cal: open webcal://vteamvolleyball.com/cal/<token>.ics
+  loop every ~1–24h (client decides)
+    Cal->>V: GET /cal/<token>.ics
+    V->>RLS: rpc calendar_feed(p_token) with anon key
+    RLS->>DB: SECURITY DEFINER: look up token → user_id
+    DB-->>V: {ok, events[]} attending / waitlisted / hosting / co-hosting,<br/>−30d … +180d, cancelled ones flagged (touch last_fetched_at ≤ hourly)
+    V-->>Cal: 200 text/calendar (VEVENT per event, UID event-<id>@vteam,<br/>STATUS CONFIRMED / TENTATIVE / CANCELLED), s-maxage=900
+  end
+  Note over Cal,V: Unknown or revoked token → 404 (calendar stops updating)
+  P->>App: Reset link
+  App->>RLS: rpc rotate_calendar_feed() → new token, old URL 404s

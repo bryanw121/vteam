@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  participant App as App (EventCard / DetailsTab)
+  participant Q as lib/query cache
+  participant V as Vercel api/forecast.ts (Edge cache)
+  participant NWS as api.weather.gov
+  App->>App: outdoor (sand/grass) + lat/lng + starts within 7 days?
+  App->>Q: useForecast(round(lat,2), round(lng,2)) — key shared by every event at that court
+  alt cached < 30 min
+    Q-->>App: hourly series
+  else stale / missing
+    Q->>V: GET {WEB_ORIGIN}/api/forecast?lat=30.27&lng=-97.77
+    alt CDN hit (s-maxage=1800)
+      V-->>Q: hourly JSON
+    else miss
+      V->>NWS: GET /points/30.27,-97.77 (User-Agent: vteam + contact)
+      NWS-->>V: forecastHourly URL (grid cached 24h in the response key)
+      V->>NWS: GET /gridpoints/EWX/x,y/forecast/hourly
+      NWS-->>V: 156 hourly periods
+      V-->>Q: trimmed {time, tempF, pop, windMph, short, rh}[] (7 days)
+    end
+  end
+  App->>App: pickForecastHours(series, start, duration) → chip / row<br/>heatIndex() ≥ 95°F or rain ≥ 40% → warning style
+  Note over V,NWS: NWS error / outside US → 204, row hidden. No database, no secrets.

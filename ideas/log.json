@@ -32,7 +32,7 @@
     "title": "No-show flag: hosts mark who didn't come, and only they miss out on points",
     "bucket": "competitor-gap",
     "status": "approved",
-    "summary": "Revised at review: everyone counts as present; hosts/co-hosts flag no-shows from the roster \u22ef menu (set_no_show RPC + guard trigger) between start and end+2h. award_event_points pays unflagged attendees at end+2h. Flagged player sees a notice. Replaced the per-player check-in design (too much host work).",
+    "summary": "Revised at review: everyone counts as present; hosts/co-hosts flag no-shows from the roster ⋯ menu (set_no_show RPC + guard trigger) between start and end+2h. award_event_points pays unflagged attendees at end+2h. Flagged player sees a notice. Replaced the per-player check-in design (too much host work).",
     "issue": 151
   },
   {
@@ -88,5 +88,29 @@
     "status": "approved",
     "summary": "Anon SECURITY DEFINER job_health() RPC (cron last success/failures, Schelagg freshness, ended events with no points, push webhook non-2xx) + scripts/job-health.mjs EXPECTATIONS + job-health.yml every 3h on live and beta; GitHub emails on failure; CI requires an expectation for every cron job.",
     "issue": 157
+  },
+  {
+    "date": "2026-11-02",
+    "n": 1,
+    "title": "Calendar sync: a private feed of your games that stays up to date in Apple / Google / Outlook",
+    "bucket": "competitor-gap",
+    "status": "proposed",
+    "summary": "Per-user secret iCal URL (calendar_feeds table + SECURITY DEFINER calendar_feed(token) RPC served by Vercel api/calendar.ts) listing attending/waitlisted/hosted events; moves and cancellations propagate. Settings → Calendar sync, reset/stop. TeamSnap, Spond, Meetup, Luma."
+  },
+  {
+    "date": "2026-11-02",
+    "n": 2,
+    "title": "Weather on outdoor games: forecast chip on sand and grass cards, hourly row on the event",
+    "bucket": "new-feature",
+    "status": "proposed",
+    "summary": "NWS hourly forecast via a cached Vercel Edge proxy (api/forecast.ts), useForecast keyed by rounded coords; chip on EventCard and ForecastRow in DetailsTab for sand/grass events within 7 days; rain ≥40% / heat index ≥95°F warnings. No schema."
+  },
+  {
+    "date": "2026-11-02",
+    "n": 3,
+    "title": "Native app smoke tests: Maestro flows on an Android emulator, nightly and on native PRs",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "native-smoke.yml builds the release APK against beta, runs Maestro flows (guest browse, sign-in, RSVP, scorekeeper restore after kill, native date picker, no tab swipe) on an API 34 emulator, logcat crash scan, fixtures swept. Android first, iOS later."
   }
 ]
