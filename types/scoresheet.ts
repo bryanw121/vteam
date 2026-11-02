@@ -344,6 +344,26 @@ export type Experiment = {
   href: Href & string
 }
 
+/**
+ * One mark on the official USA Volleyball form (lib/scoresheet/officialLayout.ts). Coordinates are
+ * points on the page as it is read (landscape, 792 × 612), measured from the top left; text `y`
+ * is the baseline. `page` indexes `OfficialSheetLayout.pages`.
+ */
+export type SheetOp =
+  | { kind: 'text'; page: number; x: number; y: number; text: string; size: number; align?: 'left' | 'center' | 'right'; maxWidth?: number; bold?: boolean }
+  | { kind: 'line'; page: number; x1: number; y1: number; x2: number; y2: number; width?: number }
+  | { kind: 'ellipse'; page: number; cx: number; cy: number; rx: number; ry: number; width?: number }
+  /** Paint white over printed text (a "Set 1" label on a continuation sheet). */
+  | { kind: 'cover'; page: number; x: number; y: number; w: number; h: number }
+
+/** `form`: a copy of the official sheet; `plain`: a blank landscape page (remarks that don't fit). */
+export type OfficialSheetLayout = { pages: ('form' | 'plain')[]; ops: SheetOp[] }
+
+/** Measures text width in points (the PDF font in the app, an estimate in tests). */
+export type MeasureText = (text: string, size: number, bold?: boolean) => number
+
+export type OfficialSheetButtonProps = { doc: MatchDoc; state: MatchState }
+
 export type ScoresheetPreviewProps = {
   html: string
   title: string

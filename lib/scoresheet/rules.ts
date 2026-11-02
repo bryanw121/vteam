@@ -2,6 +2,8 @@ import type { MatchFormat, RulesPreset, ScoreRules } from '../../types/scoreshee
 
 /** Common match formats, offered at setup. */
 export const MATCH_FORMATS = {
+  /** One set decides the match (rec leagues, quick games). */
+  oneSet: { maxSets: 1, setsToWin: 1, setPoints: [25], winBy: 2, cap: null },
   bestOf3: { maxSets: 3, setsToWin: 2, setPoints: [25, 25, 15], winBy: 2, cap: null },
   bestOf5: { maxSets: 5, setsToWin: 3, setPoints: [25, 25, 25, 25, 15], winBy: 2, cap: null },
   /** Pool play: both sets are played and a match can split 1-1. */
@@ -73,5 +75,6 @@ export function withOptions(format: MatchFormat, opts: { start?: number; cap?: n
  * (best of 3 / 5) with the sets tied going in. Teams switch courts at the halfway point.
  */
 export function isDecidingSet(format: MatchFormat, setIndex: number): boolean {
-  return format.setsToWin != null && setIndex === format.maxSets - 1
+  // A one-set match is a normal set to 25: no court switch at the halfway point.
+  return format.setsToWin != null && format.maxSets > 1 && setIndex === format.maxSets - 1
 }

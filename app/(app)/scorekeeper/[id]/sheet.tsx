@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from '../../../../components/ui/Text'
 import { ScreenContainer, ScreenHeader, ScreenState } from '../../../../components/ui'
 import { Button } from '../../../../components/Button'
+import { OfficialSheetButton } from '../../../../components/scoresheet/OfficialSheetButton'
 import { ScoresheetPreview } from '../../../../components/scoresheet/ScoresheetPreview'
 import { useScoreMatch } from '../../../../hooks/useScoreMatch'
 import { scoresheetHtml } from '../../../../lib/scoresheet/sheetHtml'
@@ -41,6 +42,7 @@ export default function ScoresheetScreen() {
                 onPress={() => void Share.share({ message: shareText(doc, state) }).catch(() => {})}
                 style={{ marginBottom: theme.spacing.sm }}
               />
+              <OfficialSheetButton doc={doc} state={state} />
               <ScoresheetPreview html={html} title={`${matchTitle(doc)} scoresheet`}>
                 <View style={[shared.card, { gap: theme.spacing.sm }]}>
                   {state.sets.map(s => (
