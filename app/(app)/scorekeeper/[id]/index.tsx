@@ -1,12 +1,13 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from '../../../../components/ui/Text'
 import { BottomSheet, ConfirmDialog, IconButton, ScreenContainer, ScreenState } from '../../../../components/ui'
 import { Button } from '../../../../components/Button'
-import { CourtGrid } from '../../../../components/scoresheet/CourtGrid'
+import { CourtLayout } from '../../../../components/scoresheet/CourtLayout'
+import { CourtSpot } from '../../../../components/scoresheet/CourtSpot'
 import { LineupSetup } from '../../../../components/scoresheet/LineupSetup'
 import { SubSheet } from '../../../../components/scoresheet/SubSheet'
 import { LiberoSheet } from '../../../../components/scoresheet/LiberoSheet'
@@ -21,9 +22,9 @@ import { useScoreMatch } from '../../../../hooks/useScoreMatch'
 import { useScorekeeperKeys } from '../../../../hooks/useScorekeeperKeys'
 import { deleteMatch } from '../../../../lib/scoresheet/storage'
 import { describeEvent, playerLabel } from '../../../../lib/scoresheet/describe'
-import { serverOf } from '../../../../lib/scoresheet/engine'
+import { POSITION_LABELS, courtOf, serverOf } from '../../../../lib/scoresheet/engine'
 import { teamName } from '../../../../lib/scoresheet/summary'
-import { BREAKPOINTS, shared, theme } from '../../../../constants'
+import { shared, theme } from '../../../../constants'
 import { routes } from '../../../../utils/routes'
 import type { IoniconName, TeamSide } from '../../../../types'
 
@@ -37,8 +38,6 @@ export default function ScoreMatchScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const { width } = useWindowDimensions()
-  const wide = width >= BREAKPOINTS.sidebar
   const m = useScoreMatch(id)
   const [sheet, setSheet] = useState<SheetKind | null>(null)
   const [sheetTeam, setSheetTeam] = useState<TeamSide>('A')
@@ -184,24 +183,35 @@ export default function ScoreMatchScreen() {
                     </Text>
                   )}
 
-                  <View style={[styles.courts, wide && { flexDirection: 'row' }]}>
-                    {(['A', 'B'] as const).map(side => (
-                      <View key={side} style={[shared.card, { flex: 1, gap: theme.spacing.xs, borderTopWidth: 3, borderTopColor: TEAM_COLORS[side].fill }]}>
-                        <Text style={shared.label}>{teamName(m.doc!, side)} · tap a player to sub</Text>
-                        <CourtGrid
-                          side={side}
-                          team={set.teams[side]}
-                          serving={set.serving === side}
-                          names={names[side]}
-                          onPressPlayer={player => {
-                            const t = set.teams[side]
-                            if (t.libero?.libero === player) return openSheet('libero', side)
-                            setSubOut(player)
-                            openSheet('sub', side)
-                          }}
-                        />
-                      </View>
-                    ))}
+                  <View style={styles.courts}>
+                    <Text style={[shared.caption, { textAlign: 'center' }]}>Tap a player to sub them, or the libero to swap back.</Text>
+                    <CourtLayout
+                      renderLabel={side => (
+                        <Text style={[shared.label, { color: TEAM_COLORS[side].fill, marginBottom: 0, textAlign: 'center' }]}>
+                          {teamName(m.doc!, side)}{set.serving === side ? ' · serving' : ''}
+                        </Text>
+                      )}
+                      renderSpot={(side, position) => {
+                        const spot = courtOf(set.teams[side])[position]
+                        const isServer = set.serving === side && position === 0
+                        return (
+                          <CourtSpot
+                            position={position}
+                            number={spot.player}
+                            name={names[side].get(spot.player)}
+                            libero={spot.libero}
+                            highlight={isServer ? TEAM_COLORS[side] : null}
+                            onPress={() => {
+                              if (spot.libero) return openSheet('libero', side)
+                              setSubOut(spot.player)
+                              openSheet('sub', side)
+                            }}
+                            accessibilityLabel={`${teamName(m.doc!, side)} position ${POSITION_LABELS[position]}: ${spot.libero ? 'libero ' : ''}#${spot.player}${isServer ? ', serving' : ''}`}
+                            testID={`court-${side}-${position}`}
+                          />
+                        )
+                      }}
+                    />
                   </View>
                 </>
               )}

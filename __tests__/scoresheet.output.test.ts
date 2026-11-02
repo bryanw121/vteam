@@ -1,31 +1,9 @@
 import { replay } from '../lib/scoresheet/engine'
 import { record } from '../lib/scoresheet/history'
 import { MATCH_FORMATS, makeRules } from '../lib/scoresheet/rules'
-import { parseRoster, rosterToText } from '../lib/scoresheet/roster'
 import { scoresheetHtml } from '../lib/scoresheet/sheetHtml'
 import { matchSummary, scoreLine, shareText } from '../lib/scoresheet/summary'
 import type { MatchDoc, ScoreEventInput } from '../types/scoresheet'
-
-describe('parseRoster', () => {
-  it('reads numbers, names, libero and captain marks', () => {
-    const { players, errors } = parseRoster('7 Jane Doe\n#12 Kim L\n3 Ana (C)\n15, 9 Al')
-    expect(errors).toEqual([])
-    expect(players).toEqual([
-      { number: 3, name: 'Ana', captain: true },
-      { number: 7, name: 'Jane Doe' },
-      { number: 9, name: 'Al' },
-      { number: 12, name: 'Kim', libero: true },
-      { number: 15 },
-    ])
-    expect(parseRoster(rosterToText(players)).players).toEqual(players)
-  })
-
-  it('flags missing numbers and duplicates', () => {
-    const { players, errors } = parseRoster('Jane\n4 Ann\n4 Bea')
-    expect(players).toHaveLength(1)
-    expect(errors).toHaveLength(2)
-  })
-})
 
 describe('scoresheet output', () => {
   const setup = {

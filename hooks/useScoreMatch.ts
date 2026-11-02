@@ -101,11 +101,12 @@ export function useScoreMatch(id: string | undefined): ScoreMatchApi {
   }
 }
 
-/** Creates and saves a new match; resolves with its id. */
-export async function createMatch(setup: MatchDoc['setup']): Promise<string> {
+/** Creates and saves a new match, optionally starting set 1 (undoable); resolves with its id. */
+export async function createMatch(setup: MatchDoc['setup'], firstSet?: ScoreEventInput): Promise<string> {
   const now = Date.now()
   const id = newId()
-  const doc: MatchDoc = { id, createdAt: now, updatedAt: now, setup, log: [], undo: [], redo: [] }
-  await saveMatch(doc, matchSummary(doc, replay(setup, [])))
+  let doc: MatchDoc = { id, createdAt: now, updatedAt: now, setup, log: [], undo: [], redo: [] }
+  if (firstSet) doc = record(doc, firstSet, now).doc
+  await saveMatch(doc, matchSummary(doc, replay(setup, doc.log)))
   return id
 }

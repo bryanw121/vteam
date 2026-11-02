@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { Text } from '../ui/Text'
 import { Chip } from '../ui'
 import { Button } from '../Button'
 import { PlayerChip } from './PlayerChip'
+import { CourtLayout } from './CourtLayout'
+import { CourtSpot } from './CourtSpot'
 import { TEAM_COLORS } from './teamColors'
 import { shared, theme } from '../../constants'
 import { POSITION_LABELS, nextSetDefaults } from '../../lib/scoresheet/engine'
@@ -16,8 +18,6 @@ type Props = {
   onStart: (input: ScoreEventInput) => void
 }
 
-// Front row IV III II, back row V VI I.
-const GRID = [[3, 2, 1], [4, 5, 0]] as const
 const empty = (): (number | null)[] => [null, null, null, null, null, null]
 
 /** Before each set: six players per team in serving order, liberos, and who serves first. */
@@ -48,6 +48,11 @@ export function LineupSetup({ doc, state, onStart }: Props) {
     setLineups(prev => ({ ...prev, [side]: prev[side].map(x => (x === n ? null : x)) }))
   }
 
+  const names = useMemo(() => ({
+    A: new Map(doc.setup.teams.A.players.map(p => [p.number, p.name ?? ''])),
+    B: new Map(doc.setup.teams.B.players.map(p => [p.number, p.name ?? ''])),
+  }), [doc.setup])
+
   const complete = (side: TeamSide) => lineups[side].every(n => n != null)
   const canStart = complete('A') && complete('B') && firstServe != null
 
@@ -66,41 +71,40 @@ export function LineupSetup({ doc, state, onStart }: Props) {
       <View>
         <Text style={shared.subheading}>Set {defaults.index + 1} lineups</Text>
         <Text style={shared.caption}>
-          Tap a position, then a player. Position I serves first, then II, III and on around.
+          Tap a spot on the court, then a player. Position I serves first, then II, III and on around.
           {defaults.lineups ? " Filled in from last set; change anything that's different." : ''}
         </Text>
       </View>
 
+      <CourtLayout
+        renderLabel={side => <Text style={[shared.label, { color: TEAM_COLORS[side].fill, marginBottom: 0 }]}>{teamName(doc, side)}</Text>}
+        renderSpot={(side, slot) => {
+          const n = lineups[side][slot]
+          const isActive = active?.side === side && active.slot === slot
+          return (
+            <CourtSpot
+              position={slot}
+              number={n}
+              name={n != null ? names[side].get(n) : undefined}
+              highlight={isActive ? TEAM_COLORS[side] : null}
+              placeholder="–"
+              onPress={() => setActive({ side, slot })}
+              accessibilityLabel={`${teamName(doc, side)} position ${POSITION_LABELS[slot]}${n != null ? `: #${n}` : ', empty'}`}
+              testID={`slot-${side}-${slot}`}
+            />
+          )
+        }}
+      />
+
       {(['A', 'B'] as const).map(side => {
         const roster = doc.setup.teams[side].players
         const color = TEAM_COLORS[side]
+        const picking = active?.side === side
         return (
           <View key={side} style={[shared.card, { gap: theme.spacing.sm, borderLeftWidth: 4, borderLeftColor: color.fill }]} testID={`lineup-${side}`}>
-            <Text style={shared.subheading}>{teamName(doc, side)}</Text>
-            <View style={{ gap: 4 }}>
-              {GRID.map((row, r) => (
-                <View key={r} style={{ flexDirection: 'row', gap: 4 }}>
-                  {row.map(slot => {
-                    const n = lineups[side][slot]
-                    const isActive = active?.side === side && active.slot === slot
-                    return (
-                      <Pressable
-                        key={slot}
-                        onPress={() => setActive({ side, slot })}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Position ${POSITION_LABELS[slot]}${n != null ? `: #${n}` : ', empty'}`}
-                        accessibilityState={{ selected: isActive }}
-                        testID={`slot-${side}-${slot}`}
-                        style={[styles.slot, isActive && { borderColor: color.fill, borderWidth: 2 }]}
-                      >
-                        <Text style={styles.slotLabel}>{POSITION_LABELS[slot]}{slot === 0 ? ' · serves' : ''}</Text>
-                        <Text style={styles.slotNum}>{n ?? '–'}</Text>
-                      </Pressable>
-                    )
-                  })}
-                </View>
-              ))}
-            </View>
+            <Text style={shared.label}>
+              {teamName(doc, side)}{picking && active ? `: pick position ${POSITION_LABELS[active.slot]}` : ''}
+            </Text>
             <View role="radiogroup" style={styles.chips}>
               {roster.filter(p => !liberos[side].includes(p.number)).map(p => (
                 <PlayerChip
@@ -119,7 +123,7 @@ export function LineupSetup({ doc, state, onStart }: Props) {
               {roster.filter(p => p.libero || liberos[side].includes(p.number)).map(p => (
                 <Chip key={p.number} label={`#${p.number}${p.name ? ` ${p.name.split(' ')[0]}` : ''}`} variant="tint" active={liberos[side].includes(p.number)} onPress={() => toggleLibero(side, p.number)} />
               ))}
-              {!roster.some(p => p.libero) && <Text style={shared.caption}>No libero on the roster (add L after a number).</Text>}
+              {!roster.some(p => p.libero) && <Text style={shared.caption}>No libero on the roster.</Text>}
             </View>
           </View>
         )
@@ -141,17 +145,5 @@ export function LineupSetup({ doc, state, onStart }: Props) {
 }
 
 const styles = StyleSheet.create({
-  slot: {
-    flex: 1,
-    minHeight: 56,
-    borderRadius: theme.radius.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  slotLabel: { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext },
-  slotNum: { fontFamily: theme.fonts.display, fontSize: theme.font.size.xl, color: theme.colors.text },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
 })

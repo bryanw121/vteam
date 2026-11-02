@@ -65,7 +65,6 @@ try {
   await shot(page, 'scorekeeper-empty')
   await tap(page, 'new-match')
   await page.getByTestId('team-name-A').waitFor()
-  await page.getByTestId('team-name-A').locator('input').fill('Aces').catch(() => page.getByTestId('team-name-A').fill('Aces'))
   const fill = async (id, value) => {
     const el = page.getByTestId(id)
     const inner = el.locator('input, textarea')
@@ -73,21 +72,37 @@ try {
     else await el.fill(value)
   }
   await fill('team-name-A', 'Aces')
-  await fill('team-roster-A', '1 Maya\n2 Jess C\n3 Priya\n4 Lena\n5 Sofia\n6 Tori\n7 Nina\n8 Rae\n20 Kim L')
   await fill('team-name-B', 'Blockers')
-  await fill('team-roster-B', '11 Ana\n12 Bea\n13 Cara\n14 Dee C\n15 Eve\n16 Fay\n17 Gia\n30 Hana L')
-  await shot(page, 'new-match', true)
-  await tap(page, 'start-match')
+  await shot(page, 'new-match-empty')
 
-  // 3. Lineups
-  await page.getByTestId('lineup-A').waitFor({ timeout: 15000 })
-  for (const n of [1, 2, 3, 4, 5, 6]) await tap(page, `pick-A-${n}`)
-  await shot(page, 'lineup-team-a')
-  await tap(page, 'slot-B-0')
-  for (const n of [11, 12, 13, 14, 15, 16]) await tap(page, `pick-B-${n}`)
+  // 3. Put the starting six on the court: tap position I, then each save moves to the next spot.
+  const starters = [[1, 'Maya'], [2, 'Jess'], [3, 'Priya'], [4, 'Lena'], [5, 'Sofia'], [6, 'Tori'], [11, 'Ana'], [12, 'Bea'], [13, 'Cara'], [14, 'Dee'], [15, 'Eve'], [16, 'Fay']]
+  await tap(page, 'spot-A-0')
+  for (const [i, [n, name]] of starters.entries()) {
+    await page.getByTestId('player-number').waitFor()
+    await fill('player-number', String(n))
+    await fill('player-name', name)
+    if (i === 2) await shot(page, 'player-sheet')
+    await tap(page, 'player-save')
+    await page.waitForTimeout(250)
+  }
+  const bench = { A: [[7, 'Nina'], [8, 'Rae'], [20, 'Kim', true]], B: [[17, 'Gia'], [30, 'Hana', true]] }
+  for (const side of ['A', 'B']) {
+    for (const [n, name, libero] of bench[side]) {
+      await tap(page, `bench-add-${side}`)
+      await page.getByTestId('player-number').waitFor()
+      await fill('player-number', String(n))
+      await fill('player-name', name)
+      if (libero) await tap(page, 'player-libero')
+      await tap(page, 'player-save')
+      await page.waitForTimeout(250)
+    }
+  }
   await tap(page, 'first-serve-A')
-  await shot(page, 'lineup-ready', true)
-  await tap(page, 'start-set')
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await shot(page, 'new-match-court')
+  await shot(page, 'new-match-full', true)
+  await tap(page, 'start-match')
 
   // 4. Scoring
   await page.getByTestId('point-A').waitFor()
