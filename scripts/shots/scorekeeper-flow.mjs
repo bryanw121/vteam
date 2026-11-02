@@ -8,7 +8,7 @@
  *
  * Build the export against the mock URL first (see README.md). Exits 1 if a check fails.
  */
-import { mkdir } from 'node:fs/promises'
+import { mkdir, readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { VIEWPORTS, launchChromium, parseArgs } from './capture.mjs'
 import { serveDist } from './lib/server.mjs'
@@ -204,6 +204,12 @@ try {
   await shot(page, 'scoresheet', true)
   const frame = page.frameLocator('iframe').first()
   check(await frame.getByText('Official Scoresheet').isVisible().catch(() => false), 'scoresheet renders')
+  // The real USA Volleyball form, filled in, as a download.
+  const [download] = await Promise.all([page.waitForEvent('download', { timeout: 20_000 }), tap(page, 'sheet-official')])
+  const pdfPath = join(out, 'official-usav-scoresheet.pdf')
+  await download.saveAs(pdfPath)
+  const pdf = await readFile(pdfPath)
+  check(pdf.subarray(0, 5).toString() === '%PDF-' && pdf.length > 30_000, `official form downloads (${download.suggestedFilename()}, ${pdf.length} bytes)`)
 } catch (e) {
   failures.push(e.message.split('\n')[0])
   process.stderr.write(`  FAIL ${e.message.split('\n')[0]}\n`)

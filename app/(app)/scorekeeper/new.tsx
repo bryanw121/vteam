@@ -20,6 +20,7 @@ import { routes } from '../../../utils/routes'
 import type { Lineup, MatchInfo, RosterPlayer, RulesPreset, TeamSide } from '../../../types'
 
 const FORMAT_OPTIONS: { key: MatchFormatKey; label: string; hint: string }[] = [
+  { key: 'oneSet', label: '1 set', hint: 'One set to 25 decides it' },
   { key: 'bestOf3', label: 'Best of 3', hint: '25, 25, 15' },
   { key: 'bestOf5', label: 'Best of 5', hint: '25 ×4, 15' },
   { key: 'twoSets', label: 'Pool: 2 sets', hint: 'Both sets played, can split' },
