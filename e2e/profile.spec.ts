@@ -2,6 +2,17 @@ import { test, expect } from '@playwright/test'
 import { E2E_BASE_URL as BASE_URL } from './env'
 
 test.describe('Own profile', () => {
+  test('Every badge category loads its bundled artwork', async ({ page }) => {
+    await page.goto(`${BASE_URL}/settings/badges`)
+    const grid = page.getByTestId('badges-grid')
+    await expect(grid).toBeVisible({ timeout: 20_000 })
+    const images = grid.locator('img')
+    await expect(images).toHaveCount(14)
+    await expect.poll(async () => images.evaluateAll(nodes =>
+      nodes.every(node => node instanceof HTMLImageElement && node.complete && node.naturalWidth > 0 && new URL(node.src).pathname.includes('/badges/')),
+    )).toBe(true)
+  })
+
   test('Cheers count matches its detail screen and survives a refresh', async ({ page }) => {
     await page.goto(`${BASE_URL}/profile`)
 
