@@ -184,6 +184,7 @@ table.results tr.total td{font-weight:800}
 .remarks ol{margin:0;padding-left:16px}
 .rosters{display:grid;grid-template-columns:1fr 1fr;gap:10px;border:1.5px solid #000;padding:6px;margin-bottom:10px;break-inside:avoid}
 ul.roster{list-style:none;margin:0;padding:0;columns:3;font-size:10px}
+ul.roster li{white-space:nowrap;break-inside:avoid}
 .sign{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;break-inside:avoid}
 .sign div{border-top:1px solid #000;padding-top:2px;font-size:9px;margin-top:26px}
 .sign b{display:block;font-size:11px;margin-top:-24px;height:22px}
