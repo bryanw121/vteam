@@ -5,6 +5,7 @@ import { BottomSheet } from '../ui'
 import { Button } from '../Button'
 import { Input } from '../Input'
 import { SheetBody } from './SheetParts'
+import { PlayerChip } from './PlayerChip'
 import { shared, theme } from '../../constants'
 import type { RosterPlayer } from '../../types'
 
@@ -22,11 +23,14 @@ type Props = {
   saveLabel?: string
   onSave: (player: RosterPlayer) => void
   onRemove?: () => void
+  /** Bench players who can be put in this court spot with one tap. */
+  bench?: RosterPlayer[]
+  onPickBench?: (player: RosterPlayer) => void
   onDismiss: () => void
 }
 
 /** Add or edit one player: jersey number (required), name, captain, libero. */
-export function PlayerSheet({ visible, editKey, title, initial, taken, allowLibero, saveLabel = 'Save', onSave, onRemove, onDismiss }: Props) {
+export function PlayerSheet({ visible, editKey, title, initial, taken, allowLibero, saveLabel = 'Save', onSave, onRemove, bench, onPickBench, onDismiss }: Props) {
   const [num, setNum] = useState('')
   const [name, setName] = useState('')
   const [captain, setCaptain] = useState(false)
@@ -58,6 +62,15 @@ export function PlayerSheet({ visible, editKey, title, initial, taken, allowLibe
   return (
     <BottomSheet visible={visible} onDismiss={onDismiss} title={title}>
       <SheetBody>
+        {!!bench?.length && onPickBench && (
+          <View style={{ gap: theme.spacing.xs }}>
+            <Text style={shared.label}>From the bench</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+              {bench.map(p => <PlayerChip key={p.number} number={p.number} name={p.name} onPress={() => onPickBench(p)} testID={`bench-pick-${p.number}`} />)}
+            </View>
+            <Text style={shared.caption}>Or type a new player:</Text>
+          </View>
+        )}
         <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
           <View style={{ width: 96 }}>
             <Input

@@ -11,6 +11,7 @@ import { CourtLayout } from '../../../components/scoresheet/CourtLayout'
 import { CourtSpot } from '../../../components/scoresheet/CourtSpot'
 import { PlayerChip } from '../../../components/scoresheet/PlayerChip'
 import { PlayerSheet } from '../../../components/scoresheet/PlayerSheet'
+import { RosterScanSheet } from '../../../components/scoresheet/RosterScanSheet'
 import { TEAM_COLORS } from '../../../components/scoresheet/teamColors'
 import { createMatch } from '../../../hooks/useScoreMatch'
 import { POSITION_LABELS } from '../../../lib/scoresheet/engine'
@@ -55,6 +56,7 @@ export default function NewScoreMatchScreen() {
   const insets = useSafeAreaInsets()
   const [teams, setTeams] = useState<Record<TeamSide, TeamDraft>>({ A: emptyTeam(), B: emptyTeam() })
   const [editing, setEditing] = useState<Editing | null>(null)
+  const [scanning, setScanning] = useState<TeamSide | null>(null)
   const [firstServe, setFirstServe] = useState<TeamSide | null>(null)
   const [format, setFormat] = useState<MatchFormatKey>('bestOf3')
   const [preset, setPreset] = useState<RulesPreset>('usav')
@@ -103,6 +105,33 @@ export default function NewScoreMatchScreen() {
       const next = nextEmpty(editing.side, editing.position, draft)
       setEditing(next ? { side: next.side, spot: 'court', position: next.position } : null)
     } else setEditing(null)
+  }
+
+  // A bench player goes into the court spot being edited; whoever was there moves to the bench.
+  const pickBench = (player: RosterPlayer) => {
+    if (!editing || editing.spot !== 'court') return
+    const t = { ...teams[editing.side], court: [...teams[editing.side].court], bench: teams[editing.side].bench.filter(p => p !== player) }
+    const previous = t.court[editing.position]
+    if (previous) t.bench.push(previous)
+    t.court[editing.position] = player
+    const draft = { ...teams, [editing.side]: t }
+    setTeams(draft)
+    const next = !previous ? nextEmpty(editing.side, editing.position, draft) : null
+    setEditing(next ? { side: next.side, spot: 'court', position: next.position } : null)
+  }
+
+  // Scanned players: the first six regulars can fill an empty court in serving order (I-VI).
+  const addScanned = (side: TeamSide, players: RosterPlayer[], opts: { fillCourt: boolean; teamName: string | null }) => {
+    const t = { ...teams[side], court: [...teams[side].court], bench: [...teams[side].bench] }
+    let rest = players
+    if (opts.fillCourt) {
+      const starters = players.filter(p => !p.libero).slice(0, 6)
+      starters.forEach((p, i) => { t.court[i] = p })
+      rest = players.filter(p => !starters.includes(p))
+    }
+    t.bench.push(...rest)
+    if (!t.name.trim() && opts.teamName) t.name = opts.teamName
+    setTeams({ ...teams, [side]: t })
   }
 
   const remove = () => {
@@ -177,7 +206,7 @@ export default function NewScoreMatchScreen() {
           <ScreenContainer>
             <ScreenHeader safeTop kicker="Scorekeeper" title="New match" onBack={() => router.back()} />
             <Text style={[shared.body, { color: theme.colors.subtextStrong, marginBottom: theme.spacing.md }]}>
-              Tap a spot to put a player on the court. Position I serves first. Then add subs and liberos on each bench.
+              Tap a spot to put a player on the court (position I serves first), or scan a roster photo to fill a team in one go. Subs and liberos go on each bench.
             </Text>
 
             <CourtLayout
@@ -212,6 +241,7 @@ export default function NewScoreMatchScreen() {
                     <PlayerChip key={p.number} number={p.number} name={p.name} libero={p.libero} onPress={() => setEditing({ side, spot: 'bench', index })} />
                   ))}
                   <Chip label="+ Add player" variant="tint" onPress={() => setEditing({ side, spot: 'bench', index: null })} testID={`bench-add-${side}`} />
+                  <Chip label="Scan a roster photo" variant="tint" onPress={() => setScanning(side)} testID={`scan-${side}`} />
                 </View>
               </View>
             ))}
@@ -282,7 +312,17 @@ export default function NewScoreMatchScreen() {
         saveLabel={upcoming ? `Save, next: ${upcoming.side === editing?.side ? '' : `${teamLabel(upcoming.side)} `}position ${POSITION_LABELS[upcoming.position]}` : 'Save'}
         onSave={save}
         onRemove={current ? remove : undefined}
+        bench={editing?.spot === 'court' ? teams[editing.side].bench.filter(p => !p.libero) : undefined}
+        onPickBench={pickBench}
         onDismiss={() => setEditing(null)}
+      />
+      <RosterScanSheet
+        visible={scanning != null}
+        teamLabel={scanning ? teamLabel(scanning) : ''}
+        existing={scanning ? allPlayers(scanning).map(p => p.number) : []}
+        courtEmpty={scanning ? teams[scanning].court.every(p => p == null) : false}
+        onAdd={(players, opts) => scanning && addScanned(scanning, players, opts)}
+        onDismiss={() => setScanning(null)}
       />
     </View>
   )

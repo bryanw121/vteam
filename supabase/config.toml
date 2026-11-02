@@ -30,3 +30,8 @@ verify_jwt = true
 # verifies the user JWT and the function checks the caller owns the row.
 [functions.send-feedback-email]
 verify_jwt = true
+
+# Scorekeeper "Scan roster": signed-in clients send one photo; the function asks a
+# vision model for jersey numbers and names. Nothing is stored.
+[functions.read-roster]
+verify_jwt = true
