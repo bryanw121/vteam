@@ -32,7 +32,7 @@ export function OfficialSheetButton({ doc, state }: OfficialSheetButtonProps) {
   }
   return (
     <View style={{ gap: theme.spacing.xs, marginBottom: theme.spacing.sm }}>
-      <Button label="Official USA Volleyball form (PDF)" icon="document-text-outline" onPress={() => void exportSheet()} loading={busy} testID="sheet-official" />
+      <Button label="Official USA Volleyball form (PDF)" icon="document-text-outline" variant="secondary" onPress={() => void exportSheet()} loading={busy} testID="sheet-official" />
       <Text style={shared.caption}>
         {state.sets.length > 2 ? `The form holds two sets, so this match fills ${Math.ceil(state.sets.length / 2)} sheets.` : 'Filled in on the real two-set scoresheet, ready to print or hand in.'}
       </Text>

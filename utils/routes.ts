@@ -101,6 +101,7 @@ export const routes = {
   scorekeeperNew: () => href('/scorekeeper/new'),
   scorekeeperMatch: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}`),
   scorekeeperSheet: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/sheet`),
+  scorekeeperCopy: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/copy`),
   settings: (section?: SettingsSection) => href(section ? `/settings/${section}` : '/settings'),
 
   // ── Groups ──────────────────────────────────────────────────────────────

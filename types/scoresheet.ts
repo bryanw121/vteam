@@ -203,6 +203,8 @@ export type MatchDoc = MatchHistory & {
   log: ScoreEvent[]
   /** Save counter: the newer of the two saved copies wins on load. */
   seq?: number
+  /** "Copy to paper" steps the scorer has ticked off (CopyStep ids). */
+  copied?: string[]
 }
 
 /** A row in the saved-matches list. */
@@ -363,6 +365,47 @@ export type OfficialSheetLayout = { pages: ('form' | 'plain')[]; ops: SheetOp[] 
 export type MeasureText = (text: string, size: number, bold?: boolean) => number
 
 export type OfficialSheetButtonProps = { doc: MatchDoc; state: MatchState }
+
+/** A team saved on the device for one-tap setup next time (lib/scoresheet/teamStore.ts). */
+export type SavedTeam = {
+  name: string
+  /** Starting six in lineup order (position I first), then the bench. */
+  court: RosterPlayer[]
+  bench: RosterPlayer[]
+  updatedAt: number
+}
+
+/** Match details carried to the next match of the same day (same tournament, same court). */
+export type SavedMatchInfo = { info: MatchInfo; savedAt: number }
+
+/** An area of the paper form, in points on the landscape page (792 × 612), from the top left. */
+export type SheetRegion = { x: number; y: number; w: number; h: number }
+
+/** One block of what to write in a "Copy to paper" step. */
+export type CopySection =
+  /** Six boxes under I–VI (lineup, service rounds). */
+  | { kind: 'grid'; title: string; cells: { label: string; value: string }[] }
+  /** Label / value lines. */
+  | { kind: 'rows'; title?: string; rows: { label: string; value: string }[]; empty?: string }
+  /** A big number with an instruction (running score). */
+  | { kind: 'big'; title: string; value: string; detail: string }
+
+/** One step of "Copy to paper": a part of the form, in the order the paper lays it out. */
+export type CopyStep = {
+  id: string
+  title: string
+  /** Where on the form, in words. */
+  where: string
+  /** Sheet number (1-based; sets 3–4 are on sheet 2) and the areas to highlight on the map. */
+  sheet: number
+  regions: SheetRegion[]
+  sections: CopySection[]
+}
+
+export type CopySectionProps = { section: CopySection }
+export type SheetMapProps = { regions: SheetRegion[]; sheet: number }
+export type MatchDetailsCardProps = { info: MatchInfo; onChange: (patch: Partial<MatchInfo>) => void }
+export type SavedTeamsPickerProps = { teams: SavedTeam[]; target: TeamSide | null; targetLabel: string; onPick: (team: SavedTeam) => void }
 
 export type ScoresheetPreviewProps = {
   html: string
