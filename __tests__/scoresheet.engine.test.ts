@@ -372,3 +372,50 @@ describe('time-out countdown', () => {
     expect(formatClock(-5)).toBe('0:00')
   })
 })
+
+describe('NAGVA-style options: start at 4, caps, time limit', () => {
+  const { withOptions } = require('../lib/scoresheet/rules') as typeof import('../lib/scoresheet/rules')
+  const nagvaPool = () => setupOf('usav', withOptions(MATCH_FORMATS.twoSets, { start: 4, cap: 27, timeLimitMinutes: 40 }))
+  const nagvaBracket = () => setupOf('usav', withOptions(MATCH_FORMATS.bestOf3, { start: 4, cap: 27 }))
+
+  it('sets start at 4-4 and the running score counts from there', () => {
+    const set = stateOf(play(docOf(nagvaPool()), start('A'), rally('A'))).sets[0]
+    expect([set.teams.A.score, set.teams.B.score]).toEqual([5, 4])
+    expect(set.teams.A.marks).toEqual(['start', 'start', 'start', 'start', 'rally'])
+    expect(set.teams.A.turns[0][0].points).toBe(1)
+  })
+
+  it('ends a set at the 27 cap; the deciding set starts at 0 with no cap', () => {
+    const d = play(docOf(nagvaBracket()), start('A'), ...rallies('A', 20), ...rallies('B', 20), rally('A'), rally('B'), rally('A'), rally('B'), rally('A'))
+    const set = stateOf(d).sets[0]
+    expect([set.teams.A.score, set.teams.B.score]).toEqual([27, 26])
+    expect(set.winner).toBe('A')
+    const d3 = play(d, start('B'), ...rallies('B', 21), start('A'))
+    const third = stateOf(d3).sets[2]
+    expect(third).toMatchObject({ target: 15, cap: null, startScore: 0 })
+    expect(third.teams.A.score).toBe(0)
+  })
+
+  it("time's up: the leader takes the set and the match ends", () => {
+    const s = stateOf(play(docOf(nagvaPool()), start('A'), ...rallies('A', 10), ...rallies('B', 3), { type: 'time_up' }))
+    expect(s.sets[0].winner).toBe('A')
+    expect(s.over).toBe(true)
+    expect(s.winner).toBe('A')
+  })
+
+  it("time's up with the set tied: the next point wins it", () => {
+    let d = play(docOf(nagvaPool()), start('A'), ...rallies('A', 5), ...rallies('B', 5), { type: 'time_up' })
+    expect(stateOf(d).sets[0]).toMatchObject({ nextPointWins: true, winner: null })
+    d = play(d, rally('B'))
+    const s = stateOf(d)
+    expect(s.sets[0].winner).toBe('B')
+    expect(s.over).toBe(true)
+  })
+
+  it('warns about a time-out in the last two minutes', () => {
+    const d = play(docOf(nagvaPool()), start('A'))
+    const startedAt = d.log[0].at
+    const late = record(d, { type: 'timeout', team: 'A' }, startedAt + 39 * 60_000).doc
+    expect(stateOf(late).warnings.map(w => w.code)).toEqual(['timeout-late'])
+  })
+})

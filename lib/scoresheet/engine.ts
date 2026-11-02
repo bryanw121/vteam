@@ -20,7 +20,7 @@ import type {
   Warning,
   WarningCode,
 } from '../../types/scoresheet'
-import { isDecidingSet, setIsWon, setTarget } from './rules'
+import { isDecidingSet, setCap, setIsWon, setStart, setTarget } from './rules'
 
 export const other = (t: TeamSide): TeamSide => (t === 'A' ? 'B' : 'A')
 export const POSITION_LABELS = ['I', 'II', 'III', 'IV', 'V', 'VI'] as const
@@ -160,7 +160,7 @@ function endSet(ctx: Ctx, set: SetState, winner: TeamSide, at: number, reason: s
   if (setsToWin != null && state.setsWon[winner] >= setsToWin) {
     state.over = true
     state.winner = winner
-  } else if (state.sets.length >= maxSets) {
+  } else if (state.sets.length >= maxSets || state.timeExpired) {
     state.over = true
     state.winner = state.setsWon.A === state.setsWon.B ? null : state.setsWon.A > state.setsWon.B ? 'A' : 'B'
   }
@@ -186,7 +186,8 @@ function award(ctx: Ctx, set: SetState, team: TeamSide, mark: PointMark, ev: Sco
   set.firstRally = false
   set.rallies += 1
   const opp = set.teams[other(team)]
-  if (setIsWon(ctx.setup.rules.format, set.target, t.score, opp.score)) endSet(ctx, set, team, ev.at, null)
+  if (set.nextPointWins) endSet(ctx, set, team, ev.at, 'Time expired; next point won')
+  else if (setIsWon(ctx.setup.rules.format, set.target, t.score, opp.score, set.cap)) endSet(ctx, set, team, ev.at, null)
 }
 
 function applyOverride(ctx: Ctx, set: SetState, ev: Extract<ScoreEvent, { type: 'override' }>) {
@@ -217,8 +218,8 @@ function applyOverride(ctx: Ctx, set: SetState, ev: Extract<ScoreEvent, { type: 
   remark(ctx, set, `Corrected: ${parts.join(', ') || 'no change'}. Reason: ${ev.reason}`)
   const { A, B } = set.teams
   const fmt = ctx.setup.rules.format
-  if (setIsWon(fmt, set.target, A.score, B.score)) endSet(ctx, set, 'A', ev.at, ev.reason)
-  else if (setIsWon(fmt, set.target, B.score, A.score)) endSet(ctx, set, 'B', ev.at, ev.reason)
+  if (setIsWon(fmt, set.target, A.score, B.score, set.cap)) endSet(ctx, set, 'A', ev.at, ev.reason)
+  else if (setIsWon(fmt, set.target, B.score, A.score, set.cap)) endSet(ctx, set, 'B', ev.at, ev.reason)
 }
 
 function applySub(ctx: Ctx, set: SetState, ev: Extract<ScoreEvent, { type: 'sub' }>) {
@@ -314,6 +315,7 @@ function startSet(ctx: Ctx, ev: Extract<ScoreEvent, { type: 'set_start' }>) {
       })
   }
   const target = setTarget(setup.rules.format, index)
+  const startScore = setStart(setup.rules.format, index)
   const set: SetState = {
     index,
     teams: { A: emptyTeam(ev.lineups.A, ev.liberos.A), B: emptyTeam(ev.lineups.B, ev.liberos.B) },
@@ -325,9 +327,16 @@ function startSet(ctx: Ctx, ev: Extract<ScoreEvent, { type: 'set_start' }>) {
     winner: null,
     endReason: null,
     target,
+    cap: setCap(setup.rules.format, index),
+    startScore,
+    nextPointWins: false,
     courtSwitchAt: isDecidingSet(setup.rules.format, index) ? Math.ceil(target / 2) : null,
     courtSwitched: false,
     rallies: 0,
+  }
+  for (const side of ['A', 'B'] as const) {
+    set.teams[side].score = startScore
+    set.teams[side].marks = Array<PointMark>(startScore).fill('start')
   }
   state.sets.push(set)
   state.current = index
@@ -343,6 +352,24 @@ function step(ctx: Ctx, ev: ScoreEvent) {
       return remark(ctx, state.current != null ? state.sets[state.current] : null, ev.text)
     default:
       break
+  }
+  if (ev.type === 'time_up') {
+    state.timeExpired = true
+    const live = state.current != null ? state.sets[state.current] : null
+    if (!live) {
+      if (!state.over) {
+        state.over = true
+        state.winner = state.setsWon.A === state.setsWon.B ? null : state.setsWon.A > state.setsWon.B ? 'A' : 'B'
+      }
+      return remark(ctx, null, 'Time expired between sets; the match ended.')
+    }
+    const { A, B } = live.teams
+    if (A.score === B.score) {
+      live.nextPointWins = true
+      return remark(ctx, live, 'Time expired with the set tied: the next point wins.')
+    }
+    remark(ctx, live, 'Time expired.')
+    return endSet(ctx, live, A.score > B.score ? 'A' : 'B', ev.at, 'Time expired')
   }
   // Sanctions and improper requests can be given between sets too.
   if (ev.type === 'sanction') {
@@ -396,6 +423,10 @@ function step(ctx: Ctx, ev: ScoreEvent) {
       const t = set.teams[ev.team]
       if (t.timeouts.length >= ctx.setup.rules.timeoutsPerSet)
         warn(ctx, 'timeout-limit', `${label(ctx, ev.team)} has used all ${ctx.setup.rules.timeoutsPerSet} time-outs this set.`, ev)
+      const limit = ctx.setup.rules.format.timeLimitMinutes
+      const first = ctx.state.sets[0]
+      if (limit && first && ev.at >= first.startedAt + (limit - 2) * 60_000)
+        warn(ctx, 'timeout-late', 'No time-outs in the last 2 minutes of a timed match.', ev)
       t.timeouts.push({ team: ev.team, score: [t.score, set.teams[other(ev.team)].score], eventId: ev.id })
       return
     }
@@ -431,6 +462,7 @@ function emptyState(): MatchState {
     setsWon: { A: 0, B: 0 },
     winner: null,
     over: false,
+    timeExpired: false,
     sanctions: [],
     improperRequests: { A: false, B: false },
     warnings: [],
