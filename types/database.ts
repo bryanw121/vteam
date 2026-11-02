@@ -171,6 +171,36 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_art: {
+        Row: {
+          badge_type: string
+          generated_at: string
+          generated_by: string | null
+          image_url: string
+          model: string
+          prompt: string
+          tier: number
+        }
+        Insert: {
+          badge_type: string
+          generated_at?: string
+          generated_by?: string | null
+          image_url: string
+          model: string
+          prompt: string
+          tier: number
+        }
+        Update: {
+          badge_type?: string
+          generated_at?: string
+          generated_by?: string | null
+          image_url?: string
+          model?: string
+          prompt?: string
+          tier?: number
+        }
+        Relationships: []
+      }
       chat_silences: {
         Row: {
           created_at: string

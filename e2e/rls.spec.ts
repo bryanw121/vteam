@@ -84,6 +84,17 @@ test.describe('anon (guest browsing)', () => {
     expect(dm.data ?? []).toEqual([])
   })
 
+  test('reads generated badge art but cannot write it (#10)', async () => {
+    const read = await q(() => anon.from('badge_art').select('badge_type, tier, image_url').limit(1), 'anon badge_art')
+    // Until the migration is on beta (draft PR) the table does not exist.
+    test.skip(read.error?.code === 'PGRST205', 'badge_art not applied on beta yet')
+    expect(read.error).toBeNull()
+    const prompt = await q(() => anon.from('badge_art').select('prompt').limit(1), 'anon badge_art prompt')
+    expect(prompt.error?.code, 'prompt column is not granted to clients').toBe(RLS_DENIED)
+    const write = await q(() => anon.from('badge_art').insert({ badge_type: 'e2e_rls', tier: 1, image_url: 'https://x', prompt: 'x', model: 'x' }), 'anon insert badge_art')
+    expect(write.error?.code).toBe(RLS_DENIED)
+  })
+
   test('cannot run the reminder job or read its ledger (#129)', async () => {
     const run = await q(() => anon.rpc('send_event_reminders'), 'anon send_event_reminders')
     expect(run.error, 'anon may not run send_event_reminders').not.toBeNull()

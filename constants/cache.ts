@@ -14,6 +14,8 @@ export const STALE = {
   detail: 30_000,
   /** A user profile (own or someone else's): the `fetchProfile` pattern from CLAUDE.md. */
   profile: 60_000,
+  /** Generated badge art (useBadgeArt): a fixed catalog that changes only when an admin regenerates a tier. */
+  badgeArt: 60 * 60_000,
   /** Event tags (host form, feed filters): a near-static lookup table. */
   tags: 10 * 60_000,
   /** get_my_conversations (Chat list, chat tab badge, chat room header); realtime patches it in between. */
