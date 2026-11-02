@@ -17,6 +17,7 @@ import { WrongServerSheet } from '../../../../components/scoresheet/WrongServerS
 import { FixSheet } from '../../../../components/scoresheet/FixSheet'
 import { TextSheet } from '../../../../components/scoresheet/TextSheet'
 import { TimelineSheet } from '../../../../components/scoresheet/TimelineSheet'
+import { TimeoutTimer } from '../../../../components/scoresheet/TimeoutTimer'
 import { TEAM_COLORS } from '../../../../components/scoresheet/teamColors'
 import { useScoreMatch } from '../../../../hooks/useScoreMatch'
 import { useScorekeeperKeys } from '../../../../hooks/useScorekeeperKeys'
@@ -112,6 +113,8 @@ export default function ScoreMatchScreen() {
                   <IconButton icon="close" label="Dismiss" onPress={m.dismissWarnings} />
                 </View>
               )}
+
+              {set && <TimeoutTimer doc={m.doc} />}
 
               {set && (
                 <>

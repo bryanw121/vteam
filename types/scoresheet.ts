@@ -58,6 +58,8 @@ export type ScoreRules = {
   /** Substitutions per team per set; null = unlimited. */
   subsPerSet: number | null
   timeoutsPerSet: number
+  /** Length of a time-out, for the countdown (older matches: 30). */
+  timeoutSeconds?: number
   reentry: ReentryRule
   liberoServe: LiberoServeRule
   /** Track libero replacements (warns when a libero rotates to the front row). */

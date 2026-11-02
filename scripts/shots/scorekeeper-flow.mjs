@@ -127,6 +127,10 @@ try {
   // A third time-out raises a warning but is recorded
   for (let i = 0; i < 3; i++) { await tap(page, 'action-timeout'); await tap(page, 'timeout-B') }
   await page.getByTestId('score-warning').waitFor()
+  check(await page.getByTestId('timeout-timer').isVisible(), 'time-out countdown is running')
+  const clockAt = await page.getByTestId('timeout-clock').innerText()
+  await page.waitForTimeout(2100)
+  check((await page.getByTestId('timeout-clock').innerText()) !== clockAt, 'time-out clock counts down')
   await shot(page, 'warning-recorded')
 
   // 5. Close the tab mid-set and come back

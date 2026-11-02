@@ -349,3 +349,26 @@ describe('saved copies', () => {
     expect(pickNewest(null, 'garbage')).toBeNull()
   })
 })
+
+describe('time-out countdown', () => {
+  const { activeTimeout, formatClock } = require('../lib/scoresheet/timer') as typeof import('../lib/scoresheet/timer')
+  it('runs from the time-out until play restarts, through subs during it', () => {
+    let d = play(docOf(), start('A'), rally('A'), { type: 'timeout', team: 'B' })
+    const t = activeTimeout(d.log, d.setup.rules)
+    expect(t).toMatchObject({ team: 'B', seconds: 30 })
+    expect(t!.endsAt - t!.startedAt).toBe(30_000)
+    d = play(d, { type: 'sub', team: 'B', out: 11, in: 17 })
+    expect(activeTimeout(d.log, d.setup.rules)?.team).toBe('B')
+    d = play(d, rally('A'))
+    expect(activeTimeout(d.log, d.setup.rules)).toBeNull()
+  })
+
+  it('uses the rules length, and formats the clock', () => {
+    const d = play(docOf(setupOf('casual')), start('A'), { type: 'timeout', team: 'A' })
+    expect(activeTimeout(d.log, d.setup.rules)?.seconds).toBe(60)
+    expect(activeTimeout(d.log, {})?.seconds).toBe(30)
+    expect(formatClock(29_100)).toBe('0:30')
+    expect(formatClock(61_000)).toBe('1:01')
+    expect(formatClock(-5)).toBe('0:00')
+  })
+})

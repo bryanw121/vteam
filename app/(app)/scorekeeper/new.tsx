@@ -59,6 +59,8 @@ export default function NewScoreMatchScreen() {
   const [format, setFormat] = useState<MatchFormatKey>('bestOf3')
   const [preset, setPreset] = useState<RulesPreset>('usav')
   const [cap, setCap] = useState<number | null>(null)
+  // null: the rules preset's own length.
+  const [timeoutSeconds, setTimeoutSeconds] = useState<number | null>(null)
   const [info, setInfo] = useState<MatchInfo>({ date: today() })
   const [showDetails, setShowDetails] = useState(false)
   const [tried, setTried] = useState(false)
@@ -126,7 +128,7 @@ export default function NewScoreMatchScreen() {
             A: { name: teamLabel('A'), players: allPlayers('A').sort((a, b) => a.number - b.number) },
             B: { name: teamLabel('B'), players: allPlayers('B').sort((a, b) => a.number - b.number) },
           },
-          rules: makeRules(preset, { ...MATCH_FORMATS[format], cap }),
+          rules: { ...makeRules(preset, { ...MATCH_FORMATS[format], cap }), ...(timeoutSeconds ? { timeoutSeconds } : {}) },
         },
         { type: 'set_start', lineups: { A: lineup('A'), B: lineup('B') }, firstServe, liberos: { A: liberos('A'), B: liberos('B') } },
       )
@@ -225,9 +227,16 @@ export default function NewScoreMatchScreen() {
               </View>
               <Text style={[shared.subheading, { marginTop: theme.spacing.sm }]}>Rules</Text>
               <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
-                {RULE_OPTIONS.map(o => <Chip key={o.key} label={o.label} role="radio" active={preset === o.key} onPress={() => setPreset(o.key)} testID={`rules-${o.key}`} />)}
+                {RULE_OPTIONS.map(o => <Chip key={o.key} label={o.label} role="radio" active={preset === o.key} onPress={() => { setPreset(o.key); setTimeoutSeconds(null) }} testID={`rules-${o.key}`} />)}
               </View>
               <Text style={shared.caption}>{RULE_OPTIONS.find(o => o.key === preset)?.hint}. Breaking a rule shows a warning but is still recorded.</Text>
+              <Text style={[shared.label, { marginTop: theme.spacing.sm, marginBottom: 0 }]}>Time-out length</Text>
+              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                {[30, 60, 75].map(sec => {
+                  const current = timeoutSeconds ?? makeRules(preset).timeoutSeconds
+                  return <Chip key={sec} label={`${sec} seconds`} role="radio" variant="tint" active={current === sec} onPress={() => setTimeoutSeconds(sec)} testID={`timeout-length-${sec}`} />
+                })}
+              </View>
             </View>
 
             <View style={[shared.card, { marginTop: theme.spacing.md, gap: theme.spacing.sm }]}>

@@ -17,13 +17,13 @@ export type MatchFormatKey = keyof typeof MATCH_FORMATS
  * rules but always records it (the scorer writes down what happened on the court).
  */
 export const RULE_PRESETS: Record<RulesPreset, Omit<ScoreRules, 'format'>> = {
-  // USA Volleyball domestic: 12 substitutions a set, unlimited entries, a player keeps one
+  // USA Volleyball domestic: 30-second time-outs, 12 substitutions a set, unlimited entries, a player keeps one
   // position in the serving order; one libero serving position per set.
-  usav: { preset: 'usav', subsPerSet: 12, timeoutsPerSet: 2, reentry: 'same-position', liberoServe: 'one-position', trackLibero: true },
+  usav: { preset: 'usav', subsPerSet: 12, timeoutsPerSet: 2, timeoutSeconds: 30, reentry: 'same-position', liberoServe: 'one-position', trackLibero: true },
   // International: 6 substitutions, a starter leaves and returns once; the libero never serves.
-  international: { preset: 'international', subsPerSet: 6, timeoutsPerSet: 2, reentry: 'starter-once', liberoServe: 'never', trackLibero: true },
+  international: { preset: 'international', subsPerSet: 6, timeoutsPerSet: 2, timeoutSeconds: 30, reentry: 'starter-once', liberoServe: 'never', trackLibero: true },
   // Rec play: count things, never warn about limits.
-  casual: { preset: 'casual', subsPerSet: null, timeoutsPerSet: 2, reentry: 'free', liberoServe: 'any', trackLibero: false },
+  casual: { preset: 'casual', subsPerSet: null, timeoutsPerSet: 2, timeoutSeconds: 60, reentry: 'free', liberoServe: 'any', trackLibero: false },
 }
 
 export function makeRules(preset: RulesPreset, format: MatchFormat = MATCH_FORMATS.bestOf3): ScoreRules {
