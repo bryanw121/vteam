@@ -105,6 +105,19 @@ export default function NewScoreMatchScreen() {
     } else setEditing(null)
   }
 
+  // A bench player goes into the court spot being edited; whoever was there moves to the bench.
+  const pickBench = (player: RosterPlayer) => {
+    if (!editing || editing.spot !== 'court') return
+    const t = { ...teams[editing.side], court: [...teams[editing.side].court], bench: teams[editing.side].bench.filter(p => p !== player) }
+    const previous = t.court[editing.position]
+    if (previous) t.bench.push(previous)
+    t.court[editing.position] = player
+    const draft = { ...teams, [editing.side]: t }
+    setTeams(draft)
+    const next = !previous ? nextEmpty(editing.side, editing.position, draft) : null
+    setEditing(next ? { side: next.side, spot: 'court', position: next.position } : null)
+  }
+
   const remove = () => {
     if (!editing) return
     const t = { ...teams[editing.side], court: [...teams[editing.side].court], bench: [...teams[editing.side].bench] }
@@ -282,6 +295,8 @@ export default function NewScoreMatchScreen() {
         saveLabel={upcoming ? `Save, next: ${upcoming.side === editing?.side ? '' : `${teamLabel(upcoming.side)} `}position ${POSITION_LABELS[upcoming.position]}` : 'Save'}
         onSave={save}
         onRemove={current ? remove : undefined}
+        bench={editing?.spot === 'court' ? teams[editing.side].bench.filter(p => !p.libero) : undefined}
+        onPickBench={pickBench}
         onDismiss={() => setEditing(null)}
       />
     </View>
