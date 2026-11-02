@@ -25,7 +25,7 @@ export function ScoresheetPreview({ html, children }: ScoresheetPreviewProps) {
   }
   return (
     <View style={{ gap: theme.spacing.md }}>
-      <Button label="Preview, print or save PDF" icon="document-text-outline" onPress={() => void open()} testID="sheet-print" />
+      <Button label="Preview, print or save PDF" icon="document-text-outline" onPress={() => void open()} variant="secondary" testID="sheet-print" />
       {!!error && <Text style={[shared.caption, { color: theme.colors.error }]}>{error}</Text>}
       {children}
     </View>

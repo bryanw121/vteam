@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
 import { Stack, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -17,7 +17,9 @@ import { POSITION_LABELS } from '../../../lib/scoresheet/engine'
 import { MATCH_FORMATS, makeRules, withOptions, type MatchFormatKey } from '../../../lib/scoresheet/rules'
 import { shared, theme } from '../../../constants'
 import { routes } from '../../../utils/routes'
-import type { Lineup, MatchInfo, RosterPlayer, RulesPreset, TeamSide } from '../../../types'
+import { SavedTeamsPicker } from '../../../components/scoresheet/SavedTeamsPicker'
+import { loadSavedTeams, loadTodaysInfo, rememberInfo, rememberTeams } from '../../../lib/scoresheet/teamStore'
+import type { Lineup, MatchInfo, RosterPlayer, RulesPreset, SavedTeam, TeamSide } from '../../../types'
 
 const FORMAT_OPTIONS: { key: MatchFormatKey; label: string; hint: string }[] = [
   { key: 'oneSet', label: '1 set', hint: 'One set to 25 decides it' },
@@ -80,11 +82,35 @@ export default function NewScoreMatchScreen() {
   const [showDetails, setShowDetails] = useState(false)
   const [tried, setTried] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [savedTeams, setSavedTeams] = useState<SavedTeam[]>([])
+  const [carried, setCarried] = useState(false)
+
+  // Teams from earlier matches, and today's competition / court / officials from the last match.
+  useEffect(() => {
+    let live = true
+    void loadSavedTeams().then(t => { if (live) setSavedTeams(t) })
+    void loadTodaysInfo().then(last => {
+      if (!live || !last) return
+      setInfo(prev => ({ ...last, ...Object.fromEntries(Object.entries(prev).filter(([, v]) => v)) }))
+      setCarried(true)
+    })
+    return () => { live = false }
+  }, [])
 
   const teamLabel = (side: TeamSide) => teams[side].name.trim() || `Team ${side}`
   const allPlayers = (side: TeamSide) => [...teams[side].court.filter((p): p is RosterPlayer => p != null), ...teams[side].bench]
   const missing = (side: TeamSide) => teams[side].court.filter(p => p == null).length
   const ready = missing('A') === 0 && missing('B') === 0 && firstServe != null
+  // Saved teams fill the first team that's still empty.
+  const isEmpty = (side: TeamSide) => !teams[side].name.trim() && teams[side].court.every(p => p == null) && !teams[side].bench.length
+  const pickTarget: TeamSide | null = isEmpty('A') ? 'A' : isEmpty('B') ? 'B' : null
+  const usedNames = new Set((['A', 'B'] as const).map(side => teams[side].name.trim().toLowerCase()))
+  const applySaved = (team: SavedTeam) => {
+    if (!pickTarget) return
+    const court: (RosterPlayer | null)[] = [...team.court.slice(0, 6)]
+    while (court.length < 6) court.push(null)
+    setTeams(prev => ({ ...prev, [pickTarget]: { name: team.name, court, bench: [...team.court.slice(6), ...team.bench] } }))
+  }
 
   // The next empty court spot after this one: this team in serving order, then the other team.
   const nextEmpty = (side: TeamSide, position: number, draft = teams): { side: TeamSide; position: number } | null => {
@@ -160,6 +186,8 @@ export default function NewScoreMatchScreen() {
         },
         { type: 'set_start', lineups: { A: lineup('A'), B: lineup('B') }, firstServe, liberos: { A: liberos('A'), B: liberos('B') } },
       )
+      void rememberTeams((['A', 'B'] as const).map(side => ({ name: teamLabel(side), court: teams[side].court.filter((p): p is RosterPlayer => p != null), bench: teams[side].bench })))
+      void rememberInfo(info)
       router.replace(routes.scorekeeperMatch(id))
     } finally {
       setSaving(false)
@@ -208,6 +236,12 @@ export default function NewScoreMatchScreen() {
               Tap a spot to put a player on the court. Position I serves first. Then add subs and liberos on each bench.
             </Text>
 
+            <SavedTeamsPicker
+              teams={savedTeams.filter(t => !usedNames.has(t.name.trim().toLowerCase()))}
+              target={pickTarget}
+              targetLabel={pickTarget === 'A' ? 'the top team (A)' : 'the bottom team (B)'}
+              onPick={applySaved}
+            />
             <CourtLayout
               renderLabel={label}
               renderSpot={(side, position) => {
@@ -297,7 +331,7 @@ export default function NewScoreMatchScreen() {
 
             <View style={[shared.card, { marginTop: theme.spacing.md, gap: theme.spacing.sm }]}>
               <Button
-                label={showDetails ? 'Hide match details' : 'Add match details (optional)'}
+                label={showDetails ? 'Hide match details' : carried ? 'Match details (from your last match today)' : 'Add match details (optional)'}
                 variant="ghost"
                 icon={showDetails ? 'chevron-up' : 'chevron-down'}
                 onPress={() => setShowDetails(v => !v)}

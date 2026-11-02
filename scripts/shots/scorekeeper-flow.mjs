@@ -210,6 +210,45 @@ try {
   await download.saveAs(pdfPath)
   const pdf = await readFile(pdfPath)
   check(pdf.subarray(0, 5).toString() === '%PDF-' && pdf.length > 30_000, `official form downloads (${download.suggestedFilename()}, ${pdf.length} bytes)`)
+
+  // Match details after the match: they reach the sheet and carry over to the next match.
+  await page.getByTestId('match-details').scrollIntoViewIfNeeded()
+  await tap(page, 'match-details-toggle')
+  await fill('detail-competition', 'Fall Classic')
+  await fill('detail-scorer', 'Sam')
+  await shot(page, 'match-details')
+
+  // Copy to paper: step by step, ticks saved (survive a reload), then the checklist.
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await tap(page, 'sheet-copy')
+  await page.getByTestId('copy-next').waitFor()
+  await shot(page, 'copy-header')
+  check(await text(page, 'Fall Classic').first().isVisible().catch(() => false), 'copy steps show the details entered after the match')
+  await tap(page, 'copy-next')
+  await tap(page, 'copy-next')
+  await page.waitForTimeout(400)
+  await shot(page, 'copy-lineup')
+  await page.reload()
+  await page.getByTestId('copy-next').waitFor()
+  check(await text(page, 'Set 1 · 3 of').first().isVisible().catch(() => false), 'copy to paper resumes where it left off after a reload')
+  let pointsShot = false
+  for (let i = 0; i < 40 && (await page.getByTestId('copy-next').count()); i++) {
+    if (!pointsShot && (await page.getByRole('heading', { name: 'Running score' }).count())) { pointsShot = true; await shot(page, 'copy-points') }
+    await tap(page, 'copy-next')
+    await page.waitForTimeout(200)
+  }
+  await page.getByTestId('copy-all-done').waitFor()
+  await shot(page, 'copy-checklist')
+
+  // Next match: the teams and today's details come back with one tap.
+  await page.goto(server.url + '/scorekeeper/new', { waitUntil: 'load' })
+  await page.getByTestId('saved-teams').waitFor({ timeout: 15000 })
+  await tap(page, 'saved-team-Aces')
+  await tap(page, 'saved-team-Blockers')
+  await page.waitForTimeout(400)
+  await shot(page, 'saved-teams')
+  check((await page.getByTestId('spot-A-0').innerText()).includes('1') && (await page.getByTestId('spot-B-5').innerText()).includes('16'), 'saved teams fill both courts')
+  check(await text(page, 'Match details (from your last match today)').isVisible().catch(() => false), "today's match details carry over")
 } catch (e) {
   failures.push(e.message.split('\n')[0])
   process.stderr.write(`  FAIL ${e.message.split('\n')[0]}\n`)
