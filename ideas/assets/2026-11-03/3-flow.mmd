@@ -1,0 +1,21 @@
+flowchart TB
+  subgraph PR["Every PR touching supabase/functions/**"]
+    direction LR
+    A[setup-deno pinned] --> B[deno lint]
+    B --> C["deno check */index.ts"]
+    C --> D["deno test: handler tests<br/>stub fetch + fake Supabase client<br/>no network, no secrets"]
+  end
+  subgraph Merge["Push to main"]
+    direction LR
+    E{functions changed?} -- yes --> F["environment: production<br/>(Bryan approves in GitHub)"]
+    F --> G["supabase functions deploy &lt;changed&gt;<br/>--project-ref live"]
+    G --> H["record deployed commit<br/>(function_deploys.json artifact + job summary)"]
+  end
+  subgraph Daily["Daily (schema-drift.yml)"]
+    direction LR
+    I["Management API: list functions<br/>version, updated_at, verify_jwt"] --> J{"repo newer than deploy?<br/>verify_jwt ≠ config.toml?<br/>function missing / extra?"}
+    J -- yes --> K[fail: GitHub emails Bryan<br/>names the deploy command]
+    J -- no --> L[pass]
+  end
+  PR --> Merge
+  Merge --> Daily

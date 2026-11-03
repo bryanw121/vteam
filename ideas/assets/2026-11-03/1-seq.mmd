@@ -1,0 +1,25 @@
+sequenceDiagram
+  autonumber
+  actor H as Host
+  participant App
+  participant RLS as PostgREST/RLS
+  participant DB as Postgres (events, settings)
+  participant Cron as pg_cron new-game-alerts (*/10)
+  participant Fn as send_new_game_alerts()
+  participant Push as Edge fn send-notification-push
+  actor P as Player
+  H->>App: Create event (host.tsx)
+  App->>RLS: insert events (+ event_tags)
+  RLS->>DB: row saved, created_at = now()
+  Note over Cron,Fn: waits until the event is 10 min old (host can fix typos or delete)
+  Cron->>Fn: every 10 min
+  Fn->>DB: events created 10–70 min ago, not cancelled, starts in future, not full, not approval-denied for viewer
+  Fn->>DB: recipients = club members (game_alerts on) ∪ players with 2+ attended games by this host (host alerts on)
+  Fn->>DB: drop: the host, already joined, silenced host, filter mismatch (surface, level, time bucket), 3 alerts today
+  Fn->>DB: insert game_alert_log (user_id, event_id) on conflict do nothing
+  Fn->>DB: insert notifications (new_game, data.deep_link=/event/id) for new log rows only
+  DB-->>Push: Database Webhook on notifications INSERT (existing)
+  Push->>Push: honours notification_prefs.push.new_game
+  Push-->>P: Expo push "New game from Eastside Spikers"
+  P->>App: tap → isAppPath(/event/id) → event page
+  App->>RLS: select event (anon/auth SELECT, existing)
