@@ -121,23 +121,26 @@
     "n": 1,
     "title": "New game alerts: hear when your clubs, or hosts you play with, post a game",
     "bucket": "competitor-gap",
-    "status": "proposed",
-    "summary": "new_game notification from a 10-min pg_cron send_new_game_alerts(): club members (per-club mute via club_members.game_alerts) and players with 2+ games by the host (opt-in), filtered by surface/level/time chips in user_settings.game_alerts, game_alert_log dedupe, 3/day cap, grouped per host/club, pushed by the existing webhook. Meetup new-event announcements, Playtomic priority alerts."
+    "status": "approved",
+    "summary": "new_game notification from a 10-min pg_cron send_new_game_alerts(): club members (per-club mute via club_members.game_alerts) and players with 2+ games by the host (opt-in), filtered by surface/level/time chips in user_settings.game_alerts, game_alert_log dedupe, 3/day cap, grouped per host/club, pushed by the existing webhook. Meetup new-event announcements, Playtomic priority alerts.",
+    "issue": 170
   },
   {
     "date": "2026-11-03",
     "n": 2,
     "title": "Leave with a heads-up: a sheet that says what leaving costs, and an optional note to the host",
     "bucket": "end-user-experience",
-    "status": "proposed",
-    "summary": "Leave event (attending only) opens LeaveSheet listing only what applies from pure leaveConsequences(): full/waitlist position, approval, host told within 24h, marked paid, points lost; within 24h optional reason chips + note sent as a DM to the host. No schema."
+    "status": "approved",
+    "summary": "Leave event (attending only) opens LeaveSheet listing only what applies from pure leaveConsequences(): full/waitlist position, approval, host told within 24h, marked paid, points lost; within 24h optional reason chips + note sent as a DM to the host. No schema.",
+    "issue": 171
   },
   {
     "date": "2026-11-03",
     "n": 3,
     "title": "Edge functions under test: Deno handler tests on every PR, approved deploy on merge, daily deploy drift check",
     "bucket": "testing",
-    "status": "proposed",
-    "summary": "createHandler(deps) seam in each function, deno lint/check/test with fake Supabase + stub fetch in a CI job, deploy-functions.yml behind a production environment approval, scripts/functions-drift.mjs daily (updated_at vs last commit, verify_jwt vs config.toml, missing/extra)."
+    "status": "approved",
+    "summary": "createHandler(deps) seam in each function, deno lint/check/test with fake Supabase + stub fetch in a CI job, deploy-functions.yml behind a production environment approval, scripts/functions-drift.mjs daily (updated_at vs last commit, verify_jwt vs config.toml, missing/extra).",
+    "issue": 172
   }
 ]
