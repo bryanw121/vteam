@@ -80,16 +80,8 @@ jobs:
         with:
           deno-version: 2.9.6
       - run: deno task lint
+      # --frozen (in the task): fails if esm.sh serves something deno.lock doesn't record.
       - run: deno task check
-      - name: Lockfile is current
-        # Not fatal yet: the committed deno.lock has no esm.sh entries (it was
-        # created where esm.sh was unreachable). Commit the printed lockfile, then
-        # make this step fail (or add --frozen to the check task).
-        run: |
-          if ! git diff --quiet -- deno.lock; then
-            echo "::warning title=deno.lock is stale::deno task check updated supabase/functions/deno.lock; commit the version printed in this step's log"
-            cat deno.lock
-          fi
       # --allow-env only: any real network call fails the test (and stubFetch
       # throws on any URL a test did not script).
       - run: deno task test --allow-env

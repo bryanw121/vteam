@@ -37,7 +37,7 @@ From this directory, with [Deno](https://deno.com) 2.9:
 
 ```bash
 deno task lint
-deno task check          # type-checks index.ts too, so it fetches supabase-js from esm.sh
+deno task check          # type-checks index.ts too: fetches supabase-js from esm.sh, --frozen against deno.lock
 deno task test --allow-env   # no network permission: the tests never leave the process
 ```
 
