@@ -30,7 +30,11 @@ jest.mock('react-native-safe-area-context', () => ({
 }))
 
 const mockRpc = jest.fn()
-jest.mock('../lib/supabase', () => ({ supabase: { rpc: (...args: unknown[]) => mockRpc(...args) } }))
+const mockInsert = jest.fn(async (_row: unknown) => ({ error: null as unknown }))
+const mockFrom = jest.fn((_table: string) => ({ insert: mockInsert }))
+jest.mock('../lib/supabase', () => ({
+  supabase: { rpc: (...args: unknown[]) => mockRpc(...args), from: (table: string) => mockFrom(table) },
+}))
 
 let mockUserId: string | null = 'host'
 jest.mock('../contexts/session', () => ({ useSession: () => ({ userId: mockUserId, isGuest: !mockUserId }) }))
@@ -262,6 +266,49 @@ describe('useOpenDm', () => {
     mockRpc.mockResolvedValue({ data: 'conv-2', error: null })
     await act(async () => { await result.current.openDm('bea') })
     expect(fetchList).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('useOpenDm().sendDm (the leave sheet note, #171)', () => {
+  it('posts one message into the DM without opening it', async () => {
+    mockRpc.mockResolvedValue({ data: 'conv-1', error: null })
+    const { result } = renderHook(() => useOpenDm())
+    let ok = false
+    await act(async () => { ok = await result.current.sendDm('maya', 'Left Thursday (Thu 7:00 PM): Sick.') })
+    expect(ok).toBe(true)
+    expect(mockRpc).toHaveBeenCalledWith('find_or_create_dm', { other_user_id: 'maya' })
+    expect(mockFrom).toHaveBeenCalledWith('messages')
+    expect(mockInsert).toHaveBeenCalledWith({ conversation_id: 'conv-1', sender_id: 'host', content: 'Left Thursday (Thu 7:00 PM): Sick.' })
+    expect(mockPush).not.toHaveBeenCalled()
+    expect(mockChatAlert).not.toHaveBeenCalled()
+  })
+
+  it('reports a failed insert as false and shows nothing itself', async () => {
+    mockRpc.mockResolvedValue({ data: 'conv-1', error: null })
+    mockInsert.mockResolvedValueOnce({ error: { message: 'rls' } })
+    const { result } = renderHook(() => useOpenDm())
+    let ok = true
+    await act(async () => { ok = await result.current.sendDm('maya', 'hi') })
+    expect(ok).toBe(false)
+    expect(mockChatAlert).not.toHaveBeenCalled()
+  })
+
+  it('reports a failed find_or_create_dm as false, with no insert', async () => {
+    mockRpc.mockResolvedValue({ data: null, error: { message: 'boom' } })
+    const { result } = renderHook(() => useOpenDm())
+    let ok = true
+    await act(async () => { ok = await result.current.sendDm('maya', 'hi') })
+    expect(ok).toBe(false)
+    expect(mockInsert).not.toHaveBeenCalled()
+  })
+
+  it('never messages yourself or sends an empty note', async () => {
+    const { result } = renderHook(() => useOpenDm())
+    await act(async () => {
+      expect(await result.current.sendDm('host', 'hi')).toBe(false)
+      expect(await result.current.sendDm('maya', '   ')).toBe(false)
+    })
+    expect(mockRpc).not.toHaveBeenCalled()
   })
 })
 
