@@ -48,6 +48,8 @@ export const SCREENS = {
   'event-cheers': { route: `/event/${E.pastSand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-cheers', text: 'Cheers' }], sources: [...EVENT_DETAIL, 'components/CheerRadarChart.tsx'] },
   // Bottom of a paid event someone else hosts: price, Venmo button, about.
   'event-paid-bottom': { route: `/event/${E.fridayNight}`, ready: 'Austin Sports Center', actions: [{ scroll: 3000 }], sources: EVENT_DETAIL },
+  // The leave sheet (#171) on a full, paid game that starts tonight: every line, plus the reason chips.
+  'event-leave-sheet': { route: `/event/${E.fridayNight}`, ready: 'Austin Sports Center', actions: [{ tap: 'leave-event' }, { wait: 400 }], sources: [...EVENT_DETAIL, 'components/ui/BottomSheet.tsx', 'components/ui/ConfirmDialog.tsx', 'components/ui/Chip.tsx', 'utils/leaveConsequences.ts', 'constants/copy.ts'] },
   'event-guest': { route: `/event/${E.fridayNight}`, signedIn: false, ready: 'Austin Sports Center', sources: EVENT_DETAIL },
   'host-create': { route: '/host', ready: 'Title', sources: ['app/(app)/host.tsx', 'components/host/**', 'components/DatePickerField*.tsx', 'components/LocationPickerField.tsx', 'components/Input.tsx'] },
   'host-edit': { route: `/host?edit=${E.sundaySand}`, sources: ['app/(app)/host.tsx', 'components/host/**'] },
