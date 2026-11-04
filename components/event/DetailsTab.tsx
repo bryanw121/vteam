@@ -157,7 +157,7 @@ export function DetailsTab({
           </Text>
           <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.subtextStrong, lineHeight: 20 }}>{NO_SHOW_PLAYER_BODY}</Text>
           {event.created_by !== userId && (
-            <Button label={NO_SHOW_MESSAGE_HOST} variant="secondary" onPress={() => onMessageHost(event.created_by)} testID="no-show-message-host" />
+            <Button label={NO_SHOW_MESSAGE_HOST} variant="primary" onPress={() => onMessageHost(event.created_by)} testID="no-show-message-host" />
           )}
         </View>
       )}
