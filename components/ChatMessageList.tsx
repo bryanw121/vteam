@@ -1,8 +1,9 @@
 import React from 'react'
-import { ActivityIndicator, FlatList, View } from 'react-native'
+import { FlatList, View } from 'react-native'
 import { RefreshControl } from './RefreshControl'
 import { shared, theme } from '../constants'
 import type { ChatMessageListProps, MessageWithDetails } from '../types'
+import { Spinner } from './ui/Spinner'
 
 const keyOf = (m: MessageWithDetails) => m.id
 
@@ -24,7 +25,7 @@ export function ChatMessageList({ messages, renderMessage, hasMore, onLoadMore, 
       onEndReachedThreshold={0.2}
       ListFooterComponent={hasMore ? (
         <View style={shared.chatListEdge}>
-          <ActivityIndicator size="small" color={theme.colors.subtext} />
+          <Spinner size="small" color={theme.colors.subtext} />
         </View>
       ) : null}
     />

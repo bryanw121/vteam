@@ -1,12 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {
-  ActivityIndicator,
-  Modal,
-  Platform,
-  ScrollView,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Modal, Platform, ScrollView, TouchableOpacity, View } from 'react-native'
 import type { StyleProp, ViewStyle } from 'react-native'
 import { Text, TextInput } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -17,6 +10,7 @@ import { LOCATIONS } from '../constants/events'
 import { formatVenueDisplay } from '../utils'
 import { placeAddress } from '../utils/clubLocation'
 import type { GooglePlacePrediction, LocationValue } from '../types'
+import { Spinner } from './ui/Spinner'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -318,7 +312,7 @@ export function LocationPickerField({ value, onChange, recentVenues = [], placeh
                 }}
               />
               {loading || selecting
-                ? <ActivityIndicator size="small" color={theme.colors.primary} />
+                ? <Spinner size="small" color={theme.colors.primary} />
                 : query.length > 0
                   ? <TouchableOpacity hitSlop={8} onPress={() => setQuery('')}>
                       <Ionicons name="close-circle" size={16} color={theme.colors.subtext} />

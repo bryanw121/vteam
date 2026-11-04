@@ -1,11 +1,6 @@
 import React, { useCallback } from 'react'
 import { useFocusEffect } from 'expo-router'
-import {
-  ActivityIndicator,
-  FlatList,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { FlatList, TouchableOpacity, View } from 'react-native'
 import { Text } from '../../components/ui/Text'
 import { RefreshControl } from '../../components/RefreshControl'
 import { Stack, useRouter } from 'expo-router'
@@ -15,6 +10,7 @@ import { shared, theme } from '../../constants'
 import { routes, isAppPath, toRoute } from '../../utils/routes'
 import { formatShortTime } from '../../utils/notificationUtils'
 import type { Notification } from '../../types'
+import { Spinner } from '../../components/ui/Spinner'
 
 export default function NotificationsScreen() {
   const router = useRouter()
@@ -95,7 +91,7 @@ export default function NotificationsScreen() {
           }}
           ListEmptyComponent={
             loading ? (
-              <ActivityIndicator color={theme.colors.primary} style={{ marginTop: theme.spacing.xl }} />
+              <Spinner color={theme.colors.primary} style={{ marginTop: theme.spacing.xl }} />
             ) : (
               <View style={{ alignItems: 'center', paddingTop: theme.spacing.xl, gap: theme.spacing.sm }}>
                 <Ionicons name="notifications-off-outline" size={40} color={theme.colors.subtext} />

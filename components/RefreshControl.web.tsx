@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react'
-import { ActivityIndicator, View } from 'react-native'
+import { View } from 'react-native'
 import type { RefreshControlProps } from 'react-native'
 import { shared, theme } from '../constants'
 import { IDLE, PULL_TRIGGER, pullEnd, pullMove, pullStart, type PullState } from '../lib/pullGesture'
+import { Spinner } from './ui/Spinner'
 
 type Props = RefreshControlProps & { children?: React.ReactNode }
 
@@ -111,7 +112,7 @@ function Indicator({ indicatorRef, refreshing, tintColor, fixed }: {
       accessibilityElementsHidden={!refreshing}
       style={[shared.pullIndicator, fixed && shared.pullIndicatorFixed, { opacity: 0, transform: [{ translateY: HIDDEN_Y }] }]}
     >
-      <ActivityIndicator size="small" color={tintColor ?? theme.colors.primary} animating />
+      <Spinner size="small" color={tintColor ?? theme.colors.primary} animating />
     </View>
   )
 }
