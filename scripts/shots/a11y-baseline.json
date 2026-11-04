@@ -448,5 +448,15 @@
       "aria-progressbar-name": 1,
       "color-contrast": 9
     }
+  },
+  "event-leave-sheet": {
+    "mobile": {
+      "aria-progressbar-name": 1,
+      "color-contrast": 10
+    },
+    "desktop": {
+      "aria-progressbar-name": 2,
+      "color-contrast": 11
+    }
   }
 }

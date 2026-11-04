@@ -16,6 +16,8 @@ type Props = {
   /** `events.requires_approval`: joins become requests the host approves. Independent of price. */
   requiresApproval: boolean
   attendance: EventAttendanceApi
+  /** "Leave event" while attending: the screen opens the leave sheet (#171). Waitlist / request leaves stay one tap. */
+  onLeave: () => void
   onAddGuest: () => void
   /** Mobile-web document scroll: pin to the viewport (`fixed`) instead of the screen (`absolute`). */
   docScrollActive: boolean
@@ -28,7 +30,7 @@ type Props = {
  * viewer's state (join / leave / waitlist / request / denied, decided by
  * `resolveJoinAction`), plus the +1 button for attendees and hosts.
  */
-export function JoinFooter({ eventDate, eventStatus, requiresApproval, attendance, onAddGuest, docScrollActive, bottomInset, onHeightChange }: Props) {
+export function JoinFooter({ eventDate, eventStatus, requiresApproval, attendance, onLeave, onAddGuest, docScrollActive, bottomInset, onHeightChange }: Props) {
   const { joining } = attendance
   const action = resolveJoinAction({ ...eventStatus, requiresApproval })
   const signingUp = action === 'join' || action === 'request' || action === 'waitlist' || action === 'rerequest'
@@ -51,7 +53,7 @@ export function JoinFooter({ eventDate, eventStatus, requiresApproval, attendanc
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm }}>
         <View style={{ flex: 1 }}>
           {action === 'leave' ? (
-            <Button label="Leave event" onPress={() => { void attendance.leave() }} loading={joining} variant="secondary" />
+            <Button label="Leave event" onPress={onLeave} loading={joining} variant="secondary" testID="leave-event" />
           ) : action === 'leave-waitlist' ? (
             <View style={{ gap: theme.spacing.xs }}>
               <Button label="Leave Waitlist" onPress={() => { void attendance.leaveWaitlist() }} loading={joining} variant="secondary" />

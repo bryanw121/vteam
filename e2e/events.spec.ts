@@ -134,16 +134,19 @@ test.describe('Events', () => {
     await expect(page.getByText('Duration').first()).toBeVisible({ timeout: 15000 })
   })
 
-  test('open an event, then join and leave it', async ({ page }) => {
+  test('open an event, then join and leave it through the leave sheet', async ({ page }) => {
     await page.getByText(OPEN_PLAY_EVENT).first().click()
     await page.waitForURL(/\/event\//, { timeout: 20000 })
 
     const joinBtn = page.getByText('Join event', { exact: true })
-    const leaveBtn = page.getByText('Leave event', { exact: true })
+    const leaveBtn = page.getByTestId('leave-event')
+    const sheetLeave = page.getByTestId('leave-confirm')
+    const stayIn = page.getByTestId('leave-cancel')
 
     // State-tolerant: a prior run may have left the account attending.
     if (await leaveBtn.isVisible().catch(() => false)) {
       await leaveBtn.click()
+      await sheetLeave.click()
       await expect(joinBtn).toBeVisible({ timeout: 15000 })
     }
 
@@ -152,8 +155,27 @@ test.describe('Events', () => {
     await expect(leaveBtn).toBeVisible({ timeout: 15000 })
     await expect(page.getByText("You're going", { exact: true }).first()).toBeVisible()
 
-    // Leave → back to Join (cleans up shared-account state).
+    // Leave opens the sheet (#171); Stay in keeps the spot.
     await leaveBtn.click()
+    await expect(page.getByText('Leave this game?', { exact: true })).toBeVisible()
+    // Open spots and points, never the host notice (this account hosts the fixture).
+    await expect(page.getByTestId('leave-line-points')).toBeVisible()
+    await expect(page.getByTestId('leave-line-hostNotified')).toHaveCount(0)
+    await expect(stayIn).toBeFocused()
+    await stayIn.click()
+    await expect(page.getByText('Leave this game?', { exact: true })).toHaveCount(0)
+    await expect(leaveBtn).toBeVisible()
+
+    // Esc is Stay in too.
+    await leaveBtn.click()
+    await expect(sheetLeave).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(sheetLeave).toHaveCount(0)
+    await expect(leaveBtn).toBeVisible()
+
+    // Leave game → back to Join (cleans up shared-account state).
+    await leaveBtn.click()
+    await sheetLeave.click()
     await expect(joinBtn).toBeVisible({ timeout: 15000 })
   })
 
