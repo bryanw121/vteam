@@ -280,7 +280,7 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
               {preview}
             </Text>
             {hasUnread && (
-              <View style={{
+              <View testID="conversation-unread" style={{
                 minWidth: 20, height: 20, borderRadius: 10,
                 backgroundColor: theme.colors.primary,
                 alignItems: 'center', justifyContent: 'center',

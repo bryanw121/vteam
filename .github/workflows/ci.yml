@@ -150,6 +150,8 @@ jobs:
           path: dist-mock/
       - name: Badge artwork browser check
         run: node scripts/shots/badge-artwork-flow.mjs --dist dist-mock --out a11y-report/badge-artwork
+      - name: Chat badge browser check
+        run: node scripts/shots/chat-unread-flow.mjs --dist dist-mock --out a11y-report/chat-unread
       - name: axe scan vs baseline
         run: npm run a11y -- --dist dist-mock --out a11y-report
       - name: Job summary
