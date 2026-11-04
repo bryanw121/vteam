@@ -1,16 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  View,
-  ScrollView,
-  ActivityIndicator,
-  TouchableOpacity,
-  Image,
-  Alert,
-  Modal,
-  Pressable,
-  Platform,
-  StyleSheet,
-} from 'react-native'
+import { View, ScrollView, TouchableOpacity, Image, Alert, Modal, Pressable, Platform, StyleSheet } from 'react-native'
 import { Text, TextInput } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -35,6 +24,7 @@ import { clubLocationFromPicker, pickerFromClubLocation } from '../../../utils/c
 import { ClubPostCard, ClubPostComposerModal } from '../../../components/ClubPostCard'
 import { ScreenState } from '../../../components/ui'
 import type { ClubDetailData, ClubWithDetails, LocationValue, MajorCity, Profile } from '../../../types'
+import { Spinner } from '../../../components/ui/Spinner'
 
 const COVER_HEIGHT = 200
 const AVATAR_SIZE = 80
@@ -397,7 +387,7 @@ export default function ClubDetailScreen() {
                   disabled={uploadingCover}
                 >
                   {uploadingCover
-                    ? <ActivityIndicator size="small" color={theme.colors.white} />
+                    ? <Spinner size="small" color={theme.colors.white} />
                     : <Ionicons name="camera-outline" size={14} color={theme.colors.white} />
                   }
                   <Text style={{ color: theme.colors.white, fontSize: theme.font.size.xs, fontWeight: theme.font.weight.semibold }}>
@@ -417,7 +407,7 @@ export default function ClubDetailScreen() {
                 <View style={styles.avatarRing}>
                   <View style={styles.avatar}>
                     {uploadingAvatar ? (
-                      <ActivityIndicator color={theme.colors.primary} />
+                      <Spinner color={theme.colors.primary} />
                     ) : avatarUri ? (
                       <Image source={{ uri: avatarUri }} style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }} resizeMode="cover" />
                     ) : (
@@ -483,11 +473,11 @@ export default function ClubDetailScreen() {
             <View style={{ paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.md }}>
               {member ? (
                 <TouchableOpacity onPress={handleLeave} disabled={membership.isPending} style={[shared.buttonBase, shared.buttonSecondary, membership.isPending && shared.buttonDisabled]}>
-                  {membership.isPending ? <ActivityIndicator color={theme.colors.primary} /> : <Text style={shared.buttonLabelSecondary}>Leave club</Text>}
+                  {membership.isPending ? <Spinner color={theme.colors.primary} /> : <Text style={shared.buttonLabelSecondary}>Leave club</Text>}
                 </TouchableOpacity>
               ) : club.membership_type === 'open' ? (
                 <TouchableOpacity onPress={handleJoin} disabled={membership.isPending} style={[shared.buttonBase, shared.buttonPrimary, membership.isPending && shared.buttonDisabled]}>
-                  {membership.isPending ? <ActivityIndicator color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Join club</Text>}
+                  {membership.isPending ? <Spinner color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Join club</Text>}
                 </TouchableOpacity>
               ) : (
                 <View style={[shared.buttonBase, { backgroundColor: theme.colors.border }]}>
@@ -530,7 +520,7 @@ export default function ClubDetailScreen() {
                 disabled={saving}
                 style={[shared.buttonBase, shared.buttonPrimary, saving && shared.buttonDisabled]}
               >
-                {saving ? <ActivityIndicator color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Save changes</Text>}
+                {saving ? <Spinner color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Save changes</Text>}
               </TouchableOpacity>
             </View>
           )}
@@ -573,7 +563,7 @@ export default function ClubDetailScreen() {
                 )}
               </View>
               {postsQuery.isLoading ? (
-                <ActivityIndicator color={theme.colors.primary} style={{ marginVertical: theme.spacing.lg }} />
+                <Spinner color={theme.colors.primary} style={{ marginVertical: theme.spacing.lg }} />
               ) : clubPosts.length === 0 ? (
                 <View style={[shared.card, {
                   marginHorizontal: theme.spacing.md,
@@ -679,7 +669,7 @@ export default function ClubDetailScreen() {
                 disabled={deleting}
                 style={[shared.buttonBase, { flex: 1, backgroundColor: theme.colors.error, borderRadius: theme.radius.md, alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.sm }]}
               >
-                {deleting ? <ActivityIndicator color={theme.colors.white} /> : <Text style={{ color: theme.colors.white, fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold }}>Delete</Text>}
+                {deleting ? <Spinner color={theme.colors.white} /> : <Text style={{ color: theme.colors.white, fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold }}>Delete</Text>}
               </TouchableOpacity>
             </View>
           </Pressable>
