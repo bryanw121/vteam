@@ -171,6 +171,7 @@ test.describe('Events', () => {
     // Esc is Stay in too.
     await leaveBtn.click()
     await expect(sheetLeave).toBeVisible()
+    await expect(stayIn).toBeFocused() // focus moves into the dialog first; Esc acts on the focused dialog
     await page.keyboard.press('Escape')
     await expect(sheetLeave).toHaveCount(0)
     await expect(leaveBtn).toBeVisible()
