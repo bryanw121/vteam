@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { ActivityIndicator, ScrollView, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -9,6 +9,7 @@ import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { shared, theme, CHEER_TYPES } from '../../../../constants'
 import { CheerRadarChart } from '../../../../components/CheerRadarChart'
 import type { CheerType } from '../../../../types'
+import { Spinner } from '../../../../components/ui/Spinner'
 
 export default function ProfileCheersScreen() {
   useStackBackTitle('Cheers')
@@ -63,7 +64,7 @@ export default function ProfileCheersScreen() {
   if (loading) {
     return (
       <View style={[shared.screen, shared.centered]}>
-        <ActivityIndicator color={theme.colors.primary} />
+        <Spinner color={theme.colors.primary} />
       </View>
     )
   }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native'
+import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { Text } from '../ui/Text'
 import type { RefreshControlProps } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -11,6 +11,7 @@ import { MatchEditForm } from './MatchEditForm'
 import { ScheduleConfigForm } from './ScheduleConfigForm'
 import { ScheduleSectionLabel } from './TournamentBits'
 import { ts } from './tournamentStyles'
+import { Spinner } from '../ui/Spinner'
 
 type Props = {
   /** Pull-to-refresh for the whole tournament page. */
@@ -182,7 +183,7 @@ export function ScheduleTab(p: Props) {
 
   function renderMatches() {
     if (p.matchesLoading && matches.length === 0) {
-      return <View style={{ paddingVertical: 32 }}><ActivityIndicator color={theme.colors.primary} /></View>
+      return <View style={{ paddingVertical: 32 }}><Spinner color={theme.colors.primary} /></View>
     }
     if (p.matchesError && matches.length === 0) {
       return (

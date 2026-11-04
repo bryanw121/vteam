@@ -1,10 +1,11 @@
-import { ActivityIndicator, View } from 'react-native'
+import { View } from 'react-native'
 import { Text } from './Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { shared, theme } from '../../constants'
 import { Button } from '../Button'
 import { EmptyState } from './EmptyState'
 import type { ScreenStateProps } from '../../types'
+import { Spinner } from './Spinner'
 
 const GENERIC_ERROR = 'Something went wrong. Check your connection and try again.'
 
@@ -21,7 +22,7 @@ export function ScreenState({
   if (loading && !ready) {
     return (
       <View style={shared.screenStateCenter} testID="screen-state-loading">
-        <ActivityIndicator color={theme.colors.primary} />
+        <Spinner color={theme.colors.primary} />
       </View>
     )
   }

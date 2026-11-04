@@ -16,11 +16,13 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         {/*
           viewport-fit=cover: extends layout under notch/home bar so safe-area-inset-* env vars populate on iOS.
-          maximum-scale=1: prevents pinch/double-tap zoom for a native app feel.
+          Pinch zoom stays allowed (WCAG 1.4.4, #136): no maximum-scale / user-scalable=no.
+          Double-tap zoom is off through touch-action: manipulation (below), and
+          inputs are at least 16px, so iOS doesn't zoom on focus either.
         */}
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content"
+          content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
         />
         {/* Tint browser chrome (iOS status bar area, Chrome toolbar) to match the app background */}
         <meta name="theme-color" content={theme.colors.background} />
@@ -64,11 +66,11 @@ export default function Root({ children }: { children: React.ReactNode }) {
           body { overscroll-behavior-y: contain; }
 
           /*
-            Suppress double-tap-to-zoom on interactive elements.
-            RN Web handles Touchable* automatically, but HTML elements (e.g.
-            in DatePickerField.web) need this explicitly.
+            Suppress double-tap-to-zoom everywhere (pinch zoom still works).
+            On the root as well as HTML controls: RN Web pressables are divs,
+            and the viewport no longer blocks zoom outright (#136).
           */
-          button, a, input, select, textarea, label { touch-action: manipulation; }
+          html, body, #root, button, a, input, select, textarea, label { touch-action: manipulation; }
 
           /*
             ── Document-scroll mode (mobile web, Events tab) ──
