@@ -139,7 +139,9 @@ test.describe('Events', () => {
     await page.waitForURL(/\/event\//, { timeout: 20000 })
 
     const joinBtn = page.getByText('Join event', { exact: true })
-    const leaveBtn = page.getByTestId('leave-event')
+    // By its label, not just the testID: while the join is still saving the button
+    // shows a spinner (and ignores taps), and the label only appears once it is done.
+    const leaveBtn = page.getByTestId('leave-event').getByText('Leave event', { exact: true })
     const sheetLeave = page.getByTestId('leave-confirm')
     const stayIn = page.getByTestId('leave-cancel')
 
