@@ -4,6 +4,7 @@ import { Text } from '../ui/Text'
 import { BADGE_DEFINITIONS, shared, theme } from '../../constants'
 import type { BadgeDef } from '../../constants'
 import { BadgeIcon } from '../BadgeIcon'
+import { BADGE_VISIBILITY_ENABLED } from '../../constants/badges'
 import { BottomSheet } from '../ui'
 import type { UserBadge } from '../../types'
 
@@ -17,7 +18,7 @@ type Props = {
 
 type PickerItem = { badge: UserBadge; def: BadgeDef; displayTier: number }
 
-const ITEM_WIDTH = 58
+const ITEM_WIDTH = BADGE_VISIBILITY_ENABLED ? 96 : 58
 
 /**
  * Earned badges that can go in `slot`. Multi-tier badges expand to one item per
@@ -64,9 +65,9 @@ export function BadgeSlotSheet({ slot, badges, onPick, onDismiss }: Props) {
                 if (slot !== null) onPick(badge.badge_type, slot, displayTier)
                 onDismiss()
               }}
-              style={({ pressed }) => ({ opacity: pressed ? 0.65 : 1 })}
+              style={({ pressed }) => ({ width: ITEM_WIDTH, opacity: pressed ? 0.65 : 1 })}
             >
-              <BadgeIcon def={def} tier={displayTier} size="sm" showLabel />
+              <BadgeIcon def={def} tier={displayTier} size="collection" showLabel />
             </Pressable>
           ))}
           {/* Spacers force the last row to start from the left while full rows stay centred. */}

@@ -21,6 +21,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFocusRefetch } from '../../../../lib/query'
 import { useSession } from '../../../../contexts/session'
 import { BadgeIcon } from '../../../../components/BadgeIcon'
+import { BADGE_VISIBILITY_ENABLED } from '../../../../constants/badges'
 import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { BorderSwatch } from '../../../../components/profile/BorderSwatch'
 import { badgesKey, useBadges } from '../../../../hooks/useBadges'
@@ -44,7 +45,7 @@ export default function BadgesScreen() {
 
   const { width } = useWindowDimensions()
   const insets = useSafeAreaInsets()
-  const cols = width >= BREAKPOINTS.sidebar ? 6 : 4
+  const cols = width >= BREAKPOINTS.sidebar ? 6 : BADGE_VISIBILITY_ENABLED ? 3 : 4
 
   const { userId } = useSession()
   const { badges, loading, fetchBadges } = useBadges()
@@ -153,7 +154,7 @@ export default function BadgesScreen() {
                     borderRadius: theme.radius.md,
                   })}
                 >
-                  <BadgeIcon def={def} tier={badge?.tier} size="sm" showLabel />
+                  <BadgeIcon def={def} tier={badge?.tier} size="collection" showLabel />
                 </Pressable>
               )
             })}

@@ -6,7 +6,7 @@ test.describe('Own profile', () => {
     await page.goto(`${BASE_URL}/settings/badges`)
     const grid = page.getByTestId('badges-grid')
     await expect(grid).toBeVisible({ timeout: 20_000 })
-    const images = grid.locator('img')
+    const images = grid.locator('[data-testid^="badge-artwork-"] img')
     await expect(images).toHaveCount(14)
     await expect.poll(async () => images.evaluateAll(nodes =>
       nodes.every(node => node instanceof HTMLImageElement && node.complete && node.naturalWidth > 0 && new URL(node.src).pathname.includes('/badges/')),

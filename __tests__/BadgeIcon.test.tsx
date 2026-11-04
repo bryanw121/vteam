@@ -25,8 +25,26 @@ it.each([undefined, 0])('previews first-tier art dimmed when locked (tier %s)', 
   const view = render(<BadgeIcon def={attendee} tier={tier} />)
   const image = view.getByTestId('badge-artwork-event_attendee')
   expect(image.props.source).toBe(101)
-  expect(StyleSheet.flatten(image.props.style).opacity).toBe(0.25)
+  expect(StyleSheet.flatten(view.getByTestId('badge-image-group-event_attendee').props.style).opacity).toBe(0.6)
+  expect(view.getByTestId('badge-lock-event_attendee')).toBeTruthy()
   expect(image.props.accessibilityLabel).toBe('Newcomer (locked)')
+})
+
+it('keeps full collection labels and makes the collection larger than profile pins', () => {
+  const collection = render(<BadgeIcon def={attendee} size="collection" showLabel />)
+  expect(StyleSheet.flatten(collection.getByTestId('badge-image-group-event_attendee').props.style).width).toBe(72)
+  expect(collection.getByText('Newcomer').props.numberOfLines).toBeUndefined()
+  expect(StyleSheet.flatten(collection.getByText('Newcomer').props.style).opacity).toBe(1)
+  expect(collection.getByText('Locked · Event Attendance')).toBeTruthy()
+  collection.unmount()
+  const profile = render(<BadgeIcon def={attendee} tier={1} />)
+  expect(StyleSheet.flatten(profile.getByTestId('badge-image-group-event_attendee').props.style).width).toBe(58)
+  expect(profile.queryByTestId('badge-lock-event_attendee')).toBeNull()
+})
+
+it('shows locked detail artwork at full opacity', () => {
+  const view = render(<BadgeIcon def={attendee} size="lg" />)
+  expect(StyleSheet.flatten(view.getByTestId('badge-image-group-event_attendee').props.style).opacity).toBe(1)
 })
 
 it('renders single-tier artwork', () => {

@@ -29,7 +29,7 @@ const server = await serveDist(resolve(args.dist || 'dist'))
 let browser
 try {
   browser = await launchChromium()
-  for (const [surface, viewport] of [['desktop', { width: 1280, height: 800 }], ['mobile', { width: 390, height: 844 }]]) {
+  for (const [surface, viewport] of [['desktop', { width: 1280, height: 800 }], ['mobile', { width: 390, height: 844 }], ['narrow', { width: 320, height: 740 }]]) {
     for (let earnedTier = 0; earnedTier <= 5; earnedTier++) {
       const context = await browser.newContext({ viewport, timezoneId: 'America/Chicago' })
       const now = defaultNow()
@@ -46,8 +46,13 @@ try {
         await page.goto(`${server.url}/settings/badges`, { waitUntil: 'load' })
         const grid = page.getByTestId('badges-grid')
         await expect(grid).toBeVisible({ timeout: 20000 })
-        await expect(grid.locator('img')).toHaveCount(14)
-        await expect.poll(() => grid.locator('img').evaluateAll(nodes => nodes.every(im => im.complete && im.naturalWidth > 0))).toBe(true)
+        await expect(grid.locator('[data-testid^="badge-artwork-"] img')).toHaveCount(14)
+        await expect.poll(() => grid.locator('[data-testid^="badge-artwork-"] img').evaluateAll(nodes => nodes.every(im => im.complete && im.naturalWidth > 0))).toBe(true)
+        await expect(grid.locator('[data-testid^="badge-lock-"]')).toHaveCount(earnedTier ? 0 : 14)
+        await expect(grid.getByTestId('badge-image-group-event_attendee')).toHaveCSS('opacity', earnedTier ? '1' : '0.6')
+        await expect(grid.getByTestId('badge-image-group-event_attendee')).toHaveCSS('width', '72px')
+        assert.ok(await grid.evaluate(el => [...el.querySelectorAll('*')].filter(node => node instanceof HTMLElement && node.clientWidth > 0 && [...node.childNodes].some(child => child.nodeType === Node.TEXT_NODE && child.textContent.trim())).every(node => node.scrollWidth <= node.clientWidth + 1)), `${surface}: clipped collection label`)
+        assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${surface}: horizontal overflow`)
         for (const def of catalog) {
           const tier = Math.max(1, Math.min(earnedTier, def.tiers.length))
           const id = `${def.type}_tier${tier}_${def.tiers.length === 1 ? 'special' : accents[tier-1]}`
@@ -81,11 +86,14 @@ try {
           const picker = page.getByTestId('bottom-sheet')
           await expect(picker).toBeVisible()
           await expect(picker.getByTestId('badge-artwork-event_attendee')).toHaveCount(5)
+          await context.clock.runFor(300)
+          await page.screenshot({ path: resolve(out, `${surface}-picker.png`), fullPage: true })
           await picker.getByRole('img', { name: 'Regular', exact: true }).click()
           await expect.poll(() => db.rowsOf('user_badges').find(b => b.badge_type === 'event_attendee').display_tier).toBe(2)
           await page.reload({ waitUntil: 'load' })
           const pinned = page.getByTestId('badge-artwork-event_attendee')
           await expect(pinned).toHaveAttribute('aria-label', 'Regular')
+          await expect(page.getByTestId('badge-image-group-event_attendee')).toHaveCSS('width', '58px')
           await expect(pinned.locator('img')).toHaveAttribute('src', /event_attendee_tier2_silver\./)
           await page.evaluate(() => document.fonts.ready)
           await context.clock.runFor(300)

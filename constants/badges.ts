@@ -1,5 +1,8 @@
 import type { BadgeType, CardBgType, ProfileBorder } from '../types'
 
+/** One-line rollback for the clearer badge presentation; artwork stays unchanged. */
+export const BADGE_VISIBILITY_ENABLED = true
+
 // ─── Category gradients (Discord-style: each badge type has its own palette) ──
 // Top color is used for glow; bottom for the gradient fill.
 export const BADGE_CATEGORY_GRADIENTS: Record<string, readonly [string, string]> = {
