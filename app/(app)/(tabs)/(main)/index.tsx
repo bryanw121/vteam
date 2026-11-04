@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useCallback, memo, useEffect, useLayoutEffect } from 'react'
 import { useRouter } from 'expo-router'
-import { Dimensions, Platform, View, ScrollView, SectionList, TouchableOpacity, PanResponder, Animated, ActivityIndicator, StyleSheet } from 'react-native'
+import { Dimensions, Platform, View, ScrollView, SectionList, TouchableOpacity, PanResponder, Animated, StyleSheet } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { DocPullToRefresh, RefreshControl } from '../../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -41,6 +41,7 @@ import { useFeedAds } from '../../../../hooks/useFeedAds'
 import { planFeedAds } from '../../../../utils/feedAds'
 import { FeedBanner } from '../../../../components/ads/FeedBanner'
 import { SponsoredLabel } from '../../../../components/ads/SponsoredLabel'
+import { Spinner } from '../../../../components/ui/Spinner'
 
 const _now = new Date()
 const TODAY = localDateKey(_now)
@@ -510,7 +511,7 @@ export default function EventsScreen() {
               })}
 
               {loading && (
-                <ActivityIndicator style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+                <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
               )}
             </>
           )}
@@ -653,7 +654,7 @@ export default function EventsScreen() {
                 </View>
               ))}
               {loading && sections.length > 0 && (
-                <ActivityIndicator style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+                <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
               )}
               </View>
             </View>
@@ -710,7 +711,7 @@ export default function EventsScreen() {
             }}
             ListFooterComponent={
               loading && sections.length > 0
-                ? <ActivityIndicator style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+                ? <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
                 : null
             }
             refreshControl={refreshControl}

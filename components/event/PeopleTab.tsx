@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react'
-import { Platform, View, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native'
+import { Platform, View, TouchableOpacity, StyleSheet } from 'react-native'
 import { Text } from '../ui/Text'
 import { RefreshControl } from '../RefreshControl'
 import { GestureDetector, Gesture, TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler'
@@ -16,6 +16,7 @@ import { profileDisplayName, profileAvatarSmallUri, hostRosterSkillAndPositionsL
 import { guestRowActions, hasRosterMenu, memberRowActions } from '../../utils/rosterActions'
 import { attendeesPaid } from '../../hooks/event/derive'
 import type { EventAttendanceApi, EventData, EventPaymentsApi, EventTeamsApi, TeamDragApi } from '../../types'
+import { Spinner } from '../ui/Spinner'
 
 // ─── Draggable cards (People tab only) ───────────────────────────────────────
 
@@ -529,7 +530,7 @@ export function PeopleTab({
                   style={{ paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.sm, backgroundColor: theme.colors.success, borderRadius: theme.radius.md }}
                 >
                   {processingRequest === profile.id
-                    ? <ActivityIndicator size="small" color={theme.colors.white} />
+                    ? <Spinner size="small" color={theme.colors.white} />
                     : <Text style={{ color: theme.colors.white, fontSize: theme.font.size.sm, fontWeight: theme.font.weight.medium }}>Approve</Text>
                   }
                 </TouchableOpacity>
