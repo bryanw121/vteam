@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { View, Platform, ActivityIndicator, Pressable } from 'react-native'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
+import Svg, { Circle, Path, Polygon } from 'react-native-svg'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -133,6 +134,45 @@ function LegendBorder({ children, outerSize }: { children: React.ReactNode; oute
   )
 }
 
+/** Wind and storm currents — earned for top-tier communication cheers. */
+function StormBorder({ children, outerSize }: { children: React.ReactNode; outerSize: number }) {
+  const avatarSize = outerSize - RING * 2
+  return (
+    <View style={{ width: outerSize, height: outerSize }}>
+      <Svg width={outerSize} height={outerSize} viewBox="0 0 100 100" style={{ position: 'absolute' }}>
+        <Circle cx="50" cy="50" r="46" stroke="#7BE7FF" strokeWidth="3" fill="#75DFFF16" />
+        <Path d="M12 38 C21 17, 42 12, 57 22 C68 30, 63 39, 51 38" stroke="#D4FAFF" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <Path d="M87 61 C78 83, 57 88, 42 78 C31 70, 36 61, 48 62" stroke="#65D9FF" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <Path d="M28 78 C16 70, 14 56, 24 47" stroke="#AA91FF" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <Path d="M72 22 C84 30, 86 44, 76 53" stroke="#AA91FF" strokeWidth="3" fill="none" strokeLinecap="round" />
+      </Svg>
+      <RingHole size={avatarSize} ring={RING}>{children}</RingHole>
+    </View>
+  )
+}
+
+/** A precise, crystal-guided energy ring — earned for top-tier setting cheers. */
+function AetherBorder({ children, outerSize }: { children: React.ReactNode; outerSize: number }) {
+  const avatarSize = outerSize - RING * 2
+  return (
+    <View style={{ width: outerSize, height: outerSize, borderRadius: outerSize / 2, overflow: 'visible' }}>
+      <LinearGradient
+        colors={['#6F47E9', '#F0D9FF', '#9E6CFF', '#6F47E9'] as [string, string, string, string]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: outerSize / 2 }}
+      />
+      <Svg width={outerSize} height={outerSize} viewBox="0 0 100 100" style={{ position: 'absolute' }}>
+        <Circle cx="50" cy="50" r="40" stroke="#F2DEFF" strokeWidth="1.5" fill="none" opacity="0.8" />
+        <Path d="M17 61 C31 82, 69 82, 83 61" stroke="#EACBFF" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <Path d="M22 32 C39 14, 61 14, 78 32" stroke="#C393FF" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <Polygon points="50,0 57,9 50,18 43,9" fill="#F1D7FF" stroke="#FFFFFF" strokeWidth="1" />
+        <Polygon points="50,82 56,91 50,100 44,91" fill="#B982FF" stroke="#F1D7FF" strokeWidth="1" />
+      </Svg>
+      <RingHole size={avatarSize} ring={RING}>{children}</RingHole>
+    </View>
+  )
+}
+
 /**
  * Avatar circle with an optional animated border. Read-only by default (use it
  * when viewing any profile); the owner's own profile passes `onPress` /
@@ -160,6 +200,8 @@ export function ProfileAvatar({ uri, border, size, loading = false, onPress, onD
 
   let bordered: React.ReactNode
   if (border === 'gradient') bordered = <LegendBorder outerSize={outerSize}>{inner}</LegendBorder>
+  else if (border === 'storm') bordered = <StormBorder outerSize={outerSize}>{inner}</StormBorder>
+  else if (border === 'aether') bordered = <AetherBorder outerSize={outerSize}>{inner}</AetherBorder>
   else if (border === 'gold') bordered = <GoldBorder outerSize={outerSize}>{inner}</GoldBorder>
   else if (border === 'bronze') bordered = <BronzeBorder outerSize={outerSize}>{inner}</BronzeBorder>
   else bordered = <View style={{ width: outerSize, height: outerSize, alignItems: 'center', justifyContent: 'center' }}>{inner}</View>

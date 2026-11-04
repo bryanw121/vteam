@@ -281,6 +281,24 @@ export const PROFILE_BORDERS: ProfileBorderDef[] = [
     description: 'Reach Legend (100 events attended)',
     unlockedBy: [{ badgeType: 'event_attendee', minTier: 5 }],
   },
+  {
+    type: 'storm',
+    label: 'Stormcaller',
+    color: '#73E8FF',
+    gradientColors: ['#D1F8FF', '#57D8FF', '#9A7CFF'] as const,
+    ringColors: ['#D1F8FF', '#57D8FF', '#9A7CFF'],
+    description: 'Reach The Coach (30 communication cheers)',
+    unlockedBy: [{ badgeType: 'communication_cheer', minTier: 3 }],
+  },
+  {
+    type: 'aether',
+    label: 'Aether',
+    color: '#B58CFF',
+    gradientColors: ['#F0D9FF', '#B58CFF', '#6F47E9'] as const,
+    ringColors: ['#F0D9FF', '#B58CFF', '#6F47E9'],
+    description: 'Reach Maestro (30 setting cheers)',
+    unlockedBy: [{ badgeType: 'set_cheer', minTier: 3 }],
+  },
 ]
 
 /** Returns the label for a badge at a given tier (falls back to the badge def description). */
