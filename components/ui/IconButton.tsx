@@ -1,7 +1,8 @@
-import { ActivityIndicator, TouchableOpacity, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { shared, theme } from '../../constants'
 import type { IconButtonProps } from '../../types'
+import { Spinner } from './Spinner'
 
 /** Square bordered icon button (the notifications bell). 38pt by default; use 44 where touch targets matter. */
 export function IconButton({ icon, onPress, label, size = 38, active, badge, busy, testID }: IconButtonProps) {
@@ -17,7 +18,7 @@ export function IconButton({ icon, onPress, label, size = 38, active, badge, bus
     >
       <View>
         {busy
-          ? <ActivityIndicator size="small" color={theme.colors.text} />
+          ? <Spinner size="small" color={theme.colors.text} />
           : (
             <Ionicons
               name={icon}

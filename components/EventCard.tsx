@@ -1,5 +1,5 @@
 import React, { memo, useState } from 'react'
-import { TouchableOpacity, View, ActivityIndicator } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import { Text } from './ui/Text'
 import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -12,6 +12,7 @@ import { rememberEventCard } from '../hooks/event/seed'
 import { eventPrefetchProps } from '../hooks/event/prefetch'
 import { profileAvatarSmallUri, profileDisplayName, surfaceOf } from '../utils'
 import type { EventCardRsvpHandler, EventWithDetails, ForecastSummary, Tag } from '../types'
+import { Spinner } from './ui/Spinner'
 
 // ─── Attendance helpers ───────────────────────────────────────────────────────
 
@@ -278,7 +279,7 @@ function EventCardInner({
               }}
             >
               {rsvpLoading
-                ? <ActivityIndicator size="small" color={isAttending ? theme.colors.subtext : theme.colors.accentInk} />
+                ? <Spinner size="small" color={isAttending ? theme.colors.subtext : theme.colors.accentInk} />
                 : (
                     <Text
                       style={{
@@ -509,7 +510,7 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
               }}
             >
               {rsvpLoading
-                ? <ActivityIndicator size="small" color={isAttending ? theme.colors.subtext : theme.colors.white} />
+                ? <Spinner size="small" color={isAttending ? theme.colors.subtext : theme.colors.white} />
                 : <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.xs, color: isAttending ? theme.colors.subtext : theme.colors.white }}>
                     {isAttending ? 'Going ✓' : 'RSVP'}
                   </Text>

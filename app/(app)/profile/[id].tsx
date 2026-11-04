@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { View, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native'
+import { View, ScrollView, TouchableOpacity } from 'react-native'
 import { Text } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -24,6 +24,7 @@ import {
   confirmDestructive,
 } from '../../../utils'
 import type { Profile, UserBadge } from '../../../types'
+import { Spinner } from '../../../components/ui/Spinner'
 
 const POS_ABBREV: Record<string, string> = {
   setter: 'S',
@@ -159,7 +160,7 @@ export default function UserProfileDetail() {
       </View>
 
       {loading ? (
-        <View style={shared.centered}><ActivityIndicator color={theme.colors.primary} /></View>
+        <View style={shared.centered}><Spinner color={theme.colors.primary} /></View>
       ) : !profile ? (
         <ScrollView
           style={shared.screen}

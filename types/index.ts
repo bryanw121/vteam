@@ -10,6 +10,7 @@
 import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database'
 import type { TabKey } from '../constants/navigation'
 import type { ReactElement } from 'react'
+import type { ActivityIndicatorProps } from 'react-native'
 import type { BracketMatchInsert, SetScore } from './tournament'
 
 /** The client's database type. Kept as an alias so callers don't care how it's assembled. */
@@ -950,6 +951,12 @@ export type SessionState = {
 // ─── UI primitives (components/ui) ─────────────────────────────────────────────
 
 export type IoniconName = keyof typeof import('@expo/vector-icons').Ionicons.glyphMap
+
+/** `components/ui/Spinner`: an ActivityIndicator that always has an accessible name. */
+export type SpinnerProps = ActivityIndicatorProps & {
+  /** What is loading, read by screen readers ("Loading events"). Defaults to "Loading". */
+  label?: string
+}
 
 export type ScreenStateProps = {
   /** Show the spinner. Ignored once `ready` is true so a background refetch never blanks the screen. */

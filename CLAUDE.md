@@ -306,6 +306,7 @@ Use `components/ui` (import from `components/ui`) before hand-rolling UI:
 - `Chip` for pill filters (`solid` or `tint` variant)
 - `TimePill` for an event's start time (lavender: `theme.colors.time` background, `timeInk` label); use it wherever a player decides whether to join
 - `IconButton` for square icon buttons (38pt default, 44 where touch targets matter)
+- `Spinner` for every loading indicator (never `ActivityIndicator` directly: it needs an accessible name; pass `label` when "Loading" isn't enough)
 - `ScreenState` decides loading / error / empty / content for a data screen; `EmptyState` is the empty block
 - `ConfirmDialog` for confirm/cancel prompts; `BottomSheet` for slide-up sheets (no inline `Modal`s)
 - `ScreenContainer` centers content on wide desktop web
@@ -351,7 +352,7 @@ Add to `constants/styles.ts` inside the existing `StyleSheet.create({})` call, t
 ## UI Best Practices
 When implementing any UI feature, follow best practices for all three target surfaces:
 - **Mobile app (iOS/Android)**: touch targets ≥44pt, gesture-friendly interactions, safe area insets via `useSafeAreaInsets`, no hover-only affordances
-- **Mobile web**: same touch target sizes, no iOS input-zoom (font-size ≥16px on inputs), `touch-action: manipulation` on interactive elements, `viewport-fit=cover` for safe areas, no double-tap zoom
+- **Mobile web**: same touch target sizes, no iOS input-zoom (font-size ≥16px on inputs), `touch-action: manipulation` on interactive elements, `viewport-fit=cover` for safe areas, no double-tap zoom, but pinch zoom stays allowed (never `maximum-scale` / `user-scalable=no`)
 - **Desktop web**: pointer/hover states where appropriate, keyboard navigation, sidebar layout at ≥768px breakpoint, reasonable max-width constraints so content doesn't stretch across a 27" monitor
 
 Test each surface mentally when building. If a component behaves differently across surfaces, use `Platform.select` or `.web.tsx` file variants rather than runtime branching scattered throughout the component.
