@@ -23,6 +23,7 @@ const T = IDS.tournament
 const EVENT_DETAIL = [
   'app/(app)/event/**', 'components/event/**', 'hooks/event/**', 'components/EventCommentRow.tsx', 'components/DiscussionComposer.tsx',
   'components/VenmoPayButton.tsx', 'components/LinkedText.tsx',
+  'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs',
 ]
 const TOURNAMENT_DETAIL = ['app/(app)/tournament/[id].tsx', 'components/tournament/**', 'hooks/tournament/**', 'lib/tournament*.ts', 'constants/tournamentCopy.ts', 'types/tournament.ts']
 // settings/index.tsx only bounces back (settings live under Profile), so it has no screen of its own.
@@ -34,7 +35,8 @@ export const SCREENS = {
     route: '/', ready: 'Lunchtime Pepper',
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'app/(app)/(tabs)/(main)/_layout.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx',
       'components/MyEventsRail.tsx', 'components/Pager.tsx', 'hooks/useMonthEvents.ts', 'hooks/useMyUpcomingEvents.ts', 'hooks/useTags.ts', 'utils/feed*.ts', 'utils/eventCardPreviews.ts',
-      'utils/monthKeys.ts', 'utils/calendar*.ts', 'constants/events.ts', 'components/RefreshControl*.tsx', 'lib/pullGesture.ts'],
+      'utils/monthKeys.ts', 'utils/calendar*.ts', 'constants/events.ts', 'components/RefreshControl*.tsx', 'lib/pullGesture.ts',
+      'components/event/ForecastChip.tsx', 'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs'],
   },
   'events-feed-guest': {
     route: '/', signedIn: false, ready: 'Lunchtime Pepper',

@@ -73,7 +73,9 @@ its error state.
   after load, past the app's deferred startup reads such as the chat badge),
   and takes the shot. Repeated captures of one export come out the same.
 - **lib/supabaseMock.mjs** answers `/rest/v1`, `/rest/v1/rpc`, `/auth/v1`,
-  `/functions/v1`, `/storage/v1` and the Realtime websocket with `page.route`.
+  `/functions/v1`, `/storage/v1` and the Realtime websocket with `page.route`,
+  plus the app's own weather proxy `/api/forecast` (a Vercel function the static
+  server doesn't have), answered from `fixtures/forecast.mjs`.
   Signed-in screens get a fake session in localStorage (`sb-shotsmock-auth-token`)
   before the app loads. Every one-time banner and tour in the checkout is marked
   as seen so none covers a screen.

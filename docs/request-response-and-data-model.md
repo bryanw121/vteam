@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `1bd1ade882f8`
+> Inventory fingerprint: `8895fe2755d7`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -468,7 +468,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `event_guests` | [`hooks/event/useEventAttendance.ts:266`](../hooks/event/useEventAttendance.ts#L266)<br>[`hooks/event/useEventData.ts:35`](../hooks/event/useEventData.ts#L35)<br>[`hooks/event/useEventTeams.ts:86`](../hooks/event/useEventTeams.ts#L86) |
 | `event_payments` | [`hooks/event/useEventPayments.ts:13`](../hooks/event/useEventPayments.ts#L13) |
 | `event_tags` | [`app/(app)/host.tsx:363`](../app/%28app%29/host.tsx#L363) |
-| `events` | [`app/(app)/(tabs)/settings/history.tsx:54`](../app/%28app%29/%28tabs%29/settings/history.tsx#L54)<br>[`app/(app)/(tabs)/settings/hosted.tsx:24`](../app/%28app%29/%28tabs%29/settings/hosted.tsx#L24)<br>[`app/(app)/event/[id].tsx:210`](../app/%28app%29/event/%5Bid%5D.tsx#L210)<br>[`app/(app)/host.tsx:181`](../app/%28app%29/host.tsx#L181)<br>[`hooks/event/useEventData.ts:28`](../hooks/event/useEventData.ts#L28)<br>[`hooks/useClub.ts:45`](../hooks/useClub.ts#L45)<br>+2 more files |
+| `events` | [`app/(app)/(tabs)/settings/history.tsx:54`](../app/%28app%29/%28tabs%29/settings/history.tsx#L54)<br>[`app/(app)/(tabs)/settings/hosted.tsx:24`](../app/%28app%29/%28tabs%29/settings/hosted.tsx#L24)<br>[`app/(app)/event/[id].tsx:210`](../app/%28app%29/event/%5Bid%5D.tsx#L210)<br>[`app/(app)/host.tsx:181`](../app/%28app%29/host.tsx#L181)<br>[`hooks/event/useEventData.ts:28`](../hooks/event/useEventData.ts#L28)<br>[`hooks/useClub.ts:45`](../hooks/useClub.ts#L45)<br>+3 more files |
 | `external_sessions` | [`hooks/useMonthEvents.ts:238`](../hooks/useMonthEvents.ts#L238) |
 | `feedback_submissions` | [`app/(app)/(tabs)/settings/feedback.tsx:50`](../app/%28app%29/%28tabs%29/settings/feedback.tsx#L50)<br>[`supabase/functions/send-feedback-email/handler.ts:88`](../supabase/functions/send-feedback-email/handler.ts#L88) |
 | `major_cities` | [`hooks/useMajorCities.ts:10`](../hooks/useMajorCities.ts#L10) |
@@ -585,6 +585,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Usage metrics (lib/analytics.ts) | [`AnalyticsEventName`](../types/index.ts#L1656), [`AnalyticsProps`](../types/index.ts#L1659) |
 | Legal pages (/terms, /privacy) | [`LegalSpan`](../types/index.ts#L1664), [`LegalBlock`](../types/index.ts#L1667), [`VenmoLinks`](../types/index.ts#L1675) |
 | Text size (#43) | [`TextSizeId`](../types/index.ts#L1685), [`TextSizeOption`](../types/index.ts#L1687), [`TextScaleContextValue`](../types/index.ts#L1694), [`WebScrollableRef`](../types/index.ts#L1705) |
+| Weather on outdoor games (#165) | [`ForecastHour`](../types/index.ts#L1710), [`Forecast`](../types/index.ts#L1727), [`ForecastWindow`](../types/index.ts#L1734), [`ForecastCell`](../types/index.ts#L1737), [`ForecastTone`](../types/index.ts#L1740), [`ForecastSummary`](../types/index.ts#L1743), [`ForecastCourt`](../types/index.ts#L1758) |
 
 ### Constrained string values
 
@@ -607,6 +608,8 @@ TypeScript `enum` keyword.
 | `FeedbackPriority` | `low`, `medium`, `high` | [`types/index.ts:316`](../types/index.ts#L316) |
 | `FeedFilter` | `mine`, `all`, `open_play`, `tournament`, `not_full` | [`types/index.ts:648`](../types/index.ts#L648) |
 | `FeedRsvpAction` | `join`, `leave` | [`types/index.ts:662`](../types/index.ts#L662) |
+| `ForecastTone` | `neutral`, `rain`, `heat` | [`types/index.ts:1740`](../types/index.ts#L1740) |
+| `ForecastWindow` | `show`, `later` | [`types/index.ts:1734`](../types/index.ts#L1734) |
 | `JoinAction` | `leave`, `leave-waitlist`, `cancel-request`, `rerequest`, `waitlist`, `request`, `join` | [`types/index.ts:1263`](../types/index.ts#L1263) |
 | `LeaveConsequence.kind` | `waitlist`, `full`, `open`, `approval`, `hostNotified`, `paid`, `points` | [`types/index.ts:1295`](../types/index.ts#L1295) |
 | `LeaveReason` | `something_came_up`, `sick`, `injured`, `work` | [`types/index.ts:1312`](../types/index.ts#L1312) |

@@ -10,6 +10,7 @@ import { DocScrollView } from '../DocScrollView'
 import { LinkedText } from '../LinkedText'
 import { VenmoPayButton } from '../VenmoPayButton'
 import { PaidToggle } from './PaidToggle'
+import { ForecastRow } from './ForecastRow'
 import { shared, theme, LOCATIONS } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
 import type { EventData, EventPaymentsApi } from '../../types'
@@ -342,6 +343,9 @@ export function DetailsTab({
             </>
           )
         })() : null}
+
+        {/* Forecast row: sand / grass events with coordinates (#165) */}
+        <ForecastRow event={event} />
 
         {/* Difficulty row */}
         {(() => {
