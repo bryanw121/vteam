@@ -62,6 +62,30 @@ jobs:
           retention-days: 14
       - run: node --test scripts/*.test.mjs scripts/shots/*.test.mjs
 
+  # The Deno edge functions' real request handlers (supabase/functions/*/handler.ts),
+  # run against a fake Supabase client and a stubbed fetch: no network for the
+  # tests, no secrets, never touches live or beta. Only `deno task check` needs the
+  # network, to load supabase-js from esm.sh for the index.ts entry points.
+  edge-functions:
+    name: Edge functions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - uses: actions/checkout@v4
+      # v2.0.5, pinned by commit SHA.
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
+        with:
+          deno-version: 2.9.6
+      - run: deno task lint
+      # --frozen (in the task): fails if esm.sh serves something deno.lock doesn't record.
+      - run: deno task check
+      # --allow-env only: any real network call fails the test (and stubFetch
+      # throws on any URL a test did not script).
+      - run: deno task test --allow-env
+
   # The web build runs in parallel with docs/unit, outside the shared e2e lock,
   # so the serialized e2e job only installs and runs tests.
   build-web:

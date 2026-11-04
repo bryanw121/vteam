@@ -13,7 +13,7 @@ import { join } from 'path'
  */
 
 const proxy = readFileSync(
-  join(__dirname, '..', 'supabase/functions/places-proxy/index.ts'),
+  join(__dirname, '..', 'supabase/functions/places-proxy/handler.ts'),
   'utf8',
 )
 
