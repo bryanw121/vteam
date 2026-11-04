@@ -55,13 +55,14 @@ function readEnv(name: string): string | undefined {
 
 /**
  * Returns a 401 Response when the request is not authorized, otherwise null.
- *   const denied = requireWebhookAuth(req)
+ *   const denied = requireWebhookAuth(req, deps.env)
  *   if (denied) return denied
+ * `env` defaults to Deno.env; handlers pass their deps' reader so tests can script it.
  */
-export function requireWebhookAuth(req: Request): Response | null {
+export function requireWebhookAuth(req: Request, env: (name: string) => string | undefined = readEnv): Response | null {
   const ok = isAuthorized(req.headers, {
-    serviceRoleKey: readEnv('SUPABASE_SERVICE_ROLE_KEY'),
-    webhookSecret: readEnv('WEBHOOK_SECRET'),
+    serviceRoleKey: env('SUPABASE_SERVICE_ROLE_KEY'),
+    webhookSecret: env('WEBHOOK_SECRET'),
   })
   if (ok) return null
   return new Response('Unauthorized', { status: 401, headers: { 'Content-Type': 'text/plain' } })
