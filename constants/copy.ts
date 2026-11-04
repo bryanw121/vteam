@@ -1,5 +1,8 @@
 /** User-facing copy shared across screens. */
 
+/** The app's name as people see it: the browser tab title on web and the iOS home-screen label. */
+export const APP_NAME = 'VTeam'
+
 /** Alert body for a failed write when there is nothing more specific to say. */
 export const GENERIC_ERROR_MESSAGE = 'Something went wrong. Please try again.'
 
