@@ -148,16 +148,18 @@
     "n": 1,
     "title": "Club polls: \"Which night next week?\" in one tap, and the winning time becomes the event",
     "bucket": "competitor-gap",
-    "status": "proposed",
-    "summary": "Club owners post text or date/time polls in Updates (Spond time polls, Heja polls); members vote in one tap; a closed time poll opens Host prefilled with club/date/time and links to the event. New club_polls/options/votes tables, definer RPCs, club_poll notification."
+    "status": "approved",
+    "summary": "Club owners post text or date/time polls in Updates (Spond time polls, Heja polls); members vote in one tap; a closed time poll opens Host prefilled with club/date/time and links to the event. New club_polls/options/votes tables, definer RPCs, club_poll notification.",
+    "issue": 175
   },
   {
     "date": "2026-11-04",
     "n": 2,
     "title": "Search games: find a game, place, host or club from the Events tab",
     "bucket": "end-user-experience",
-    "status": "proposed",
-    "summary": "Search button in the Events header opens /search (public): upcoming vteam + external sessions, hosts with upcoming games, clubs, typo-tolerant via pg_trgm; signed-in past-games scope; desktop type-ahead. One SECURITY INVOKER RPC search_feed, no tables."
+    "status": "approved",
+    "summary": "Search button in the Events header opens /search (public): upcoming vteam + external sessions, hosts with upcoming games, clubs, typo-tolerant via pg_trgm; signed-in past-games scope; desktop type-ahead. One SECURITY INVOKER RPC search_feed, no tables.",
+    "issue": 176
   },
   {
     "date": "2026-11-04",
