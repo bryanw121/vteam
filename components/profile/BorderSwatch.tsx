@@ -56,8 +56,10 @@ export function BorderSwatch({ label, borderDef, selected, unlocked, onPress, si
     <Pressable
       onPress={onPress}
       disabled={blocked}
-      accessibilityRole="radio"
-      accessibilityState={{ selected, disabled: !unlocked }}
+      role="radio"
+      aria-checked={selected}
+      aria-disabled={!unlocked}
+      aria-label={unlocked ? label : `${label}, locked`}
       accessibilityHint={description}
       style={({ pressed }) => ({ alignItems: 'center', gap: theme.spacing.xs, opacity: pressed && unlocked ? 0.7 : 1 })}
     >

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { View, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native'
+import { View, ScrollView, TouchableOpacity } from 'react-native'
 import { Text } from '../ui/Text'
 import { RefreshControl } from '../RefreshControl'
 import { shared, theme } from '../../constants'
@@ -8,6 +8,7 @@ import type { EventCommentsApi, EventData } from '../../types'
 import { profileDisplayName } from '../../utils'
 import { EventCommentRow } from '../EventCommentRow'
 import { DiscussionComposer } from '../DiscussionComposer'
+import { Spinner } from '../ui/Spinner'
 
 type Props = {
   discussion: EventCommentsApi
@@ -87,7 +88,7 @@ export function DiscussionTab({
       >
         {commentsLoading && comments.length === 0 ? (
           <View style={{ paddingVertical: theme.spacing.lg, alignItems: 'center' }}>
-            <ActivityIndicator color={theme.colors.primary} />
+            <Spinner color={theme.colors.primary} />
           </View>
         ) : comments.length === 0 ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -105,7 +106,7 @@ export function DiscussionTab({
                 style={shared.loadEarlierButton}
               >
                 {loadingEarlier
-                  ? <ActivityIndicator size="small" color={theme.colors.primary} />
+                  ? <Spinner size="small" color={theme.colors.primary} />
                   : <Text style={shared.loadEarlierLabel}>Load earlier comments</Text>}
               </TouchableOpacity>
             ) : null}

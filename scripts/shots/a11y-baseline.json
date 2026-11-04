@@ -1,31 +1,25 @@
 {
   "chat-club": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 7
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 12
     }
   },
   "chat-conversation": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 11
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 16
     }
   },
   "chat-list": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 9
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 14
     }
   },
@@ -39,140 +33,106 @@
   },
   "club-detail": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 8
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 14
     }
   },
   "club-detail-guest": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 7
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 12
     }
   },
   "clubs-list": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 2
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 7
     }
   },
   "event-cheers": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 10
     },
     "desktop": {
-      "aria-progressbar-name": 3,
       "color-contrast": 15
     }
   },
   "event-details": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 20
     },
     "desktop": {
-      "aria-progressbar-name": 2,
       "color-contrast": 23
     }
   },
   "event-discussion": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 16,
-      "label": 1
+      "color-contrast": 16
     },
     "desktop": {
-      "aria-progressbar-name": 3,
-      "color-contrast": 21,
-      "label": 1
+      "color-contrast": 21
     }
   },
   "event-guest": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 19
     },
     "desktop": {
-      "aria-progressbar-name": 2,
       "color-contrast": 23
     }
   },
   "event-paid-bottom": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 20
     },
     "desktop": {
-      "aria-progressbar-name": 2,
       "color-contrast": 20
     }
   },
   "event-people": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 20
     },
     "desktop": {
-      "aria-progressbar-name": 2,
       "color-contrast": 25
     }
   },
   "events-feed": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 33
     },
     "desktop": {
-      "aria-progressbar-name": 2,
       "color-contrast": 49
     }
   },
   "events-feed-guest": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 24
     },
     "desktop": {
-      "aria-progressbar-name": 2,
       "color-contrast": 44
     }
   },
   "host-create": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 10,
-      "label": 2,
-      "select-name": 3
+      "color-contrast": 10
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 15,
-      "label": 2,
-      "select-name": 3
+      "color-contrast": 15
     }
   },
   "host-edit": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 10,
-      "select-name": 3
+      "color-contrast": 10
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 15,
-      "select-name": 3
+      "color-contrast": 15
     }
   },
   "login": {
@@ -185,11 +145,9 @@
   },
   "notifications": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 12
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 17
     }
   },
@@ -203,21 +161,17 @@
   },
   "profile-other": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 4
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 9
     }
   },
   "profile-own": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 4
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 9
     }
   },
@@ -263,33 +217,25 @@
   },
   "settings-account": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 3
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 8
     }
   },
   "settings-badges": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "aria-required-attr": 4,
       "color-contrast": 13
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "aria-required-attr": 4,
       "color-contrast": 18
     }
   },
   "settings-cheers": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 8
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 13
     }
   },
@@ -311,53 +257,41 @@
   },
   "settings-feedback": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 9
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 14
     }
   },
   "settings-history": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 5
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 10
     }
   },
   "settings-hosted": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 4
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 9
     }
   },
   "settings-notifications": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 6,
-      "label": 24
+      "color-contrast": 6
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 11,
-      "label": 24
+      "color-contrast": 11
     }
   },
   "settings-silenced": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 4
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 9
     }
   },
@@ -379,73 +313,57 @@
   },
   "tournament-discussion": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 11,
-      "label": 1
+      "color-contrast": 11
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 16,
-      "label": 1
+      "color-contrast": 16
     }
   },
   "tournament-overview": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 15
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 22
     }
   },
   "tournament-results": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 21
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 24
     }
   },
   "tournament-schedule": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 17
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 24
     }
   },
   "tournament-teams": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 14
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 20
     }
   },
   "tournaments-list": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 8
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 13
     }
   },
   "tournaments-list-past": {
     "mobile": {
-      "aria-progressbar-name": 1,
       "color-contrast": 4
     },
     "desktop": {
-      "aria-progressbar-name": 1,
       "color-contrast": 9
     }
   },
