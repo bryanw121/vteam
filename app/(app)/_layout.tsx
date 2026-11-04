@@ -166,7 +166,7 @@ function AppLayoutInner() {
                       color={active ? theme.colors.primary : theme.colors.subtext}
                     />
                     {badge > 0 && (
-                      <View style={{
+                      <View testID="chat-unread-badge" style={{
                         position: 'absolute', top: -5, right: -8,
                         minWidth: 18, height: 18, borderRadius: 9,
                         backgroundColor: theme.colors.hot,

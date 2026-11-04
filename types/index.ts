@@ -1038,6 +1038,12 @@ export type ConfirmDialogProps = {
   onConfirm: () => void
   onCancel: () => void
   loading?: boolean
+  /** Extra content between the body and the buttons (e.g. the leave sheet's lines and reason chips). */
+  children?: import('react').ReactNode
+  /** Card width on wide screens (default 320; it never exceeds 92% of the window). */
+  width?: number
+  /** Replace the default `confirm-dialog-*` test ids' prefix. */
+  testIDPrefix?: string
 }
 
 export type BottomSheetProps = {
@@ -1277,6 +1283,36 @@ export type SelfAttendanceAction =
   | 'requestToJoin'
   | 'cancelRequest'
   | 'rerequest'
+
+/** One run of a leave-sheet line; `strong` runs are bold (the part that matters). */
+export type LeaveConsequencePart = { text: string; strong?: boolean }
+
+/**
+ * One line on the leave sheet (#171), from `leaveConsequences()` in
+ * utils/leaveConsequences.ts. Only the lines that apply are produced, in display order.
+ */
+export type LeaveConsequence = {
+  kind: 'waitlist' | 'full' | 'open' | 'approval' | 'hostNotified' | 'paid' | 'points'
+  icon: IoniconName
+  parts: LeaveConsequencePart[]
+}
+
+/** What `leaveConsequences` needs from the event row, plus the host's display name. */
+export type LeaveEventInfo = Pick<EventWithDetails, 'event_date' | 'max_attendees' | 'requires_approval' | 'price' | 'event_tags'> & {
+  hostName: string
+}
+
+/** Roster counts as the event page derives them (`computeEventStatus`): `count` includes +1 guests. */
+export type LeaveRosterInfo = Pick<AttendanceStatus, 'count' | 'isFull' | 'spotsLeft' | 'waitlistCount'>
+
+/** The viewer's side: hosts and co-hosts aren't told about their own dropout; `paid` is their "I've paid" flag. */
+export type LeaveViewerInfo = { isHostOrCohost: boolean; paid: boolean }
+
+/** A reason chip on the leave sheet (`LEAVE_REASONS` in constants/copy.ts). */
+export type LeaveReason = 'something_came_up' | 'sick' | 'injured' | 'work'
+
+/** Toast with an optional action button (e.g. "Message host" after a failed leave note). */
+export type ToastAction = { label: string; onPress: () => void }
 
 /** Host removing someone from the roster (the X on a card). */
 export type RemoveTarget =

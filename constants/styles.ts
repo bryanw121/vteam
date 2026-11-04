@@ -868,4 +868,15 @@ export const shared = StyleSheet.create({
     borderRadius: 18, paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
   },
   settingsPreviewBubbleText: { fontFamily: fonts.body, fontSize: font.size.md, color: colors.onPrimary },
+
+  // ── Leave sheet (components/event/LeaveSheet, #171) ────────
+  leaveSubtitle: { fontFamily: fonts.body, fontSize: font.size.sm, color: colors.subtextStrong, marginTop: -spacing.sm, marginBottom: spacing.md },
+  leaveLines: { gap: spacing.md, marginBottom: spacing.md },
+  leaveLine: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  leaveLineIcon: { marginTop: 1 },
+  leaveLineText: { flex: 1, fontFamily: fonts.body, fontSize: font.size.md, lineHeight: 20, color: colors.subtextStrong },
+  leaveLineStrong: { fontFamily: fonts.bodySemiBold, fontWeight: '600', color: colors.text },
+  leaveReasonLabel: { fontFamily: fonts.body, fontSize: font.size.sm, color: colors.subtextStrong, marginBottom: spacing.xs },
+  leaveNote: { marginTop: spacing.sm, marginBottom: spacing.md, fontSize: font.size.base, minHeight: 44 },
+  leaveActions: { gap: spacing.sm },
 })
