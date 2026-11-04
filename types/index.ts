@@ -1660,3 +1660,56 @@ export type TextScaleContextValue = {
 
 /** react-native-web's ScrollView instance: exposes the DOM node that scrolls (web only). */
 export type WebScrollableRef = { getScrollableNode?: () => HTMLElement } | null
+
+// ─── Weather on outdoor games (#165) ─────────────────────────────────────────
+
+/** One hour of the National Weather Service hourly forecast, trimmed by `api/forecast.ts`. */
+export type ForecastHour = {
+  /** Start of the hour (ISO 8601 with offset, as NWS sends it). */
+  t: string
+  tempF: number
+  /** Chance of precipitation, 0–100. */
+  pop: number
+  /** Wind speed in mph (the top of a "5 to 10 mph" range). */
+  windMph: number
+  /** NWS short forecast ("Sunny", "Chance Rain Showers"). */
+  short: string
+  /** Condition from the NWS icon URL: `day/skc`, `night/rain_showers`, ... (empty when unknown). */
+  icon: string
+  /** Relative humidity, 0–100. */
+  rh: number
+}
+
+/** `GET /api/forecast` body: the hourly series for one court (coordinates rounded to 2 decimals). */
+export type Forecast = {
+  /** When NWS last updated the forecast (ISO 8601). */
+  updatedAt: string
+  hours: ForecastHour[]
+}
+
+/** Whether an event gets a forecast now (`show`), only later (`later`: more than 7 days out), or never. */
+export type ForecastWindow = 'show' | 'later' | null
+
+/** An hourly cell on the event page: game hours are highlighted. */
+export type ForecastCell = ForecastHour & { inGame: boolean }
+
+/** Neutral, or a warning style: rain likely, or dangerous heat. */
+export type ForecastTone = 'neutral' | 'rain' | 'heat'
+
+/** What the card chip and the event page say about the game hours (`forecastSummary`). */
+export type ForecastSummary = {
+  tone: ForecastTone
+  /** Card chip text: "☀️ 78°", "🌧 70% rain", "🔥 97°". */
+  chipLabel: string
+  /** Event page headline: "Rain likely during the game", "Hot: feels like 97°F", or the NWS short forecast. */
+  headline: string
+  /** Event page line under the headline: temperature, wind and rain chance. */
+  detail: string
+  /** Screen reader label for the chip: "Forecast: 70 percent chance of rain". */
+  a11yLabel: string
+  /** Emoji for the condition (used by the event page icon). */
+  emoji: string
+}
+
+/** A rounded court position: the forecast cache key. */
+export type ForecastCourt = { lat: number; lng: number }

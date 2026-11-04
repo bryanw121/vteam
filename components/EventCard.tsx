@@ -6,11 +6,12 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter, usePathname } from 'expo-router'
 import { theme, eventAttendeeDisplayCount, SURFACE_LABELS } from '../constants'
 import { TimePill } from './ui'
+import { ForecastChip } from './event/ForecastChip'
 import { routes } from '../utils/routes'
 import { rememberEventCard } from '../hooks/event/seed'
 import { eventPrefetchProps } from '../hooks/event/prefetch'
 import { profileAvatarSmallUri, profileDisplayName, surfaceOf } from '../utils'
-import type { EventCardRsvpHandler, EventWithDetails, Tag } from '../types'
+import type { EventCardRsvpHandler, EventWithDetails, ForecastSummary, Tag } from '../types'
 
 // ─── Attendance helpers ───────────────────────────────────────────────────────
 
@@ -79,6 +80,7 @@ function EventCardInner({
   currentUserId,
   onRsvp,
   rsvpPending = false,
+  forecast,
 }: {
   event: EventWithDetails
   from?: string
@@ -86,6 +88,8 @@ function EventCardInner({
   onRsvp?: EventCardRsvpHandler
   /** The parent's RSVP write for this event is in flight (survives a remount, unlike the local spinner). */
   rsvpPending?: boolean
+  /** Weather chip for an outdoor event (#165); the feed works it out (`useFeedForecasts`). */
+  forecast?: ForecastSummary | null
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -118,6 +122,7 @@ function EventCardInner({
   return (
     <TouchableOpacity
       activeOpacity={0.85}
+      testID="event-card"
       {...(event._isTournament ? null : eventPrefetchProps(event.id))}
       onPress={() => {
         if (!event._isTournament) rememberEventCard(event)
@@ -147,6 +152,7 @@ function EventCardInner({
         {/* Top chips: time + day + type + skill */}
         <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
           <TimePill label={time} testID="event-card-time" />
+          {forecast && <ForecastChip summary={forecast} />}
           <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, backgroundColor: theme.colors.accent }}>
             <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.accentInk }}>
               {day}
@@ -307,13 +313,15 @@ export const HeroEventCard = EventCard
 
 // ─── Row Event Card (desktop secondary cards) ─────────────────────────────────
 
-function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, rsvpPending = false }: {
+function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, rsvpPending = false, forecast }: {
   event: EventWithDetails
   from?: string
   currentUserId?: string | null
   onRsvp?: EventCardRsvpHandler
   /** See EventCard. */
   rsvpPending?: boolean
+  /** See EventCard. */
+  forecast?: ForecastSummary | null
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -346,6 +354,7 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
   return (
     <TouchableOpacity
       activeOpacity={0.85}
+      testID="event-card"
       {...(event._isTournament ? null : eventPrefetchProps(event.id))}
       onPress={() => {
         if (!event._isTournament) rememberEventCard(event)
@@ -390,8 +399,9 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
 
       {/* Content */}
       <View style={{ flex: 1, minWidth: 0 }}>
-        <View style={{ marginBottom: 6 }}>
+        <View style={{ marginBottom: 6, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
           <TimePill label={time} testID="event-card-time" />
+          {forecast && <ForecastChip summary={forecast} />}
         </View>
         {/* Chips */}
         <View style={{ flexDirection: 'row', gap: 5, marginBottom: 6, flexWrap: 'wrap' }}>

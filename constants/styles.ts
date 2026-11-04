@@ -232,6 +232,26 @@ export const shared = StyleSheet.create({
     color: theme.colors.timeInk, letterSpacing: -0.2,
   },
   timePillLabelLg: { fontSize: theme.font.size.lgm },
+  // Weather on outdoor games (#165): card chip next to the TimePill, event page row.
+  forecastChip: {
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start',
+    paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full,
+    borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.card,
+  },
+  forecastChipRain: { backgroundColor: theme.colors.accent + '1A', borderColor: theme.colors.accent + '66' },
+  forecastChipHeat: { backgroundColor: theme.colors.warm + '1F', borderColor: theme.colors.warm + '73' },
+  forecastChipLabel: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong },
+  forecastChipLabelRain: { color: theme.colors.accent },
+  forecastChipLabelHeat: { color: theme.colors.warm },
+  forecastCells: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: theme.spacing.sm },
+  forecastCell: {
+    minWidth: 56, flexGrow: 0, alignItems: 'center', paddingVertical: 6, paddingHorizontal: 8,
+    borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.background,
+  },
+  forecastCellInGame: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
+  forecastCellTime: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
+  forecastCellTemp: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lgs, color: theme.colors.text },
+  forecastCellPop: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
   externalCard: {
     backgroundColor: theme.colors.card,
     borderRadius: 20,

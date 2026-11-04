@@ -9,10 +9,12 @@
  * - /functions/v1/*        {} (places-proxy gets an empty prediction list)
  * - /storage/v1/*          uploads succeed; object reads get a 1x1 PNG
  * - /realtime/v1/websocket joins succeed, nothing is ever pushed
+ * - <app>/api/forecast      the weather proxy (#165): a fake NWS hourly series (fixtures/forecast.mjs)
  */
 import { createDb } from './postgrest.mjs'
 import { buildFixtures, VIEWS, ME } from '../fixtures/index.mjs'
 import { PEOPLE } from '../fixtures/people.mjs'
+import { buildForecast } from '../fixtures/forecast.mjs'
 
 export const MOCK_SUPABASE_URL = 'https://shotsmock.supabase.co'
 export const MOCK_ANON_KEY = 'shots-mock-anon-key'
@@ -142,6 +144,16 @@ export async function installSupabaseMock(page, { now, signedIn, seenIds = [], r
 
   // Everything that is neither the local server nor Supabase: abort (fonts are bundled; maps, Sentry, avatars from elsewhere are not needed).
   await page.route(url => !/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//.test(url.href) && !url.href.startsWith(MOCK_SUPABASE_URL) && !url.href.startsWith('data:') && !url.href.startsWith('blob:'), route => route.abort())
+
+  // The weather proxy (api/forecast.ts) is a Vercel function the static server doesn't have.
+  await page.route(url => /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/api\/forecast\b/.test(url.href), route => {
+    const url = new URL(route.request().url())
+    const lat = Number(url.searchParams.get('lat'))
+    const lng = Number(url.searchParams.get('lng'))
+    if (log) log.push(`GET /api/forecast${url.search}`)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return route.fulfill({ status: 400 })
+    return json(route, 200, buildForecast(now, lat, lng))
+  })
 
   await page.route(`${MOCK_SUPABASE_URL}/**`, async route => {
     const req = route.request()

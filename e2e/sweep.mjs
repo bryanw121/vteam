@@ -59,6 +59,8 @@ async function main() {
     }
     if (RUN_TAG) {
       await sweep('this run', q => q.like('title', `[e2e ${RUN_TAG}]%`))
+      // e2e/weather.spec.ts keeps its own prefix so the events suite's beforeAll scrub can't delete them mid-run.
+      await sweep('this run (weather)', q => q.like('title', `[e2e-wx ${RUN_TAG}]%`))
       const staleBefore = new Date(Date.now() - STALE_HOURS * 3600_000).toISOString()
       await sweep('stale', q => q.like('title', '[e2e%').lt('created_at', staleBefore))
     } else {
