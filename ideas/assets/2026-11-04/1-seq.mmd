@@ -1,0 +1,24 @@
+sequenceDiagram
+  autonumber
+  actor O as Owner (App)
+  actor M as Member (App)
+  participant R as PostgREST/RLS
+  participant F as Postgres functions
+  participant T as Trigger notify_club_poll
+  participant E as Edge fn send-notification-push
+  O->>R: rpc create_club_poll(club_id, question, kind, options[], multi, closes_at, notify)
+  R->>F: SECURITY DEFINER: caller is club owner? 2–10 options? closes_at in future?
+  F->>F: insert club_posts (body = question) + club_polls + club_poll_options (one transaction)
+  F-->>T: AFTER INSERT on club_polls (notify = true)
+  T->>T: insert notifications type club_poll for each member except owner (deep_link /club/id?post=)
+  T-->>E: Database Webhook on notifications INSERT
+  E->>M: push "Maya: Which night next week?" (honours prefs.push.club_poll)
+  M->>R: select club_posts + club_polls + options + vote counts (members-only SELECT)
+  M->>R: rpc vote_club_poll(poll_id, option_ids[])
+  R->>F: member? poll open? single-choice => exactly 1 id, options belong to poll
+  F->>F: delete my votes for poll, insert new votes (replace, idempotent)
+  F-->>M: counts per option
+  Note over F: closes_at passes: votes rejected, card shows Closed (no cron needed)
+  O->>O: Create event for winning option: router.push(routes.host({ clubId, date, pollId }))
+  O->>R: insert events (existing host flow) then rpc link_poll_event(poll_id, event_id)
+  R->>F: owner of poll's club and host of event? set club_polls.event_id

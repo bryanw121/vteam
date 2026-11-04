@@ -142,5 +142,29 @@
     "status": "approved",
     "summary": "createHandler(deps) seam in each function, deno lint/check/test with fake Supabase + stub fetch in a CI job, deploy-functions.yml behind a production environment approval, scripts/functions-drift.mjs daily (updated_at vs last commit, verify_jwt vs config.toml, missing/extra).",
     "issue": 172
+  },
+  {
+    "date": "2026-11-04",
+    "n": 1,
+    "title": "Club polls: \"Which night next week?\" in one tap, and the winning time becomes the event",
+    "bucket": "competitor-gap",
+    "status": "proposed",
+    "summary": "Club owners post text or date/time polls in Updates (Spond time polls, Heja polls); members vote in one tap; a closed time poll opens Host prefilled with club/date/time and links to the event. New club_polls/options/votes tables, definer RPCs, club_poll notification."
+  },
+  {
+    "date": "2026-11-04",
+    "n": 2,
+    "title": "Search games: find a game, place, host or club from the Events tab",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "Search button in the Events header opens /search (public): upcoming vteam + external sessions, hosts with upcoming games, clubs, typo-tolerant via pg_trgm; signed-in past-games scope; desktop type-ahead. One SECURITY INVOKER RPC search_feed, no tables."
+  },
+  {
+    "date": "2026-11-04",
+    "n": 3,
+    "title": "Web bundle budget: size report on every PR, fail on unplanned growth of the first-load JS",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "scripts/bundle-size.mjs after build:web: initial vs lazy JS gz, source-map attribution per package/folder, job summary, fail when initial JS grows >15 KB gz and >3% over committed baseline; bundleImports test enforces icon-barrel/pdf-lib/expo-print/Sentry import rules. Entry is 876 KB gz today."
   }
 ]

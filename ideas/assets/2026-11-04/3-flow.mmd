@@ -1,0 +1,15 @@
+flowchart LR
+  A[PR push] --> B[Web build job: npm run build:web]
+  B --> C["scripts/bundle-size.mjs dist/"]
+  C --> D{"initial JS gz vs scripts/bundle-baseline.json"}
+  D -->|"within +15 KB gz and +3%"| E[Pass: table in job summary]
+  D -->|"over budget"| F[Fail: names the growth and top modules added]
+  C --> G["expo export --source-maps (same build) to attribute bytes per package"]
+  G --> H[Top 10 packages in initial chunk, delta vs main]
+  H --> E
+  H --> F
+  F --> I{"Growth intended?"}
+  I -->|yes| J["npm run bundle:baseline, commit with reason in PR"]
+  I -->|no| K["lazy-load it: import() chunk, like officialPdf"]
+  L[push to main] --> M[Upload bundle-report artifact = next baseline candidate]
+  N["__tests__/bundleImports.test.ts"] --> O["fails on @expo/vector-icons barrel, pdf-lib ESM, top-level expo-print import"]

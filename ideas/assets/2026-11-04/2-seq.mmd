@@ -1,0 +1,19 @@
+sequenceDiagram
+  autonumber
+  actor U as Player or guest (App)
+  participant C as lib/query cache
+  participant R as PostgREST/RLS (anon or authenticated)
+  participant F as search_feed() SECURITY INVOKER
+  participant P as Postgres (pg_trgm GIN indexes)
+  U->>U: type "riverbend" (debounce 250 ms, min 2 chars)
+  U->>C: useSearch(q, scope) key search:q:scope:region
+  C->>R: rpc search_feed(q, scope, region)
+  R->>F: runs as the caller, so every table's RLS applies
+  F->>P: events (title, location, description) where not cancelled, next 60 days or my past games
+  F->>P: external_sessions (title, venue) in region, fresh rows only
+  F->>P: profiles (username, first/last name) that host or co-host upcoming games
+  F->>P: clubs (name, location_name)
+  P-->>F: ranked by similarity then date, limit 20 per kind
+  F-->>C: jsonb {events, external, hosts, clubs}
+  C-->>U: grouped results, tap opens routes.event / external link / routes.profileOf / routes.club
+  U->>U: Enter or tap saves q in recent searches (device storage, max 8)
