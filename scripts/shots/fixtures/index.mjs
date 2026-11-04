@@ -112,9 +112,9 @@ export function buildFixtures(now) {
   // Attendance: who's in, in join order. `n` attending from ALL (skipping the host), then waitlist.
   const event_attendees = []
   const roster = (key, users, { waitlist = [], teams = false, pending = [] } = {}) => {
-    users.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'attending', joined_at: t.ago(60 * 24 * 3 - i * 37), team_number: teams ? (i % 2) + 1 : null, team_pinned: false, denial_reason: null }))
-    waitlist.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'waitlisted', joined_at: t.ago(60 * 5 - i * 11), team_number: null, team_pinned: false, denial_reason: null }))
-    pending.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'pending', joined_at: t.ago(60 * 2 - i * 7), team_number: null, team_pinned: false, denial_reason: null }))
+    users.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'attending', joined_at: t.ago(60 * 24 * 3 - i * 37), team_number: teams ? (i % 2) + 1 : null, team_pinned: false, denial_reason: null, no_show: false, no_show_marked_at: null, no_show_marked_by: null }))
+    waitlist.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'waitlisted', joined_at: t.ago(60 * 5 - i * 11), team_number: null, team_pinned: false, denial_reason: null, no_show: false, no_show_marked_at: null, no_show_marked_by: null }))
+    pending.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'pending', joined_at: t.ago(60 * 2 - i * 7), team_number: null, team_pinned: false, denial_reason: null, no_show: false, no_show_marked_at: null, no_show_marked_by: null }))
   }
   const others = exclude => ALL.filter(u => !exclude.includes(u))
   roster('sundaySand', [ME, ...others([ME]).slice(0, 10)], { teams: true })
@@ -130,6 +130,8 @@ export function buildFixtures(now) {
   roster('nextWeekIndoor', [P.jordanr])
   roster('pastSand', [ME, P.jordanr, P.priyap, P.marcusw, P.sofiag, P.liamo, P.emmat, P.zoeyl], { teams: true })
   roster('pastIndoor', [P.jordanr, ME, P.aishak, P.danielk, P.noahb, P.hannahs])
+  // No-show flag (#151): Jordan marked Maya as a no-show at the last indoor gym (the event-details-noshow screen).
+  Object.assign(event_attendees.find(a => a.event_id === E.pastIndoor && a.user_id === ME), { no_show: true, no_show_marked_at: t.iso(-5, 21, 30), no_show_marked_by: P.jordanr })
   roster('pastHosted', [ME, P.priyap, P.marcusw, P.emmat, P.ethanp, P.zoeyl])
 
   const event_guests = [

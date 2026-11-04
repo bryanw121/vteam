@@ -32,10 +32,12 @@ export const COHOST_SELECT =
 
 /**
  * `event_attendees` row with the attendee's profile. `denial_reason` is left out
- * on purpose: every viewer of the event reads these rows.
+ * on purpose: every viewer of the event reads these rows. `no_show` (#151) is
+ * read by everyone like the rest of the row, but the app shows it only to hosts,
+ * co-hosts and the flagged player.
  */
 export const ATTENDEE_SELECT =
-  `event_id, user_id, joined_at, team_number, team_pinned, status, profiles!event_attendees_user_id_fkey (${PROFILE_ROSTER})`
+  `event_id, user_id, joined_at, team_number, team_pinned, status, no_show, profiles!event_attendees_user_id_fkey (${PROFILE_ROSTER})`
 
 /** `cheers` row. */
 export const CHEER_SELECT = 'id, event_id, giver_id, receiver_id, cheer_type, created_at'

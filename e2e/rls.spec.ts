@@ -242,6 +242,38 @@ test.describe('points (#4)', () => {
 })
 
 /**
+ * No-show flag (#151): only set_no_show() writes event_attendees.no_show, and
+ * only for the host or a co-host. Nothing here succeeds: random ids, an event
+ * the account doesn't host, and inserts the guard trigger refuses.
+ */
+test.describe('no-show flag (#151)', () => {
+  // TEMPORARY casts: set_no_show / no_show reach types/database.ts when it is regenerated after merge.
+  const args = (eventId: string, userId: string) => ({ p_event_id: eventId, p_user_id: userId, p_value: true }) as never
+
+  test('anon cannot call set_no_show', async () => {
+    const res = await q(() => anon.rpc('set_no_show' as never, args(crypto.randomUUID(), BUDDY_ID)), 'anon set_no_show')
+    expect(res.error?.code).toBe(RLS_DENIED)
+  })
+
+  test('a user cannot flag on an event they do not host (or that does not exist)', async () => {
+    const missing = await q(() => me.rpc('set_no_show' as never, args(crypto.randomUUID(), BUDDY_ID)), 'set_no_show unknown event')
+    expect(missing.error, 'unknown event').not.toBeNull()
+    const other = await q(() => me.from('events').select('id').neq('created_by', myId).limit(1), 'an event someone else hosts')
+    test.skip(!other.data?.length, 'beta has no event hosted by someone else')
+    const res = await q(() => me.rpc('set_no_show' as never, args(other.data![0].id, BUDDY_ID)), 'set_no_show not host')
+    expect(res.error?.code).toBe(RLS_DENIED)
+  })
+
+  test('the columns cannot be set directly, even on your own RSVP', async () => {
+    // Rejected by the guard trigger before any foreign key or RLS check could save it.
+    const ins = await q(() => me.from('event_attendees').insert({ event_id: crypto.randomUUID(), user_id: myId, no_show: true } as never), 'insert with no_show')
+    expect(ins.error?.code).toBe(RLS_DENIED)
+    const marked = await q(() => me.from('event_attendees').insert({ event_id: crypto.randomUUID(), user_id: myId, no_show_marked_by: BUDDY_ID } as never), 'insert with no_show_marked_by')
+    expect(marked.error?.code).toBe(RLS_DENIED)
+  })
+})
+
+/**
  * #111: signed-in RPCs are no longer executable by anon. Skips while the
  * migration is not on beta (anon can still call them then).
  * TODO(#111): drop the skip once 20261028160000_definer_search_path is applied.

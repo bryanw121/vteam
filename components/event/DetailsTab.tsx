@@ -10,6 +10,8 @@ import { DocScrollView } from '../DocScrollView'
 import { LinkedText } from '../LinkedText'
 import { VenmoPayButton } from '../VenmoPayButton'
 import { PaidToggle } from './PaidToggle'
+import { Button } from '../Button'
+import { NO_SHOW_MESSAGE_HOST, NO_SHOW_PLAYER_BODY, NO_SHOW_PLAYER_TITLE } from '../../constants/copy'
 import { shared, theme, LOCATIONS } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
 import type { EventData, EventPaymentsApi } from '../../types'
@@ -119,6 +121,8 @@ type Props = {
   onManageCohosts: () => void
   /** "I've paid" toggle; null when the viewer can't set one (free event, not on the roster, the creator). */
   payments: EventPaymentsApi | null
+  /** The host flagged the viewer as a no-show (#151): show them why they get no points. */
+  noShow?: boolean
 }
 
 export function DetailsTab({
@@ -133,6 +137,7 @@ export function DetailsTab({
   onMessageHost,
   onManageCohosts,
   payments,
+  noShow = false,
 }: Props) {
   const { refreshing, refresh: onRefresh, cohosts, userId } = data
   const totalAttending = eventStatus.count
@@ -143,6 +148,19 @@ export function DetailsTab({
       contentContainerStyle={[shared.scrollContent, { paddingBottom: descFooterHeight + Math.max(bottomInset, theme.spacing.md) }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
     >
+
+      {/* ── The viewer was marked as a no-show (#151) ── */}
+      {noShow && (
+        <View testID="no-show-card" style={shared.noShowCard}>
+          <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.base, color: theme.colors.text }}>
+            {NO_SHOW_PLAYER_TITLE}
+          </Text>
+          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.subtextStrong, lineHeight: 20 }}>{NO_SHOW_PLAYER_BODY}</Text>
+          {event.created_by !== userId && (
+            <Button label={NO_SHOW_MESSAGE_HOST} variant="secondary" onPress={() => onMessageHost(event.created_by)} testID="no-show-message-host" />
+          )}
+        </View>
+      )}
 
       {/* ── Quick-stats strip ── */}
       {(() => {

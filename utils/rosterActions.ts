@@ -1,4 +1,5 @@
-import type { EventGuest, Profile, RosterAction, RosterActionContext } from '../types'
+import type { EventGuest, NoShowRowAction, Profile, RosterAction, RosterActionContext } from '../types'
+import { NO_SHOW_MARK_LABEL, NO_SHOW_MARK_SUBTITLE, NO_SHOW_UNDO_LABEL, NO_SHOW_UNDO_SUBTITLE } from '../constants/copy'
 
 /**
  * The People tab's per-row ⋯ menu (#40). The risky part is the gates, not the
@@ -30,17 +31,27 @@ export function canMessageFromRoster(userId: string, ctx: RosterActionContext): 
     && !ctx.silencedUserIds.has(userId)
 }
 
-/** Member row: Message (leads, it's what the menu is for), View profile, Remove (last, destructive). */
+/**
+ * Member row: Message (leads, it's what the menu is for), View profile, then
+ * Mark as no-show / Undo no-show when the caller passes it (host or co-host,
+ * inside the window, not their own row: #151), Remove (last, destructive).
+ */
 export function memberRowActions(
   profile: Pick<Profile, 'id'>,
   ctx: RosterActionContext,
   onRemove?: () => void,
+  noShow?: NoShowRowAction,
 ): RosterAction[] {
   const out: RosterAction[] = []
   if (canMessageFromRoster(profile.id, ctx)) {
     out.push({ key: 'message', label: 'Message', onPress: () => ctx.onMessage?.(profile.id) })
   }
   out.push({ key: 'profile', label: 'View profile', onPress: () => ctx.onOpenProfile(profile.id) })
+  if (noShow && profile.id !== ctx.viewerId) {
+    out.push(noShow.flagged
+      ? { key: 'no-show', label: NO_SHOW_UNDO_LABEL, subtitle: NO_SHOW_UNDO_SUBTITLE(noShow.until), onPress: noShow.onToggle }
+      : { key: 'no-show', label: NO_SHOW_MARK_LABEL, subtitle: NO_SHOW_MARK_SUBTITLE(noShow.until), caution: true, onPress: noShow.onToggle })
+  }
   if (onRemove) out.push({ key: 'remove', label: 'Remove from event', destructive: true, onPress: onRemove })
   return out
 }
