@@ -9,8 +9,41 @@
 | `send-feedback-email` | the app, after inserting `feedback_submissions` (`lib/feedback.ts`) | user JWT checked by the gateway; the function emails only a fresh row the caller owns | `true` |
 
 `verify_jwt` is declared in [`../config.toml`](../config.toml) and applied on deploy.
-Shared code lives in `_shared/` (`supabase.ts`: service-role client, Expo constants;
-`webhook.ts`: request authentication). Imports of local files need the `.ts` extension.
+Shared code lives in `_shared/` (`supabase.ts`: service-role client and `defaultDeps`;
+`expo.ts`: Expo endpoints and batch sizes; `webhook.ts`: request authentication).
+Imports of local files need the `.ts` extension.
+
+## Layout and tests
+
+Each function is two files:
+
+- `<name>/handler.ts` exports `createHandler(deps)`, the whole request handler. It
+  reaches the outside world only through `deps` (`_shared/deps.ts`): `fetch`,
+  `getClient` (the service-role client), `env` (secrets) and `now`. It never imports
+  `_shared/supabase.ts`, so it loads with no network.
+- `<name>/index.ts` is only `Deno.serve(createHandler(defaultDeps))`
+  (`places-proxy` uses `platformDeps`, which has no database client, so it never
+  loads supabase-js).
+
+`<name>/handler.test.ts` runs the handler with `_shared/testing.ts`: `fakeSupabase()`
+records every `from(table)` chain and answers scripted rows or errors per
+`<table>.<op>`, `stubFetch()` answers scripted Expo / Resend / Google responses and
+throws on any other URL, and `testDeps()` puts them together with fixed secrets and
+a fixed clock. Add a case there with every behaviour change; when a handler starts
+calling a new supabase-js method, add it to `DbQuery` in `_shared/deps.ts` and to the
+fake.
+
+From this directory, with [Deno](https://deno.com) 2.9:
+
+```bash
+deno task lint
+deno task check          # type-checks index.ts too, so it fetches supabase-js from esm.sh
+deno task test --allow-env   # no network permission: the tests never leave the process
+```
+
+CI runs the same three in the **Edge functions** job of `.github/workflows/ci.yml`.
+`__tests__/edgeFunctions.test.ts` (Jest) keeps static guards on the wiring: auth
+before the database, the pinned supabase-js, `config.toml`, and the handler/index split.
 
 ## Webhook authentication
 
@@ -127,6 +160,9 @@ supabase functions deploy send-feedback-email
 supabase functions deploy
 ```
 
+Deploys are still manual (an approved deploy workflow is planned in #172). Deploy
+from an up-to-date `main`: the daily drift check compares live with `main`.
+
 Deploy applies `verify_jwt` from `config.toml`. After the first deploy from this
 config, check Dashboard → Edge Functions that the three push functions show JWT
 verification off and `places-proxy` on.
@@ -138,3 +174,15 @@ curl -i -X POST "https://<ref>.supabase.co/functions/v1/check-push-receipts"
 curl -i -X POST "https://<ref>.supabase.co/functions/v1/check-push-receipts" \
   -H "Authorization: Bearer $SERVICE_ROLE_KEY"
 ```
+
+## Drift check
+
+`scripts/functions-drift.mjs` runs daily in `.github/workflows/schema-drift.yml`
+(job "Live edge functions vs repo"). It lists live's functions through the
+Management API and fails, naming the command to run, when a function in this folder
+is not deployed, when live has one that isn't here, when the last commit touching a
+function's folder or `_shared/` (tests and READMEs excluded) is newer than its live
+deploy, when live's `verify_jwt` differs from `config.toml`, or when a function is
+not `ACTIVE`. It only reads. It needs a Supabase personal access token in the
+`SUPABASE_ACCESS_TOKEN` repository secret; until that exists it prints a notice and
+passes. `node --test scripts/functions-drift.test.mjs` covers the comparison.

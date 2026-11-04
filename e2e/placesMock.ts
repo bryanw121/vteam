@@ -5,7 +5,7 @@
  * posts to the `places-proxy` Supabase edge function, which holds GOOGLE_MAPS_KEY
  * server-side. So the interception seam is that function, not Google, and the
  * fulfilled body is the raw Google response shape the function passes through
- * verbatim (see supabase/functions/places-proxy/index.ts).
+ * verbatim (see supabase/functions/places-proxy/handler.ts).
  *
  * Without this, any test that types into the venue picker spends real Google
  * Places quota — autocomplete is billed per session and details per request.
