@@ -171,9 +171,12 @@ test.describe('Events', () => {
     // Esc is Stay in too.
     await leaveBtn.click()
     await expect(sheetLeave).toBeVisible()
-    await expect(stayIn).toBeFocused() // focus moves into the dialog first; Esc acts on the focused dialog
-    await page.keyboard.press('Escape')
-    await expect(sheetLeave).toHaveCount(0)
+    await expect(stayIn).toBeFocused()
+    // react-native-web's Modal ignores Esc until its open animation has finished (~300ms), so retry the key.
+    await expect(async () => {
+      await page.keyboard.press('Escape')
+      await expect(sheetLeave).toHaveCount(0, { timeout: 500 })
+    }).toPass({ timeout: 5000 })
     await expect(leaveBtn).toBeVisible()
 
     // Leave game → back to Join (cleans up shared-account state).
