@@ -39,7 +39,8 @@ const FEED_EVENT_SELECT = 'id, created_by, club_id, title, location, event_date,
 const FEED_TOURNAMENT_SELECT = 'id, created_by, club_id, title, location, start_date, max_teams, price, skill_levels, status, created_at, profiles!tournaments_created_by_fkey(id, username, first_name, last_name, avatar_url), clubs(id, name, avatar_url)'
 const FEED_EXTERNAL_SELECT = 'id, source_id, region, title, venue, city, surface, session_type, level, price, starts_at, ends_at, signup_url, signup_label, note, verified_at'
 
-function rpcHandlers(db, signedIn) {
+function rpcHandlers(db, signedIn, now) {
+  const nowMs = new Date(now ?? Date.now()).getTime()
   const profile = id => db.rowsOf('profiles').find(p => p.id === id) ?? {}
   const previews = eventIds => {
     const set = new Set(eventIds)
@@ -105,7 +106,12 @@ function rpcHandlers(db, signedIn) {
     is_club_owner: ({ p_club_id }) => db.rowsOf('club_members').some(m => m.club_id === p_club_id && m.user_id === ME && m.role === 'owner'),
     is_conversation_member: ({ conv_id }) => db.rowsOf('conversation_members').some(m => m.conversation_id === conv_id && m.user_id === ME),
     notification_pref_enabled: () => true,
-    mark_conversation_read: () => null,
+    // Saves the read like the real RPC (server clock: the fixture "now", or later), so a recount agrees (#146).
+    mark_conversation_read: ({ p_conversation_id }) => {
+      const m = db.rowsOf('conversation_members').find(x => x.conversation_id === p_conversation_id && x.user_id === ME)
+      if (m) m.last_read_at = new Date(Math.max(nowMs, Date.now())).toISOString()
+      return null
+    },
     mark_notification_read: () => null,
     mark_all_notifications_read: () => null,
   }
@@ -120,7 +126,7 @@ export async function installSupabaseMock(page, { now, signedIn, seenIds = [], r
   const fixtures = buildFixtures(now)
   fixtures.user_settings = fixtures.user_settings.map(s => ({ ...s, seen_banners: [...new Set([...s.seen_banners, ...seenIds])] }))
   const db = createDb({ tables: fixtures, views: VIEWS, relationships })
-  const rpc = rpcHandlers(db, signedIn)
+  const rpc = rpcHandlers(db, signedIn, now)
   const session = fakeSession(now)
   const misses = new Set()
 
