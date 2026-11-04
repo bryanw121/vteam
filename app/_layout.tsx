@@ -16,6 +16,7 @@ import {
 } from '@expo-google-fonts/inter'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router'
+import Head from 'expo-router/head'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider, useSession } from '../contexts/session'
@@ -23,7 +24,7 @@ import { TextScaleProvider } from '../contexts/textScale'
 import { isAppPath, routes, toRoute } from '../utils/routes'
 import { isProtectedPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
 import { supabase } from '../lib/supabase'
-import { theme, SWIPE_NAVIGATION } from '../constants'
+import { APP_NAME, theme, SWIPE_NAVIGATION } from '../constants'
 import { initSentry, Sentry } from '../lib/sentry'
 import { SentryErrorBoundary } from '../components/SentryErrorBoundary'
 import { registerPushToken, subscribeToPushTaps } from '../utils/pushNotifications'
@@ -184,6 +185,17 @@ function RootNavigator() {
     <SentryErrorBoundary>
     <SafeAreaProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {/*
+        Browser tab title. Outside the hydration gate on purpose: the static
+        export renders it into every page's <title> (Expo Router's head manager
+        otherwise leaves an empty one, which tabs show as "Untitled"), and the
+        client renders the same string, so there is nothing to mismatch.
+      */}
+      {Platform.OS === 'web' && (
+        <Head>
+          <title>{APP_NAME}</title>
+        </Head>
+      )}
       {hydrated && (
         <Stack
           screenOptions={{
