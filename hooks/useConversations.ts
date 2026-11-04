@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
-import { getQueryData, invalidate, queryKey, setQueryData, useFocusRefetch, useQuery } from '../lib/query'
+import { Sentry } from '../lib/sentry'
+import { getQueryData, invalidate, queryKey, setQueryData, useFocusRefetch, useForegroundRefetch, useQuery } from '../lib/query'
 import { useRealtimeChannel } from '../lib/realtime'
 import { STALE } from '../constants/cache'
 import { useSession } from '../contexts/session'
@@ -61,8 +62,17 @@ export function scheduleInvalidate(key: string): void {
 const openConversations = new Map<string, number>()
 /** conversation id → ms epoch of our last mark_conversation_read. */
 const ownReads = new Map<string, number>()
-/** An UPDATE on our membership this soon after our own markRead is its echo. */
+/**
+ * An UPDATE on our membership this soon after our own markRead is probably its
+ * echo. It is still applied (it can only clear a count); the window only skips
+ * the recount an echo that doesn't cover the newest message would otherwise ask for.
+ */
 const OWN_READ_ECHO_MS = 10_000
+/** Waits before retrying a failed `mark_conversation_read` (then give up and show the server's count). */
+export const MARK_READ_RETRY_MS = [1_000, 4_000] as const
+/** Bumped when the signed-in user changes: a read still retrying for the old user stops. */
+let sessionEpoch = 0
+const retryTimers = new Set<ReturnType<typeof setTimeout>>()
 
 /** A room registers while mounted: new messages there don't bump its unread count (the room marks them read). */
 export function markConversationOpen(conversationId: string): () => void {
@@ -88,6 +98,57 @@ export function markConversationReadLocally(userId: string, conversationId: stri
   ))
 }
 
+/**
+ * Mark a conversation read: zero it in the shared store now, then save it with
+ * `mark_conversation_read`. Once the server has the read, recount once
+ * (debounced): a recount that left before the save (reconnect, focus, an
+ * unknown conversation's message, the badge's first load) would otherwise put
+ * the old count back, and nothing else would correct it (#146). A failed save
+ * is retried; if it still fails, the store is recounted so the badge shows
+ * what the server has instead of a zero that comes back later.
+ */
+export function markConversationRead(userId: string, conversationId: string): void {
+  markConversationReadLocally(userId, conversationId)
+  void saveRead(userId, conversationId, 0, sessionEpoch)
+}
+
+async function saveRead(userId: string, conversationId: string, attempt: number, epoch: number): Promise<void> {
+  let failure: unknown = null
+  try {
+    const { error } = await supabase.rpc('mark_conversation_read', { p_conversation_id: conversationId })
+    failure = error
+  } catch (e) {
+    failure = e
+  }
+  if (epoch !== sessionEpoch) return // signed out or switched account meanwhile
+  const key = conversationsKey(userId)
+  if (!failure) {
+    ownReads.set(conversationId, Date.now())
+    scheduleInvalidate(key)
+    return
+  }
+  if (attempt < MARK_READ_RETRY_MS.length) {
+    const t = setTimeout(() => {
+      retryTimers.delete(t)
+      void saveRead(userId, conversationId, attempt + 1, epoch)
+    }, MARK_READ_RETRY_MS[attempt])
+    retryTimers.add(t)
+    return
+  }
+  const message = (failure as { message?: string })?.message ?? String(failure)
+  console.warn('[useConversations] mark_conversation_read failed', message)
+  Sentry.captureException(failure instanceof Error ? failure : new Error(`mark_conversation_read: ${message}`))
+  scheduleInvalidate(key)
+}
+
+/** The signed-in user changed: forget our reads and stop retrying the old user's. */
+export function resetChatReadState(): void {
+  sessionEpoch++
+  retryTimers.forEach(t => clearTimeout(t))
+  retryTimers.clear()
+  ownReads.clear()
+}
+
 /** Our own message, confirmed by the insert: update the list preview without a refetch. */
 export function applyOwnMessageToConversations(userId: string, msg: MessageRecord, sender: SenderProfile | null): void {
   const key = conversationsKey(userId)
@@ -103,7 +164,7 @@ export function __resetConversationsStore(): void {
   refetchTimers.forEach(t => clearTimeout(t))
   refetchTimers.clear()
   openConversations.clear()
-  ownReads.clear()
+  resetChatReadState()
 }
 
 // ── Realtime ────────────────────────────────────────────────────────────────
@@ -142,12 +203,14 @@ export function useConversationsRealtime(userId: string | null, enabled: boolean
   const onMembershipUpdate = useCallback((payload: { new: { conversation_id: string; last_read_at: string | null } }) => {
     if (!key || !payload.new?.conversation_id) return
     const at = ownReads.get(payload.new.conversation_id)
-    if (at !== undefined && Date.now() - at < OWN_READ_ECHO_MS) return // echo of our own markRead
+    const ownEcho = at !== undefined && Date.now() - at < OWN_READ_ECHO_MS
     const rows = getQueryData<ConversationRow[]>(key)
     if (!rows) return
+    // Always applied: a read covering the newest message clears the row, whoever
+    // made it (this device's echo, or the phone a moment later).
     const { rows: next, needsRefetch } = applyMembershipUpdate(rows, payload.new)
     if (next !== rows) setQueryData(key, next)
-    if (needsRefetch) scheduleInvalidate(key)
+    if (needsRefetch && !ownEcho) scheduleInvalidate(key)
   }, [key])
 
   const onReconnect = useCallback(() => {
@@ -161,11 +224,16 @@ export function useConversationsRealtime(userId: string | null, enabled: boolean
   )
 }
 
-/** The shared conversations query, without focus refetch (for providers outside a screen). */
+/**
+ * The shared conversations query, without screen-focus refetch (for providers
+ * outside a screen). It still recounts when the app comes back to the
+ * foreground and the copy is stale, so a read on another device clears the badge.
+ */
 export function useConversationsQuery(enabled: boolean) {
   const { userId } = useSession()
   const key = userId ? conversationsKey(userId) : null
   const query = useQuery(key, fetchConversations, { staleMs: STALE.conversations, enabled })
+  useForegroundRefetch(enabled ? key : null)
   useConversationsRealtime(userId, enabled && !!userId)
   return { key, ...query }
 }

@@ -478,6 +478,14 @@ export function useFocusRefetch(key: string | null): void {
       if (key !== null) refetchIfStale(key)
     }, [key]),
   )
+  useForegroundRefetch(key)
+}
+
+/**
+ * Only the foreground half of `useFocusRefetch`: refetch `key` when the app
+ * returns to the foreground, if stale. For providers outside a screen.
+ */
+export function useForegroundRefetch(key: string | null): void {
   useEffect(() => {
     if (key === null) return
     const sub = AppState.addEventListener('change', status => {

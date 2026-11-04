@@ -342,7 +342,7 @@ export default function TabsLayout() {
                           color={active ? theme.colors.white : 'rgba(255,255,255,0.5)'}
                         />
                         {badge > 0 && (
-                          <View style={{
+                          <View testID="chat-unread-badge" style={{
                             position: "absolute", top: -4, right: -7,
                             minWidth: 18, height: 18, borderRadius: 9,
                             backgroundColor: theme.colors.hot,
