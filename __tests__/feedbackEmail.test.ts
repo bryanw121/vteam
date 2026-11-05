@@ -90,7 +90,7 @@ describe('email content', () => {
 })
 
 describe('send-feedback-email wiring', () => {
-  const fn = read('supabase/functions/send-feedback-email/index.ts')
+  const fn = read('supabase/functions/send-feedback-email/handler.ts')
   it('identifies the caller from the JWT and loads the row server-side', () => {
     expect(fn).toMatch(/auth\.getUser\(jwt\)/)
     expect(fn).toMatch(/from\('feedback_submissions'\)[\s\S]*\.eq\('id', id\)/)
@@ -98,9 +98,9 @@ describe('send-feedback-email wiring', () => {
     expect(fn).not.toMatch(/esm\.sh/)
   })
   it('reads the destination and key only from secrets', () => {
-    expect(fn).toMatch(/Deno\.env\.get\('RESEND_API_KEY'\)/)
-    expect(fn).toMatch(/Deno\.env\.get\('FEEDBACK_EMAIL'\)/)
-    expect(fn).toMatch(/Deno\.env\.get\('FEEDBACK_FROM'\)/)
+    expect(fn).toMatch(/deps\.env\('RESEND_API_KEY'\)/)
+    expect(fn).toMatch(/deps\.env\('FEEDBACK_EMAIL'\)/)
+    expect(fn).toMatch(/deps\.env\('FEEDBACK_FROM'\)/)
   })
   it('is JWT-verified by the gateway', () => {
     expect(read('supabase/config.toml')).toMatch(/\[functions\.send-feedback-email\]\s*\n\s*verify_jwt\s*=\s*true/)

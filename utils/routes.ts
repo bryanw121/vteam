@@ -42,6 +42,8 @@ export type SettingsSection =
   | 'feedback'
   | 'badges'
   | 'delete-account'
+  | 'ad-free'
+  | 'experimental'
 
 export type HostRouteOptions = {
   /** Event id to edit. */
@@ -96,6 +98,13 @@ export const routes = {
   deleteAccountInfo: () => href('/delete-account'),
 
   notifications: () => href('/notifications'),
+
+  /** Experimental scorekeeper (Settings → Experimental features). Matches live on the device. */
+  scorekeeper: () => href('/scorekeeper'),
+  scorekeeperNew: () => href('/scorekeeper/new'),
+  scorekeeperMatch: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}`),
+  scorekeeperSheet: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/sheet`),
+  scorekeeperCopy: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/copy`),
   settings: (section?: SettingsSection) => href(section ? `/settings/${section}` : '/settings'),
 
   // ── Groups ──────────────────────────────────────────────────────────────

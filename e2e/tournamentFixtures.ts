@@ -8,8 +8,9 @@
  * stale e2e clubs from crashed runs (older than STALE_FIXTURE_HOURS), so other
  * specs' and other runs' clubs are left alone.
  */
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { e2eCredentials, E2E_RUN_TAG, E2E_TITLE_PREFIX, STALE_FIXTURE_HOURS, SUPABASE_ANON_KEY, SUPABASE_URL } from './env'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { E2E_RUN_TAG, E2E_TITLE_PREFIX, STALE_FIXTURE_HOURS } from './env'
+import { signInE2eClient } from './eventsFixtures'
 
 /**
  * Not under E2E_TITLE_PREFIX on purpose: surfaceFixtures (another shard of the
@@ -22,15 +23,8 @@ export const TOURNAMENT_TITLE = `${E2E_TITLE_PREFIX} Cup`
 export const MY_TEAM = `${E2E_TITLE_PREFIX} Diggers`
 export const RIVAL_TEAM = `${E2E_TITLE_PREFIX} Rivals`
 
-async function signIn(): Promise<{ supabase: SupabaseClient; userId: string }> {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  const { username, password } = e2eCredentials()
-  const { data: email, error: rpcError } = await supabase.rpc('get_email_by_username', { p_username: username })
-  if (rpcError || !email) throw new Error(`Could not resolve email for ${username}: ${rpcError?.message ?? 'not found'}`)
-  const { data, error } = await supabase.auth.signInWithPassword({ email: email as string, password })
-  if (error || !data.user) throw new Error(`E2E sign-in failed: ${error?.message ?? 'no user'}`)
-  return { supabase, userId: data.user.id }
-}
+/** The e2e account's Node-side client, signed in the same way as the other fixtures (server-side username login). */
+const signIn = signInE2eClient
 
 /** Local sign-out only: the default global scope would revoke the browser's stored session too. */
 const signOut = (supabase: SupabaseClient) => supabase.auth.signOut({ scope: 'local' })
@@ -62,14 +56,18 @@ export async function seedTournamentClub(): Promise<void> {
  * manage every team in their tournament). One account can only captain one
  * team, and a bracket needs two.
  */
-export async function addRivalTeam(): Promise<void> {
-  const { supabase, userId } = await signIn()
-  const { data: t, error } = await supabase.from('tournaments').select('id').eq('created_by', userId).eq('title', TOURNAMENT_TITLE).single()
-  if (error || !t) throw new Error(`Tournament fixture not found: ${error?.message ?? 'none'}`)
-  const { error: insertError } = await supabase.from('tournament_teams').insert({
-    tournament_id: t.id, name: RIVAL_TEAM, status: 'registered', is_approved: true,
-  })
-  if (insertError) throw new Error(`Failed to add the rival team: ${insertError.message}`)
+export async function addRivalTeam(tournamentId: string): Promise<void> {
+  const { supabase } = await signIn()
+  // Idempotent: a retried test must not add a third team.
+  const { data: existing, error: readError } = await supabase.from('tournament_teams').select('id')
+    .eq('tournament_id', tournamentId).eq('name', RIVAL_TEAM)
+  if (readError) throw new Error(`Could not read teams: ${readError.message}`)
+  if (!existing || existing.length === 0) {
+    const { error } = await supabase.from('tournament_teams').insert({
+      tournament_id: tournamentId, name: RIVAL_TEAM, status: 'registered', is_approved: true,
+    })
+    if (error) throw new Error(`Failed to add the rival team: ${error.message}`)
+  }
   await signOut(supabase)
 }
 

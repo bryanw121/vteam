@@ -17,6 +17,8 @@ export const eventKeys = {
   myCheers: (id: string, userId: string | null) => queryKey('event', id, 'cheers', userId),
   /** The host's reason for denying the viewer (owner/host-only table). */
   myDenial: (id: string, userId: string) => queryKey('event', id, 'denial', userId),
+  /** "I've paid" flags the viewer may see (their own; everyone's for hosts). Per viewer: RLS decides the rows. */
+  payments: (id: string, userId: string) => queryKey('event', id, 'payments', userId),
   /** The viewer's own `ProfileBrief` (optimistic join rows, Venmo note). Shared with chat. */
   viewerProfile: (userId: string) => profileBriefKey(userId),
 }

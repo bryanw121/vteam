@@ -32,8 +32,8 @@ export const BADGE_TIER_COLORS: Record<number, string> = {
   1: '#CD7F32', // bronze
   2: '#A8A9AD', // silver
   3: '#FFD700', // gold
-  4: '#B0C4DE', // platinum
-  5: '#B9F2FF', // diamond
+  4: '#008E91', // platinum / Elite: teal distinguishes it from silver
+  5: '#A59AF8', // diamond / Legend: lavender
 }
 
 /** Color used for single-level achievement badges (beta, tournament director, etc.) */

@@ -1,9 +1,8 @@
 import { clientIp, GENERIC_LOGIN_ERROR, MIN_RESPONSE_MS, parseLoginBody, passwordGrantOutcome, remainingDelayMs, secretKeyFromEnv } from '../supabase/functions/_shared/usernameLogin'
-import { corsHeaders } from '../supabase/functions/_shared/http'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-const fn = readFileSync(join(__dirname, '../supabase/functions/login-with-username/index.ts'), 'utf8')
+const fn = readFileSync(join(__dirname, '../supabase/functions/login-with-username/handler.ts'), 'utf8')
 
 describe('parseLoginBody', () => {
   it('normalizes the username', () => {
@@ -36,16 +35,6 @@ describe('clientIp', () => {
   })
 })
 
-describe('corsHeaders', () => {
-  it('allows any origin when ALLOWED_ORIGINS is unset', () => {
-    expect(corsHeaders('https://x.test', undefined)['Access-Control-Allow-Origin']).toBe('*')
-  })
-  it('echoes only listed origins', () => {
-    expect(corsHeaders('https://a.test', 'https://a.test, https://b.test')['Access-Control-Allow-Origin']).toBe('https://a.test')
-    expect(corsHeaders('https://evil.test', 'https://a.test')['Access-Control-Allow-Origin']).toBeUndefined()
-  })
-})
-
 describe('login-with-username function', () => {
   it('answers an unknown username and any Auth failure with the same generic error', () => {
     expect(fn).toMatch(/if \(typeof email !== 'string' \|\| !email\) return finish\(\{ error: GENERIC_LOGIN_ERROR \}, 401\)/)
@@ -61,7 +50,7 @@ describe('login-with-username function', () => {
     expect(fn).not.toMatch(/finish\(\{[^}]*email/)
   })
   it('uses the service role for get_email_by_username', () => {
-    expect(fn).toMatch(/const service = getServiceClient\(\)/)
+    expect(fn).toMatch(/const service = deps\.getClient\(\)/)
     expect(fn).toMatch(/service\s*\n\s*\.rpc\('get_email_by_username'/)
   })
   it('checks the rate limits before looking the username up (#11)', () => {

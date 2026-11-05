@@ -1,16 +1,5 @@
 import React, { useState } from 'react'
-import {
-  View,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Alert,
-  Platform,
-  Modal,
-  Pressable,
-  KeyboardAvoidingView,
-} from 'react-native'
+import { View, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform, Modal, Pressable, KeyboardAvoidingView } from 'react-native'
 import { Text, TextInput } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter } from 'expo-router'
@@ -21,6 +10,7 @@ import type { ClubPostCommentWithAuthor, ClubPostWithFeed } from '../types'
 import { profileAvatarSmallUri, profileDisplayName } from '../utils'
 import { ProfileAvatar } from './ProfileAvatar'
 import { LinkedText } from './LinkedText'
+import { Spinner } from './ui/Spinner'
 
 function formatPostTime(iso: string): string {
   const normalized = /[Z+]/.test(iso) ? iso : iso + 'Z'
@@ -145,7 +135,7 @@ export function ClubPostCard({
           accessibilityLabel={likedByMe ? 'Unlike' : 'Like'}
         >
           {likeBusy ? (
-            <ActivityIndicator size="small" color={theme.colors.primary} />
+            <Spinner size="small" color={theme.colors.primary} />
           ) : (
             <Ionicons
               name={likedByMe ? 'heart' : 'heart-outline'}
@@ -201,7 +191,7 @@ export function ClubPostCard({
                 style={[styles.commentSend, (!commentDraft.trim() || commentBusy) && { opacity: 0.45 }]}
               >
                 {commentBusy
-                  ? <ActivityIndicator size="small" color={theme.colors.primary} />
+                  ? <Spinner size="small" color={theme.colors.primary} />
                   : <Ionicons name="send" size={18} color={theme.colors.primary} />
                 }
               </TouchableOpacity>
@@ -344,7 +334,7 @@ export function ClubPostComposerModal({ visible, clubId, onClose, onCreated }: C
                   style={[shared.buttonBase, shared.buttonPrimary, { flex: 1 }, (busy || !body.trim()) && shared.buttonDisabled]}
                 >
                   {busy
-                    ? <ActivityIndicator color={theme.colors.white} />
+                    ? <Spinner color={theme.colors.white} />
                     : <Text style={shared.buttonLabelPrimary}>Post</Text>
                   }
                 </TouchableOpacity>
