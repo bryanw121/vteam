@@ -430,6 +430,7 @@ export default function TournamentDetailScreen() {
               visible={showRegister}
               onDismiss={() => setShowRegister(false)}
               tournament={tournament}
+              full={tournament.max_teams !== null && registeredTeams.length >= tournament.max_teams}
               busy={actions.register.isPending}
               onSubmit={submitRegister}
             />

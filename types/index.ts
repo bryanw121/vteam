@@ -63,7 +63,7 @@ type ProfileRow = Override<Tables<'profiles'>, {
 }>
 
 /** Allowed values of `profiles.selected_border`. */
-export type ProfileBorder = 'bronze' | 'gold' | 'gradient'
+export type ProfileBorder = 'bronze' | 'gold' | 'gradient' | 'storm' | 'aether'
 
 /**
  * `profiles` table
