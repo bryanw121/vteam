@@ -222,9 +222,7 @@ test.describe('signed in as the e2e account', () => {
   })
 })
 
-// TODO(#7): change test.describe.skip to test.describe once
-// 20261028205312_tournament_trophies is applied to beta.
-test.describe.skip('tournament trophies (#7)', () => {
+test.describe('tournament trophies (#7)', () => {
   test('anyone can read trophies; nobody can write them directly', async () => {
     const read = await q(() => anon.from('tournament_trophies').select('id, place, tournament_title').limit(1), 'anon trophies')
     expect(read.error).toBeNull()
