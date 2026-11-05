@@ -8,7 +8,8 @@
 -- event_attendees.denial_reason once no deployed build reads them.
 --
 --  1. profiles.notification_prefs -> user_settings.notification_prefs (owner-only RLS)
---  2. profiles.is_admin           -> app_admins (no client access), read by current_user_is_admin()
+--  2. profiles.is_admin           -> app_admins (no client access) + is_app_admin()
+--                                   (current_user_is_admin() switches to app_admins on its own)
 --  3. event_attendees.denial_reason -> event_attendee_denials (host, co-hosts, that attendee)
 --  4. event_guests: signed-out visitors no longer read +1 names; headcounts
 --     still work through event_guests_attending (no names)
@@ -41,10 +42,22 @@ insert into public.app_admins (user_id)
 select p.id from public.profiles p join auth.users u on u.id = p.id where p.is_admin
 on conflict do nothing;
 
--- Admin checks read app_admins through current_user_is_admin() (from
--- 20261028170100_ads.sql, which already prefers app_admins when it exists).
--- No separate is_app_admin(): the only policy that used it ("Admins insert
--- clubs") was dropped by 20261031032200_drop_admin_club_insert_policy.sql.
+create or replace function public.is_app_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (select 1 from public.app_admins a where a.user_id = (select auth.uid()))
+$$;
+revoke execute on function public.is_app_admin() from public, anon;
+grant execute on function public.is_app_admin() to authenticated;
+
+-- No clubs policy here: main dropped the leftover "Admins insert clubs" policy
+-- (20261031032200_drop_admin_club_insert_policy.sql); any signed-in user creates
+-- clubs. current_user_is_admin() (20261028170100_ads.sql) already reads
+-- app_admins once this table exists.
 
 -- Old clients may still write these columns: move a written value to its
 -- private home and keep the public column at its default.

@@ -83,7 +83,8 @@ it is best effort only; a durable guarantee would need a column on `messages`.
 Pushes every `notifications` row (event reminders, cancellations, waitlist,
 cheers, join requests, late dropouts, and any type added later) to the
 recipient's devices, unless they turned push off for that type
-(`profiles.notification_prefs.push.<type> = false`). The push carries the row's
+(`user_settings.notification_prefs.push.<type> = false`; the legacy
+`profiles.notification_prefs` only when `user_settings` has none). The push carries the row's
 `data.deep_link`, which the app opens on tap. `chat_mention` rows are skipped:
 `send-chat-push` already pushed the message. Same chunking, dead-token cleanup
 and `push_receipts` bookkeeping as `send-chat-push`, and the same best-effort,
@@ -179,6 +180,7 @@ supabase functions deploy send-notification-push
 supabase functions deploy check-push-receipts
 supabase functions deploy places-proxy
 supabase functions deploy send-feedback-email
+supabase functions deploy login-with-username
 # or all at once:
 supabase functions deploy
 ```

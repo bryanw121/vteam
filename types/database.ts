@@ -2448,6 +2448,7 @@ export type Database = {
         }[]
       }
       ingest_schelagg_feed: { Args: never; Returns: number }
+      is_app_admin: { Args: never; Returns: boolean }
       is_club_owner: { Args: { p_club_id: string }; Returns: boolean }
       is_conversation_member: { Args: { conv_id: string }; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: undefined }

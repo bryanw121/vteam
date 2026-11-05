@@ -33,41 +33,31 @@
  * signed in yet.
  *
  * index.ts serves this with the real dependencies; handler.test.ts runs it
- * against a fake database, a stubbed Auth endpoint and an instant clock.
+ * against a fake database and a stubbed network (with the padding delay recorded,
+ * not waited out).
  */
 
-import { corsHeaders } from '../_shared/cors.ts'
 import type { Deps } from '../_shared/deps.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 import {
-  clientIp,
-  GENERIC_LOGIN_ERROR,
-  LOGIN_LIMITS,
-  parseLoginBody,
-  passwordGrantOutcome,
-  remainingDelayMs,
-  secretKeyFromEnv,
-  TOO_MANY_ATTEMPTS,
+  clientIp, GENERIC_LOGIN_ERROR, LOGIN_LIMITS, parseLoginBody, passwordGrantOutcome,
+  remainingDelayMs, secretKeyFromEnv, TOO_MANY_ATTEMPTS,
 } from '../_shared/usernameLogin.ts'
 
-const UNAVAILABLE = 'Sign-in is unavailable right now. Please try again.'
+export const LOGIN_UNAVAILABLE = 'Sign-in is unavailable right now. Please try again.'
 
-/** Timing hooks, so tests need not wait out the minimum response time. */
-export type LoginTiming = {
-  sleep: (ms: number) => Promise<void>
-  /** Extra padding in ms, 0..150 in production. */
-  jitterMs: () => number
+export type LoginHandlerOptions = {
+  /** Waits out the minimum response time. Tests pass a recorder instead of a real timer. */
+  sleep?: (ms: number) => Promise<void>
+  /** Jitter added to the minimum response time (default 0..150 ms). */
+  jitterMs?: () => number
 }
 
-const realTiming: LoginTiming = {
-  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-  jitterMs: () => Math.floor(Math.random() * 150),
-}
+const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
-function json(body: unknown, status: number, headers: Record<string, string>): Response {
-  return new Response(JSON.stringify(body), { status, headers: { ...headers, 'Content-Type': 'application/json' } })
-}
-
-export function createHandler(deps: Deps, timing: LoginTiming = realTiming) {
+export function createHandler(deps: Deps, opts: LoginHandlerOptions = {}) {
+  const sleep = opts.sleep ?? realSleep
+  const jitterMs = opts.jitterMs ?? (() => Math.floor(Math.random() * 150))
   let warnedNoForwarding = false
 
   /** Password grant against Supabase Auth, forwarding the caller's IP when a secret key exists. */
@@ -100,14 +90,16 @@ export function createHandler(deps: Deps, timing: LoginTiming = realTiming) {
   }
 
   return async (req: Request): Promise<Response> => {
-    const cors = corsHeaders(req, deps.env)
+    const cors = { ...corsHeaders(req, deps.env), 'Access-Control-Allow-Methods': 'POST, OPTIONS' }
+    const json = (body: unknown, status: number) =>
+      new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
     if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
-    if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405, cors)
+    if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
     const startedAt = deps.now()
     const finish = async (body: unknown, status: number) => {
-      await timing.sleep(remainingDelayMs(startedAt, deps.now(), timing.jitterMs()))
-      return json(body, status, cors)
+      await sleep(remainingDelayMs(startedAt, deps.now(), jitterMs()))
+      return json(body, status)
     }
 
     let input
@@ -127,20 +119,18 @@ export function createHandler(deps: Deps, timing: LoginTiming = realTiming) {
       const keys: [string, number][] = [[`login_user:${input.username}`, LOGIN_LIMITS.perUsername]]
       if (ip) keys.push([`login_ip:${ip}`, LOGIN_LIMITS.perIp])
       for (const [key, max] of keys) {
-        const { data: allowed, error: limitError } = await service.rpc('check_rate_limit', {
-          p_key: key,
-          p_max: max,
-          p_window_seconds: LOGIN_LIMITS.windowSeconds,
-        })
+        const { data: allowed, error: limitError } = await service
+          .rpc('check_rate_limit', { p_key: key, p_max: max, p_window_seconds: LOGIN_LIMITS.windowSeconds })
         // A broken limiter must not lock everyone out: log and carry on.
         if (limitError) console.error('[login-with-username] rate limit check failed:', limitError.message)
         else if (allowed === false) return finish({ error: TOO_MANY_ATTEMPTS }, 429)
       }
 
-      const { data: email, error: lookupError } = await service.rpc('get_email_by_username', { p_username: input.username })
+      const { data: email, error: lookupError } = await service
+        .rpc('get_email_by_username', { p_username: input.username })
       if (lookupError) {
         console.error('[login-with-username] lookup failed:', lookupError.message)
-        return finish({ error: UNAVAILABLE }, 500)
+        return finish({ error: LOGIN_UNAVAILABLE }, 500)
       }
       if (typeof email !== 'string' || !email) return finish({ error: GENERIC_LOGIN_ERROR }, 401)
 
@@ -149,7 +139,7 @@ export function createHandler(deps: Deps, timing: LoginTiming = realTiming) {
       return finish(outcome.session, 200)
     } catch (e) {
       console.error('[login-with-username] failed:', (e as Error)?.message)
-      return finish({ error: UNAVAILABLE }, 500)
+      return finish({ error: LOGIN_UNAVAILABLE }, 500)
     }
   }
 }

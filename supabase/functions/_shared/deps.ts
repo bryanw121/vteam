@@ -40,7 +40,7 @@ export type AuthUser = { id: string; email?: string | null }
 /** The slice of a supabase-js client the handlers call. */
 export interface DbClient {
   from(table: string): DbQuery
-  /** A Postgres function through PostgREST (login-with-username: check_rate_limit, get_email_by_username). */
+  /** A Postgres function through PostgREST (service role: bypasses EXECUTE grants for clients). */
   rpc(fn: string, args?: Record<string, unknown>): PromiseLike<DbResult>
   auth: {
     getUser(jwt: string): PromiseLike<{ data: { user: AuthUser | null } | null; error: DbError | null }>

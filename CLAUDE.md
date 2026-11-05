@@ -276,7 +276,7 @@ If the login field doesn't look like an email, `login.tsx` calls `signInWithUser
 ### Private data stays off public rows
 Everyone (including signed-out visitors) can read `profiles`, `event_attendees`, `cheers` rows, so private values live elsewhere:
 - notification switches: `user_settings.notification_prefs` (owner-only; `useMyProfile` reads and writes it). `profiles.notification_prefs` is legacy and always the default.
-- admins: `app_admins` (no client access), checked in policies with `current_user_is_admin()`. `profiles.is_admin` is always false.
+- admins: `app_admins` (no client access), checked server-side with `current_user_is_admin()` (or `is_app_admin()`). `profiles.is_admin` is always false.
 - a host's reason for denying a join request: `event_attendee_denials` (that attendee, the host and co-hosts; `useMyDenialReason`). `event_attendees.denial_reason` is legacy and always null.
 - Triggers move values old app builds still write to the legacy columns. A later contract PR drops those columns.
 - +1 guests' names are for signed-in users only; signed-out visitors read the name-free `event_guests_attending` view (`fetchEventGuests`). Signed-out visitors can't see who gave a kudo (`cheers.giver_id`).

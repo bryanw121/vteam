@@ -127,21 +127,21 @@ Deno.test('push turned off for the type: 200, nothing sent', async () => {
   assert.equal(net.calls.length, 0)
 })
 
-Deno.test('the private user_settings copy wins over the legacy profiles column', async () => {
+Deno.test('push prefs come from user_settings, not the legacy profiles column', async () => {
   const { send, net, db } = setup({ prefs: { push: { event_reminder: false } }, legacyPrefs: { push: { event_reminder: true } } })
   assert.equal(await (await send()).text(), 'Not pushed for this type')
   assert.equal(net.calls.length, 0)
   assert.equal(filterValue(db.callsTo('user_settings', 'select')[0], 'eq'), USER)
 })
 
-Deno.test('no private copy yet: falls back to the legacy profiles column', async () => {
+Deno.test('no user_settings prefs: falls back to the legacy profiles column', async () => {
   const { send, net } = setup({ legacyPrefs: { push: { event_reminder: false } } })
   assert.equal(await (await send()).text(), 'Not pushed for this type')
   assert.equal(net.calls.length, 0)
 })
 
-Deno.test('a prefs lookup error is a 500 before anything is sent', async () => {
-  const { send, net } = setup({ results: { 'user_settings.select': { error: { message: 'db down' } } } })
+Deno.test('500 when the user_settings lookup fails', async () => {
+  const { send, net } = setup({ results: { 'user_settings.select': { error: { message: 'boom' } } } })
   assert.equal((await send()).status, 500)
   assert.equal(net.calls.length, 0)
 })

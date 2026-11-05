@@ -72,5 +72,6 @@ begin
 end;
 $function$;
 
+drop function if exists public.is_app_admin();
 drop table if exists public.app_admins;
 alter table public.user_settings drop column if exists notification_prefs;

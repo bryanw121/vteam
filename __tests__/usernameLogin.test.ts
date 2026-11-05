@@ -1,4 +1,8 @@
-import { clientIp, MIN_RESPONSE_MS, parseLoginBody, passwordGrantOutcome, remainingDelayMs, secretKeyFromEnv } from '../supabase/functions/_shared/usernameLogin'
+import { clientIp, GENERIC_LOGIN_ERROR, MIN_RESPONSE_MS, parseLoginBody, passwordGrantOutcome, remainingDelayMs, secretKeyFromEnv } from '../supabase/functions/_shared/usernameLogin'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+
+const fn = readFileSync(join(__dirname, '../supabase/functions/login-with-username/handler.ts'), 'utf8')
 
 describe('parseLoginBody', () => {
   it('normalizes the username', () => {
@@ -31,8 +35,32 @@ describe('clientIp', () => {
   })
 })
 
-// The handler itself (CORS, limits before lookup, generic errors, IP forwarding)
-// is tested in supabase/functions/login-with-username/handler.test.ts (deno).
+describe('login-with-username function', () => {
+  it('answers an unknown username and any Auth failure with the same generic error', () => {
+    expect(fn).toMatch(/if \(typeof email !== 'string' \|\| !email\) return finish\(\{ error: GENERIC_LOGIN_ERROR \}, 401\)/)
+    expect(fn).toMatch(/if \(outcome\.kind !== 'session'\) return finish\(\{ error: GENERIC_LOGIN_ERROR \}, 401\)/)
+    expect(GENERIC_LOGIN_ERROR).toBe('Incorrect username or password')
+  })
+  it('forwards the caller IP to Supabase Auth with a secret key', () => {
+    expect(fn).toMatch(/headers\['Sb-Forwarded-For'\] = ip/)
+    expect(fn).toMatch(/headers\.apikey = secret/)
+  })
+  it('never returns the resolved email', () => {
+    expect(fn).not.toMatch(/json\([^)]*email/)
+    expect(fn).not.toMatch(/finish\(\{[^}]*email/)
+  })
+  it('uses the service role for get_email_by_username', () => {
+    expect(fn).toMatch(/const service = deps\.getClient\(\)/)
+    expect(fn).toMatch(/service\s*\n\s*\.rpc\('get_email_by_username'/)
+  })
+  it('checks the rate limits before looking the username up (#11)', () => {
+    const limitAt = fn.indexOf("rpc('check_rate_limit'")
+    const lookupAt = fn.indexOf("rpc('get_email_by_username'")
+    expect(limitAt).toBeGreaterThan(-1)
+    expect(lookupAt).toBeGreaterThan(limitAt)
+    expect(fn).toMatch(/allowed === false\) return finish\(\{ error: TOO_MANY_ATTEMPTS \}, 429\)/)
+  })
+})
 
 describe('secretKeyFromEnv', () => {
   it('reads the default secret key', () => {
