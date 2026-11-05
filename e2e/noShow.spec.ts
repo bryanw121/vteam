@@ -144,6 +144,8 @@ test('host: ⋯ → Mark as no-show shows the badge; Undo clears it', async ({ p
   await expect(visible(page, 'roster-no-show-note').first()).toHaveText(/^1 no-show\. Everyone else gets points at/)
   await expect.poll(() => calls).toEqual([{ p_event_id: eventId, p_user_id: BUDDY_ID, p_value: true }])
 
+  // The sheet slides out on web (the action runs as it starts closing); a tap during the slide is lost.
+  await expect(visible(page, 'roster-actions')).toHaveCount(0)
   await buddyMenu.click()
   await expect(visible(page, 'roster-action-no-show')).toContainText('Undo no-show')
   await visible(page, 'roster-action-no-show').click()
