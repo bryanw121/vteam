@@ -133,7 +133,13 @@ test('host: ⋯ → Mark as no-show shows the badge; Undo clears it', async ({ p
   await page.getByTestId('event-tab-people').first().click()
 
   await expect(visible(page, 'roster-no-show-note').first()).toHaveText(/Tap ⋯ on anyone who didn't come\. Everyone else gets points at/, { timeout: 20_000 })
-  const buddyMenu = page.getByRole('button', { name: /^Actions for E2E/ }).filter({ visible: true }).first()
+  // By name: the host (e2ebot) is on the roster too, and a flagged player may move in the list.
+  const first = String(buddyProfile?.first_name ?? '').trim()
+  const last = String(buddyProfile?.last_name ?? '').trim()
+  const buddyName = first && last ? `${first} ${last.charAt(0)}` : first || last || String(buddyProfile?.username ?? '')
+  expect(buddyName).not.toBe('')
+  const escaped = buddyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const buddyMenu = page.getByRole('button', { name: new RegExp(`^Actions for ${escaped}`) }).filter({ visible: true }).first()
   await buddyMenu.click()
   await expect(visible(page, 'roster-action-no-show')).toContainText('Mark as no-show')
   await expect(visible(page, 'roster-action-no-show')).toContainText(/You can undo until/)
