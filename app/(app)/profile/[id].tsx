@@ -16,6 +16,8 @@ import { normalizeProfileRow, PROFILE_BRIEF_SELECT } from '../../../hooks/useMyP
 import { routes } from '../../../utils/routes'
 import { useSilencedUsers } from '../../../hooks/useSilencedUsers'
 import { useOpenDm } from '../../../hooks/useOpenDm'
+import { useUserTrophies } from '../../../hooks/useUserTrophies'
+import { TrophyCase } from '../../../components/profile/TrophyCase'
 import { usePointsBalance } from '../../../hooks/usePoints'
 import {
   resolveProfileAvatarUriWithError,
@@ -45,6 +47,7 @@ export default function UserProfileDetail() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [avatarUri, setAvatarUri] = useState<string | null>(null)
   const [totalCheers, setTotalCheers] = useState(0)
+  const trophies = useUserTrophies(id ?? null)
   const [displayBadges, setDisplayBadges] = useState<UserBadge[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -279,7 +282,7 @@ export default function UserProfileDetail() {
                 <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Points</Text>
               </View>
               <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
-                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>0</Text>
+                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{trophies.data?.length ?? 0}</Text>
                 <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Trophies</Text>
               </View>
             </View>
@@ -302,35 +305,8 @@ export default function UserProfileDetail() {
           </View>
 
           {/* ── Trophy case ── */}
-          <View style={{ marginTop: theme.spacing.lg }}>
-            <Text style={{
-              fontFamily: theme.fonts.display, fontWeight: '700',
-              fontSize: theme.font.size.lg, color: theme.colors.text, marginBottom: theme.spacing.sm,
-            }}>Trophy case</Text>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {([
-                { place: '1', color: theme.colors.medalGold, label: '1st place' },
-                { place: '2', color: theme.colors.medalSilver, label: '2nd place' },
-                { place: '3', color: theme.colors.medalBronze, label: '3rd place' },
-              ] as const).map(t => (
-                <View key={t.place} style={{
-                  flex: 1, backgroundColor: theme.colors.card,
-                  borderRadius: 16, padding: 12,
-                  borderWidth: 1, borderColor: theme.colors.border,
-                  alignItems: 'center',
-                }}>
-                  <View style={{
-                    width: 40, height: 40, borderRadius: 20,
-                    backgroundColor: t.color,
-                    alignItems: 'center', justifyContent: 'center', marginBottom: 6,
-                  }}>
-                    <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lg, color: theme.colors.background }}>{t.place}</Text>
-                  </View>
-                  <Text style={{ fontFamily: theme.fonts.bodyBold, fontSize: theme.font.size.xs, color: theme.colors.text, letterSpacing: 0.2 }}>{t.label}</Text>
-                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext, marginTop: 1 }}>—</Text>
-                </View>
-              ))}
-            </View>
+          <View style={{ marginTop: theme.spacing.sm }}>
+            <TrophyCase trophies={trophies.data ?? []} />
           </View>
 
           {/* ── Profile actions ── */}

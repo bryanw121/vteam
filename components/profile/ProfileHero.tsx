@@ -16,6 +16,8 @@ type Props = {
   totalCheers: number
   /** Accumulated points (`point_balances`). */
   totalPoints: number
+  /** Tournament trophies won (any place). */
+  trophyCount?: number
   /** Badges pinned to the display slots, in slot order. */
   displayedBadges: UserBadge[]
   onEdit: () => void
@@ -24,7 +26,7 @@ type Props = {
 const STAT_LABEL = { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 } as const
 
 /** The profile card at the top of the Profile tab: avatar, name, stats and pinned badges. */
-export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints, displayedBadges, onEdit }: Props) {
+export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints, trophyCount = 0, displayedBadges, onEdit }: Props) {
   const editing = mode === 'edit'
 
   return (
@@ -86,7 +88,7 @@ export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints,
             <Text style={STAT_LABEL}>Points</Text>
           </View>
           <View style={styles.stat}>
-            <Text testID="profile-trophies-count" style={styles.statValue}>{0}</Text>
+            <Text testID="profile-trophies-count" style={styles.statValue}>{trophyCount}</Text>
             <Text style={STAT_LABEL}>Trophies</Text>
           </View>
         </View>

@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { TOURNAMENT_ERROR_TITLE as T } from '../../constants/tournamentCopy'
-import { getQueryData, invalidate, setQueryData, useMutation, type MutationOptions } from '../../lib/query'
+import { getQueryData, invalidate, queryKey, setQueryData, useMutation, type MutationOptions } from '../../lib/query'
 import { patchCommentRow } from '../../utils/commentPages'
 import type {
   GeneratedSchedule, SetScore, TimedBracketMatch, TournamentCommentWithAuthor, TournamentCommentsPage, TournamentResultWrites,
@@ -136,8 +136,12 @@ export function useTournamentActions(id: string, userId: string | null) {
   const recordResult = useAction(
     (v: { matchId: string; winnerId: string; sets: SetScore[]; forfeit: boolean; writes: TournamentResultWrites }) =>
       api.recordResult({ tournamentId: id, ...v }),
-    // Status may change (in progress / completed), so the core row refetches too.
-    { invalidates: [tournamentKeys.core(id), tournamentKeys.matches(id)], onError: e => notifyError(T.result, e) },
+    // Status may change (in progress / completed), so the core row and the list refetch too,
+    // and finishing writes trophies onto profiles.
+    {
+      invalidates: [tournamentKeys.core(id), tournamentKeys.matches(id), queryKey('tournaments'), queryKey('trophies')],
+      onError: e => notifyError(T.result, e),
+    },
   )
 
   const saveSeeds = useAction(
