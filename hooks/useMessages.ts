@@ -22,7 +22,7 @@ import {
 import {
   applyOwnMessageToConversations,
   markConversationOpen,
-  markConversationReadLocally,
+  markConversationRead,
   profileBriefKey,
 } from './useConversations'
 import type { DebouncedCall, MessageRecord, MessageWithDetails, PendingSend, ReplySnapshot, SenderProfile } from '../types'
@@ -148,10 +148,7 @@ export function useMessages(conversationId: string) {
   useEffect(() => {
     const call = createDebouncedCall(() => {
       if (!userId) return
-      markConversationReadLocally(userId, conversationId)
-      void supabase.rpc('mark_conversation_read', { p_conversation_id: conversationId }).then(({ error: e }) => {
-        if (e) console.warn('[useMessages] mark_conversation_read', e.message)
-      })
+      markConversationRead(userId, conversationId)
     }, MARK_READ_DEBOUNCE_MS)
     markReadCall.current = call
     return () => {

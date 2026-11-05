@@ -1,0 +1,89 @@
+{
+  "uniqueBadges": 36,
+  "scenarios": [
+    {
+      "surface": "desktop",
+      "earnedTier": 0,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "desktop",
+      "earnedTier": 1,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "desktop",
+      "earnedTier": 2,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "desktop",
+      "earnedTier": 3,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "desktop",
+      "earnedTier": 4,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "desktop",
+      "earnedTier": 5,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "mobile",
+      "earnedTier": 0,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "mobile",
+      "earnedTier": 1,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "mobile",
+      "earnedTier": 2,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "mobile",
+      "earnedTier": 3,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "mobile",
+      "earnedTier": 4,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    },
+    {
+      "surface": "mobile",
+      "earnedTier": 5,
+      "categories": 14,
+      "loaded": true,
+      "correctTierAndBytes": true
+    }
+  ]
+}

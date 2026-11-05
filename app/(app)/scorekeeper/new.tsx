@@ -1,0 +1,381 @@
+import { useEffect, useState } from 'react'
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
+import { Stack, useRouter } from 'expo-router'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Text } from '../../../components/ui/Text'
+import { Chip, ScreenContainer, ScreenHeader } from '../../../components/ui'
+import { Input } from '../../../components/Input'
+import { Button } from '../../../components/Button'
+import { CourtLayout } from '../../../components/scoresheet/CourtLayout'
+import { CourtSpot } from '../../../components/scoresheet/CourtSpot'
+import { PlayerChip } from '../../../components/scoresheet/PlayerChip'
+import { PlayerSheet } from '../../../components/scoresheet/PlayerSheet'
+import { TEAM_COLORS } from '../../../components/scoresheet/teamColors'
+import { createMatch } from '../../../hooks/useScoreMatch'
+import { POSITION_LABELS } from '../../../lib/scoresheet/engine'
+import { MATCH_FORMATS, makeRules, withOptions, type MatchFormatKey } from '../../../lib/scoresheet/rules'
+import { shared, theme } from '../../../constants'
+import { routes } from '../../../utils/routes'
+import { SavedTeamsPicker } from '../../../components/scoresheet/SavedTeamsPicker'
+import { loadSavedTeams, loadTodaysInfo, rememberInfo, rememberTeams } from '../../../lib/scoresheet/teamStore'
+import type { Lineup, MatchInfo, RosterPlayer, RulesPreset, SavedTeam, TeamSide } from '../../../types'
+
+const FORMAT_OPTIONS: { key: MatchFormatKey; label: string; hint: string }[] = [
+  { key: 'oneSet', label: '1 set', hint: 'One set to 25 decides it' },
+  { key: 'bestOf3', label: 'Best of 3', hint: '25, 25, 15' },
+  { key: 'bestOf5', label: 'Best of 5', hint: '25 ×4, 15' },
+  { key: 'twoSets', label: 'Pool: 2 sets', hint: 'Both sets played, can split' },
+  { key: 'threeSetsAllPlayed', label: 'Pool: 3 sets', hint: '25, 25, 15, all played' },
+]
+const RULE_OPTIONS: { key: RulesPreset; label: string; hint: string }[] = [
+  { key: 'usav', label: 'USA Volleyball', hint: '12 subs a set, players keep their spot in the order, libero serves in one spot' },
+  { key: 'international', label: 'International', hint: '6 subs a set, starters out and back once, libero never serves' },
+  { key: 'casual', label: 'Rec', hint: 'No sub limits or re-entry warnings' },
+]
+const START_OPTIONS = [0, 4] as const
+const TIME_OPTIONS: { value: number | null; label: string }[] = [
+  { value: null, label: 'No time limit' },
+  { value: 35, label: '35 min' },
+  { value: 40, label: '40 min' },
+  { value: 45, label: '45 min' },
+]
+/** Tournament shortcuts: NAGVA pool play and bracket formats. */
+const QUICK_SETUPS: { key: string; label: string; hint: string; format: MatchFormatKey; start: number; cap: number | null; time: number | null }[] = [
+  { key: 'nagva-pool', label: 'NAGVA pool play', hint: '2 sets to 25 from 4–4, cap 27, 40-minute clock', format: 'twoSets', start: 4, cap: 27, time: 40 },
+  { key: 'nagva-bracket', label: 'NAGVA bracket', hint: 'Best of 3: two sets to 25 from 4–4 (cap 27), third to 15 from 0', format: 'bestOf3', start: 4, cap: 27, time: null },
+]
+const CAP_OPTIONS: { value: number | null; label: string }[] = [
+  { value: null, label: 'No cap' },
+  { value: 27, label: 'Cap 27' },
+  { value: 30, label: 'Cap 30' },
+]
+
+type TeamDraft = { name: string; court: (RosterPlayer | null)[]; bench: RosterPlayer[] }
+type Editing = { side: TeamSide; spot: 'court'; position: number } | { side: TeamSide; spot: 'bench'; index: number | null }
+
+const emptyTeam = (): TeamDraft => ({ name: '', court: [null, null, null, null, null, null], bench: [] })
+const today = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/**
+ * New scorekeeper match: put the starting six of each team on the court (tap a spot, type the
+ * number and name), add subs and liberos on the bench, pick who serves, the format and the rules.
+ * Starting the match starts set 1 with that lineup.
+ */
+export default function NewScoreMatchScreen() {
+  const router = useRouter()
+  const insets = useSafeAreaInsets()
+  const [teams, setTeams] = useState<Record<TeamSide, TeamDraft>>({ A: emptyTeam(), B: emptyTeam() })
+  const [editing, setEditing] = useState<Editing | null>(null)
+  const [firstServe, setFirstServe] = useState<TeamSide | null>(null)
+  const [format, setFormat] = useState<MatchFormatKey>('bestOf3')
+  const [preset, setPreset] = useState<RulesPreset>('usav')
+  const [cap, setCap] = useState<number | null>(null)
+  const [startAt, setStartAt] = useState<number>(0)
+  const [timeLimit, setTimeLimit] = useState<number | null>(null)
+  // null: the rules preset's own length.
+  const [timeoutSeconds, setTimeoutSeconds] = useState<number | null>(null)
+  const [info, setInfo] = useState<MatchInfo>({ date: today() })
+  const [showDetails, setShowDetails] = useState(false)
+  const [tried, setTried] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [savedTeams, setSavedTeams] = useState<SavedTeam[]>([])
+  const [carried, setCarried] = useState(false)
+
+  // Teams from earlier matches, and today's competition / court / officials from the last match.
+  useEffect(() => {
+    let live = true
+    void loadSavedTeams().then(t => { if (live) setSavedTeams(t) })
+    void loadTodaysInfo().then(last => {
+      if (!live || !last) return
+      setInfo(prev => ({ ...last, ...Object.fromEntries(Object.entries(prev).filter(([, v]) => v)) }))
+      setCarried(true)
+    })
+    return () => { live = false }
+  }, [])
+
+  const teamLabel = (side: TeamSide) => teams[side].name.trim() || `Team ${side}`
+  const allPlayers = (side: TeamSide) => [...teams[side].court.filter((p): p is RosterPlayer => p != null), ...teams[side].bench]
+  const missing = (side: TeamSide) => teams[side].court.filter(p => p == null).length
+  const ready = missing('A') === 0 && missing('B') === 0 && firstServe != null
+  // Saved teams fill the first team that's still empty.
+  const isEmpty = (side: TeamSide) => !teams[side].name.trim() && teams[side].court.every(p => p == null) && !teams[side].bench.length
+  const pickTarget: TeamSide | null = isEmpty('A') ? 'A' : isEmpty('B') ? 'B' : null
+  const usedNames = new Set((['A', 'B'] as const).map(side => teams[side].name.trim().toLowerCase()))
+  const applySaved = (team: SavedTeam) => {
+    if (!pickTarget) return
+    const court: (RosterPlayer | null)[] = [...team.court.slice(0, 6)]
+    while (court.length < 6) court.push(null)
+    setTeams(prev => ({ ...prev, [pickTarget]: { name: team.name, court, bench: [...team.court.slice(6), ...team.bench] } }))
+  }
+
+  // The next empty court spot after this one: this team in serving order, then the other team.
+  const nextEmpty = (side: TeamSide, position: number, draft = teams): { side: TeamSide; position: number } | null => {
+    for (let i = 1; i <= 6; i++) {
+      const p = (position + i) % 6
+      if (draft[side].court[p] == null) return { side, position: p }
+    }
+    const otherSide: TeamSide = side === 'A' ? 'B' : 'A'
+    const p = draft[otherSide].court.findIndex(x => x == null)
+    return p >= 0 ? { side: otherSide, position: p } : null
+  }
+
+  const current: RosterPlayer | null = !editing
+    ? null
+    : editing.spot === 'court'
+      ? teams[editing.side].court[editing.position]
+      : editing.index != null ? teams[editing.side].bench[editing.index] : null
+  const taken = editing ? allPlayers(editing.side).filter(p => p !== current).map(p => p.number) : []
+  const upcoming = editing?.spot === 'court' && !current ? nextEmpty(editing.side, editing.position) : null
+
+  const save = (player: RosterPlayer) => {
+    if (!editing) return
+    const draft = { ...teams, [editing.side]: { ...teams[editing.side], court: [...teams[editing.side].court], bench: [...teams[editing.side].bench] } }
+    const t = draft[editing.side]
+    if (editing.spot === 'court') t.court[editing.position] = player
+    else if (editing.index != null) t.bench[editing.index] = player
+    else t.bench.push(player)
+    setTeams(draft)
+    // Filling an empty spot moves straight on to the next one.
+    if (editing.spot === 'court' && !current) {
+      const next = nextEmpty(editing.side, editing.position, draft)
+      setEditing(next ? { side: next.side, spot: 'court', position: next.position } : null)
+    } else setEditing(null)
+  }
+
+  // A bench player goes into the court spot being edited; whoever was there moves to the bench.
+  const pickBench = (player: RosterPlayer) => {
+    if (!editing || editing.spot !== 'court') return
+    const t = { ...teams[editing.side], court: [...teams[editing.side].court], bench: teams[editing.side].bench.filter(p => p !== player) }
+    const previous = t.court[editing.position]
+    if (previous) t.bench.push(previous)
+    t.court[editing.position] = player
+    const draft = { ...teams, [editing.side]: t }
+    setTeams(draft)
+    const next = !previous ? nextEmpty(editing.side, editing.position, draft) : null
+    setEditing(next ? { side: next.side, spot: 'court', position: next.position } : null)
+  }
+
+  const remove = () => {
+    if (!editing) return
+    const t = { ...teams[editing.side], court: [...teams[editing.side].court], bench: [...teams[editing.side].bench] }
+    if (editing.spot === 'court') t.court[editing.position] = null
+    else if (editing.index != null) t.bench.splice(editing.index, 1)
+    setTeams({ ...teams, [editing.side]: t })
+    setEditing(null)
+  }
+
+  async function start() {
+    setTried(true)
+    if (!ready || saving || !firstServe) return
+    setSaving(true)
+    try {
+      const lineup = (side: TeamSide) => teams[side].court.map(p => p!.number) as unknown as Lineup
+      const liberos = (side: TeamSide) => teams[side].bench.filter(p => p.libero).map(p => p.number).slice(0, 2)
+      const id = await createMatch(
+        {
+          info,
+          teams: {
+            A: { name: teamLabel('A'), players: allPlayers('A').sort((a, b) => a.number - b.number) },
+            B: { name: teamLabel('B'), players: allPlayers('B').sort((a, b) => a.number - b.number) },
+          },
+          rules: { ...makeRules(preset, withOptions(MATCH_FORMATS[format], { start: startAt, cap, timeLimitMinutes: timeLimit })), ...(timeoutSeconds ? { timeoutSeconds } : {}) },
+        },
+        { type: 'set_start', lineups: { A: lineup('A'), B: lineup('B') }, firstServe, liberos: { A: liberos('A'), B: liberos('B') } },
+      )
+      void rememberTeams((['A', 'B'] as const).map(side => ({ name: teamLabel(side), court: teams[side].court.filter((p): p is RosterPlayer => p != null), bench: teams[side].bench })))
+      void rememberInfo(info)
+      router.replace(routes.scorekeeperMatch(id))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const setInfoField = (key: keyof MatchInfo) => (v: string) => setInfo(prev => ({ ...prev, [key]: v }))
+
+  const label = (side: TeamSide) => (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+      <View style={{ flex: 1 }}>
+        <Input
+          value={teams[side].name}
+          onChangeText={v => setTeams(prev => ({ ...prev, [side]: { ...prev[side], name: v } }))}
+          placeholder={side === 'A' ? 'Team A name' : 'Team B name'}
+          maxLength={40}
+          accessibilityLabel={`Team ${side} name`}
+          testID={`team-name-${side}`}
+        />
+      </View>
+      <Pressable
+        onPress={() => setFirstServe(side)}
+        role="radio"
+        aria-checked={firstServe === side}
+        accessibilityLabel={`${teamLabel(side)} serves first`}
+        testID={`first-serve-${side}`}
+        style={[
+          { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: theme.spacing.sm, borderRadius: theme.radius.full, borderWidth: 1, borderColor: theme.colors.border },
+          firstServe === side && { backgroundColor: TEAM_COLORS[side].fill, borderColor: TEAM_COLORS[side].fill },
+        ]}
+      >
+        <Ionicons name="tennisball-outline" size={16} color={firstServe === side ? TEAM_COLORS[side].ink : theme.colors.subtextStrong} />
+        <Text style={[shared.caption, { color: firstServe === side ? TEAM_COLORS[side].ink : theme.colors.subtextStrong }]}>{firstServe === side ? 'Serves first' : 'Serve?'}</Text>
+      </Pressable>
+    </View>
+  )
+
+  return (
+    <View style={shared.screen}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: insets.bottom + theme.spacing.xxl }} keyboardShouldPersistTaps="handled">
+          <ScreenContainer>
+            <ScreenHeader safeTop kicker="Scorekeeper" title="New match" onBack={() => router.back()} />
+            <Text style={[shared.body, { color: theme.colors.subtextStrong, marginBottom: theme.spacing.md }]}>
+              Tap a spot to put a player on the court. Position I serves first. Then add subs and liberos on each bench.
+            </Text>
+
+            <SavedTeamsPicker
+              teams={savedTeams.filter(t => !usedNames.has(t.name.trim().toLowerCase()))}
+              target={pickTarget}
+              targetLabel={pickTarget === 'A' ? 'the top team (A)' : 'the bottom team (B)'}
+              onPick={applySaved}
+            />
+            <CourtLayout
+              renderLabel={label}
+              renderSpot={(side, position) => {
+                const p = teams[side].court[position]
+                const active = editing?.spot === 'court' && editing.side === side && editing.position === position
+                return (
+                  <CourtSpot
+                    position={position}
+                    number={p?.number}
+                    name={p?.name}
+                    highlight={active ? TEAM_COLORS[side] : null}
+                    onPress={() => setEditing({ side, spot: 'court', position })}
+                    accessibilityLabel={`${teamLabel(side)} position ${POSITION_LABELS[position]}${p ? `: #${p.number}${p.name ? ` ${p.name}` : ''}` : ', empty'}`}
+                    testID={`spot-${side}-${position}`}
+                  />
+                )
+              }}
+            />
+            {tried && !ready && (
+              <Text style={[shared.caption, { color: theme.colors.error, marginTop: theme.spacing.sm }]}>
+                {missing('A') + missing('B') > 0 ? `Fill all six spots for both teams (${missing('A') + missing('B')} empty).` : 'Pick who serves first.'}
+              </Text>
+            )}
+
+            {(['A', 'B'] as const).map(side => (
+              <View key={side} style={[shared.card, { marginTop: theme.spacing.md, gap: theme.spacing.sm, borderLeftWidth: 4, borderLeftColor: TEAM_COLORS[side].fill }]} testID={`bench-${side}`}>
+                <Text style={shared.label}>{teamLabel(side)} bench: subs and liberos</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                  {teams[side].bench.map((p, index) => (
+                    <PlayerChip key={p.number} number={p.number} name={p.name} libero={p.libero} onPress={() => setEditing({ side, spot: 'bench', index })} />
+                  ))}
+                  <Chip label="+ Add player" variant="tint" onPress={() => setEditing({ side, spot: 'bench', index: null })} testID={`bench-add-${side}`} />
+                </View>
+              </View>
+            ))}
+
+            <View style={[shared.card, { marginTop: theme.spacing.md, gap: theme.spacing.sm }]}>
+              <Text style={shared.subheading}>Format</Text>
+              <Text style={[shared.label, { marginBottom: 0 }]}>Quick setup</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                {QUICK_SETUPS.map(q => {
+                  const on = format === q.format && startAt === q.start && cap === q.cap && timeLimit === q.time && preset === 'usav'
+                  return (
+                    <Chip
+                      key={q.key}
+                      label={q.label}
+                      variant="tint"
+                      active={on}
+                      onPress={() => { setFormat(q.format); setStartAt(q.start); setCap(q.cap); setTimeLimit(q.time); setPreset('usav'); setTimeoutSeconds(null) }}
+                      testID={`quick-${q.key}`}
+                    />
+                  )
+                })}
+              </View>
+              {QUICK_SETUPS.filter(q => format === q.format && startAt === q.start && cap === q.cap && timeLimit === q.time).map(q => (
+                <Text key={q.key} style={shared.caption}>{q.hint}. NAGVA plays USA Volleyball rules.</Text>
+              ))}
+              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginTop: theme.spacing.xs }}>
+                {FORMAT_OPTIONS.map(o => <Chip key={o.key} label={o.label} role="radio" active={format === o.key} onPress={() => setFormat(o.key)} testID={`format-${o.key}`} />)}
+              </View>
+              <Text style={shared.caption}>{FORMAT_OPTIONS.find(o => o.key === format)?.hint}. Win by 2. Caps apply to sets to 25.</Text>
+              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                {CAP_OPTIONS.map(o => <Chip key={o.label} label={o.label} role="radio" variant="tint" active={cap === o.value} onPress={() => setCap(o.value)} />)}
+              </View>
+              <Text style={[shared.label, { marginBottom: 0 }]}>Sets to 25 start at</Text>
+              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                {START_OPTIONS.map(v => <Chip key={v} label={`${v}–${v}`} role="radio" variant="tint" active={startAt === v} onPress={() => setStartAt(v)} testID={`start-${v}`} />)}
+              </View>
+              <Text style={[shared.label, { marginBottom: 0 }]}>Match clock</Text>
+              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                {TIME_OPTIONS.map(o => <Chip key={o.label} label={o.label} role="radio" variant="tint" active={timeLimit === o.value} onPress={() => setTimeLimit(o.value)} testID={`time-${o.value ?? 'none'}`} />)}
+              </View>
+              {timeLimit != null && <Text style={shared.caption}>Counts from the first serve. No time-outs in the last 2 minutes; at time the leader takes the set, and a tied set goes to the next point.</Text>}
+              <Text style={[shared.subheading, { marginTop: theme.spacing.sm }]}>Rules</Text>
+              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                {RULE_OPTIONS.map(o => <Chip key={o.key} label={o.label} role="radio" active={preset === o.key} onPress={() => { setPreset(o.key); setTimeoutSeconds(null) }} testID={`rules-${o.key}`} />)}
+              </View>
+              <Text style={shared.caption}>{RULE_OPTIONS.find(o => o.key === preset)?.hint}. Breaking a rule shows a warning but is still recorded.</Text>
+              <Text style={[shared.label, { marginTop: theme.spacing.sm, marginBottom: 0 }]}>Time-out length</Text>
+              <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+                {[30, 60, 75].map(sec => {
+                  const current = timeoutSeconds ?? makeRules(preset).timeoutSeconds
+                  return <Chip key={sec} label={`${sec} seconds`} role="radio" variant="tint" active={current === sec} onPress={() => setTimeoutSeconds(sec)} testID={`timeout-length-${sec}`} />
+                })}
+              </View>
+            </View>
+
+            <View style={[shared.card, { marginTop: theme.spacing.md, gap: theme.spacing.sm }]}>
+              <Button
+                label={showDetails ? 'Hide match details' : carried ? 'Match details (from your last match today)' : 'Add match details (optional)'}
+                variant="ghost"
+                icon={showDetails ? 'chevron-up' : 'chevron-down'}
+                onPress={() => setShowDetails(v => !v)}
+              />
+              {showDetails && (
+                <View style={{ gap: theme.spacing.sm }}>
+                  <Input label="Competition" value={info.competition ?? ''} onChangeText={setInfoField('competition')} maxLength={80} />
+                  <Input label="Division / category" value={info.division ?? ''} onChangeText={setInfoField('division')} maxLength={40} />
+                  <Input label="Match no." value={info.matchNo ?? ''} onChangeText={setInfoField('matchNo')} maxLength={20} />
+                  <Input label="City, state" value={info.city ?? ''} onChangeText={setInfoField('city')} maxLength={60} />
+                  <Input label="Hall" value={info.hall ?? ''} onChangeText={setInfoField('hall')} maxLength={60} />
+                  <Input label="Court" value={info.court ?? ''} onChangeText={setInfoField('court')} maxLength={20} />
+                  <Input label="Date" value={info.date ?? ''} onChangeText={setInfoField('date')} placeholder="2026-11-01" maxLength={10} />
+                  <View role="radiogroup" style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+                    {(['men', 'women', 'coed'] as const).map(g => (
+                      <Chip key={g} label={{ men: 'Men', women: 'Women', coed: 'CoEd' }[g]} role="radio" variant="tint" active={info.gender === g} onPress={() => setInfo(prev => ({ ...prev, gender: prev.gender === g ? undefined : g }))} />
+                    ))}
+                  </View>
+                  <Input label="1st referee" value={info.firstReferee ?? ''} onChangeText={setInfoField('firstReferee')} maxLength={60} />
+                  <Input label="2nd referee" value={info.secondReferee ?? ''} onChangeText={setInfoField('secondReferee')} maxLength={60} />
+                  <Input label="Scorer" value={info.scorer ?? ''} onChangeText={setInfoField('scorer')} maxLength={60} />
+                </View>
+              )}
+            </View>
+
+            <Button label="Start match" icon="play" onPress={() => void start()} loading={saving} style={{ marginTop: theme.spacing.lg }} testID="start-match" />
+          </ScreenContainer>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      <PlayerSheet
+        visible={editing != null}
+        editKey={editing ? `${editing.side}:${editing.spot}:${editing.spot === 'court' ? editing.position : editing.index ?? 'new'}` : ''}
+        title={editing ? `${teamLabel(editing.side)} · ${editing.spot === 'court' ? `position ${POSITION_LABELS[editing.position]}${editing.position === 0 ? ' (serves first)' : ''}` : 'bench'}` : ''}
+        initial={current}
+        taken={taken}
+        allowLibero={editing?.spot === 'bench'}
+        saveLabel={upcoming ? `Save, next: ${upcoming.side === editing?.side ? '' : `${teamLabel(upcoming.side)} `}position ${POSITION_LABELS[upcoming.position]}` : 'Save'}
+        onSave={save}
+        onRemove={current ? remove : undefined}
+        bench={editing?.spot === 'court' ? teams[editing.side].bench.filter(p => !p.libero) : undefined}
+        onPickBench={pickBench}
+        onDismiss={() => setEditing(null)}
+      />
+    </View>
+  )
+}

@@ -5,6 +5,13 @@
  * than one FK to `profiles`.
  */
 
+/**
+ * What a link preview reads of an event (`api/event-page.ts`, `api/og/event.tsx`,
+ * #130): only columns a guest already sees on the event page, read with the
+ * anon key. `e2e/rls.spec.ts` asserts anon can still select them.
+ */
+export const EVENT_PREVIEW_COLUMNS = 'id,title,event_date,location,max_attendees,cancelled_at,price,duration_minutes'
+
 /** A profile as shown in a byline, avatar or host row. */
 export const PROFILE_BRIEF = 'id, username, first_name, last_name, avatar_url, selected_border'
 

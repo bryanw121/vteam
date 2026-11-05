@@ -176,7 +176,7 @@ describe('shared conversations query', () => {
     expect(conversationRpcCalls()).toBe(1)
   })
 
-  it('ignores the echo of our own markRead, applies a read from another device', async () => {
+  it('does not recount for the echo of our own markRead, applies a read from another device', async () => {
     const list = renderHook(() => useConversations(true))
     await flush()
     act(() => {
@@ -433,5 +433,299 @@ describe('useMessages — review fixes', () => {
     expect(room.result.current.messages[0].id).toBe(sentId)
     expect(room.result.current.messages[0]._failed).toBeFalsy()
     expect(room.result.current.messages[0]._sending).toBeFalsy()
+  })
+})
+
+// ── Tab badge (#146) ─────────────────────────────────────────────────────────
+// A tiny server: `unread` per conversation, what get_my_conversations returns,
+// and a mark_conversation_read that can be held open or made to fail.
+
+import React from 'react'
+import { AppState } from 'react-native'
+import { ChatUnreadProvider, useChatUnread } from '../hooks/useChatUnread'
+import { MARK_READ_RETRY_MS, resetChatReadState } from '../hooks/useConversations'
+
+describe('chat tab badge (#146)', () => {
+  type Server = { unread: Record<string, number>; lastAt: Record<string, string>; readAt: Record<string, string> }
+  let server: Server
+  let holdRead: Array<() => void>
+  let failReads: number
+
+  const rowsFromServer = () => Object.keys(server.unread).map(id => conv({
+    conversation_id: id, other_user_id: `u-${id}`, unread_count: server.unread[id],
+    last_message_id: `last-${id}`, last_message_at: server.lastAt[id] ?? '2026-10-24T19:00:00.000Z',
+  }))
+
+  /** AppState listeners the badge registered (jest-expo's AppState returns no subscription). */
+  let appStateListeners: Array<(s: string) => void>
+  let appStateSpy: jest.SpyInstance
+
+  beforeEach(() => {
+    appStateListeners = []
+    appStateSpy = jest.spyOn(AppState, 'addEventListener').mockImplementation(((_: string, fn: (s: string) => void) => {
+      appStateListeners.push(fn)
+      return { remove: () => { appStateListeners = appStateListeners.filter(l => l !== fn) } }
+    }) as unknown as typeof AppState.addEventListener)
+    server = { unread: { c1: 2, c2: 1 }, lastAt: {}, readAt: {} }
+    holdRead = []
+    failReads = 0
+    tables.messages = () => ({ data: [msg()], error: null })
+    mockRpc.mockImplementation(async (name: string, args?: unknown) => {
+      if (name === 'get_my_conversations') return { data: rowsFromServer(), error: null }
+      if (name === 'mark_conversation_read') {
+        const id = (args as { p_conversation_id: string }).p_conversation_id
+        if (failReads > 0) { failReads--; return { data: null, error: { message: 'timeout' } } }
+        await new Promise<void>(resolve => {
+          holdRead.push(resolve)
+        })
+        server.unread[id] = 0
+        server.readAt[id] = '2026-10-24T19:30:00.000Z'
+        return { data: null, error: null }
+      }
+      return { data: null, error: null }
+    })
+  })
+
+  afterEach(() => appStateSpy.mockRestore())
+
+  const releaseReads = async () => {
+    const pending = holdRead.splice(0)
+    pending.forEach(r => r())
+    await flush()
+  }
+
+  function renderBadge() {
+    const wrapper = ({ children }: { children: React.ReactNode }) => <ChatUnreadProvider>{children}</ChatUnreadProvider>
+    return renderHook(() => useChatUnread(), { wrapper })
+  }
+
+  async function startBadge() {
+    const badge = renderBadge()
+    act(() => { jest.advanceTimersByTime(1_500) })
+    await flush()
+    return badge
+  }
+
+  /** What a membership UPDATE for our own row looks like on the wire. */
+  const membershipEcho = (conversationId: string, lastReadAt: string) =>
+    emit('conversations:me', 'conversation_members', 'UPDATE', { new: { conversation_id: conversationId, user_id: 'me', last_read_at: lastReadAt } })
+
+  it('starts after the delay and counts every unread conversation', async () => {
+    const badge = renderBadge()
+    expect(badge.result.current).toBe(0)
+    expect(conversationRpcCalls()).toBe(0)
+    act(() => { jest.advanceTimersByTime(1_500) })
+    await flush()
+    expect(badge.result.current).toBe(3)
+  })
+
+  it('opening a conversation clears it from the badge without a reload', async () => {
+    const badge = await startBadge()
+    const room = renderHook(() => useMessages('c1'))
+    await flush()
+    act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+    expect(badge.result.current).toBe(1)
+    await releaseReads()
+    room.unmount()
+    expect(badge.result.current).toBe(1)
+  })
+
+  it('a new message elsewhere adds 1 live; in the open room it never counts', async () => {
+    const badge = await startBadge()
+    act(() => {
+      emit('conversations:me', 'messages', 'INSERT', {
+        new: { id: 'n1', conversation_id: 'c2', sender_id: 'them', content: 'yo', image_url: null, reply_to_id: null, created_at: '2026-10-24T20:00:00.000Z', deleted_at: null, edited_at: null },
+      })
+    })
+    expect(badge.result.current).toBe(4)
+
+    const room = renderHook(() => useMessages('c1'))
+    await flush()
+    act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+    await releaseReads()
+    act(() => {
+      emit('conversations:me', 'messages', 'INSERT', {
+        new: { id: 'n2', conversation_id: 'c1', sender_id: 'them', content: 'here', image_url: null, reply_to_id: null, created_at: '2026-10-24T20:01:00.000Z', deleted_at: null, edited_at: null },
+      })
+    })
+    expect(badge.result.current).toBe(2) // c2 only
+    room.unmount()
+  })
+
+  it('a DM from someone you silenced never adds to the badge', async () => {
+    tables.chat_silences = () => ({ data: [{ silenced_user_id: 'u-c2', created_at: 'x', profiles: null }], error: null })
+    const badge = await startBadge()
+    expect(badge.result.current).toBe(2) // c1 only
+    act(() => {
+      emit('conversations:me', 'messages', 'INSERT', {
+        new: { id: 'n1', conversation_id: 'c2', sender_id: 'u-c2', content: 'hi', image_url: null, reply_to_id: null, created_at: '2026-10-24T20:00:00.000Z', deleted_at: null, edited_at: null },
+      })
+    })
+    expect(badge.result.current).toBe(2)
+  })
+
+  it('no ghost: a recount that left before the server saved our read does not bring the count back', async () => {
+    const badge = await startBadge()
+    expect(badge.result.current).toBe(3)
+
+    // Open c1: the room marks it read; the server is slow to commit.
+    const room = renderHook(() => useMessages('c1'))
+    await flush()
+    act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+    expect(badge.result.current).toBe(1)
+
+    // Meanwhile something recounts (a message in a conversation not in the list,
+    // a reconnect, a focus refetch). The server hasn't saved the read yet.
+    act(() => {
+      emit('conversations:me', 'messages', 'INSERT', {
+        new: { id: 'x', conversation_id: 'brand-new', sender_id: 'them', content: 'hey', image_url: null, reply_to_id: null, created_at: '2026-10-24T20:00:00.000Z', deleted_at: null, edited_at: null },
+      })
+    })
+    act(() => { jest.advanceTimersByTime(500) })
+    await flush()
+
+    // The read commits; its realtime echo follows within seconds.
+    await releaseReads()
+    act(() => { membershipEcho('c1', '2026-10-24T19:30:00.000Z') })
+    act(() => { jest.advanceTimersByTime(1_000) })
+    await flush()
+    room.unmount()
+    await flush()
+    expect(badge.result.current).toBe(1) // c2 only: c1 stays read
+  })
+
+  it('no ghost even when the realtime echo never arrives: the saved read is recounted', async () => {
+    const badge = await startBadge()
+    const room = renderHook(() => useMessages('c1'))
+    await flush()
+    act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+    act(() => { mockSubscribers.get('conversations:me')![0].opts?.onReconnect?.() }) // a recount before the save
+    act(() => { jest.advanceTimersByTime(500) })
+    await flush()
+    await releaseReads() // saved; no membership UPDATE delivered
+    act(() => { jest.advanceTimersByTime(500) })
+    await flush()
+    room.unmount()
+    expect(badge.result.current).toBe(1)
+  })
+
+  it('no ghost: a read saved before the list first loaded is not shown as unread', async () => {
+    // Deep link straight into the room: the read starts before the badge's first fetch.
+    const room = renderHook(() => useMessages('c1'))
+    await flush()
+    act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+    const badge = renderBadge()
+    act(() => { jest.advanceTimersByTime(1_500) })
+    await flush() // the badge's first fetch returns c1 as unread: the read isn't saved yet
+    await releaseReads()
+    act(() => { membershipEcho('c1', '2026-10-24T19:30:00.000Z') })
+    act(() => { jest.advanceTimersByTime(1_000) })
+    await flush()
+    room.unmount()
+    await flush()
+    expect(badge.result.current).toBe(1)
+  })
+
+  it('a failed mark_conversation_read is retried, so the read sticks', async () => {
+    failReads = 1
+    const badge = await startBadge()
+    const room = renderHook(() => useMessages('c1'))
+    await flush()
+    act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+    await flush()
+    expect(badge.result.current).toBe(1)
+    act(() => { jest.advanceTimersByTime(5_000) }) // retry
+    await flush()
+    await releaseReads()
+    room.unmount()
+    // Any later recount (reload, foreground, reconnect) agrees.
+    act(() => { mockSubscribers.get('conversations:me')![0].opts?.onReconnect?.() })
+    act(() => { jest.advanceTimersByTime(500) })
+    await flush()
+    expect(server.unread.c1).toBe(0)
+    expect(badge.result.current).toBe(1)
+  })
+
+  it('a read on another device clears the badge here, even right after our own read', async () => {
+    const badge = await startBadge()
+    const room = renderHook(() => useMessages('c2'))
+    await flush()
+    act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+    await releaseReads()
+    room.unmount()
+    expect(badge.result.current).toBe(2)
+    // c1 read on the phone a moment later.
+    server.unread.c1 = 0
+    act(() => { membershipEcho('c1', '2026-10-24T19:31:00.000Z') })
+    expect(badge.result.current).toBe(0)
+  })
+
+  it('gives up after the retries and shows the server count rather than a zero that comes back later', async () => {
+    failReads = 1 + MARK_READ_RETRY_MS.length
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    const badge = await startBadge()
+    const room = renderHook(() => useMessages('c1'))
+    await flush()
+    act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+    await flush()
+    expect(badge.result.current).toBe(1)
+    for (const ms of MARK_READ_RETRY_MS) {
+      act(() => { jest.advanceTimersByTime(ms) })
+      await flush()
+    }
+    expect(markReadCalls()).toBe(1 + MARK_READ_RETRY_MS.length)
+    act(() => { jest.advanceTimersByTime(500) })
+    await flush()
+    expect(badge.result.current).toBe(3)
+    expect(warn).toHaveBeenCalledWith('[useConversations] mark_conversation_read failed', 'timeout')
+    warn.mockRestore()
+    room.unmount()
+  })
+
+  it('stops retrying a read once the user changes (sign out / sign in)', async () => {
+    failReads = 1
+    renderHook(() => useMessages('c1'))
+    await flush()
+    act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+    await flush()
+    expect(markReadCalls()).toBe(1)
+    act(() => { resetChatReadState() })
+    act(() => { jest.advanceTimersByTime(10_000) })
+    await flush()
+    expect(markReadCalls()).toBe(1)
+  })
+
+  it('never sends a client timestamp: unread is the server comparing its own clocks', async () => {
+    renderHook(() => useMessages('c1'))
+    await flush()
+    act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+    expect(mockRpc.mock.calls.find(c => c[0] === 'mark_conversation_read')?.[1]).toEqual({ p_conversation_id: 'c1' })
+    await releaseReads()
+  })
+
+  it('recounts when the app comes back to the foreground with a stale copy (a read on another device)', async () => {
+    const badge = await startBadge()
+    expect(badge.result.current).toBe(3)
+    server.unread = { c1: 0, c2: 0 } // read on the web while this phone slept
+    act(() => { jest.advanceTimersByTime(31_000) })
+    act(() => { appStateListeners.forEach(l => l('active')) })
+    await flush()
+    expect(badge.result.current).toBe(0)
+  })
+
+  it('stays clear after a reload', async () => {
+    const badge = await startBadge()
+    for (const id of ['c1', 'c2']) {
+      const room = renderHook(() => useMessages(id))
+      await flush()
+      act(() => { jest.advanceTimersByTime(MARK_READ_DEBOUNCE_MS) })
+      await releaseReads()
+      room.unmount()
+    }
+    expect(badge.result.current).toBe(0)
+    badge.unmount()
+    __resetQueryCache()
+    const reloaded = await startBadge()
+    expect(reloaded.result.current).toBe(0)
   })
 })

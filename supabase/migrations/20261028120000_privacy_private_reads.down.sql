@@ -72,11 +72,5 @@ begin
 end;
 $function$;
 
-drop policy if exists "Admins insert clubs" on public.clubs;
-create policy "Admins insert clubs" on public.clubs
-  for insert to public
-  with check (( SELECT profiles.is_admin FROM profiles WHERE (profiles.id = ( SELECT auth.uid() AS uid))));
-
-drop function if exists public.is_app_admin();
 drop table if exists public.app_admins;
 alter table public.user_settings drop column if exists notification_prefs;
