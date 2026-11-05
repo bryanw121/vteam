@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Platform, View, TouchableOpacity, Alert } from 'react-native'
 import { Text } from '../ui/Text'
 import { RefreshControl } from '../RefreshControl'
@@ -9,6 +9,10 @@ import { ProfileAvatar } from '../ProfileAvatar'
 import { DocScrollView } from '../DocScrollView'
 import { LinkedText } from '../LinkedText'
 import { VenmoPayButton } from '../VenmoPayButton'
+import { FriendsGoingLine } from '../FriendsGoingLine'
+import { useFriends } from '../../hooks/useFriends'
+import { attendeeRowsWithProfiles } from '../../hooks/event/derive'
+import { friendsGoingFromAttendees } from '../../utils/friends'
 import { PaidToggle } from './PaidToggle'
 import { ForecastRow } from './ForecastRow'
 import { shared, theme, LOCATIONS } from '../../constants'
@@ -137,6 +141,11 @@ export function DetailsTab({
 }: Props) {
   const { refreshing, refresh: onRefresh, cohosts, userId } = data
   const totalAttending = eventStatus.count
+  const { data: myFriends } = useFriends()
+  const friendsGoing = useMemo(
+    () => friendsGoingFromAttendees(event.id, attendeeRowsWithProfiles(event), myFriends.friends),
+    [event, myFriends.friends],
+  )
   return (
     <DocScrollView
       docScroll={docScrollActive}
@@ -257,6 +266,7 @@ export function DetailsTab({
             </View>
           )}
         </View>
+        <FriendsGoingLine going={friendsGoing} testID="event-friends-going" />
       </View>
 
       {/* ── Info rows ── */}
