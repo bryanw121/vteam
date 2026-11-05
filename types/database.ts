@@ -1,4 +1,3 @@
-// TODO regenerate from beta: hand-edited for 20261028205312_tournament_trophies (tournament_trophies, tournament_rules.tiebreakers / third_place_match, complete_tournament).
 export type Json =
   | string
   | number
@@ -2470,6 +2469,13 @@ export type Database = {
       schema_pending_changes: { Args: never; Returns: Json }
       send_event_reminders: { Args: never; Returns: number }
       send_kudos_reminders: { Args: never; Returns: undefined }
+      tournament_registration_check: {
+        Args: {
+          p_player: string
+          p_tournament: Database["public"]["Tables"]["tournaments"]["Row"]
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
