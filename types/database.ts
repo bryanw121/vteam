@@ -1,5 +1,7 @@
 // TODO(#102): hand-edited to match migrations 20261028120000_privacy_private_reads.sql and 20261028120200_rate_limit_core.sql until they can be
 // applied on beta (Supabase write approval pending). Regenerate from beta before merging; do not keep this line.
+// TODO(#99 account deletion): hand-edited for migration 20261028130000_account_deletion.sql (functions, cheers.giver_id nullable)
+// until it can be applied on beta (Supabase write approval pending). Regenerate from beta before merging; do not keep this line.
 export type Json =
   | string
   | number
@@ -226,7 +228,7 @@ export type Database = {
           cheer_type: string
           created_at: string
           event_id: string
-          giver_id: string
+          giver_id: string | null
           id: string
           receiver_id: string
         }
@@ -234,7 +236,7 @@ export type Database = {
           cheer_type: string
           created_at?: string
           event_id: string
-          giver_id: string
+          giver_id?: string | null
           id?: string
           receiver_id: string
         }
@@ -242,7 +244,7 @@ export type Database = {
           cheer_type?: string
           created_at?: string
           event_id?: string
-          giver_id?: string
+          giver_id?: string | null
           id?: string
           receiver_id?: string
         }
@@ -2368,6 +2370,8 @@ export type Database = {
       }
     }
     Functions: {
+      account_deletion_plan: { Args: { p_user: string }; Returns: Json }
+      account_is_being_deleted: { Args: { p_user: string }; Returns: boolean }
       accept_tournament_invite: {
         Args: { p_invite_id: string }
         Returns: string
@@ -2375,6 +2379,7 @@ export type Database = {
       ad_free_offer: { Args: never; Returns: Json }
       award_event_points: { Args: never; Returns: number }
       can_read_chat_image: { Args: { p_name: string }; Returns: boolean }
+      club_successor: { Args: { p_club: string; p_user: string }; Returns: string }
       check_rate_limit: {
         Args: { p_key: string; p_max: number; p_window_seconds: number }
         Returns: boolean
@@ -2392,12 +2397,14 @@ export type Database = {
           title: string
         }[]
       }
+      delete_account: { Args: { p_plan_hash: string; p_user: string }; Returns: Json }
       enforce_rate_limit: {
         Args: { p_key: string; p_max: number; p_window_seconds: number }
         Returns: undefined
       }
       find_or_create_dm: { Args: { other_user_id: string }; Returns: string }
       get_ad_free_status: { Args: never; Returns: Json }
+      get_account_deletion_preview: { Args: never; Returns: Json }
       get_chat_unread_count: { Args: never; Returns: number }
       get_email_by_username: { Args: { p_username: string }; Returns: string }
       get_event_card_attendee_previews: {

@@ -165,7 +165,7 @@ These providers may process data in the United States and other countries.
 
 - **Edit your profile** in the app.
 - **Turn off push notifications** in the app or your phone's settings.
-- **Request deletion of your account** by emailing us.
+- **Delete your account** in the app (Profile > Account Settings > Delete account), or by emailing us. Instructions: vteamvolleyball.com/delete-account.
 - **Request access to your data** by emailing us. We may need to verify your identity, and will respond as required by applicable law.
 
 Depending on where you live, you may have additional rights under applicable law, such as to correct your data or appeal a decision about your request. Where those laws apply, email us to make a request. Some rights are subject to exceptions and limits under those laws.
@@ -189,4 +189,32 @@ We may update this policy from time to time. We'll post the updated version with
 ## Contact
 
 Questions or requests: **privacy@vteamvolleyball.com** \[set up this address before publishing\].
+`
+
+/** Public page Google Play links to: how to delete an account, in the app or by email (/delete-account). */
+export const DELETE_ACCOUNT_MARKDOWN = String.raw`# Delete your vteam account
+
+## In the app
+
+- Open vteam and sign in.
+- Go to **Profile > Account Settings > Delete account**.
+- If you signed in more than 10 minutes ago, confirm it's you with your password or an emailed code.
+- Check what will happen to your clubs, tournaments and events, type DELETE, and tap **Delete my account**.
+
+Your account is deleted right away.
+
+## By email
+
+If you can't sign in, email **privacy@vteamvolleyball.com** \[set up this address before publishing\] from the address on your account and ask us to delete it. We'll confirm by email when it's done.
+
+## What happens to your data
+
+- Your profile, photos, messages, comments, RSVPs, settings and push notification tokens are deleted.
+- Kudos you gave stay with the people who received them, without your name.
+- Clubs you created go to another owner of the club if there is one. Otherwise they are deleted, with their group chat, posts and tournaments (finished ones too).
+- Tournaments you created go to an owner of their club if there is one. Otherwise they are deleted.
+- Upcoming events you host go to your co-host if you have one. Otherwise they are cancelled, and players who joined are notified.
+- Past events you hosted stay for the people who played, without your name.
+
+Some information may remain for a limited time in backups and logs, or where we must keep it by law, as described in our Privacy Policy.
 `

@@ -7,9 +7,12 @@ import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { supabase } from '../../../../lib/supabase'
 import { Button } from '../../../../components/Button'
 import { shared, theme } from '../../../../constants'
+import { useRouter } from 'expo-router'
+import { routes } from '../../../../utils/routes'
 
 export default function AccountSettingsScreen() {
   useStackBackTitle('Account settings')
+  const router = useRouter()
   const [refreshing, setRefreshing] = useState(false)
 
   const handleRefresh = useCallback(() => {
@@ -49,6 +52,19 @@ export default function AccountSettingsScreen() {
 
       <View style={[shared.card, { marginTop: theme.spacing.md }]}>
         <Button label="Sign out" onPress={handleSignOut} variant="danger" />
+      </View>
+
+      <View style={[shared.card, { marginTop: theme.spacing.md, gap: theme.spacing.sm }]}>
+        <Text style={shared.subheading}>Delete account</Text>
+        <Text style={shared.caption}>
+          Permanently delete your account and data. You'll see exactly what happens to your clubs, tournaments and events before anything is deleted.
+        </Text>
+        <Button
+          label="Delete account…"
+          variant="secondary"
+          onPress={() => router.push(routes.settings('delete-account'))}
+          testID="open-delete-account"
+        />
       </View>
     </ScrollView>
   )
