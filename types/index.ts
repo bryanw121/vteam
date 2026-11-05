@@ -226,7 +226,37 @@ type EventAttendeeRow = Override<Tables<'event_attendees'>, {
  * `team_number` is 1-based (null = unassigned); `team_pinned` is true when the
  * host placed the player manually (skipped by randomize).
  */
-export type EventAttendee = Omit<EventAttendeeRow, 'denial_reason'> & Partial<Pick<EventAttendeeRow, 'denial_reason'>>
+export type EventAttendee = Omit<EventAttendeeRow, 'denial_reason' | keyof NoShowColumns>
+  & Partial<Pick<EventAttendeeRow, 'denial_reason'>>
+  & Partial<NoShowColumns>
+
+/**
+ * No-show flag (#151): `event_attendees.no_show`, `no_show_marked_at`,
+ * `no_show_marked_by`, written only by the `set_no_show` RPC.
+ *
+ * TEMPORARY: written out here because `types/database.ts` is generated from
+ * live, which gets migration 20261104190000_event_no_show only when the PR
+ * merges. After regenerating, these come from `EventAttendeeRow`; this type
+ * can then become `Pick<EventAttendeeRow, 'no_show' | ...>` (the `Omit` above
+ * keeps `EventAttendee` the same shape either way). Optional on
+ * `EventAttendee` because optimistic and older cached rows don't carry them.
+ */
+export type NoShowColumns = {
+  no_show: boolean
+  no_show_marked_at: string | null
+  no_show_marked_by: string | null
+}
+
+/** `set_no_show(p_event_id, p_user_id, p_value)` arguments (TEMPORARY, see `NoShowColumns`). */
+export type SetNoShowArgs = { p_event_id: string; p_user_id: string; p_value: boolean }
+
+/** The host's no-show window on an event (`noShowWindow` in hooks/event/derive.ts). */
+export type NoShowWindow = {
+  /** Now is between the start and 2 hours after the end, and the event isn't cancelled. */
+  open: boolean
+  /** When the window closes and the unflagged players are paid (ms since epoch). */
+  closesAt: number
+}
 
 /** `event_attendees` row with embedded `profiles` from the event detail query (`profiles!…user_id…`). */
 export type EventAttendeeWithProfile = EventAttendee & {
@@ -1326,10 +1356,22 @@ export type RemoveTarget =
 
 /** One entry in a People-tab row's ⋯ menu (Message / View profile / Remove). */
 export type RosterAction = {
-  key: 'message' | 'message-adder' | 'profile' | 'remove'
+  key: 'message' | 'message-adder' | 'profile' | 'no-show' | 'remove'
   label: string
+  /** A second, smaller line under the label ("No points for this event. You can undo until 9:00 PM."). */
+  subtitle?: string
   destructive?: boolean
+  /** Warm accent for a consequential but reversible action (Mark as no-show). */
+  caution?: boolean
   onPress: () => void
+}
+
+/** Host / co-host no-show control for one roster row (#151). */
+export type NoShowRowAction = {
+  flagged: boolean
+  /** "9:00 PM": when the window closes. */
+  until: string
+  onToggle: () => void
 }
 
 /** The open ⋯ menu on the People tab: whose row, and what it offers. */

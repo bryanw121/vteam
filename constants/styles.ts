@@ -592,6 +592,27 @@ export const shared = StyleSheet.create({
   sheetOptionActive:      { backgroundColor: colors.background },
   sheetOptionText:        { fontSize: font.size.md, fontWeight: font.weight.medium, color: colors.text },
   sheetOptionDestructive: { color: colors.error },
+  /** Consequential but reversible (roster: Mark as no-show). */
+  sheetOptionCaution:     { color: colors.warm },
+  sheetOptionSubtitle:    { fontSize: font.size.sm, color: colors.subtext, marginTop: 2 },
+  /** Roster card of a player the host flagged as a no-show (#151). */
+  playerCardNoShow:       { borderColor: colors.error + '99', backgroundColor: colors.error + '0F' },
+  noShowBadge: {
+    alignSelf: 'flex-start', marginTop: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.full,
+    backgroundColor: colors.error + '1A', borderWidth: 1, borderColor: colors.error + '40',
+  },
+  noShowBadgeText:        { fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.error },
+  /** One-line note above the roster (host, during the no-show window). */
+  rosterNote: {
+    padding: spacing.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.timeBorder,
+    backgroundColor: colors.primarySoft, marginBottom: spacing.sm,
+  },
+  rosterNoteText:         { fontSize: font.size.sm, color: colors.subtextStrong },
+  /** The flagged player's own card on Details. */
+  noShowCard: {
+    borderRadius: radius.lg, borderWidth: 1, borderColor: colors.warm + '66', backgroundColor: colors.warm + '12',
+    padding: spacing.md, marginBottom: spacing.md, gap: spacing.sm,
+  },
   /** Glyph-only corner trigger on a roster card (⋯): the icon stays small, the hit area is 44pt. */
   rowMenuTrigger: {
     minWidth: 44,

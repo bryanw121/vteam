@@ -216,7 +216,7 @@ jobs:
           - shard: chat
             specs: e2e/chat.spec.ts
           - shard: events
-            specs: e2e/events.spec.ts e2e/tournament-flow.spec.ts e2e/weather.spec.ts
+            specs: e2e/events.spec.ts e2e/tournament-flow.spec.ts e2e/noShow.spec.ts e2e/weather.spec.ts
           # Row level security + RPC integration tests (no browser). In the
           # matrix, so they share the one-suite-at-a-time group with the others.
           - shard: api

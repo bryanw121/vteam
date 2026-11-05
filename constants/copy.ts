@@ -26,6 +26,24 @@ export const SKILL_LEVEL_LABELS: Record<string, string> = {
 /** Approval-gated events: told to the player before they tap (event page, feed card) and echoed in the host form. */
 export const APPROVAL_REQUIRED_NOTE = 'The host reviews requests for this event'
 
+// ─── No-show flag (#151) ───────────────────────────────────────────────────────
+/** Roster ⋯ menu (hosts and co-hosts, from the start until 2 hours after the end). */
+export const NO_SHOW_MARK_LABEL = 'Mark as no-show'
+export const NO_SHOW_UNDO_LABEL = 'Undo no-show'
+export const NO_SHOW_MARK_SUBTITLE = (until: string) => `No points for this event. You can undo until ${until}.`
+export const NO_SHOW_UNDO_SUBTITLE = (until: string) => `They get points with everyone else at ${until}.`
+/** Badge on a flagged roster card. A non-breaking hyphen: the card's text column is narrow on phones. */
+export const NO_SHOW_BADGE = 'No\u2011show'
+/** One line above the roster for hosts during the window. */
+export const NO_SHOW_HOST_NOTE = (flagged: number, pointsAt: string) =>
+  flagged === 0
+    ? `Game started. Tap ⋯ on anyone who didn't come. Everyone else gets points at ${pointsAt}.`
+    : `${flagged} no-show${flagged === 1 ? '' : 's'}. Everyone else gets points at ${pointsAt}.`
+/** The flagged player's own card on Details. */
+export const NO_SHOW_PLAYER_TITLE = 'Marked as a no-show'
+export const NO_SHOW_PLAYER_BODY =
+  "The host marked you as not attending, so this event earns no points. If that's a mistake, message the host."
+export const NO_SHOW_MESSAGE_HOST = 'Message host'
 /** The leave sheet (#171): what leaving costs, said before it happens. Lines come from utils/leaveConsequences.ts. */
 export const LEAVE_COPY = {
   title: 'Leave this game?',

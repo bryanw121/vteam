@@ -11,10 +11,11 @@ import { DocScrollView } from '../DocScrollView'
 import { IconButton } from '../ui'
 import { RosterActionsSheet } from './RosterActionsSheet'
 import { shared, theme, TEAM_COLORS, TEAM_COLOR_NAMES } from '../../constants'
+import { NO_SHOW_BADGE, NO_SHOW_HOST_NOTE } from '../../constants/copy'
 import type { EventWithDetails, Profile, AttendanceStatus, EventGuest, RosterAction, RosterActionContext, RosterMenu } from '../../types'
 import { profileDisplayName, profileAvatarSmallUri, hostRosterSkillAndPositionsLine } from '../../utils'
 import { guestRowActions, hasRosterMenu, memberRowActions } from '../../utils/rosterActions'
-import { attendeesPaid } from '../../hooks/event/derive'
+import { attendeesPaid, noShowUserIds, noShowWindow } from '../../hooks/event/derive'
 import type { EventAttendanceApi, EventData, EventPaymentsApi, EventTeamsApi, TeamDragApi } from '../../types'
 import { Spinner } from '../ui/Spinner'
 
@@ -37,9 +38,11 @@ type DraggableCardProps = {
   onOpenMenu?: () => void
   /** Hosts on a paid event: whether this player marked "I've paid". Undefined hides the badge. */
   paid?: boolean
+  /** Hosts and co-hosts: the player was flagged as a no-show (#151). */
+  noShow?: boolean
 }
 
-function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStart, onDragMove, onDragEnd, onRemove, onTogglePin, onOpenMenu, paid }: DraggableCardProps) {
+function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStart, onDragMove, onDragEnd, onRemove, onTogglePin, onOpenMenu, paid, noShow }: DraggableCardProps) {
   const scale = useSharedValue(1)
   const opacity = useSharedValue(1)
   const avatarUri = profileAvatarSmallUri(profile.avatar_url)
@@ -96,12 +99,14 @@ function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStar
 
   // X stays outside the pan gesture so taps work; shell keeps the original single-card look.
   return (
-    <View style={shared.playerCardShell}>
+    <View style={[shared.playerCardShell, noShow && shared.playerCardNoShow]}>
       <GestureDetector gesture={panGesture}>
         <Animated.View style={[{ flex: 1, minWidth: 0 }, animStyle]}>
           <GestureDetector gesture={tapGesture}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-              <ProfileAvatar uri={avatarUri} border={profile.selected_border ?? null} size={34} />
+              <View style={noShow ? { opacity: 0.45 } : undefined}>
+                <ProfileAvatar uri={avatarUri} border={profile.selected_border ?? null} size={34} />
+              </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={shared.playerCardName} numberOfLines={1}>{profileDisplayName(profile)}</Text>
                 {isOwner ? (
@@ -109,6 +114,11 @@ function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStar
                     {hostRosterSkillAndPositionsLine(profile)}
                   </Text>
                 ) : null}
+                {noShow && (
+                  <View testID="roster-no-show-badge" accessibilityLabel="Marked as a no-show" style={shared.noShowBadge}>
+                    <Text style={shared.noShowBadgeText} numberOfLines={1}>{NO_SHOW_BADGE}</Text>
+                  </View>
+                )}
                 {paid && (
                   <View testID="roster-paid-badge" accessibilityLabel="Marked paid" style={styles.paidBadge}>
                     <Ionicons name="checkmark" size={11} color={theme.colors.success} />
@@ -128,6 +138,7 @@ function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStar
         onRemove={isOwner ? onRemove : undefined}
         menuLabel={`Actions for ${profileDisplayName(profile)}`}
         removeLabel={`Remove ${profileDisplayName(profile)}`}
+        testID={`roster-menu-${profile.id}`}
       />
     </View>
   )
@@ -212,6 +223,7 @@ type CardCornerControlProps = {
   onRemove?: () => void
   menuLabel: string
   removeLabel: string
+  testID?: string
 }
 
 /**
@@ -220,7 +232,7 @@ type CardCornerControlProps = {
  * presses register; web uses a responder View (a GH touchable there loses to
  * the card's gestures), native a gesture-handler touchable. 44pt hit area.
  */
-function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel }: CardCornerControlProps) {
+function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel, testID }: CardCornerControlProps) {
   const activate = onOpenMenu ?? onRemove
   if (!activate) return null
   const label = onOpenMenu ? menuLabel : removeLabel
@@ -232,6 +244,7 @@ function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel }: Car
       style={[onOpenMenu ? shared.rowMenuTrigger : styles.removeBtn, styles.removeBtnHit]}
       accessibilityRole="button"
       accessibilityLabel={label}
+      testID={testID}
     >
       {glyph}
     </View>
@@ -242,6 +255,7 @@ function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel }: Car
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={label}
+      testID={testID}
     >
       {glyph}
     </GHTouchableOpacity>
@@ -315,6 +329,15 @@ export function PeopleTab({
   const openMenu = (title: string, actions: RosterAction[]) =>
     hasRosterMenu(actions) ? () => setRowMenu({ title, actions }) : undefined
   const removeAttendee = (profile: Profile) => (eventStatus.isOwner ? () => onRemoveAttendee(profile) : undefined)
+
+  // ── No-show flag (#151): hosts and co-hosts, from the start until end + 2h ──
+  const noShowWin = noShowWindow(event)
+  const canFlagNoShows = isHostOrCohost && noShowWin.open
+  const noShows = isHostOrCohost ? noShowUserIds(data.roster.attendingRows) : new Set<string>()
+  const pointsAt = new Date(noShowWin.closesAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const noShowAction = (profile: Profile) => canFlagNoShows
+    ? { flagged: noShows.has(profile.id), until: pointsAt, onToggle: () => { void attendance.setNoShow(profile.id, !noShows.has(profile.id)) } }
+    : undefined
   const removeGuest = (g: EventGuest) => (eventStatus.isOwner ? () => onRemoveGuest(g) : undefined)
   const guestName = (g: EventGuest) => `${g.first_name} ${g.last_name}`
 
@@ -340,8 +363,9 @@ export function PeopleTab({
         onDragEnd={onDragEnd}
         onRemove={() => onRemoveAttendee(profile)}
         onTogglePin={() => onTogglePin(profile.id)}
-        onOpenMenu={openMenu(profileDisplayName(profile), memberRowActions(profile, actionCtx, removeAttendee(profile)))}
+        onOpenMenu={openMenu(profileDisplayName(profile), memberRowActions(profile, actionCtx, removeAttendee(profile), noShowAction(profile)))}
         paid={payments ? payments.paidUserIds.has(profile.id) : undefined}
+        noShow={noShows.has(profile.id)}
       />
     )
     if (eventStatus.isOwner) {
@@ -385,6 +409,11 @@ export function PeopleTab({
       contentContainerStyle={shared.scrollContent}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
     >
+      {canFlagNoShows && attendees.length > 0 && (
+        <View testID="roster-no-show-note" style={shared.rosterNote}>
+          <Text style={shared.rosterNoteText}>{NO_SHOW_HOST_NOTE(noShows.size, pointsAt)}</Text>
+        </View>
+      )}
       {/* Going + Teams */}
       <View style={[shared.rowBetween, shared.mb_sm]}>
         <Text style={shared.subheading}>Going</Text>

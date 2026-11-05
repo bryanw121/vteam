@@ -71,6 +71,16 @@
       "color-contrast": 23
     }
   },
+  "event-details-noshow": {
+    "mobile": {
+      "aria-progressbar-name": 1,
+      "color-contrast": 4
+    },
+    "desktop": {
+      "aria-progressbar-name": 2,
+      "color-contrast": 5
+    }
+  },
   "event-discussion": {
     "mobile": {
       "color-contrast": 16
