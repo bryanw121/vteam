@@ -23,6 +23,7 @@ const T = IDS.tournament
 const EVENT_DETAIL = [
   'app/(app)/event/**', 'components/event/**', 'hooks/event/**', 'components/EventCommentRow.tsx', 'components/DiscussionComposer.tsx',
   'components/VenmoPayButton.tsx', 'components/LinkedText.tsx',
+  'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs',
 ]
 const TOURNAMENT_DETAIL = ['app/(app)/tournament/[id].tsx', 'components/tournament/**', 'hooks/tournament/**', 'lib/tournament*.ts', 'constants/tournamentCopy.ts', 'types/tournament.ts']
 // settings/index.tsx only bounces back (settings live under Profile), so it has no screen of its own.
@@ -34,7 +35,8 @@ export const SCREENS = {
     route: '/', ready: 'Lunchtime Pepper',
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'app/(app)/(tabs)/(main)/_layout.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx',
       'components/MyEventsRail.tsx', 'components/Pager.tsx', 'hooks/useMonthEvents.ts', 'hooks/useMyUpcomingEvents.ts', 'hooks/useTags.ts', 'utils/feed*.ts', 'utils/eventCardPreviews.ts',
-      'utils/monthKeys.ts', 'utils/calendar*.ts', 'constants/events.ts', 'components/RefreshControl*.tsx', 'lib/pullGesture.ts'],
+      'utils/monthKeys.ts', 'utils/calendar*.ts', 'constants/events.ts', 'components/RefreshControl*.tsx', 'lib/pullGesture.ts',
+      'components/event/ForecastChip.tsx', 'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs'],
   },
   'events-feed-guest': {
     route: '/', signedIn: false, ready: 'Lunchtime Pepper',
@@ -48,6 +50,8 @@ export const SCREENS = {
   'event-cheers': { route: `/event/${E.pastSand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-cheers', text: 'Cheers' }], sources: [...EVENT_DETAIL, 'components/CheerRadarChart.tsx'] },
   // Bottom of a paid event someone else hosts: price, Venmo button, about.
   'event-paid-bottom': { route: `/event/${E.fridayNight}`, ready: 'Austin Sports Center', actions: [{ scroll: 3000 }], sources: EVENT_DETAIL },
+  // The leave sheet (#171) on a full, paid game that starts tonight: every line, plus the reason chips.
+  'event-leave-sheet': { route: `/event/${E.fridayNight}`, ready: 'Austin Sports Center', actions: [{ tap: 'leave-event' }, { wait: 400 }], sources: [...EVENT_DETAIL, 'components/ui/BottomSheet.tsx', 'components/ui/ConfirmDialog.tsx', 'components/ui/Chip.tsx', 'utils/leaveConsequences.ts', 'constants/copy.ts'] },
   'event-guest': { route: `/event/${E.fridayNight}`, signedIn: false, ready: 'Austin Sports Center', sources: EVENT_DETAIL },
   'host-create': { route: '/host', ready: 'Title', sources: ['app/(app)/host.tsx', 'components/host/**', 'components/DatePickerField*.tsx', 'components/LocationPickerField.tsx', 'components/Input.tsx'] },
   'host-edit': { route: `/host?edit=${E.sundaySand}`, sources: ['app/(app)/host.tsx', 'components/host/**'] },

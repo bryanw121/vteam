@@ -4,13 +4,7 @@
 */
 
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  ActivityIndicator,
-  FlatList,
-  TouchableOpacity,
-  View,
-  Alert,
-} from 'react-native'
+import { FlatList, TouchableOpacity, View, Alert } from 'react-native'
 import { Text, TextInput } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
 import { Image } from 'expo-image'
@@ -30,6 +24,7 @@ import { useTabsActive, useTabsShell } from '../../../contexts/tabs'
 import { resolveClubAvatarUri } from '../../../utils'
 import { routes } from '../../../utils/routes'
 import type { ClubListItem, MajorCity } from '../../../types'
+import { Spinner } from '../../../components/ui/Spinner'
 
 /** List payload: member count; membership embed is added when signed in. */
 const CLUB_LIST_SELECT_BASE =
@@ -173,7 +168,7 @@ function ClubCard({ club, userId, listKey, isOwner, isMember, onPress }: ClubCar
           style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: theme.colors.primary, opacity: join.isPending ? 0.6 : 1 }}
         >
           {join.isPending
-            ? <ActivityIndicator size="small" color={theme.colors.white} />
+            ? <Spinner size="small" color={theme.colors.white} />
             : <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.white }}>Join</Text>
           }
         </TouchableOpacity>

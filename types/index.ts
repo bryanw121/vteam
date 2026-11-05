@@ -10,6 +10,7 @@
 import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database'
 import type { TabKey } from '../constants/navigation'
 import type { ReactElement } from 'react'
+import type { ActivityIndicatorProps } from 'react-native'
 import type { BracketMatchInsert, SetScore } from './tournament'
 
 /** The client's database type. Kept as an alias so callers don't care how it's assembled. */
@@ -981,6 +982,12 @@ export type SessionState = {
 
 export type IoniconName = keyof typeof import('@expo/vector-icons').Ionicons.glyphMap
 
+/** `components/ui/Spinner`: an ActivityIndicator that always has an accessible name. */
+export type SpinnerProps = ActivityIndicatorProps & {
+  /** What is loading, read by screen readers ("Loading events"). Defaults to "Loading". */
+  label?: string
+}
+
 export type ScreenStateProps = {
   /** Show the spinner. Ignored once `ready` is true so a background refetch never blanks the screen. */
   loading?: boolean
@@ -1061,6 +1068,12 @@ export type ConfirmDialogProps = {
   onConfirm: () => void
   onCancel: () => void
   loading?: boolean
+  /** Extra content between the body and the buttons (e.g. the leave sheet's lines and reason chips). */
+  children?: import('react').ReactNode
+  /** Card width on wide screens (default 320; it never exceeds 92% of the window). */
+  width?: number
+  /** Replace the default `confirm-dialog-*` test ids' prefix. */
+  testIDPrefix?: string
 }
 
 export type BottomSheetProps = {
@@ -1300,6 +1313,36 @@ export type SelfAttendanceAction =
   | 'requestToJoin'
   | 'cancelRequest'
   | 'rerequest'
+
+/** One run of a leave-sheet line; `strong` runs are bold (the part that matters). */
+export type LeaveConsequencePart = { text: string; strong?: boolean }
+
+/**
+ * One line on the leave sheet (#171), from `leaveConsequences()` in
+ * utils/leaveConsequences.ts. Only the lines that apply are produced, in display order.
+ */
+export type LeaveConsequence = {
+  kind: 'waitlist' | 'full' | 'open' | 'approval' | 'hostNotified' | 'paid' | 'points'
+  icon: IoniconName
+  parts: LeaveConsequencePart[]
+}
+
+/** What `leaveConsequences` needs from the event row, plus the host's display name. */
+export type LeaveEventInfo = Pick<EventWithDetails, 'event_date' | 'max_attendees' | 'requires_approval' | 'price' | 'event_tags'> & {
+  hostName: string
+}
+
+/** Roster counts as the event page derives them (`computeEventStatus`): `count` includes +1 guests. */
+export type LeaveRosterInfo = Pick<AttendanceStatus, 'count' | 'isFull' | 'spotsLeft' | 'waitlistCount'>
+
+/** The viewer's side: hosts and co-hosts aren't told about their own dropout; `paid` is their "I've paid" flag. */
+export type LeaveViewerInfo = { isHostOrCohost: boolean; paid: boolean }
+
+/** A reason chip on the leave sheet (`LEAVE_REASONS` in constants/copy.ts). */
+export type LeaveReason = 'something_came_up' | 'sick' | 'injured' | 'work'
+
+/** Toast with an optional action button (e.g. "Message host" after a failed leave note). */
+export type ToastAction = { label: string; onPress: () => void }
 
 /** Host removing someone from the roster (the X on a card). */
 export type RemoveTarget =
@@ -1702,3 +1745,56 @@ export type TextScaleContextValue = {
 
 /** react-native-web's ScrollView instance: exposes the DOM node that scrolls (web only). */
 export type WebScrollableRef = { getScrollableNode?: () => HTMLElement } | null
+
+// ─── Weather on outdoor games (#165) ─────────────────────────────────────────
+
+/** One hour of the National Weather Service hourly forecast, trimmed by `api/forecast.ts`. */
+export type ForecastHour = {
+  /** Start of the hour (ISO 8601 with offset, as NWS sends it). */
+  t: string
+  tempF: number
+  /** Chance of precipitation, 0–100. */
+  pop: number
+  /** Wind speed in mph (the top of a "5 to 10 mph" range). */
+  windMph: number
+  /** NWS short forecast ("Sunny", "Chance Rain Showers"). */
+  short: string
+  /** Condition from the NWS icon URL: `day/skc`, `night/rain_showers`, ... (empty when unknown). */
+  icon: string
+  /** Relative humidity, 0–100. */
+  rh: number
+}
+
+/** `GET /api/forecast` body: the hourly series for one court (coordinates rounded to 2 decimals). */
+export type Forecast = {
+  /** When NWS last updated the forecast (ISO 8601). */
+  updatedAt: string
+  hours: ForecastHour[]
+}
+
+/** Whether an event gets a forecast now (`show`), only later (`later`: more than 7 days out), or never. */
+export type ForecastWindow = 'show' | 'later' | null
+
+/** An hourly cell on the event page: game hours are highlighted. */
+export type ForecastCell = ForecastHour & { inGame: boolean }
+
+/** Neutral, or a warning style: rain likely, or dangerous heat. */
+export type ForecastTone = 'neutral' | 'rain' | 'heat'
+
+/** What the card chip and the event page say about the game hours (`forecastSummary`). */
+export type ForecastSummary = {
+  tone: ForecastTone
+  /** Card chip text: "☀️ 78°", "🌧 70% rain", "🔥 97°". */
+  chipLabel: string
+  /** Event page headline: "Rain likely during the game", "Hot: feels like 97°F", or the NWS short forecast. */
+  headline: string
+  /** Event page line under the headline: temperature, wind and rain chance. */
+  detail: string
+  /** Screen reader label for the chip: "Forecast: 70 percent chance of rain". */
+  a11yLabel: string
+  /** Emoji for the condition (used by the event page icon). */
+  emoji: string
+}
+
+/** A rounded court position: the forecast cache key. */
+export type ForecastCourt = { lat: number; lng: number }

@@ -201,7 +201,11 @@ function fingerprint(renderedBody) {
 }
 
 function buildGeneratedSection() {
-  const callFiles = [...new Set(CALL_DIRS.flatMap(walk))].filter(path => /\.(?:ts|tsx)$/.test(path)).sort()
+  // Tests and their fakes (edge function handler tests, _shared/testing.ts) script
+  // tables and payloads; they are not call sites.
+  const callFiles = [...new Set(CALL_DIRS.flatMap(walk))]
+    .filter(path => /\.(?:ts|tsx)$/.test(path) && !/\.test\.tsx?$/.test(path) && !path.endsWith('/_shared/testing.ts'))
+    .sort()
   const sqlFiles = walk('supabase/migrations')
   const tables = collect(/\.from\(\s*(['"])([^'"]+)\1\s*\)/g, callFiles)
   const rpcs = collect(/\.rpc\(\s*(['"])([^'"]+)\1/g, callFiles)

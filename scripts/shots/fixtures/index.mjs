@@ -137,6 +137,8 @@ export function buildFixtures(now) {
   const event_guests = [
     { id: id('e2000000', 1), event_id: E.sundaySand, added_by: P.jordanr, first_name: 'Chris', last_name: 'Reyes', status: 'attending', joined_at: t.ago(60 * 20), team_number: 2, team_pinned: false },
   ]
+  // "I've paid" (#6): the viewer marked the Friday game paid (the leave sheet's paid line, #171).
+  const event_payments = [{ event_id: E.fridayNight, user_id: ME, paid_at: t.ago(60 * 20) }]
   const event_cohosts = [
     { event_id: E.sundaySand, user_id: P.priyap, added_by: ME, added_at: t.iso(-5) },
   ]
@@ -334,7 +336,7 @@ export function buildFixtures(now) {
   return {
     profiles: profiles(t),
     tags, major_cities, clubs, club_members, club_posts, club_post_likes, club_post_comments,
-    events, event_tags, event_attendees, event_guests, event_cohosts, event_comments, cheers, user_event_templates, external_sessions,
+    events, event_tags, event_attendees, event_guests, event_payments, event_cohosts, event_comments, cheers, user_event_templates, external_sessions,
     tournaments, tournament_rules, tournament_prizes, tournament_teams, tournament_team_members, tournament_pools, tournament_pool_teams,
     tournament_matches, tournament_sets, tournament_comments, tournament_team_invitations: [], tournament_team_join_requests: [],
     conversations, conversation_members, messages, message_reactions,

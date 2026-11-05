@@ -1,3 +1,5 @@
+import type { LeaveReason } from '../types'
+
 /** User-facing copy shared across screens. */
 
 /** The app's name as people see it: the browser tab title on web and the iOS home-screen label. */
@@ -42,3 +44,25 @@ export const NO_SHOW_PLAYER_TITLE = 'Marked as a no-show'
 export const NO_SHOW_PLAYER_BODY =
   "The host marked you as not attending, so this event earns no points. If that's a mistake, message the host."
 export const NO_SHOW_MESSAGE_HOST = 'Message host'
+/** The leave sheet (#171): what leaving costs, said before it happens. Lines come from utils/leaveConsequences.ts. */
+export const LEAVE_COPY = {
+  title: 'Leave this game?',
+  leave: 'Leave game',
+  stay: 'Stay in',
+  /** Above the reason chips; `{host}` is the host's display name. */
+  reasonPrompt: 'Tell {host} why (optional, sent as a message)',
+  notePlaceholder: 'Add a note...',
+  dmFailed: "Left, but the message didn't send",
+  messageHost: 'Message host',
+} as const
+
+/** Reason chips on the leave sheet, in display order. The label is what the host reads in the DM. */
+export const LEAVE_REASONS: ReadonlyArray<{ id: LeaveReason; label: string }> = [
+  { id: 'something_came_up', label: 'Something came up' },
+  { id: 'sick', label: 'Sick' },
+  { id: 'injured', label: 'Injured' },
+  { id: 'work', label: 'Work' },
+]
+
+/** Longest note the leave sheet sends to the host. */
+export const LEAVE_NOTE_MAX = 280

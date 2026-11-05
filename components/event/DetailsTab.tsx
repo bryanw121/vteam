@@ -12,6 +12,7 @@ import { VenmoPayButton } from '../VenmoPayButton'
 import { PaidToggle } from './PaidToggle'
 import { Button } from '../Button'
 import { NO_SHOW_MESSAGE_HOST, NO_SHOW_PLAYER_BODY, NO_SHOW_PLAYER_TITLE } from '../../constants/copy'
+import { ForecastRow } from './ForecastRow'
 import { shared, theme, LOCATIONS } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
 import type { EventData, EventPaymentsApi } from '../../types'
@@ -360,6 +361,9 @@ export function DetailsTab({
             </>
           )
         })() : null}
+
+        {/* Forecast row: sand / grass events with coordinates (#165) */}
+        <ForecastRow event={event} />
 
         {/* Difficulty row */}
         {(() => {

@@ -46,8 +46,13 @@ import { CohostsDialog } from '../../../components/event/CohostsDialog'
 import { DenyRequestDialog } from '../../../components/event/DenyRequestDialog'
 import { DeleteEventDialog } from '../../../components/event/DeleteEventDialog'
 import { RemoveParticipantDialog } from '../../../components/event/RemoveParticipantDialog'
-import { theme, SWIPE_NAVIGATION } from '../../../constants'
-import type { MentionUser, Profile } from '../../../types'
+import { LeaveSheet } from '../../../components/event/LeaveSheet'
+import { Toast } from '../../../components/Toast'
+import { ANALYTICS_EVENTS } from '../../../constants/analytics'
+import { LEAVE_COPY, LEAVE_REASONS, theme, SWIPE_NAVIGATION } from '../../../constants'
+import { track } from '../../../lib/analytics'
+import { hostWillBeTold, leaveConsequences, leaveDmText, leaveSubtitle } from '../../../utils/leaveConsequences'
+import type { LeaveConsequence, LeaveReason, MentionUser, Profile } from '../../../types'
 import { profileDisplayName } from '../../../utils'
 import { routes, isAppPath, toRoute } from '../../../utils/routes'
 
@@ -84,13 +89,17 @@ export default function EventDetail() {
   const drag = useTeamDrag(teams.moveToTeam)
   const cohostsApi = useCohosts(data)
   const removeDialog = useRemoveDialog()
-  const { openDm } = useOpenDm()
+  const { openDm, sendDm } = useOpenDm()
   // Only hosts/co-hosts get roster Message actions, so only they need silences.
   // One-directional by RLS: a host can't learn who has silenced *them*.
   const { silencedUserIds } = useSilencedUserIds(isHostOrCohost)
   const [denyTarget, setDenyTarget] = useState<{ userId: string; displayName: string } | null>(null)
   const [guestDialogOpen, setGuestDialogOpen] = useState(false)
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false)
+  // The leave sheet (#171): lines are frozen when it opens, so the optimistic
+  // leave doesn't reshuffle them under the spinner.
+  const [leaveSheet, setLeaveSheet] = useState<{ subtitle: string; lines: LeaveConsequence[]; showReason: boolean } | null>(null)
+  const [leaveDmFailed, setLeaveDmFailed] = useState(false)
 
   // ── Tabs ───────────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState(() => initialTab(tab))
@@ -213,6 +222,45 @@ export default function EventDetail() {
       },
     },
   )
+
+  const host = event?.profiles ?? null
+  const hostName = host ? profileDisplayName(host) : 'the host'
+
+  function openLeaveSheet() {
+    if (!event) return
+    const now = Date.now()
+    const lines = leaveConsequences({ ...event, hostName }, eventStatus, { isHostOrCohost, paid: payments.iPaid }, now)
+    const within24h = hostWillBeTold(event.event_date, now)
+    track(ANALYTICS_EVENTS.leaveSheetShown, { full: eventStatus.isFull, within24h, paid: payments.iPaid })
+    setLeaveSheet({
+      subtitle: leaveSubtitle(event.event_date, now),
+      lines,
+      // Only when the host is told anyway; then a reason gives it context.
+      showReason: lines.some(l => l.kind === 'hostNotified') && !!event.created_by && event.created_by !== userId,
+    })
+  }
+
+  function cancelLeave() {
+    track(ANALYTICS_EVENTS.leaveCancelled)
+    setLeaveSheet(null)
+  }
+
+  async function confirmLeave(reason: LeaveReason | null, note: string) {
+    if (!event) return
+    track(ANALYTICS_EVENTS.leaveConfirmed, { reason: reason ?? 'none' })
+    const text = leaveDmText({
+      title: event.title,
+      eventDate: event.event_date,
+      reasonLabel: LEAVE_REASONS.find(r => r.id === reason)?.label ?? null,
+      note,
+    })
+    const left = await attendance.leave()
+    setLeaveSheet(null)
+    // undefined: the leave failed (useEventAttendance already alerted). The note waits for a real leave.
+    if (left === undefined || !text) return
+    // The leave stands whatever happens to the message.
+    if (!(await sendDm(event.created_by, text))) setLeaveDmFailed(true)
+  }
 
   async function confirmRemove() {
     const target = removeDialog.target
@@ -349,6 +397,7 @@ export default function EventDetail() {
                 eventStatus={eventStatus}
                 requiresApproval={requiresApproval}
                 attendance={attendance}
+                onLeave={openLeaveSheet}
                 onAddGuest={() => setGuestDialogOpen(true)}
                 docScrollActive={docScrollActive}
                 bottomInset={insets.bottom}
@@ -360,6 +409,25 @@ export default function EventDetail() {
       </ScreenState>
       )}
 
+      <LeaveSheet
+        visible={leaveSheet !== null}
+        layout={Platform.OS === 'web' && !isMobileWeb ? 'dialog' : 'sheet'}
+        subtitle={leaveSheet?.subtitle ?? ''}
+        lines={leaveSheet?.lines ?? []}
+        hostName={hostName}
+        showReason={leaveSheet?.showReason ?? false}
+        leaving={attendance.joining}
+        onLeave={(reason, note) => { void confirmLeave(reason, note) }}
+        onCancel={cancelLeave}
+      />
+      <Toast
+        visible={leaveDmFailed}
+        message={LEAVE_COPY.dmFailed}
+        variant="error"
+        duration={8000}
+        onHide={() => setLeaveDmFailed(false)}
+        action={event ? { label: LEAVE_COPY.messageHost, onPress: () => { void openDm(event.created_by) } } : undefined}
+      />
       <AddGuestDialog
         visible={guestDialogOpen}
         adding={attendance.addingGuest}

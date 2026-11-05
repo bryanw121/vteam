@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ActivityIndicator, Pressable, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Virtuoso } from 'react-virtuoso'
@@ -8,6 +8,7 @@ import { RefreshControl } from './RefreshControl'
 import { shared, theme } from '../constants'
 import type { ChatMessageListProps, MessageWithDetails } from '../types'
 import { nextFirstItemIndex } from '../utils/chatUtils'
+import { Spinner } from './ui/Spinner'
 
 /**
  * Virtuoso needs a positive, stable index for the first item that only goes
@@ -34,7 +35,7 @@ type EdgeContext = { hasMore: boolean }
 function Header({ context }: { context?: EdgeContext }) {
   return (
     <View style={shared.chatListEdge}>
-      {context?.hasMore ? <ActivityIndicator size="small" color={theme.colors.subtext} /> : null}
+      {context?.hasMore ? <Spinner size="small" color={theme.colors.subtext} /> : null}
     </View>
   )
 }

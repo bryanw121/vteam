@@ -62,6 +62,30 @@ jobs:
           retention-days: 14
       - run: node --test scripts/*.test.mjs scripts/shots/*.test.mjs
 
+  # The Deno edge functions' real request handlers (supabase/functions/*/handler.ts),
+  # run against a fake Supabase client and a stubbed fetch: no network for the
+  # tests, no secrets, never touches live or beta. Only `deno task check` needs the
+  # network, to load supabase-js from esm.sh for the index.ts entry points.
+  edge-functions:
+    name: Edge functions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - uses: actions/checkout@v4
+      # v2.0.5, pinned by commit SHA.
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
+        with:
+          deno-version: 2.9.6
+      - run: deno task lint
+      # --frozen (in the task): fails if esm.sh serves something deno.lock doesn't record.
+      - run: deno task check
+      # --allow-env only: any real network call fails the test (and stubFetch
+      # throws on any URL a test did not script).
+      - run: deno task test --allow-env
+
   # The web build runs in parallel with docs/unit, outside the shared e2e lock,
   # so the serialized e2e job only installs and runs tests.
   build-web:
@@ -150,6 +174,8 @@ jobs:
           path: dist-mock/
       - name: Badge artwork browser check
         run: node scripts/shots/badge-artwork-flow.mjs --dist dist-mock --out a11y-report/badge-artwork
+      - name: Chat badge browser check
+        run: node scripts/shots/chat-unread-flow.mjs --dist dist-mock --out a11y-report/chat-unread
       - name: axe scan vs baseline
         run: npm run a11y -- --dist dist-mock --out a11y-report
       - name: Job summary
@@ -190,7 +216,7 @@ jobs:
           - shard: chat
             specs: e2e/chat.spec.ts
           - shard: events
-            specs: e2e/events.spec.ts e2e/tournament-flow.spec.ts e2e/noShow.spec.ts
+            specs: e2e/events.spec.ts e2e/tournament-flow.spec.ts e2e/noShow.spec.ts e2e/weather.spec.ts
           # Row level security + RPC integration tests (no browser). In the
           # matrix, so they share the one-suite-at-a-time group with the others.
           - shard: api

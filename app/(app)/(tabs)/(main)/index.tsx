@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useCallback, memo, useEffect, useLayoutEffect } from 'react'
 import { useRouter } from 'expo-router'
-import { Dimensions, Platform, View, ScrollView, SectionList, TouchableOpacity, PanResponder, Animated, ActivityIndicator, StyleSheet } from 'react-native'
+import { Dimensions, Platform, View, ScrollView, SectionList, TouchableOpacity, PanResponder, Animated, StyleSheet } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { DocPullToRefresh, RefreshControl } from '../../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -38,9 +38,11 @@ import { routes, isAppPath, toRoute } from '../../../../utils/routes'
 import { eventLocalDateKey, localDateKey, surfaceOf } from '../../../../utils'
 import { useAdsEnabled } from '../../../../hooks/useAdsEnabled'
 import { useFeedAds } from '../../../../hooks/useFeedAds'
+import { useFeedForecasts } from '../../../../hooks/useForecast'
 import { planFeedAds } from '../../../../utils/feedAds'
 import { FeedBanner } from '../../../../components/ads/FeedBanner'
 import { SponsoredLabel } from '../../../../components/ads/SponsoredLabel'
+import { Spinner } from '../../../../components/ui/Spinner'
 
 const _now = new Date()
 const TODAY = localDateKey(_now)
@@ -349,6 +351,8 @@ export default function EventsScreen() {
   const showAds = useAdsEnabled()
   const feedAds = useFeedAds(showAds)
   const adPlan = useMemo(() => planFeedAds(allEvents, feedAds, showAds), [allEvents, feedAds, showAds])
+  // Weather chips for sand / grass events in the next 7 days (#165): one request per court.
+  const forecasts = useFeedForecasts(allEvents)
   const sponsoredIds = useMemo(() => new Set(showAds ? feedAds?.sponsoredEventIds ?? [] : []), [showAds, feedAds])
 
   const headerRight = isGuest ? <SignInButton /> : (
@@ -483,6 +487,7 @@ export default function EventsScreen() {
                             currentUserId={currentUserId}
                             onRsvp={event._isTournament ? undefined : handleRsvp}
                             rsvpPending={isRsvpPending(event.id)}
+                            forecast={forecasts.get(event.id)}
                           />
                         )
                         return (
@@ -510,7 +515,7 @@ export default function EventsScreen() {
               })}
 
               {loading && (
-                <ActivityIndicator style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+                <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
               )}
             </>
           )}
@@ -612,6 +617,7 @@ export default function EventsScreen() {
                 currentUserId={currentUserId}
                 onRsvp={item._isTournament ? undefined : handleRsvp}
                 rsvpPending={isRsvpPending(item.id)}
+                forecast={forecasts.get(item.id)}
               />
             )}
           </View>
@@ -653,7 +659,7 @@ export default function EventsScreen() {
                 </View>
               ))}
               {loading && sections.length > 0 && (
-                <ActivityIndicator style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+                <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
               )}
               </View>
             </View>
@@ -690,6 +696,7 @@ export default function EventsScreen() {
               <View style={{ paddingHorizontal: theme.spacing.lg }}>{railNode}</View>
             }
             renderItem={({ item }) => renderEvent(item)}
+            extraData={forecasts}
             renderSectionHeader={({ section }) => renderSectionHeader(section)}
             stickySectionHeadersEnabled={false}
             initialNumToRender={6}
@@ -710,7 +717,7 @@ export default function EventsScreen() {
             }}
             ListFooterComponent={
               loading && sections.length > 0
-                ? <ActivityIndicator style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+                ? <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
                 : null
             }
             refreshControl={refreshControl}
