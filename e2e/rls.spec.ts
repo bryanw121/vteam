@@ -84,6 +84,19 @@ test.describe('anon (guest browsing)', () => {
     expect(dm.data ?? []).toEqual([])
   })
 
+  test('sees no friend data and cannot call the friend RPCs (#15)', async () => {
+    const probe = await q(() => anon.from('friendships').select('user_id').limit(1), 'anon friendships')
+    // Until the migration is on beta (draft PR) the tables do not exist.
+    test.skip(probe.error?.code === 'PGRST205', 'friends migration not applied on beta yet')
+    for (const table of ['friendships', 'friend_requests'] as const) {
+      const res = await q(() => anon.from(table).select('*').limit(1), `anon ${table}`)
+      if (res.error) expect(res.error.code, `anon ${table}: ${res.error.message}`).toBe(RLS_DENIED)
+      else expect(res.data, `anon rows visible in ${table}`).toEqual([])
+    }
+    const rpc = await q(() => anon.rpc('send_friend_request', { p_user_id: BUDDY_ID }), 'anon send_friend_request')
+    expect(rpc.error, 'anon must not execute send_friend_request').not.toBeNull()
+  })
+
   test('cannot run the reminder job or read its ledger (#129)', async () => {
     const run = await q(() => anon.rpc('send_event_reminders'), 'anon send_event_reminders')
     expect(run.error, 'anon may not run send_event_reminders').not.toBeNull()
@@ -165,6 +178,19 @@ test.describe('signed in as the e2e account', () => {
     const profile = await q(() => me.from('profiles').update({ first_name: 'E2E' }).eq('id', BUDDY_ID).select('id'), "update buddy's profile")
     // UPDATE with a USING policy filters the row out: no error, zero rows changed.
     expect(profile.data ?? []).toEqual([])
+  })
+
+  test('reads only its own friend rows and cannot write them directly (#15)', async () => {
+    const probe = await q(() => me.from('friendships').select('user_id, friend_id, is_best_friend'), 'my friendships')
+    test.skip(probe.error?.code === 'PGRST205', 'friends migration not applied on beta yet')
+    expect(probe.error).toBeNull()
+    for (const row of (probe.data ?? []) as { user_id: string }[]) expect(row.user_id).toBe(myId)
+    const forged = await q(() => me.from('friendships').insert({ user_id: myId, friend_id: BUDDY_ID }), 'insert friendship')
+    expect(forged.error?.code).toBe(RLS_DENIED)
+    const forgedReq = await q(() => me.from('friend_requests').insert({ requester_id: BUDDY_ID, addressee_id: myId }), 'insert friend request')
+    expect(forgedReq.error?.code).toBe(RLS_DENIED)
+    const internal = await q(() => me.rpc('friend_accept', { p_request_id: crypto.randomUUID(), p_requester: BUDDY_ID, p_addressee: myId }), 'friend_accept')
+    expect(internal.error, 'friend_accept is internal').not.toBeNull()
   })
 
   test('event reminders (#129): the job and its ledger are server-only', async () => {
