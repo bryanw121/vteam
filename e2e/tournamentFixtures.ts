@@ -62,14 +62,18 @@ export async function seedTournamentClub(): Promise<void> {
  * manage every team in their tournament). One account can only captain one
  * team, and a bracket needs two.
  */
-export async function addRivalTeam(): Promise<void> {
-  const { supabase, userId } = await signIn()
-  const { data: t, error } = await supabase.from('tournaments').select('id').eq('created_by', userId).eq('title', TOURNAMENT_TITLE).single()
-  if (error || !t) throw new Error(`Tournament fixture not found: ${error?.message ?? 'none'}`)
-  const { error: insertError } = await supabase.from('tournament_teams').insert({
-    tournament_id: t.id, name: RIVAL_TEAM, status: 'registered', is_approved: true,
-  })
-  if (insertError) throw new Error(`Failed to add the rival team: ${insertError.message}`)
+export async function addRivalTeam(tournamentId: string): Promise<void> {
+  const { supabase } = await signIn()
+  // Idempotent: a retried test must not add a third team.
+  const { data: existing, error: readError } = await supabase.from('tournament_teams').select('id')
+    .eq('tournament_id', tournamentId).eq('name', RIVAL_TEAM)
+  if (readError) throw new Error(`Could not read teams: ${readError.message}`)
+  if (!existing || existing.length === 0) {
+    const { error } = await supabase.from('tournament_teams').insert({
+      tournament_id: tournamentId, name: RIVAL_TEAM, status: 'registered', is_approved: true,
+    })
+    if (error) throw new Error(`Failed to add the rival team: ${error.message}`)
+  }
   await signOut(supabase)
 }
 

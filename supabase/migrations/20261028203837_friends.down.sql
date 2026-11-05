@@ -18,7 +18,8 @@ alter table public.notifications add constraint notifications_notification_type_
     'event_cancelled', 'badge_earned', 'cohost_added', 'cheers_reminder', 'user_mentioned',
     'join_request', 'request_approved', 'request_denied', 'tournament_team_invite',
     'tournament_join_request', 'tournament_join_accepted', 'tournament_join_declined',
-    'tournament_free_agent_assigned', 'tournament_mention', 'chat_mention'
+    'tournament_free_agent_assigned', 'tournament_mention', 'chat_mention',
+    'event_reminder', 'late_dropout'
   ]::text[]));
 
 drop table if exists public.friendships;

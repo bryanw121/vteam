@@ -33,6 +33,26 @@ async function press(page: Page, testId: string) {
   await page.getByTestId(testId).first().dispatchEvent('click')
 }
 
+/**
+ * Press a Button only once it is enabled. A disabled Button (aria-disabled)
+ * ignores the click silently: Generate stays disabled until the teams query
+ * has loaded two teams, Register until the name has reached React state.
+ */
+async function pressWhenEnabled(page: Page, testId: string) {
+  const button = page.getByTestId(testId).first()
+  await expect(button).toBeVisible({ timeout: 15_000 })
+  await expect(button).not.toHaveAttribute('aria-disabled', 'true', { timeout: 15_000 })
+  await button.dispatchEvent('click')
+}
+
+/** Resolve on the first successful Supabase write matching `path` (POST/PATCH/DELETE to /rest/v1/<path>). */
+function supabaseWrite(page: Page, path: string) {
+  return page.waitForResponse(
+    r => r.url().includes(`/rest/v1/${path}`) && r.request().method() !== 'GET' && r.ok(),
+    { timeout: 20_000 },
+  )
+}
+
 async function openTab(page: Page, tab: string) {
   await press(page, `tournament-tab-${tab}`)
 }
@@ -70,28 +90,54 @@ test.describe('Tournament flow', () => {
 
   test('host registers a team', async ({ page }) => {
     test.skip(!tournamentUrl, 'needs the tournament from the previous test')
-    await gotoReady(page, tournamentUrl, page.getByTestId('register-team'))
-    await press(page, 'register-team')
-    await page.getByPlaceholder('e.g. Block Party').fill(MY_TEAM)
-    await press(page, 'register-submit')
+    await gotoReady(page, tournamentUrl, page.getByTestId('tournament-tab-teams'))
+    // Let the viewer's own registration load before deciding: on a retry the
+    // first attempt may already have registered, and the button then goes away.
+    await page.waitForLoadState('networkidle')
+    if (await page.getByTestId('register-team').count()) {
+      await pressWhenEnabled(page, 'register-team')
+      const name = page.getByPlaceholder('e.g. Block Party')
+      await expect(name).toBeVisible()
+      await name.fill(MY_TEAM)
+      const saved = supabaseWrite(page, 'tournament_team_members')
+      await pressWhenEnabled(page, 'register-submit')
+      await saved
+    }
     await openTab(page, 'teams')
-    await expect(page.getByText(MY_TEAM, { exact: true })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(MY_TEAM, { exact: true }).first()).toBeVisible({ timeout: 15_000 })
   })
 
   test('schedule generates a bracket; recording the final completes the tournament', async ({ page }) => {
     test.skip(!tournamentUrl, 'needs the tournament from the previous tests')
-    await withNetworkRetry(addRivalTeam, { label: 'add rival team' })
+    const tournamentId = tournamentUrl.split('/').pop() as string
+    await withNetworkRetry(() => addRivalTeam(tournamentId), { label: 'add rival team' })
     await gotoReady(page, tournamentUrl, page.getByTestId('tournament-tab-schedule'))
     await openTab(page, 'schedule')
-    await press(page, 'generate-schedule')
-    await expect(page.getByText('Final', { exact: true }).first()).toBeVisible({ timeout: 15_000 })
+    // On a retry the bracket may already exist; generate only when the button is there.
+    await page.waitForLoadState('networkidle')
+    if (await page.getByTestId('generate-schedule').count()) {
+      const rpc = page.waitForResponse(r => r.url().includes('/rest/v1/rpc/replace_tournament_schedule') && r.ok(), { timeout: 20_000 })
+      const bracket = supabaseWrite(page, 'tournament_matches')
+      await pressWhenEnabled(page, 'generate-schedule')
+      await rpc
+      await bracket
+    }
+    await expect(page.getByText('Final', { exact: true }).first()).toBeVisible({ timeout: 20_000 })
 
-    await page.locator('[data-testid^="record-result-"]').first().dispatchEvent('click')
+    const recordResult = page.locator('[data-testid^="record-result-"]').first()
+    await expect(recordResult).toBeVisible()
+    await recordResult.dispatchEvent('click')
     await page.getByTestId('set-1-a').fill('25')
     await page.getByTestId('set-1-b').fill('20')
     await page.getByTestId('set-2-a').fill('25')
     await page.getByTestId('set-2-b').fill('18')
-    await press(page, 'result-save')
+    // The status write: a PATCH on tournaments, or the complete_tournament RPC once trophies are live.
+    const finished = page.waitForResponse(
+      r => /\/rest\/v1\/(tournaments\?|rpc\/complete_tournament)/.test(r.url()) && r.request().method() !== 'GET' && r.ok(),
+      { timeout: 20_000 },
+    )
+    await pressWhenEnabled(page, 'result-save')
+    await finished
 
     // Status flips to Completed (points PR #100 awards on this), and the podium shows.
     await expect(page.getByTestId('tournament-status').first()).toHaveText('Completed', { timeout: 15_000 })
@@ -105,7 +151,7 @@ test.describe('Tournament flow', () => {
     test.skip(!tournamentUrl, 'needs the tournament from the previous tests')
     await gotoReady(page, `${BASE_URL}/tournaments`, page.getByTestId('tournaments-past'))
     await press(page, 'tournaments-past')
-    await expect(page.getByText(TOURNAMENT_TITLE, { exact: true })).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText(TOURNAMENT_TITLE, { exact: true }).first()).toBeVisible({ timeout: 15_000 })
   })
 
   // TODO(#7): enable once the trophies migration (draft PR, `tournament_trophies` +

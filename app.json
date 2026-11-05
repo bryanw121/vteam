@@ -6,7 +6,7 @@
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "scheme": "vteam",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/branding/vteam-app-icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -31,7 +31,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/vteam.png",
+      "favicon": "./assets/branding/vteam-favicon.png",
       "name": "vteam",
       "shortName": "vteam",
       "themeColor": "#7C4DFF",

@@ -1,5 +1,6 @@
 import { ScrollViewStyleReset } from 'expo-router/html'
 import { theme } from '../constants/theme'
+import { APP_NAME } from '../constants/copy'
 
 // Read at build time (static export inlines EXPO_PUBLIC_*). Empty in tests.
 const SUPABASE_ORIGIN = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').replace(/\/+$/, '')
@@ -15,11 +16,13 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         {/*
           viewport-fit=cover: extends layout under notch/home bar so safe-area-inset-* env vars populate on iOS.
-          maximum-scale=1: prevents pinch/double-tap zoom for a native app feel.
+          Pinch zoom stays allowed (WCAG 1.4.4, #136): no maximum-scale / user-scalable=no.
+          Double-tap zoom is off through touch-action: manipulation (below), and
+          inputs are at least 16px, so iOS doesn't zoom on focus either.
         */}
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content"
+          content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
         />
         {/* Tint browser chrome (iOS status bar area, Chrome toolbar) to match the app background */}
         <meta name="theme-color" content={theme.colors.background} />
@@ -29,7 +32,8 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="vteam" />
+        <meta name="apple-mobile-web-app-title" content={APP_NAME} />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <ScrollViewStyleReset />
         {/*
           Start the Supabase connection (DNS + TLS) while the app bundle downloads,
@@ -62,11 +66,11 @@ export default function Root({ children }: { children: React.ReactNode }) {
           body { overscroll-behavior-y: contain; }
 
           /*
-            Suppress double-tap-to-zoom on interactive elements.
-            RN Web handles Touchable* automatically, but HTML elements (e.g.
-            in DatePickerField.web) need this explicitly.
+            Suppress double-tap-to-zoom everywhere (pinch zoom still works).
+            On the root as well as HTML controls: RN Web pressables are divs,
+            and the viewport no longer blocks zoom outright (#136).
           */
-          button, a, input, select, textarea, label { touch-action: manipulation; }
+          html, body, #root, button, a, input, select, textarea, label { touch-action: manipulation; }
 
           /*
             ── Document-scroll mode (mobile web, Events tab) ──

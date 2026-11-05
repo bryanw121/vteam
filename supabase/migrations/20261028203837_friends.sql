@@ -78,6 +78,7 @@ alter table public.notifications add constraint notifications_notification_type_
     'join_request', 'request_approved', 'request_denied', 'tournament_team_invite',
     'tournament_join_request', 'tournament_join_accepted', 'tournament_join_declined',
     'tournament_free_agent_assigned', 'tournament_mention', 'chat_mention',
+    'event_reminder', 'late_dropout',
     'friend_request', 'friend_accepted'
   ]::text[]));
 

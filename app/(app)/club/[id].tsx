@@ -1,16 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  View,
-  ScrollView,
-  ActivityIndicator,
-  TouchableOpacity,
-  Image,
-  Alert,
-  Modal,
-  Pressable,
-  Platform,
-  StyleSheet,
-} from 'react-native'
+import { View, ScrollView, TouchableOpacity, Image, Alert, Modal, Pressable, Platform, StyleSheet } from 'react-native'
 import { Text, TextInput } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -29,9 +18,13 @@ import { resolveClubAvatarUri, profileDisplayName, confirmDestructive } from '..
 import { routes } from '../../../utils/routes'
 import { EventCard } from '../../../components/EventCard'
 import { MajorCityAutocomplete } from '../../../components/MajorCityAutocomplete'
+import { ClubLocationField } from '../../../components/ClubLocationField'
+import { ClubLocationCard } from '../../../components/ClubLocationCard'
+import { clubLocationFromPicker, pickerFromClubLocation } from '../../../utils/clubLocation'
 import { ClubPostCard, ClubPostComposerModal } from '../../../components/ClubPostCard'
 import { ScreenState } from '../../../components/ui'
-import type { ClubDetailData, ClubWithDetails, MajorCity, Profile } from '../../../types'
+import type { ClubDetailData, ClubWithDetails, LocationValue, MajorCity, Profile } from '../../../types'
+import { Spinner } from '../../../components/ui/Spinner'
 
 const COVER_HEIGHT = 200
 const AVATAR_SIZE = 80
@@ -82,6 +75,7 @@ export default function ClubDetailScreen() {
   const [editName, setEditName] = useState('')
   const [editDescription, setEditDescription] = useState('')
   const [editMajorCity, setEditMajorCity] = useState<MajorCity | null>(null)
+  const [editLocation, setEditLocation] = useState<LocationValue | null>(null)
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
@@ -192,6 +186,7 @@ export default function ClubDetailScreen() {
         name: editName.trim(),
         description: editDescription.trim() || null,
         major_city_id: editMajorCity.id,
+        ...clubLocationFromPicker(editLocation),
       })
       .eq('id', club.id)
     setSaving(false)
@@ -364,6 +359,7 @@ export default function ClubDetailScreen() {
                         setEditName(club.name)
                         setEditDescription(club.description ?? '')
                         setEditMajorCity(club.major_cities ?? null)
+                        setEditLocation(pickerFromClubLocation(club))
                         setEditMode(true)
                       }}
                       style={styles.floatingBtn}
@@ -391,7 +387,7 @@ export default function ClubDetailScreen() {
                   disabled={uploadingCover}
                 >
                   {uploadingCover
-                    ? <ActivityIndicator size="small" color={theme.colors.white} />
+                    ? <Spinner size="small" color={theme.colors.white} />
                     : <Ionicons name="camera-outline" size={14} color={theme.colors.white} />
                   }
                   <Text style={{ color: theme.colors.white, fontSize: theme.font.size.xs, fontWeight: theme.font.weight.semibold }}>
@@ -411,7 +407,7 @@ export default function ClubDetailScreen() {
                 <View style={styles.avatarRing}>
                   <View style={styles.avatar}>
                     {uploadingAvatar ? (
-                      <ActivityIndicator color={theme.colors.primary} />
+                      <Spinner color={theme.colors.primary} />
                     ) : avatarUri ? (
                       <Image source={{ uri: avatarUri }} style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }} resizeMode="cover" />
                     ) : (
@@ -477,11 +473,11 @@ export default function ClubDetailScreen() {
             <View style={{ paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.md }}>
               {member ? (
                 <TouchableOpacity onPress={handleLeave} disabled={membership.isPending} style={[shared.buttonBase, shared.buttonSecondary, membership.isPending && shared.buttonDisabled]}>
-                  {membership.isPending ? <ActivityIndicator color={theme.colors.primary} /> : <Text style={shared.buttonLabelSecondary}>Leave club</Text>}
+                  {membership.isPending ? <Spinner color={theme.colors.primary} /> : <Text style={shared.buttonLabelSecondary}>Leave club</Text>}
                 </TouchableOpacity>
               ) : club.membership_type === 'open' ? (
                 <TouchableOpacity onPress={handleJoin} disabled={membership.isPending} style={[shared.buttonBase, shared.buttonPrimary, membership.isPending && shared.buttonDisabled]}>
-                  {membership.isPending ? <ActivityIndicator color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Join club</Text>}
+                  {membership.isPending ? <Spinner color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Join club</Text>}
                 </TouchableOpacity>
               ) : (
                 <View style={[shared.buttonBase, { backgroundColor: theme.colors.border }]}>
@@ -517,16 +513,22 @@ export default function ClubDetailScreen() {
                   numberOfLines={4}
                 />
               </View>
+              <ClubLocationField value={editLocation} onChange={setEditLocation} userId={userId} />
               <MajorCityAutocomplete label="Metro area" value={editMajorCity} onChange={setEditMajorCity} />
               <TouchableOpacity
                 onPress={handleSaveEdit}
                 disabled={saving}
                 style={[shared.buttonBase, shared.buttonPrimary, saving && shared.buttonDisabled]}
               >
-                {saving ? <ActivityIndicator color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Save changes</Text>}
+                {saving ? <Spinner color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Save changes</Text>}
               </TouchableOpacity>
             </View>
           )}
+
+          {/* ── Home court (#13) ── */}
+          {!editMode && club.location_name ? (
+            <ClubLocationCard club={club} />
+          ) : null}
 
           {/* ── About ── */}
           {!editMode && club.description && (
@@ -561,7 +563,7 @@ export default function ClubDetailScreen() {
                 )}
               </View>
               {postsQuery.isLoading ? (
-                <ActivityIndicator color={theme.colors.primary} style={{ marginVertical: theme.spacing.lg }} />
+                <Spinner color={theme.colors.primary} style={{ marginVertical: theme.spacing.lg }} />
               ) : clubPosts.length === 0 ? (
                 <View style={[shared.card, {
                   marginHorizontal: theme.spacing.md,
@@ -667,7 +669,7 @@ export default function ClubDetailScreen() {
                 disabled={deleting}
                 style={[shared.buttonBase, { flex: 1, backgroundColor: theme.colors.error, borderRadius: theme.radius.md, alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.sm }]}
               >
-                {deleting ? <ActivityIndicator color={theme.colors.white} /> : <Text style={{ color: theme.colors.white, fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold }}>Delete</Text>}
+                {deleting ? <Spinner color={theme.colors.white} /> : <Text style={{ color: theme.colors.white, fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold }}>Delete</Text>}
               </TouchableOpacity>
             </View>
           </Pressable>

@@ -15,6 +15,82 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_banners: {
+        Row: {
+          body: string | null
+          created_at: string
+          created_by: string | null
+          display_order: number
+          ends_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          link_url: string
+          starts_at: string
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_url: string
+          starts_at?: string
+          title: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          display_order?: number
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_url?: string
+          starts_at?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_banners_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_free_passes: {
+        Row: {
+          ad_free_until: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_free_until: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_free_until?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_free_passes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_config: {
         Row: {
           message: string | null
@@ -66,6 +142,33 @@ export type Database = {
           platform?: string | null
           props?: Json
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      app_events_daily: {
+        Row: {
+          day: string
+          events: number
+          name: string
+          people: number
+          platform: string
+          updated_at: string
+        }
+        Insert: {
+          day: string
+          events: number
+          name: string
+          people: number
+          platform?: string
+          updated_at?: string
+        }
+        Update: {
+          day?: string
+          events?: number
+          name?: string
+          people?: number
+          platform?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -306,9 +409,14 @@ export type Database = {
           created_by: string
           description: string | null
           id: string
+          latitude: number | null
+          location_address: string | null
+          location_name: string | null
+          longitude: number | null
           major_city_id: string
           membership_type: string
           name: string
+          place_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -317,9 +425,14 @@ export type Database = {
           created_by: string
           description?: string | null
           id?: string
+          latitude?: number | null
+          location_address?: string | null
+          location_name?: string | null
+          longitude?: number | null
           major_city_id: string
           membership_type?: string
           name: string
+          place_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -328,9 +441,14 @@ export type Database = {
           created_by?: string
           description?: string | null
           id?: string
+          latitude?: number | null
+          location_address?: string | null
+          location_name?: string | null
+          longitude?: number | null
           major_city_id?: string
           membership_type?: string
           name?: string
+          place_id?: string | null
         }
         Relationships: [
           {
@@ -610,6 +728,79 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_payments: {
+        Row: {
+          event_id: string
+          paid_at: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          paid_at?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          paid_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_payments_event_id_user_id_fkey"
+            columns: ["event_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "event_attendees"
+            referencedColumns: ["event_id", "user_id"]
+          },
+          {
+            foreignKeyName: "event_payments_event_id_user_id_fkey"
+            columns: ["event_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "event_attendees_attending"
+            referencedColumns: ["event_id", "user_id"]
+          },
+          {
+            foreignKeyName: "event_payments_event_id_user_id_fkey"
+            columns: ["event_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "event_attendees_waitlisted"
+            referencedColumns: ["event_id", "user_id"]
+          },
+        ]
+      }
+      event_reminder_log: {
+        Row: {
+          event_id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_reminder_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reminder_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1066,6 +1257,84 @@ export type Database = {
           },
         ]
       }
+      point_balances: {
+        Row: {
+          balance: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "point_balances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      point_events: {
+        Row: {
+          amount: number
+          created_at: string
+          event_id: string | null
+          id: number
+          reason: string
+          tournament_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          event_id?: string | null
+          id?: never
+          reason: string
+          tournament_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          event_id?: string | null
+          id?: never
+          reason?: string
+          tournament_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "point_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "point_events_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "point_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1080,6 +1349,8 @@ export type Database = {
           selected_border: string | null
           selected_card_bg: string | null
           skill_level: string | null
+          terms_accepted_at: string | null
+          terms_version: string | null
           username: string | null
         }
         Insert: {
@@ -1095,6 +1366,8 @@ export type Database = {
           selected_border?: string | null
           selected_card_bg?: string | null
           skill_level?: string | null
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           username?: string | null
         }
         Update: {
@@ -1110,6 +1383,8 @@ export type Database = {
           selected_border?: string | null
           selected_card_bg?: string | null
           skill_level?: string | null
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           username?: string | null
         }
         Relationships: []
@@ -1157,6 +1432,45 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsored_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          ends_at: string | null
+          event_id: string
+          starts_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          event_id: string
+          starts_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string | null
+          event_id?: string
+          starts_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsored_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsored_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -1904,18 +2218,21 @@ export type Database = {
       user_settings: {
         Row: {
           home_city_id: string | null
+          reminder_lead_minutes: number
           seen_banners: string[]
           updated_at: string
           user_id: string
         }
         Insert: {
           home_city_id?: string | null
+          reminder_lead_minutes?: number
           seen_banners?: string[]
           updated_at?: string
           user_id: string
         }
         Update: {
           home_city_id?: string | null
+          reminder_lead_minutes?: number
           seen_banners?: string[]
           updated_at?: string
           user_id?: string
@@ -2067,8 +2384,24 @@ export type Database = {
         Args: { p_invite_id: string }
         Returns: string
       }
+      ad_free_offer: { Args: never; Returns: Json }
+      award_event_points: { Args: never; Returns: number }
+      current_user_is_admin: { Args: never; Returns: boolean }
+      event_reminder_text: {
+        Args: {
+          p_location: string
+          p_now?: string
+          p_starts_at: string
+          p_title: string
+        }
+        Returns: {
+          body: string
+          title: string
+        }[]
+      }
       cancel_friend_request: { Args: { p_user_id: string }; Returns: string }
       find_or_create_dm: { Args: { other_user_id: string }; Returns: string }
+      get_ad_free_status: { Args: never; Returns: Json }
       get_chat_unread_count: { Args: never; Returns: number }
       get_email_by_username: { Args: { p_username: string }; Returns: string }
       get_event_card_attendee_previews: {
@@ -2149,6 +2482,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      redeem_ad_free: { Args: never; Returns: Json }
       remove_friend: { Args: { p_user_id: string }; Returns: string }
       replace_tournament_schedule: {
         Args: { p_matches: Json; p_pools?: Json; p_tournament_id: string }
@@ -2158,8 +2492,10 @@ export type Database = {
         Args: { p_accept: boolean; p_request_id: string }
         Returns: string
       }
+      rollup_app_events: { Args: { p_days?: number }; Returns: number }
       schema_fingerprint: { Args: never; Returns: Json }
       schema_pending_changes: { Args: never; Returns: Json }
+      send_event_reminders: { Args: never; Returns: number }
       send_friend_request: { Args: { p_user_id: string }; Returns: string }
       send_kudos_reminders: { Args: never; Returns: undefined }
       set_best_friend: {

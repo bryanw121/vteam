@@ -18,4 +18,10 @@ export const ANALYTICS_EVENTS = {
   tourCompleted: 'tour_completed',
   /** Skip / Esc. props: { tour, step, target } (the step it was on) */
   tourSkipped: 'tour_skipped',
+  /** The leave sheet opened on an event the viewer attends (#171). props: { full, within24h, paid } */
+  leaveSheetShown: 'leave_sheet_shown',
+  /** "Leave game" tapped. props: { reason } (a LEAVE_REASONS id, or 'none') */
+  leaveConfirmed: 'leave_confirmed',
+  /** Stay in / Esc / back / scrim. */
+  leaveCancelled: 'leave_cancelled',
 } as const

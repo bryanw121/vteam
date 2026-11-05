@@ -95,14 +95,16 @@ describe('JoinFooter', () => {
     cancelRequest: jest.fn(async () => {}),
     rerequest: jest.fn(async () => {}),
   })
-  const renderFooter = (eventStatus: AttendanceStatus, requiresApproval: boolean, attendance = api()) => ({
+  const renderFooter = (eventStatus: AttendanceStatus, requiresApproval: boolean, attendance = api(), onLeave = jest.fn()) => ({
     attendance,
+    onLeave,
     view: render(
       <JoinFooter
         eventDate="2026-09-09T22:35:00"
         eventStatus={eventStatus}
         requiresApproval={requiresApproval}
         attendance={attendance as unknown as EventAttendanceApi}
+        onLeave={onLeave}
         onAddGuest={() => {}}
         docScrollActive={false}
         bottomInset={0}
@@ -132,6 +134,24 @@ describe('JoinFooter', () => {
     expect(renderFooter(status(), true).view.getByText(signup)).toBeTruthy()
     expect(renderFooter(status({ isFull: true, spotsLeft: 0 }), false).view.getByText(signup)).toBeTruthy()
     expect(renderFooter(status({ isAttending: true }), false).view.queryByText(signup)).toBeNull()
+  })
+
+  it('Leave event opens the leave sheet instead of leaving at once (#171)', () => {
+    const { view, attendance, onLeave } = renderFooter(status({ isAttending: true }), false)
+    fireEvent.press(view.getByTestId('leave-event'))
+    expect(onLeave).toHaveBeenCalledTimes(1)
+    expect(attendance.leave).not.toHaveBeenCalled()
+  })
+
+  it('leaving the waitlist and cancelling a request stay one tap', () => {
+    const waitlisted = renderFooter(status({ isWaitlisted: true, waitlistPosition: 2 }), false)
+    fireEvent.press(waitlisted.view.getByText('Leave Waitlist'))
+    expect(waitlisted.attendance.leaveWaitlist).toHaveBeenCalled()
+    expect(waitlisted.onLeave).not.toHaveBeenCalled()
+    const requested = renderFooter(status({ isRequested: true }), true)
+    fireEvent.press(requested.view.getByText('Cancel Request'))
+    expect(requested.attendance.cancelRequest).toHaveBeenCalled()
+    expect(requested.onLeave).not.toHaveBeenCalled()
   })
 
   it('offers the waitlist on a full approval-gated event', () => {
