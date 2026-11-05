@@ -7,6 +7,7 @@
 | `check-push-receipts` | pg_cron every 30 min (migration `20261024120500_push_receipts.sql`) | service-role bearer or `x-webhook-secret` | `false` |
 | `places-proxy` | the app, via `supabase.functions.invoke('places-proxy')` | user JWT checked by the gateway | `true` |
 | `send-feedback-email` | the app, after inserting `feedback_submissions` (`lib/feedback.ts`) | user JWT checked by the gateway; the function emails only a fresh row the caller owns | `true` |
+| `login-with-username` | the signed-out app, via `supabase.functions.invoke('login-with-username')` | none (it is a sign-in); rate limited per username and IP | `false` |
 
 `verify_jwt` is declared in [`../config.toml`](../config.toml) and applied on deploy.
 Shared code lives in `_shared/` (`supabase.ts`: service-role client and `defaultDeps`;
@@ -82,7 +83,8 @@ it is best effort only; a durable guarantee would need a column on `messages`.
 Pushes every `notifications` row (event reminders, cancellations, waitlist,
 cheers, join requests, late dropouts, and any type added later) to the
 recipient's devices, unless they turned push off for that type
-(`profiles.notification_prefs.push.<type> = false`). The push carries the row's
+(`user_settings.notification_prefs.push.<type> = false`; the legacy
+`profiles.notification_prefs` only when `user_settings` has none). The push carries the row's
 `data.deep_link`, which the app opens on tap. `chat_mention` rows are skipped:
 `send-chat-push` already pushed the message. Same chunking, dead-token cleanup
 and `push_receipts` bookkeeping as `send-chat-push`, and the same best-effort,
@@ -145,6 +147,28 @@ Until the domain is verified, Resend only accepts `onboarding@resend.dev` as the
 and only delivers to the Resend account's own address, so `FEEDBACK_FROM="vteam <onboarding@resend.dev>"`
 works for a first test if that account uses the destination address.
 
+## `login-with-username`
+
+Resolves a username to an email server-side and signs in through Supabase Auth's
+password grant, returning only a session or a generic "Incorrect username or
+password". It limits attempts itself (`public.check_rate_limit`: 30 per username
+and 100 per IP every 15 minutes).
+
+**IP forwarding (needed in production).** Every username sign-in reaches Supabase
+Auth from this function, so Auth's own per-IP limit would otherwise treat all
+users as one IP. To make Auth count each user's IP:
+
+1. Settings → API Keys → *Publishable and secret API keys*: create the keys if the
+   project has none. Supabase then provides `SUPABASE_SECRET_KEYS` to functions
+   (the function uses the key named `default`).
+2. Authentication → Rate Limits → **IP Address Forwarding**: enable it (or the
+   management API: `PATCH /v1/projects/<ref>/config/auth` with
+   `{"security_sb_forwarded_for_enabled": true}`).
+
+With both, the function sends the password grant with the secret key and
+`Sb-Forwarded-For: <caller IP>`. Without a secret key it falls back to the anon key
+(no forwarding) and logs a warning.
+
 ## Deploying
 
 From the repo root, logged in with `supabase login` and linked with
@@ -156,6 +180,7 @@ supabase functions deploy send-notification-push
 supabase functions deploy check-push-receipts
 supabase functions deploy places-proxy
 supabase functions deploy send-feedback-email
+supabase functions deploy login-with-username
 # or all at once:
 supabase functions deploy
 ```

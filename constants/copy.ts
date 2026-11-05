@@ -26,6 +26,10 @@ export const SKILL_LEVEL_LABELS: Record<string, string> = {
 /** Approval-gated events: told to the player before they tap (event page, feed card) and echoed in the host form. */
 export const APPROVAL_REQUIRED_NOTE = 'The host reviews requests for this event'
 
+/** Username sign-in: the same message for an unknown username and a wrong password (no account enumeration). */
+export const INCORRECT_USERNAME_OR_PASSWORD = 'Incorrect username or password'
+/** Email sign-in: the same message for an unknown email and a wrong password. */
+export const INCORRECT_EMAIL_OR_PASSWORD = 'Incorrect email or password'
 /** The leave sheet (#171): what leaving costs, said before it happens. Lines come from utils/leaveConsequences.ts. */
 export const LEAVE_COPY = {
   title: 'Leave this game?',

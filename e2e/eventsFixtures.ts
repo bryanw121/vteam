@@ -31,16 +31,21 @@ export function signInE2eClient(): Promise<{ supabase: SupabaseClient; userId: s
 async function signInOnce(): Promise<{ supabase: SupabaseClient; userId: string }> {
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   const { username, password } = e2eCredentials()
-  const { data: email, error: rpcError } = await supabase.rpc('get_email_by_username', {
-    p_username: username,
+  // Same server-side username sign-in the app uses: clients cannot resolve a
+  // username to an email (get_email_by_username is service-role only).
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/login-with-username`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
   })
-  if (rpcError || !email) {
-    throw new Error(`Could not resolve email for ${username}: ${rpcError?.message ?? 'not found'}`)
+  const body = await res.json().catch(() => null) as { access_token?: string; refresh_token?: string; error?: string } | null
+  if (!res.ok || !body?.access_token || !body.refresh_token) {
+    throw new Error(`E2E sign-in failed for ${username}: ${res.status} ${body?.error ?? 'no session'}`)
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email as string,
-    password,
+  const { data, error } = await supabase.auth.setSession({
+    access_token: body.access_token,
+    refresh_token: body.refresh_token,
   })
   if (error || !data.user) {
     throw new Error(`E2E sign-in failed: ${error?.message ?? 'no user'}`)

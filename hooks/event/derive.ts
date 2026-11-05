@@ -58,6 +58,14 @@ export function deriveRoster(event: EventWithDetails | undefined, allGuests: Eve
   for (const g of guests) {
     if (g.adder?.username) adderUsernames[g.added_by] = g.adder.username
   }
+  // Signed-out visitors read guests without the adder embed; the adder is
+  // nearly always on the roster (or the host), so fill in from there.
+  for (const g of guests) {
+    if (adderUsernames[g.added_by]) continue
+    const adder = rows.find(r => r.user_id === g.added_by)?.profiles
+      ?? (event?.profiles?.id === g.added_by ? event.profiles : null)
+    if (adder?.username) adderUsernames[g.added_by] = adder.username
+  }
   return {
     rows,
     attendingRows,

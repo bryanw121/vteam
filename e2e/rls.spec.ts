@@ -222,6 +222,59 @@ test.describe('signed in as the e2e account', () => {
   })
 })
 
+/**
+ * #99 / #102 tightens what signed-out visitors and other users can read. These
+ * run once that migration is on the beta project (detected by its new
+ * event_attendee_denials table) and skip before that.
+ * TODO(#102): drop the skip once the migration is applied on beta and live.
+ */
+test.describe('privacy tightening (#99)', () => {
+  let applied = false
+  test.beforeAll(async () => {
+    const probe = await q(() => me.from('event_attendee_denials').select('event_id').limit(1), 'probe #102 migration')
+    applied = !probe.error
+  })
+
+  test('anon cannot read +1 guest names, but head counts still work', async () => {
+    test.skip(!applied, 'TODO(#102): migration 20261028120000_privacy_private_reads not on beta yet')
+    const rows = await q(() => anon.from('event_guests').select('id, first_name, last_name').limit(5), 'anon guests')
+    if (rows.error) expect(rows.error.code).toBe(RLS_DENIED)
+    else expect(rows.data).toEqual([])
+    const view = await q(() => anon.from('event_guests_attending').select('id, event_id, added_by').limit(1), 'anon guest view')
+    expect(view.error).toBeNull()
+    const names = await q(() => anon.from('event_guests_attending').select('first_name').limit(1), 'anon guest view names')
+    expect(names.error, 'the public view has no name columns').not.toBeNull()
+  })
+
+  test('anon cannot see who gave a kudo, only that it was received', async () => {
+    test.skip(!applied, 'TODO(#102): migration not on beta yet')
+    const givers = await q(() => anon.from('cheers').select('giver_id').limit(1), 'anon cheers giver')
+    expect(givers.error?.code).toBe(RLS_DENIED)
+    const received = await q(() => anon.from('cheers').select('id', { count: 'exact', head: true }).eq('receiver_id', BUDDY_ID), 'anon cheers received')
+    expect(received.error).toBeNull()
+  })
+
+  test('private profile values live off the public row', async () => {
+    test.skip(!applied, 'TODO(#102): migration not on beta yet')
+    const buddy = await q(() => anon.from('profiles').select('is_admin, notification_prefs').eq('id', BUDDY_ID), 'anon private columns')
+    expect(buddy.error).toBeNull()
+    expect(buddy.data).toEqual([{ is_admin: false, notification_prefs: { push: {}, in_app: {} } }])
+    const denials = await q(() => anon.from('event_attendee_denials').select('event_id').limit(1), 'anon denials')
+    expect(denials.error?.code).toBe(RLS_DENIED)
+    const admins = await q(() => me.from('app_admins').select('user_id').limit(1), 'app_admins')
+    if (admins.error) expect(admins.error.code).toBe(RLS_DENIED)
+    else expect(admins.data).toEqual([])
+    const mine = await q(() => me.from('user_settings').select('notification_prefs').eq('user_id', myId), 'own prefs')
+    expect(mine.error).toBeNull()
+  })
+
+  test('nobody can add themselves to a conversation directly', async () => {
+    test.skip(!applied, 'TODO(#102): migration 20261028120300_conversation_members_insert not on beta yet')
+    const join = await q(() => me.from('conversation_members').insert({ conversation_id: crypto.randomUUID(), user_id: myId }), 'self-join conversation')
+    expect(join.error?.code).toBe(RLS_DENIED)
+  })
+})
+
 test.describe('points (#4)', () => {
   test('anon reads point balances but no ledger rows', async () => {
     const balances = await q(() => anon.from('point_balances').select('user_id, balance').limit(1), 'anon point_balances')

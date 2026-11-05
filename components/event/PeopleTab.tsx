@@ -14,6 +14,7 @@ import { shared, theme, TEAM_COLORS, TEAM_COLOR_NAMES } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus, EventGuest, RosterAction, RosterActionContext, RosterMenu } from '../../types'
 import { profileDisplayName, profileAvatarSmallUri, hostRosterSkillAndPositionsLine } from '../../utils'
 import { guestRowActions, hasRosterMenu, memberRowActions } from '../../utils/rosterActions'
+import { guestFullName, guestInitials, guestShortName } from '../../utils/guests'
 import { attendeesPaid } from '../../hooks/event/derive'
 import type { EventAttendanceApi, EventData, EventPaymentsApi, EventTeamsApi, TeamDragApi } from '../../types'
 import { Spinner } from '../ui/Spinner'
@@ -175,7 +176,7 @@ function DraggableGuestCard({ guest, adderUsername, teamColor, isPinned, isOwner
   [isOwner])
 
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }], opacity: opacity.value }))
-  const initials = guest.first_name.charAt(0).toUpperCase() + guest.last_name.charAt(0).toUpperCase()
+  const initials = guestInitials(guest)
 
   return (
     <View style={shared.playerCardShell}>
@@ -187,7 +188,7 @@ function DraggableGuestCard({ guest, adderUsername, teamColor, isPinned, isOwner
                 <Text style={[shared.playerCardAvatarInitial, { color: teamColor ?? theme.colors.subtext }]}>{initials}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={shared.playerCardName} numberOfLines={1}>{guest.first_name} {guest.last_name.charAt(0)}.</Text>
+                <Text style={shared.playerCardName} numberOfLines={1}>{guestShortName(guest)}</Text>
                 <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext, lineHeight: 14 }} numberOfLines={1}>{adderUsername}'s +1</Text>
               </View>
               {isOwner && isPinned && teamColor && (
@@ -200,8 +201,8 @@ function DraggableGuestCard({ guest, adderUsername, teamColor, isPinned, isOwner
       <CardCornerControl
         onOpenMenu={onOpenMenu}
         onRemove={isOwner ? onRemove : undefined}
-        menuLabel={`Actions for guest ${guest.first_name} ${guest.last_name}`}
-        removeLabel={`Remove guest ${guest.first_name} ${guest.last_name}`}
+        menuLabel={`Actions for guest ${guestFullName(guest)}`}
+        removeLabel={`Remove guest ${guestFullName(guest)}`}
       />
     </View>
   )
@@ -316,7 +317,7 @@ export function PeopleTab({
     hasRosterMenu(actions) ? () => setRowMenu({ title, actions }) : undefined
   const removeAttendee = (profile: Profile) => (eventStatus.isOwner ? () => onRemoveAttendee(profile) : undefined)
   const removeGuest = (g: EventGuest) => (eventStatus.isOwner ? () => onRemoveGuest(g) : undefined)
-  const guestName = (g: EventGuest) => `${g.first_name} ${g.last_name}`
+  const guestName = (g: EventGuest) => guestFullName(g)
 
   /** ⋯ for the flat request / waitlist rows (roster cards use CardCornerControl). */
   function rowMenuButton(title: string, actions: RosterAction[]) {
@@ -585,7 +586,7 @@ export function PeopleTab({
               {waitlistGuests.map((g, idx) => (
                 <View key={g.id} style={[shared.card, { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }]}>
                   <Text style={[shared.caption, { minWidth: 20, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }]}>#{waitlistProfiles.length + idx + 1}</Text>
-                  <Text style={[shared.body, { flex: 1 }]}>{g.first_name} {g.last_name}</Text>
+                  <Text style={[shared.body, { flex: 1 }]}>{guestFullName(g)}</Text>
                   <View style={shared.tag}><Text style={shared.tagText}>Guest</Text></View>
                   {(() => {
                     const actions = guestRowActions(g, adderUsernames[g.added_by], actionCtx, removeGuest(g))

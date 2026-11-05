@@ -11,6 +11,7 @@ import { useSilencedUserIds } from '../../../hooks/useSilencedUsers'
 import {
   attendeeRemoveTarget,
   computeEventStatus,
+  useMyDenialReason,
   eventCardSeed,
   forgetDeletedEvent,
   guestRemoveTarget,
@@ -177,13 +178,17 @@ export default function EventDetail() {
     return m
   }, [mentionProfiles])
 
-  const eventStatus = computeEventStatus({
+  const derivedStatus = computeEventStatus({
     event,
     rows: roster.rows,
     attendingGuestCount: roster.attendingGuests.length,
     userId,
     isHostOrCohost,
   })
+  const myDenialReason = useMyDenialReason(id, userId, derivedStatus.isDenied)
+  const eventStatus = derivedStatus.isDenied && !derivedStatus.denialReason
+    ? { ...derivedStatus, denialReason: myDenialReason }
+    : derivedStatus
   // "I've paid" (#6): paid events only, for the attendee and the hosts.
   const paymentAccess = paymentVisibility({ event, userId, status: eventStatus, isHostOrCohost })
   const payments = useEventPayments(id, userId, {

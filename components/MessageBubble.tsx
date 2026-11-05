@@ -7,6 +7,7 @@ import { AnchorOptionsMenu } from './AnchorOptionsMenu'
 import type { AnchorRect } from '../types'
 import type { MessageWithDetails } from '../types'
 import { profileAvatarSmallUri } from '../utils'
+import { useChatImageUrl } from '../hooks/useChatImageUrl'
 
 const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '🔥', '👏']
 
@@ -55,6 +56,8 @@ export function MessageBubble({
   const hiddenIncoming = !isOwn && contentSuppressed
   const hasText = !deleted && !hiddenIncoming && !!message.content
   const hasImage = !deleted && !hiddenIncoming && !!message.image_url
+  // chat-images is private: stored paths (and legacy public URLs) need a signed URL.
+  const imageUri = useChatImageUrl(hasImage ? message.image_url : null)
 
   // Group reactions by emoji
   const reactionGroups: Record<string, number> = {}
@@ -186,10 +189,10 @@ export function MessageBubble({
           ) : (
             <>
               {hasImage && (
-                <Pressable onPress={() => onImagePress?.(message.image_url!)}>
+                <Pressable onPress={() => { if (imageUri) onImagePress?.(imageUri) }} disabled={!imageUri}>
                   <Image
-                    source={{ uri: message.image_url! }}
-                    style={{ width: 220, height: 180, borderRadius: hasText ? 0 : 18 }}
+                    source={imageUri ? { uri: imageUri } : undefined}
+                    style={{ width: 220, height: 180, borderRadius: hasText ? 0 : 18, backgroundColor: theme.colors.background }}
                     resizeMode="cover"
                   />
                 </Pressable>

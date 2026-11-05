@@ -2,6 +2,7 @@ import { Platform } from 'react-native'
 import { prefetchQuery } from '../../lib/query'
 import { STALE } from '../../constants/cache'
 import { eventKeys } from './keys'
+import { getSessionUser } from '../../lib/sessionUser'
 import { fetchEventCohosts, fetchEventComments, fetchEventDetail, fetchEventGuests } from './useEventData'
 
 /**
@@ -14,7 +15,8 @@ import { fetchEventCohosts, fetchEventComments, fetchEventDetail, fetchEventGues
 export function prefetchEventDetail(id: string): void {
   const opts = { staleMs: STALE.detail }
   void prefetchQuery(eventKeys.root(id), () => fetchEventDetail(id), opts)
-  void prefetchQuery(eventKeys.guests(id), () => fetchEventGuests(id), opts)
+  // Signed-out visitors read +1s from the name-free view (#99); same key either way.
+  void prefetchQuery(eventKeys.guests(id), async () => fetchEventGuests(id, !!(await getSessionUser())), opts)
   void prefetchQuery(eventKeys.cohosts(id), () => fetchEventCohosts(id), opts)
   void prefetchQuery(eventKeys.comments(id), () => fetchEventComments(id), opts)
 }

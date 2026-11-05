@@ -176,7 +176,8 @@ describe('useEventData', () => {
     mockUserId = null
     render(<Harness />)
     await settle()
-    expect(mockCalls.map(c => c.table).sort()).toEqual(['event_cohosts', 'event_comments', 'event_guests', 'events'])
+    // Signed-out visitors read +1s from the name-free view, never event_guests.
+    expect(mockCalls.map(c => c.table).sort()).toEqual(['event_cohosts', 'event_comments', 'event_guests_attending', 'events'])
   })
 
   it('an edit elsewhere (invalidate of the event root) refetches every piece in place, without a spinner', async () => {

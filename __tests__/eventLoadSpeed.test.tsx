@@ -51,6 +51,7 @@ jest.mock('../contexts/session', () => ({
   useSession: () => ({ userId: null, isGuest: true, loading: false, session: null }),
 }))
 jest.mock('../lib/sentry', () => ({ Sentry: { addBreadcrumb: jest.fn(), captureException: jest.fn() } }))
+jest.mock('../lib/sessionUser', () => ({ getSessionUser: async () => ({ id: 'u1' }) }))
 jest.mock('expo-router', () => ({ useFocusEffect: () => {}, useRouter: () => ({ push: jest.fn() }), usePathname: () => '/' }))
 jest.mock('expo-image', () => ({ Image: () => null }))
 

@@ -114,7 +114,7 @@ export type NotificationType = (typeof NOTIFICATION_TYPES)[number]
 /** A notification type with a Settings toggle. */
 export type NotificationPrefType = (typeof NOTIFICATION_PREF_TYPES)[number]
 
-/** Stored in `profiles.notification_prefs` jsonb. */
+/** Stored in `user_settings.notification_prefs` jsonb (owner-only; `profiles.notification_prefs` is legacy and always the default). */
 export type NotificationPrefs = {
   in_app: Partial<Record<NotificationType, boolean>>
   push: Partial<Record<NotificationType, boolean>>
@@ -292,6 +292,9 @@ export type EventGuest = Override<Tables<'event_guests'>, {
   adder?: Pick<Profile, 'id' | 'username'> | null
 }
 
+/** A row of the name-free `event_guests_attending` view (what signed-out visitors read). */
+export type EventGuestPublicRow = Database['public']['Views']['event_guests_attending']['Row']
+
 /**
  * `event_cohosts` table
  * Up to 3 cohosts per event. Cohosts have the same permissions as the host.
@@ -426,6 +429,15 @@ export type MajorCity = Tables<'major_cities'>
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
 export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
   home_city: MajorCity | null
+}
+
+/** What the login-with-username edge function returns on success (passed to `supabase.auth.setSession`). */
+export type UsernameLoginSession = {
+  access_token: string
+  refresh_token: string
+  expires_in: number
+  expires_at?: number
+  token_type: string
 }
 
 /** Allowed values of `user_settings.reminder_lead_minutes` (its check constraint): 1 hour, 2 hours, a day. */

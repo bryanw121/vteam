@@ -13,7 +13,7 @@ import { join } from 'path'
 const root = join(__dirname, '..')
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
-const FUNCTIONS = ['send-chat-push', 'send-notification-push', 'check-push-receipts', 'places-proxy', 'send-feedback-email']
+const FUNCTIONS = ['send-chat-push', 'send-notification-push', 'check-push-receipts', 'places-proxy', 'send-feedback-email', 'login-with-username']
 const handler = (fn: string) => read(`supabase/functions/${fn}/handler.ts`)
 const index = (fn: string) => read(`supabase/functions/${fn}/index.ts`)
 
@@ -95,6 +95,10 @@ describe('supabase/config.toml', () => {
     expect(verifyJwt('send-chat-push')).toBe('false')
     expect(verifyJwt('send-notification-push')).toBe('false')
     expect(verifyJwt('check-push-receipts')).toBe('false')
+  })
+
+  it('turns JWT verification off for login-with-username (callers are signed out)', () => {
+    expect(verifyJwt('login-with-username')).toBe('false')
   })
 
   it('keeps JWT verification on for places-proxy', () => {

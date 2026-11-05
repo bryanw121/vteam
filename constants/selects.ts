@@ -26,6 +26,12 @@ export const COMMENT_SELECT =
 export const GUEST_SELECT =
   'id, event_id, status, added_by, joined_at, team_number, team_pinned, first_name, last_name, adder:profiles!event_guests_added_by_fkey (id, username)'
 
+/**
+ * `event_guests_attending` view columns for signed-out visitors: no names
+ * (they are private to signed-in users). See `toAnonymousGuest`.
+ */
+export const GUEST_PUBLIC_SELECT = 'id, event_id, added_by, status, joined_at, team_number, team_pinned'
+
 /** `event_cohosts` row with the co-host's profile. */
 export const COHOST_SELECT =
   `event_id, user_id, added_by, added_at, profiles!event_cohosts_user_id_fkey (${PROFILE_BRIEF})`
