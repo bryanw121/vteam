@@ -4,7 +4,7 @@ import { Text } from '../ui/Text'
 import type { RefreshControlProps } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../../constants'
-import { FORMAT_LABELS } from '../../constants/tournamentCopy'
+import { FORMAT_LABELS, TIEBREAKER_LABELS } from '../../constants/tournamentCopy'
 import { formatCommentTime, formatPriceAmount } from '../../utils'
 import { Button } from '../Button'
 import type {
@@ -245,10 +245,14 @@ export function OverviewTab(p: Props) {
             { label: 'Win by',       value: `${rules.win_by_margin}` },
             { label: 'Sets to win',  value: String(rules.sets_to_win) },
             { label: 'Point cap',    value: rules.point_cap ? String(rules.point_cap) : 'None' },
+            { label: 'Ties broken by', value: rules.tiebreakers.map(k => TIEBREAKER_LABELS[k]).join(', ') },
+            ...(tournament.bracket_type === 'single' && tournament.format !== 'round_robin' && tournament.format !== 'pool_play'
+              ? [{ label: 'Third place', value: rules.third_place_match ? 'Playoff match' : 'Shared by semifinal losers' }]
+              : []),
           ].map((row, i, arr) => (
             <View key={row.label} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 9, paddingHorizontal: 4, borderBottomWidth: i < arr.length - 1 ? 1 : 0, borderBottomColor: theme.colors.borderSoft }}>
               <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext }}>{row.label}</Text>
-              <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.smd, color: theme.colors.text }}>{row.value}</Text>
+              <Text style={{ flexShrink: 1, textAlign: 'right', marginLeft: 12, fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.smd, color: theme.colors.text }}>{row.value}</Text>
             </View>
           ))}
         </View>

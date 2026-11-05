@@ -13,7 +13,7 @@ import { useTournamentData } from '../../../hooks/tournament/useTournamentData'
 import { RefreshControl } from '../../../components/RefreshControl'
 import { generateSchedule, nextStageStart, scheduleBracket } from '../../../lib/tournamentSchedule'
 import { generateBracket } from '../../../lib/tournamentBracket'
-import { avoidPoolRematches, computeStandings, seedsFromPools } from '../../../lib/tournamentStandings'
+import { avoidPoolRematches, computeStandings, DEFAULT_TIEBREAKERS, seedsFromPools } from '../../../lib/tournamentStandings'
 import { poolTables as buildPoolTables, resultWrites, tournamentPodium } from '../../../lib/tournamentResults'
 import { profileDisplayName } from '../../../utils'
 import { routes } from '../../../utils/routes'
@@ -112,12 +112,13 @@ export default function TournamentDetailScreen() {
   const matches = useMemo(() => matchesQ.data ?? [], [matchesQ.data])
   const pools = useMemo(() => poolsQ.data ?? [], [poolsQ.data])
   const teamName = useCallback((tid: string | null) => teams.find(t => t.id === tid)?.name ?? 'TBD', [teams])
+  const tiebreakers = rules?.tiebreakers ?? DEFAULT_TIEBREAKERS
   const results = useMemo(() => {
     if (!tournament) return null
     const registeredIds = teams.filter(t => t.status === 'registered').map(t => t.id)
     const poolStage = matches.filter(m => m.stage === 'pool_play')
-    const tables = tournament.format === 'pool_play' || tournament.format === 'pool_bracket' ? buildPoolTables(pools, poolStage) : []
-    const overall = tournament.format === 'round_robin' ? computeStandings(registeredIds, matches) : null
+    const tables = tournament.format === 'pool_play' || tournament.format === 'pool_bracket' ? buildPoolTables(pools, poolStage, tiebreakers) : []
+    const overall = tournament.format === 'round_robin' ? computeStandings(registeredIds, matches, tiebreakers) : null
     const bracketRows = matches.filter(m => m.stage === 'bracket')
     const bracketPlayed = bracketRows.some(m => !!m.winner_id)
 
@@ -133,12 +134,12 @@ export default function TournamentDetailScreen() {
     return {
       tables,
       overall,
-      podium: tournamentPodium(matches, tournament, registeredIds),
+      podium: tournamentPodium(matches, tournament, registeredIds, tiebreakers),
       seedPreview,
       poolMatchesLeft: poolStage.filter(m => !m.winner_id).length,
       bracketExists: bracketRows.length > 0,
     }
-  }, [tournament, teams, matches, pools, isCreator])
+  }, [tournament, teams, matches, pools, isCreator, tiebreakers])
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(routes.app()))
 
@@ -193,6 +194,7 @@ export default function TournamentDetailScreen() {
       seeds: Object.fromEntries(registeredTeams.map(t => [t.id, t.seed])),
       refs: tournament.has_refs,
       bracketType: tournament.bracket_type ?? 'single',
+      thirdPlace: !!rules?.third_place_match,
       config,
     })
     return !!(await actions.replaceSchedule.mutate(schedule))
@@ -200,14 +202,14 @@ export default function TournamentDetailScreen() {
 
   async function seedBracket() {
     if (!tournament || !results?.seedPreview) return
-    const rows = generateBracket(results.seedPreview.map(s => s.teamId), tournament.bracket_type ?? 'single')
+    const rows = generateBracket(results.seedPreview.map(s => s.teamId), tournament.bracket_type ?? 'single', !!rules?.third_place_match)
     const start = nextStageStart(matches.filter(m => m.stage === 'pool_play').map(m => m.scheduled_at), config, new Date(tournament.start_date))
     await actions.seedBracket.mutate(scheduleBracket(rows, start, config))
   }
 
   async function submitResult(v: { winnerId: string; sets: SetScore[]; forfeit: boolean }): Promise<boolean> {
     if (!tournament || !resultMatch) return false
-    const writes = resultWrites({ match: resultMatch, winnerId: v.winnerId, matches, tournament, teamIds: registeredTeams.map(t => t.id) })
+    const writes = resultWrites({ match: resultMatch, winnerId: v.winnerId, matches, tournament, teamIds: registeredTeams.map(t => t.id), tiebreakers })
     if (writes.blocked) {
       notifyInfo('Result not saved', writes.blocked)
       return false
@@ -215,7 +217,7 @@ export default function TournamentDetailScreen() {
     const done = await actions.recordResult.mutate({ matchId: resultMatch.id, ...v, writes })
     if (done) {
       setResultMatch(null)
-      if (writes.nextStatus === 'completed') notifyInfo('Tournament complete', 'Final results are in. The podium is on the Results tab.')
+      if (writes.nextStatus === 'completed') notifyInfo('Tournament complete', 'Final results are in. Trophies are on the winners\' profiles and the podium is on the Results tab.')
     }
     return !!done
   }

@@ -1,4 +1,5 @@
 // TODO regenerate from beta: friend_requests, friendships and the friend RPCs were added by hand (#15, draft until the migration is applied on beta).
+// TODO regenerate from beta: hand-edited for 20261028205312_tournament_trophies (tournament_trophies, tournament_rules.tiebreakers / third_place_match, complete_tournament).
 export type Json =
   | string
   | number
@@ -1763,6 +1764,8 @@ export type Database = {
           point_cap: number | null
           sets_to_win: number
           starting_score: number
+          third_place_match: boolean
+          tiebreakers: string[]
           tournament_id: string
           win_by_margin: number
           winning_score: number
@@ -1772,6 +1775,8 @@ export type Database = {
           point_cap?: number | null
           sets_to_win?: number
           starting_score?: number
+          third_place_match?: boolean
+          tiebreakers?: string[]
           tournament_id: string
           win_by_margin?: number
           winning_score?: number
@@ -1781,6 +1786,8 @@ export type Database = {
           point_cap?: number | null
           sets_to_win?: number
           starting_score?: number
+          third_place_match?: boolean
+          tiebreakers?: string[]
           tournament_id?: string
           win_by_margin?: number
           winning_score?: number
@@ -2027,6 +2034,64 @@ export type Database = {
             columns: ["tournament_id"]
             isOneToOne: false
             referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournament_trophies: {
+        Row: {
+          awarded_at: string
+          id: string
+          place: number
+          team_id: string | null
+          team_name: string
+          tournament_date: string
+          tournament_id: string
+          tournament_title: string
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          id?: string
+          place: number
+          team_id?: string | null
+          team_name: string
+          tournament_date: string
+          tournament_id: string
+          tournament_title: string
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          id?: string
+          place?: number
+          team_id?: string | null
+          team_name?: string
+          tournament_date?: string
+          tournament_id?: string
+          tournament_title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_trophies_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_trophies_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_trophies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2386,6 +2451,10 @@ export type Database = {
       }
       ad_free_offer: { Args: never; Returns: Json }
       award_event_points: { Args: never; Returns: number }
+      complete_tournament: {
+        Args: { p_podium: Json; p_tournament_id: string }
+        Returns: number
+      }
       current_user_is_admin: { Args: never; Returns: boolean }
       event_reminder_text: {
         Args: {
