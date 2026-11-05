@@ -100,6 +100,8 @@ test('database: set_no_show flags and unflags; a direct write is rejected', asyn
 
 /** Add e2ebuddy (attending, not flagged) to this event's detail read. */
 async function withBuddyOnRoster(page: Page) {
+  // The buddy's flag follows the last set_no_show call, so a refetch after marking keeps it.
+  let buddyNoShow = false
   await page.route(url => url.pathname.endsWith('/rest/v1/events') && url.searchParams.get('id') === `eq.${eventId}`, async route => {
     const res = await route.fetch()
     const body = await res.json()
@@ -107,7 +109,7 @@ async function withBuddyOnRoster(page: Page) {
       ...ev,
       event_attendees: [
         ...((ev.event_attendees as unknown[]) ?? []),
-        { event_id: eventId, user_id: BUDDY_ID, joined_at: new Date().toISOString(), team_number: null, team_pinned: false, status: 'attending', no_show: false, profiles: buddyProfile },
+        { event_id: eventId, user_id: BUDDY_ID, joined_at: new Date().toISOString(), team_number: null, team_pinned: false, status: 'attending', no_show: buddyNoShow, profiles: buddyProfile },
       ],
     })
     const next = Array.isArray(body) ? body.map(add) : body && typeof body === 'object' && 'event_attendees' in body ? add(body) : body
@@ -115,7 +117,9 @@ async function withBuddyOnRoster(page: Page) {
   })
   const calls: unknown[] = []
   await page.route('**/rest/v1/rpc/set_no_show', async route => {
-    calls.push(route.request().postDataJSON())
+    const args = route.request().postDataJSON() as { p_value?: boolean }
+    calls.push(args)
+    buddyNoShow = !!args.p_value
     await route.fulfill({ status: 204, body: '' })
   })
   return calls
