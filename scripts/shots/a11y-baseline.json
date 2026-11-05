@@ -1,0 +1,380 @@
+{
+  "chat-club": {
+    "mobile": {
+      "color-contrast": 7
+    },
+    "desktop": {
+      "color-contrast": 12
+    }
+  },
+  "chat-conversation": {
+    "mobile": {
+      "color-contrast": 11
+    },
+    "desktop": {
+      "color-contrast": 16
+    }
+  },
+  "chat-list": {
+    "mobile": {
+      "color-contrast": 9
+    },
+    "desktop": {
+      "color-contrast": 14
+    }
+  },
+  "club-create": {
+    "mobile": {
+      "color-contrast": 8
+    },
+    "desktop": {
+      "color-contrast": 13
+    }
+  },
+  "club-detail": {
+    "mobile": {
+      "color-contrast": 8
+    },
+    "desktop": {
+      "color-contrast": 14
+    }
+  },
+  "club-detail-guest": {
+    "mobile": {
+      "color-contrast": 7
+    },
+    "desktop": {
+      "color-contrast": 12
+    }
+  },
+  "clubs-list": {
+    "mobile": {
+      "color-contrast": 2
+    },
+    "desktop": {
+      "color-contrast": 7
+    }
+  },
+  "event-cheers": {
+    "mobile": {
+      "color-contrast": 10
+    },
+    "desktop": {
+      "color-contrast": 15
+    }
+  },
+  "event-details": {
+    "mobile": {
+      "color-contrast": 20
+    },
+    "desktop": {
+      "color-contrast": 23
+    }
+  },
+  "event-discussion": {
+    "mobile": {
+      "color-contrast": 16
+    },
+    "desktop": {
+      "color-contrast": 21
+    }
+  },
+  "event-guest": {
+    "mobile": {
+      "color-contrast": 19
+    },
+    "desktop": {
+      "color-contrast": 23
+    }
+  },
+  "event-paid-bottom": {
+    "mobile": {
+      "color-contrast": 20
+    },
+    "desktop": {
+      "color-contrast": 20
+    }
+  },
+  "event-people": {
+    "mobile": {
+      "color-contrast": 20
+    },
+    "desktop": {
+      "color-contrast": 25
+    }
+  },
+  "events-feed": {
+    "mobile": {
+      "color-contrast": 33
+    },
+    "desktop": {
+      "color-contrast": 49
+    }
+  },
+  "events-feed-guest": {
+    "mobile": {
+      "color-contrast": 24
+    },
+    "desktop": {
+      "color-contrast": 44
+    }
+  },
+  "host-create": {
+    "mobile": {
+      "color-contrast": 10
+    },
+    "desktop": {
+      "color-contrast": 15
+    }
+  },
+  "host-edit": {
+    "mobile": {
+      "color-contrast": 10
+    },
+    "desktop": {
+      "color-contrast": 15
+    }
+  },
+  "login": {
+    "mobile": {
+      "color-contrast": 10
+    },
+    "desktop": {
+      "color-contrast": 11
+    }
+  },
+  "notifications": {
+    "mobile": {
+      "color-contrast": 12
+    },
+    "desktop": {
+      "color-contrast": 17
+    }
+  },
+  "privacy": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 7
+    }
+  },
+  "profile-other": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
+  "profile-own": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
+  "profile-own-guest": {
+    "mobile": {
+      "color-contrast": 3
+    },
+    "desktop": {
+      "color-contrast": 8
+    }
+  },
+  "register": {
+    "mobile": {
+      "color-contrast": 13
+    },
+    "desktop": {
+      "color-contrast": 13
+    }
+  },
+  "reset-password": {
+    "mobile": {
+      "color-contrast": 3
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "scorekeeper": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "scorekeeper-new": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "settings-account": {
+    "mobile": {
+      "color-contrast": 3
+    },
+    "desktop": {
+      "color-contrast": 8
+    }
+  },
+  "settings-badges": {
+    "mobile": {
+      "color-contrast": 13
+    },
+    "desktop": {
+      "color-contrast": 18
+    }
+  },
+  "settings-cheers": {
+    "mobile": {
+      "color-contrast": 8
+    },
+    "desktop": {
+      "color-contrast": 13
+    }
+  },
+  "settings-display": {
+    "mobile": {
+      "color-contrast": 9
+    },
+    "desktop": {
+      "color-contrast": 14
+    }
+  },
+  "settings-experimental": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "settings-feedback": {
+    "mobile": {
+      "color-contrast": 9
+    },
+    "desktop": {
+      "color-contrast": 14
+    }
+  },
+  "settings-history": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 10
+    }
+  },
+  "settings-hosted": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
+  "settings-notifications": {
+    "mobile": {
+      "color-contrast": 6
+    },
+    "desktop": {
+      "color-contrast": 11
+    }
+  },
+  "settings-silenced": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
+  "terms": {
+    "mobile": {
+      "color-contrast": 3
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "tournament-create": {
+    "mobile": {
+      "color-contrast": 12
+    },
+    "desktop": {
+      "color-contrast": 17
+    }
+  },
+  "tournament-discussion": {
+    "mobile": {
+      "color-contrast": 11
+    },
+    "desktop": {
+      "color-contrast": 16
+    }
+  },
+  "tournament-overview": {
+    "mobile": {
+      "color-contrast": 15
+    },
+    "desktop": {
+      "color-contrast": 22
+    }
+  },
+  "tournament-results": {
+    "mobile": {
+      "color-contrast": 21
+    },
+    "desktop": {
+      "color-contrast": 24
+    }
+  },
+  "tournament-schedule": {
+    "mobile": {
+      "color-contrast": 17
+    },
+    "desktop": {
+      "color-contrast": 24
+    }
+  },
+  "tournament-teams": {
+    "mobile": {
+      "color-contrast": 14
+    },
+    "desktop": {
+      "color-contrast": 20
+    }
+  },
+  "tournaments-list": {
+    "mobile": {
+      "color-contrast": 8
+    },
+    "desktop": {
+      "color-contrast": 13
+    }
+  },
+  "tournaments-list-past": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
+  "event-leave-sheet": {
+    "mobile": {
+      "aria-progressbar-name": 1,
+      "color-contrast": 10
+    },
+    "desktop": {
+      "aria-progressbar-name": 2,
+      "color-contrast": 11
+    }
+  }
+}

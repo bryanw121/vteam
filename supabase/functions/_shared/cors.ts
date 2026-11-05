@@ -5,8 +5,11 @@
  */
 const ALLOW_HEADERS = 'authorization, x-client-info, apikey, content-type'
 
-export function corsHeaders(req: Request): Record<string, string> {
-  const allowed = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
+export function corsHeaders(
+  req: Request,
+  env: (name: string) => string | undefined = (name) => Deno.env.get(name),
+): Record<string, string> {
+  const allowed = (env('ALLOWED_ORIGINS') ?? '')
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean)

@@ -4,18 +4,22 @@ import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useMyProfile } from '../../../../hooks/useMyProfile'
-import { ScreenState } from '../../../../components/ui'
+import { useUserSettings } from '../../../../hooks/useUserSettings'
+import { Chip, ScreenState } from '../../../../components/ui'
 import { shared, theme } from '../../../../constants'
-import { NOTIFICATION_TYPE_LABELS } from '../../../../constants/notifications'
+import { DEFAULT_REMINDER_LEAD_MINUTES, NOTIFICATION_TYPE_LABELS, REMINDER_LEAD_OPTIONS } from '../../../../constants/notifications'
 import {
+  isNotificationTypeEnabled,
   listNotificationPrefsResolved,
   patchNotificationPrefs,
 } from '../../../../utils/notificationPrefs'
-import type { NotificationPrefs, NotificationType } from '../../../../types'
+import { isReminderLead, reminderPreview } from '../../../../utils/reminders'
+import type { NotificationPrefs, NotificationSettingRowProps, NotificationType } from '../../../../types'
 
 export default function NotificationSettingsScreen() {
   useStackBackTitle('Notification settings')
   const me = useMyProfile()
+  const { settings, setReminderLead } = useUserSettings()
   const [saveFailed, setSaveFailed] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -34,7 +38,12 @@ export default function NotificationSettingsScreen() {
     if (seq === toggleSeq.current) setSaveFailed(!saved)
   }
 
-  const rows = listNotificationPrefsResolved(prefs)
+  // The Reminders card owns event_reminder; the per-type lists show the rest.
+  const rows = listNotificationPrefsResolved(prefs).filter(r => r.type !== 'event_reminder')
+  const remindersOn = isNotificationTypeEnabled(prefs, 'in_app', 'event_reminder')
+  const stored = settings?.reminder_lead_minutes
+  const lead = isReminderLead(stored) ? stored : DEFAULT_REMINDER_LEAD_MINUTES
+  const preview = reminderPreview(lead)
 
   async function handleRefresh() {
     setRefreshing(true)
@@ -61,11 +70,41 @@ export default function NotificationSettingsScreen() {
         >
           <>
             <Text style={[shared.caption, { marginBottom: theme.spacing.md }]}>
-              Choose which updates you want. In-app notifications always appear in your inbox when enabled. Push delivery will use the same choices when it is available.
+              Choose which updates you want, in the app and as push notifications on your phone.
             </Text>
             {saveFailed ? <Text style={shared.errorText}>Could not save settings. Please try again.</Text> : null}
-            <View style={shared.card}>
-              <Text style={[shared.label, { marginBottom: theme.spacing.sm }]}>In-app</Text>
+            <View style={shared.card} testID="settings-reminders">
+              <Text style={[shared.labelStrong, { marginBottom: theme.spacing.sm }]}>Reminders</Text>
+              <Row
+                label="Before events I'm going to"
+                subtitle="In your inbox, and as a push on your phone"
+                value={remindersOn}
+                onValueChange={v => void toggle('in_app', 'event_reminder', v)}
+                testID="reminders-toggle"
+              />
+              {remindersOn ? (
+                <>
+                  <View style={shared.chipRowWrap} role="radiogroup" aria-label="How long before">
+                    {REMINDER_LEAD_OPTIONS.map(o => (
+                      <Chip
+                        key={o.minutes}
+                        label={o.label}
+                        role="radio"
+                        active={lead === o.minutes}
+                        onPress={() => { if (lead !== o.minutes) void setReminderLead(o.minutes) }}
+                        testID={`reminder-lead-${o.minutes}`}
+                      />
+                    ))}
+                  </View>
+                  <View style={shared.reminderPreview} testID="reminder-preview">
+                    <Text style={shared.reminderPreviewTitle}>{preview.title}</Text>
+                    <Text style={shared.captionStrong}>{preview.body}</Text>
+                  </View>
+                </>
+              ) : null}
+            </View>
+            <View style={[shared.card, { marginTop: theme.spacing.md }]}>
+              <Text style={[shared.labelStrong, { marginBottom: theme.spacing.sm }]}>In-app</Text>
               {rows.map(({ type, in_app }) => (
                 <Row
                   key={`in_app_${type}`}
@@ -76,13 +115,19 @@ export default function NotificationSettingsScreen() {
               ))}
             </View>
             <View style={[shared.card, { marginTop: theme.spacing.md }]}>
-              <Text style={[shared.label, { marginBottom: theme.spacing.sm }]}>Push (coming soon)</Text>
+              <Text style={[shared.labelStrong, { marginBottom: theme.spacing.sm }]}>Push on this phone</Text>
+              <Row
+                key="push_event_reminder"
+                label={NOTIFICATION_TYPE_LABELS.event_reminder}
+                value={isNotificationTypeEnabled(prefs, 'push', 'event_reminder')}
+                disabled={!remindersOn}
+                onValueChange={v => void toggle('push', 'event_reminder', v)}
+              />
               {rows.map(({ type, push }) => (
                 <Row
                   key={`push_${type}`}
                   label={NOTIFICATION_TYPE_LABELS[type]}
                   value={push}
-                  subtitle="Saved for when push is enabled"
                   onValueChange={v => void toggle('push', type, v)}
                 />
               ))}
@@ -94,15 +139,7 @@ export default function NotificationSettingsScreen() {
   )
 }
 
-type RowProps = {
-  label: string
-  subtitle?: string
-  value: boolean
-  disabled?: boolean
-  onValueChange: (v: boolean) => void
-}
-
-function Row({ label, subtitle, value, disabled, onValueChange }: RowProps) {
+function Row({ label, subtitle, value, disabled, onValueChange, testID }: NotificationSettingRowProps) {
   return (
     <View
       style={{
@@ -115,9 +152,11 @@ function Row({ label, subtitle, value, disabled, onValueChange }: RowProps) {
     >
       <View style={{ flex: 1 }}>
         <Text style={shared.body}>{label}</Text>
-        {subtitle ? <Text style={[shared.caption, { marginTop: 2 }]}>{subtitle}</Text> : null}
+        {subtitle ? <Text style={[shared.captionStrong, { marginTop: 2 }]}>{subtitle}</Text> : null}
       </View>
       <Switch
+        testID={testID}
+        accessibilityLabel={label}
         value={value}
         disabled={disabled}
         onValueChange={onValueChange}

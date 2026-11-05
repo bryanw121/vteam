@@ -146,6 +146,20 @@ describe('useMonthEvents', () => {
     expect(feed.loading).toBe(false)
   })
 
+  it('leaves out items that have already ended, but keeps upcoming ones and items with no known end', async () => {
+    const at = (ms: number) => new Date(ms).toISOString().slice(0, 19) // event_date: UTC without a zone
+    const now = Date.now()
+    const ended = eventRow('ended', THIS_MONTH, { event_date: at(now - 3 * 3600_000), duration_minutes: 60 })
+    const later = eventRow('later', THIS_MONTH, { event_date: at(now + 3600_000), duration_minutes: 60 })
+    const noEnd = eventRow('no-end', THIS_MONTH, { event_date: at(now + 7200_000), duration_minutes: 0 })
+    mockResponses.events = { data: [ended, later, noEnd], error: null }
+    render(<Probe />)
+    const months = [...new Set([ended, later, noEnd].map(e => e.event_date.slice(0, 7)))].sort()
+    act(() => feed.loadMonthSpan(months[0], addMonths(months[months.length - 1], 1)))
+    await flush()
+    expect(feed.events.map(e => e.id)).toEqual(['later', 'no-end'])
+  })
+
   it('scopes my_attendance to the signed-in user', async () => {
     mockResponses.events = { data: [eventRow('a')], error: null }
     render(<Probe />)

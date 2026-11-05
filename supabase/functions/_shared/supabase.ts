@@ -1,19 +1,19 @@
 /**
- * Shared by the edge functions that talk to the database or to Expo.
- * Import with an explicit `.ts` extension (Deno requires it):
- *   import { getServiceClient } from '../_shared/supabase.ts'
+ * The real outside world for the edge functions: the service-role client and
+ * `defaultDeps`, which each `<name>/index.ts` passes to its handler:
+ *   Deno.serve(createHandler(defaultDeps))
+ *
+ * This is the only file that imports supabase-js (from a URL), so handlers
+ * and their tests never load it. Import with an explicit `.ts` extension.
  */
 
 // Keep this in step with "@supabase/supabase-js" in package.json
 // (__tests__/edgeFunctions.test.ts fails when they drift apart).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.99.3'
+import type { DbClient, Deps } from './deps.ts'
+import { platformDeps } from './platform.ts'
 
-export const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send'
-export const EXPO_RECEIPTS_URL = 'https://exp.host/--/api/v2/push/getReceipts'
-/** Expo accepts at most 100 messages per send request. */
-export const EXPO_BATCH_SIZE = 100
-/** Expo accepts at most 1000 ticket ids per getReceipts request. */
-export const RECEIPT_BATCH = 1000
+export { chunk, EXPO_BATCH_SIZE, EXPO_PUSH_URL, EXPO_RECEIPTS_URL, RECEIPT_BATCH } from './expo.ts'
 
 let client: ReturnType<typeof createClient> | null = null
 
@@ -31,8 +31,10 @@ export function getServiceClient() {
   return client
 }
 
-export function chunk<T>(items: T[], size: number): T[][] {
-  const out: T[][] = []
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size))
-  return out
+/** Production dependencies: the global fetch, Deno.env, the clock and the service-role client. */
+export const defaultDeps: Deps = {
+  ...platformDeps,
+  // supabase-js's builder types are generic per stage; DbClient (deps.ts) is the
+  // slice the handlers call, and the handler tests hold the fake to that slice.
+  getClient: () => getServiceClient() as unknown as DbClient,
 }

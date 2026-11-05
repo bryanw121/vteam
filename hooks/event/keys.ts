@@ -15,6 +15,8 @@ export const eventKeys = {
   guests: (id: string) => queryKey('event', id, 'guests'),
   cohosts: (id: string) => queryKey('event', id, 'cohosts'),
   myCheers: (id: string, userId: string | null) => queryKey('event', id, 'cheers', userId),
+  /** "I've paid" flags the viewer may see (their own; everyone's for hosts). Per viewer: RLS decides the rows. */
+  payments: (id: string, userId: string) => queryKey('event', id, 'payments', userId),
   /** The viewer's own `ProfileBrief` (optimistic join rows, Venmo note). Shared with chat. */
   viewerProfile: (userId: string) => profileBriefKey(userId),
 }

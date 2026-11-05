@@ -23,6 +23,7 @@ const T = IDS.tournament
 const EVENT_DETAIL = [
   'app/(app)/event/**', 'components/event/**', 'hooks/event/**', 'components/EventCommentRow.tsx', 'components/DiscussionComposer.tsx',
   'components/VenmoPayButton.tsx', 'components/LinkedText.tsx',
+  'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs',
 ]
 const TOURNAMENT_DETAIL = ['app/(app)/tournament/[id].tsx', 'components/tournament/**', 'hooks/tournament/**', 'lib/tournament*.ts', 'constants/tournamentCopy.ts', 'types/tournament.ts']
 // settings/index.tsx only bounces back (settings live under Profile), so it has no screen of its own.
@@ -34,7 +35,8 @@ export const SCREENS = {
     route: '/', ready: 'Lunchtime Pepper',
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'app/(app)/(tabs)/(main)/_layout.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx',
       'components/MyEventsRail.tsx', 'components/Pager.tsx', 'hooks/useMonthEvents.ts', 'hooks/useMyUpcomingEvents.ts', 'hooks/useTags.ts', 'utils/feed*.ts', 'utils/eventCardPreviews.ts',
-      'utils/monthKeys.ts', 'utils/calendar*.ts', 'constants/events.ts', 'components/RefreshControl*.tsx', 'lib/pullGesture.ts'],
+      'utils/monthKeys.ts', 'utils/calendar*.ts', 'constants/events.ts', 'components/RefreshControl*.tsx', 'lib/pullGesture.ts',
+      'components/event/ForecastChip.tsx', 'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs'],
   },
   'events-feed-guest': {
     route: '/', signedIn: false, ready: 'Lunchtime Pepper',
@@ -46,6 +48,8 @@ export const SCREENS = {
   'event-cheers': { route: `/event/${E.pastSand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-cheers', text: 'Cheers' }], sources: [...EVENT_DETAIL, 'components/CheerRadarChart.tsx'] },
   // Bottom of a paid event someone else hosts: price, Venmo button, about.
   'event-paid-bottom': { route: `/event/${E.fridayNight}`, ready: 'Austin Sports Center', actions: [{ scroll: 3000 }], sources: EVENT_DETAIL },
+  // The leave sheet (#171) on a full, paid game that starts tonight: every line, plus the reason chips.
+  'event-leave-sheet': { route: `/event/${E.fridayNight}`, ready: 'Austin Sports Center', actions: [{ tap: 'leave-event' }, { wait: 400 }], sources: [...EVENT_DETAIL, 'components/ui/BottomSheet.tsx', 'components/ui/ConfirmDialog.tsx', 'components/ui/Chip.tsx', 'utils/leaveConsequences.ts', 'constants/copy.ts'] },
   'event-guest': { route: `/event/${E.fridayNight}`, signedIn: false, ready: 'Austin Sports Center', sources: EVENT_DETAIL },
   'host-create': { route: '/host', ready: 'Title', sources: ['app/(app)/host.tsx', 'components/host/**', 'components/DatePickerField*.tsx', 'components/LocationPickerField.tsx', 'components/Input.tsx'] },
   'host-edit': { route: `/host?edit=${E.sundaySand}`, sources: ['app/(app)/host.tsx', 'components/host/**'] },
@@ -68,22 +72,28 @@ export const SCREENS = {
   // ── Profile ─────────────────────────────────────────────────────────────
   'profile-own': {
     route: '/profile', ready: 'Maya',
-    sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'hooks/useMyProfile.ts', 'hooks/useBadges.ts', 'constants/badges.ts'],
+    sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'hooks/useMyProfile.ts', 'hooks/useBadges.ts', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
   },
   'profile-own-guest': { route: '/profile', signedIn: false, sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/SignInPrompt.tsx'] },
   'profile-other': {
     route: `/profile/${P.jordanr}`, ready: 'Jordan',
-    sources: ['app/(app)/profile/**', 'app/(app)/(tabs)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts'],
+    sources: ['app/(app)/profile/**', 'app/(app)/(tabs)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
   },
 
   // ── Settings ────────────────────────────────────────────────────────────
   'settings-account': { route: '/settings/account', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/account.tsx'] },
+  'settings-experimental': { route: '/settings/experimental', ready: 'Scorekeeper', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/experimental.tsx', 'constants/experiments.ts', 'components/scoresheet/MatchRow.tsx'] },
+  scorekeeper: { route: '/scorekeeper', ready: 'New match', sources: ['app/(app)/scorekeeper/index.tsx', 'components/scoresheet/MatchRow.tsx', 'hooks/useSavedMatches.ts'] },
+  'scorekeeper-new': { route: '/scorekeeper/new', ready: 'NET', sources: ['app/(app)/scorekeeper/new.tsx', 'components/scoresheet/CourtLayout.tsx', 'components/scoresheet/CourtSpot.tsx', 'components/scoresheet/PlayerSheet.tsx', 'lib/scoresheet/rules.ts'] },
   'settings-display': { route: '/settings/display', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/display.tsx', 'contexts/textScale.tsx'] },
-  'settings-notifications': { route: '/settings/notifications', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/notifications.tsx'] },
+  'settings-notifications': {
+    route: '/settings/notifications', ready: 'Reminders',
+    sources: [...SETTINGS, 'app/(app)/(tabs)/settings/notifications.tsx', 'constants/notifications.ts', 'utils/notificationPrefs.ts', 'utils/reminders.ts', 'hooks/useUserSettings.ts'],
+  },
   'settings-history': { route: '/settings/history', ready: 'Halloween Warm-up', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/history.tsx'] },
   'settings-hosted': { route: '/settings/hosted', ready: 'Sand Doubles at Butler', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hosted.tsx'] },
   'settings-cheers': { route: '/settings/cheers', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/cheers.tsx', 'components/CheerRadarChart.tsx'] },
-  'settings-badges': { route: '/settings/badges', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'hooks/useBadges.ts'] },
+  'settings-badges': { route: '/settings/badges', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**', 'hooks/useBadges.ts'] },
   'settings-feedback': { route: '/settings/feedback', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/feedback.tsx'] },
   'settings-silenced': { route: '/settings/silenced', ready: 'Hannah', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/silenced.tsx', 'hooks/useSilencedUsers.ts'] },
 

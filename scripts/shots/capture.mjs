@@ -108,7 +108,12 @@ async function runAction(page, action) {
   } else if (action.wait) await page.waitForTimeout(action.wait)
 }
 
-async function captureOne(browser, baseUrl, name, screen, size, opts) {
+/**
+ * Open one screen in a fresh context, wait until it has settled, then call
+ * `onReady(page, result)` (the screenshot, or an axe scan) and record what it returns in `result.output`.
+ * Errors from loading or from `onReady` land in `result.errors`; they never throw.
+ */
+export async function visitScreen(browser, baseUrl, name, screen, size, opts, onReady) {
   const result = { screen: name, size, file: null, ready: null, misses: [], errors: [] }
   const context = await browser.newContext({ ...VIEWPORTS[size], locale: 'en-US', timezoneId: TIME_ZONE, reducedMotion: 'reduce', colorScheme: 'light', serviceWorkers: 'block' })
   try {
@@ -138,9 +143,7 @@ async function captureOne(browser, baseUrl, name, screen, size, opts) {
     const rest = MIN_SETTLE_MS - (Date.now() - loadedAt)
     if (rest > 0) await page.waitForTimeout(rest)
     await settle(page, pending)
-    const file = join(opts.out, `${name}${size === 'desktop' ? '-desktop' : ''}${opts.suffix}.png`)
-    await page.screenshot({ path: file, fullPage: !!screen.fullPage, animations: 'disabled', caret: 'hide' })
-    result.file = file
+    result.output = await onReady(page, result)
     result.misses = [...misses]
   } catch (e) {
     result.errors.push(e.message.split('\n')[0])
@@ -150,25 +153,32 @@ async function captureOne(browser, baseUrl, name, screen, size, opts) {
   return result
 }
 
+/** The screenshot `onReady`: writes <out>/<screen>[-desktop]<suffix>.png. */
+function screenshotTo(opts) {
+  return async (page, result) => {
+    const file = join(opts.out, `${result.screen}${result.size === 'desktop' ? '-desktop' : ''}${opts.suffix}.png`)
+    await page.screenshot({ path: file, fullPage: !!SCREENS[result.screen].fullPage, animations: 'disabled', caret: 'hide' })
+    result.file = file
+  }
+}
+
 /**
- * Capture `screens` (names) from `dist` into `out`. Returns one result per shot.
- * @param {{ dist: string, out: string, screens?: string[], desktop?: boolean, src?: string, now?: Date, suffix?: string, concurrency?: number }} o
+ * Serve `dist`, open every (screen, size) job in Chromium and call `onReady` on each
+ * once it has settled. Results come back in job order (screens as given, mobile before desktop).
+ * @param {{ dist: string, screens?: string[], sizes: string[], src?: string, now?: Date, concurrency?: number, label?: string }} o
+ * @param {(page: import('playwright').Page, result: object) => Promise<any>} onReady
  */
-export async function capture(o) {
+export async function visitScreens(o, onReady) {
   const dist = resolve(o.dist)
   if (!existsSync(join(dist, 'index.html'))) throw new Error(`No web export at ${dist} (index.html missing)`)
   const names = o.screens?.length ? o.screens : Object.keys(SCREENS)
   const unknown = names.filter(n => !SCREENS[n])
   if (unknown.length) throw new Error(`Unknown screen(s): ${unknown.join(', ')}. Known: ${Object.keys(SCREENS).join(', ')}`)
-  await mkdir(o.out, { recursive: true })
   const src = resolve(o.src ?? process.cwd())
-  const opts = {
-    out: o.out, suffix: o.suffix ?? '', now: o.now ?? defaultNow(),
-    relationships: loadRelationships(src), seenIds: loadSeenIds(src),
-  }
+  const opts = { now: o.now ?? defaultNow(), relationships: loadRelationships(src), seenIds: loadSeenIds(src) }
   const server = await serveDist(dist)
   const browser = await launchChromium()
-  const jobs = names.flatMap(n => (o.desktop ? ['mobile', 'desktop'] : ['mobile']).map(size => [n, size]))
+  const jobs = names.flatMap(n => o.sizes.map(size => [n, size]))
   const results = []
   try {
     const concurrency = o.concurrency ?? 4
@@ -176,10 +186,10 @@ export async function capture(o) {
     await Promise.all(Array.from({ length: Math.min(concurrency, jobs.length) }, async () => {
       while (next < jobs.length) {
         const [name, size] = jobs[next++]
-        const r = await captureOne(browser, server.url, name, SCREENS[name], size, opts)
+        const r = await visitScreen(browser, server.url, name, SCREENS[name], size, opts, onReady)
         results.push(r)
         const flag = r.errors.length ? ' (errors)' : r.ready === false ? ' (ready text not found)' : ''
-        process.stderr.write(`  shot ${name}${size === 'desktop' ? ' desktop' : ''}${flag}\n`)
+        process.stderr.write(`  ${o.label ?? 'shot'} ${name}${size === 'desktop' ? ' desktop' : ''}${flag}\n`)
       }
     }))
   } finally {
@@ -188,7 +198,24 @@ export async function capture(o) {
   }
   const order = new Map(jobs.map(([n, s], i) => [`${n}|${s}`, i]))
   results.sort((a, b) => order.get(`${a.screen}|${a.size}`) - order.get(`${b.screen}|${b.size}`))
-  await writeFile(join(o.out, `capture${opts.suffix}.json`), JSON.stringify({ now: opts.now.toISOString(), results }, null, 2))
+  return { results, now: opts.now }
+}
+
+/**
+ * Capture `screens` (names) from `dist` into `out`. Returns one result per shot.
+ * @param {{ dist: string, out: string, screens?: string[], desktop?: boolean, src?: string, now?: Date, suffix?: string, concurrency?: number }} o
+ */
+export async function capture(o) {
+  const suffix = o.suffix ?? ''
+  const now = o.now ?? defaultNow()
+  if (!existsSync(join(resolve(o.dist), 'index.html'))) throw new Error(`No web export at ${resolve(o.dist)} (index.html missing)`)
+  await mkdir(o.out, { recursive: true })
+  const { results } = await visitScreens(
+    { dist: o.dist, screens: o.screens, sizes: o.desktop ? ['mobile', 'desktop'] : ['mobile'], src: o.src, now, concurrency: o.concurrency },
+    screenshotTo({ out: o.out, suffix }),
+  )
+  for (const r of results) delete r.output
+  await writeFile(join(o.out, `capture${suffix}.json`), JSON.stringify({ now: now.toISOString(), results }, null, 2))
   return results
 }
 

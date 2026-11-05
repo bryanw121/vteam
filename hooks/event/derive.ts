@@ -219,3 +219,25 @@ export function resolveJoinAction(s: JoinActionState): JoinAction {
   if (s.requiresApproval) return 'request'
   return 'join'
 }
+
+/** Who sees payment UI at all: paid events only, and only the attendee or a host/co-host. */
+export function paymentVisibility(args: {
+  event: Pick<EventWithDetails, 'price'> | undefined
+  userId: string | null
+  status: Pick<AttendanceStatus, 'isAttending' | 'isWaitlisted' | 'isOwner'>
+  isHostOrCohost: boolean
+}) {
+  const paid = !!args.event && args.event.price != null && args.event.price > 0
+  const onRoster = args.status.isAttending || args.status.isWaitlisted
+  return {
+    /** The viewer can set their own flag (any attendee who isn't the creator). */
+    canToggle: paid && !!args.userId && onRoster && !args.status.isOwner,
+    /** The viewer sees everyone's flags on the roster. */
+    canSeeAll: paid && !!args.userId && args.isHostOrCohost,
+  }
+}
+
+/** How many attending players (not +1 guests) marked "I've paid". */
+export function attendeesPaid(attendees: Pick<Profile, 'id'>[], paidUserIds: ReadonlySet<string>): number {
+  return attendees.reduce((n, p) => (paidUserIds.has(p.id) ? n + 1 : n), 0)
+}

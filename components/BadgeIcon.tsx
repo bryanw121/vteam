@@ -4,6 +4,7 @@ import { Text } from './ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { badgeTierLabel, BADGE_CATEGORY_GRADIENTS, type BadgeDef } from '../constants/badges'
+import { BADGE_ARTWORK } from '../constants/badgeArtwork'
 import { theme } from '../constants/theme'
 
 type Props = {
@@ -29,7 +30,6 @@ export function BadgeIcon({ def, tier, size = 'sm', showLabel = false, slotNumbe
   const fs       = FRAME[size]
   const iconSize = ICON[size]
   const gap      = GAP[size]
-  const isTiered = def.tiers.length > 1
   const r        = fs / 2
 
   const [topColor, bottomColor] = BADGE_CATEGORY_GRADIENTS[def.type] ?? ['#888', '#444']
@@ -37,8 +37,10 @@ export function BadgeIcon({ def, tier, size = 'sm', showLabel = false, slotNumbe
 
   // Resolve image URI: per-tier image takes precedence over a single imageUri
   const resolvedImageUri = (earned && def.tierImageUris?.[tier!]) || def.imageUri
-  // Tiered image badges (e.g. spike) render larger since they're detailed artwork
-  const imageScale = def.tierImageUris ? 1.4 : 1.2
+  const bundledArtwork = BADGE_ARTWORK[def.type]?.[earned ? tier! : def.tiers[0].tier]
+  const resolvedImageSource = bundledArtwork ?? (resolvedImageUri ? { uri: resolvedImageUri } : undefined)
+  // The bundled PNGs share a padded canvas; keep the art inside the label gap.
+  const imageScale = bundledArtwork ? 1.15 : def.tierImageUris ? 1.4 : 1.2
 
   return (
     <View style={{ alignItems: 'center', gap }}>
@@ -46,10 +48,12 @@ export function BadgeIcon({ def, tier, size = 'sm', showLabel = false, slotNumbe
       {/* ── Icon area ── */}
       <View style={{ width: fs, height: fs, alignItems: 'center', justifyContent: 'center' }}>
 
-        {resolvedImageUri ? (
+        {resolvedImageSource ? (
           // Image badge — renders larger as a free-form sticker using image transparency
           <Image
-            source={{ uri: resolvedImageUri }}
+            source={resolvedImageSource}
+            testID={`badge-artwork-${def.type}`}
+            accessibilityLabel={earned ? label : `${label} (locked)`}
             style={{ width: fs * imageScale, height: fs * imageScale, opacity: earned ? 1 : 0.25 }}
             resizeMode="contain"
           />
