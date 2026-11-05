@@ -1,0 +1,4 @@
+:root{--primary:#7C4DFF;--primarySoft:#2A1F6B;--accent:#3DC9F5;--bg:#13111F;--card:#1E1B2E;--text:#EDEAFF;--sub:#8885A4;--subS:#B5B1D4;--border:#2C2848;--error:#FF5555;--success:#00D26A;--warning:#FFA040;--time:#2A1F6B;--timeInk:#D6C9FF;--cool:#00D6B4}
+*{box-sizing:border-box}body{margin:0;background:#0b0a13;font-family:Inter,system-ui,sans-serif;color:var(--text)}
+h1,h2,h3{font-family:'Space Grotesk',system-ui,sans-serif;margin:0}
+.lbl{font:600 15px 'Space Grotesk',sans-serif;color:var(--subS);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}

@@ -1,0 +1,26 @@
+<html><head><link rel=stylesheet href=common.css><style>
+body{padding:28px;width:1280px}.wrap{background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:24px 28px;margin-bottom:22px}
+.row{display:flex;align-items:center;height:34px}.name{width:250px;font-size:14px;color:var(--subS)}.track{position:relative;flex:1;height:22px;border-left:1px solid var(--border)}
+.bar{position:absolute;height:22px;border-radius:6px;font-size:12px;line-height:22px;padding-left:8px;white-space:nowrap;color:#fff}
+.axis{display:flex;margin-left:250px;color:var(--sub);font-size:12px;justify-content:space-between;margin-top:6px}
+.mark{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--success)}
+.note{font-size:14px;color:var(--subS);margin-top:12px}.big{color:var(--success);font-weight:700}
+</style></head><body>
+<script>
+const S=950/5; // px per second, 5s axis
+function chart(title,rows,mark,note){let h=`<div class=wrap><div class=lbl>${title}</div>`;
+for(const [n,a,b,c,t] of rows){h+=`<div class=row><div class=name>${n}</div><div class=track><div class=bar style="left:${a*S}px;width:${(b-a)*S}px;background:${c}">${t||''}</div>${n.startsWith('Feed visible')?`<div class=mark style="left:${mark*S}px"></div>`:''}</div></div>`}
+h+=`<div class=axis>${[0,1,2,3,4,5].map(x=>`<span>${x}s</span>`).join('')}</div><div class=note>${note}</div></div>`;document.write(h)}
+chart('Before · first visit or >12h since last (no saved feed), mid-range phone, 4G, cold server',[
+['HTML + JS bundle (876 KB gz)',0,1.25,'#3E2F94','download + parse'],
+['App boots, auth restore',1.25,1.8,'#5A2BFF','hydrate'],
+['get_feed_span (cold server ~1.9 s)',1.8,3.9,'#FF6B3D','waits for PostgREST to wake'],
+['7 other boot requests',1.8,3.9,'#8a4b36','app_config, ads, settings… stall together'],
+['Feed visible',4.2,4.25,'#00D26A','']],4.2,'Feed shows at <b>≈4.2 s</b>. The server only starts waking at 1.8 s, after the bundle has loaded.');
+chart('After · same conditions, feed request started by an inline script in the HTML head',[
+['HTML + JS bundle (876 KB gz)',0,1.25,'#3E2F94','download + parse'],
+['Inline prefetch: get_feed_span',0.15,2.25,'#00D6B4','server wakes while the bundle loads'],
+['App boots, adopts the prefetch',1.25,1.8,'#5A2BFF','hydrate'],
+['7 other boot requests',1.8,2.4,'#3a5a52','server already warm'],
+['Feed visible',2.6,2.65,'#00D26A','']],2.6,'Feed shows at <b class=big>≈2.6 s (−1.6 s)</b>. Target: p50 under 3 s on this profile, measured in the shots harness with a 2 s first-request delay.');
+</script></body></html>

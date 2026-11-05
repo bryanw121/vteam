@@ -168,5 +168,29 @@
     "bucket": "testing",
     "status": "proposed",
     "summary": "scripts/bundle-size.mjs after build:web: initial vs lazy JS gz, source-map attribution per package/folder, job summary, fail when initial JS grows >15 KB gz and >3% over committed baseline; bundleImports test enforces icon-barrel/pdf-lib/expo-print/Sentry import rules. Entry is 876 KB gz today."
+  },
+  {
+    "date": "2026-11-05",
+    "n": 1,
+    "title": "Wake the server from the HTML: start the Events feed request before the app bundle loads",
+    "bucket": "latency",
+    "status": "proposed",
+    "summary": "Inline head script starts get_feed_span at ~0.1 s (same span as the hook, viewer token or anon); useMonthEvents adopts it. ~1.6 s off cold first opens on a phone; adds feed_first_paint metric."
+  },
+  {
+    "date": "2026-11-05",
+    "n": 2,
+    "title": "Player profile, history and cheers on lib/query: cached back-navigation, prefetch on tap, a real error state",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "useUserProfile / useEventHistory / useCheersSummary replace effect fetches in profile/[id], settings/history, hosted, cheers; fixes false 'Profile not found' on errors; prefetch on avatar press."
+  },
+  {
+    "date": "2026-11-05",
+    "n": 3,
+    "title": "RLS matrix: every table declares who may read and write it, and CI proves it on beta",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "Typed matrix of anon/stranger/owner access for all 51 tables (19 asserted today); unit test fails on a table without an entry; generated probes in the api e2e shard on beta."
   }
 ]
