@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { View, TouchableOpacity, Animated, Modal, ActivityIndicator } from 'react-native'
+import { View, TouchableOpacity, Animated, Modal } from 'react-native'
 import { Text, TextInput } from '../../components/ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
@@ -17,6 +17,7 @@ import { INCORRECT_EMAIL_OR_PASSWORD } from '../../constants/copy'
 import { routes, toRoute } from '../../utils/routes'
 import { takeGuestReturnPath } from '../../utils/authGate'
 import { AgreementLine } from '../../components/legal/AgreementLine'
+import { Spinner } from '../../components/ui/Spinner'
 
 function obfuscateEmail(email: string): string {
   const [local, domain] = email.split('@')
@@ -366,7 +367,7 @@ export default function Login() {
                 }}
               >
                 {socialLoading === 'google' ? (
-                  <ActivityIndicator size="small" color={theme.colors.subtext} />
+                  <Spinner size="small" color={theme.colors.subtext} />
                 ) : (
                   <GoogleLogo size={18} />
                 )}

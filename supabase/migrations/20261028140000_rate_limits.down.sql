@@ -1,7 +1,9 @@
 -- Undo 20261028140000_rate_limits.sql.
 drop function if exists public.search_members(text, integer);
 
--- find_or_create_dm exactly as it was.
+-- find_or_create_dm exactly as it is on main: the original body with the fixed
+-- search_path and grants from 20261028160000_definer_search_path.sql (CREATE OR
+-- REPLACE keeps the grants: EXECUTE for authenticated, not anon).
 create or replace function public.find_or_create_dm(other_user_id uuid)
  returns uuid
  language plpgsql
@@ -30,7 +32,7 @@ BEGIN
   RETURN conv_id;
 END;
 $function$;
-alter function public.find_or_create_dm(uuid) reset search_path;
+alter function public.find_or_create_dm(uuid) set search_path = public, pg_temp;
 
 drop trigger if exists trg_rate_limit_messages on public.messages;
 drop trigger if exists trg_rate_limit_event_comments on public.event_comments;

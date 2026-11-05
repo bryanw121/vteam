@@ -9,6 +9,7 @@
 --
 --  1. profiles.notification_prefs -> user_settings.notification_prefs (owner-only RLS)
 --  2. profiles.is_admin           -> app_admins (no client access) + is_app_admin()
+--                                   (current_user_is_admin() switches to app_admins on its own)
 --  3. event_attendees.denial_reason -> event_attendee_denials (host, co-hosts, that attendee)
 --  4. event_guests: signed-out visitors no longer read +1 names; headcounts
 --     still work through event_guests_attending (no names)
@@ -53,10 +54,10 @@ $$;
 revoke execute on function public.is_app_admin() from public, anon;
 grant execute on function public.is_app_admin() to authenticated;
 
-drop policy if exists "Admins insert clubs" on public.clubs;
-create policy "Admins insert clubs" on public.clubs
-  for insert to public
-  with check ((select public.is_app_admin()));
+-- No clubs policy here: main dropped the leftover "Admins insert clubs" policy
+-- (20261031032200_drop_admin_club_insert_policy.sql); any signed-in user creates
+-- clubs. current_user_is_admin() (20261028170100_ads.sql) already reads
+-- app_admins once this table exists.
 
 -- Old clients may still write these columns: move a written value to its
 -- private home and keep the public column at its default.

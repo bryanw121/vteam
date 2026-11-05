@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { View, Animated, PanResponder, Dimensions } from 'react-native'
+import { SWIPE_NAVIGATION } from '../constants/navigation'
 
 type Props = {
   page: number
@@ -19,10 +20,12 @@ type Props = {
 
 /**
  * Tab pager driven by the `page` prop (controlled).
- * Pass swipeEnabled={false} to disable gesture-based tab switching.
+ * Swiping between pages follows `SWIPE_NAVIGATION.tabs` (off since Oct 2026;
+ * the gesture code below is kept so the flag can bring it back). Pass
+ * swipeEnabled to override it for one pager.
  * Pass pagerBlockedRef to dynamically block swiping from specific inner areas.
  */
-export function Pager({ page, onPageChange, children, swipeEnabled = true, pagerBlockedRef, staticRender = false, autoHeight = false }: Props) {
+export function Pager({ page, onPageChange, children, swipeEnabled = SWIPE_NAVIGATION.tabs, pagerBlockedRef, staticRender = false, autoHeight = false }: Props) {
   if (staticRender) {
     return (
       <View style={autoHeight ? undefined : { flex: 1 }}>
@@ -46,7 +49,7 @@ export function Pager({ page, onPageChange, children, swipeEnabled = true, pager
   return <SwipePager page={page} onPageChange={onPageChange} swipeEnabled={swipeEnabled} pagerBlockedRef={pagerBlockedRef}>{children}</SwipePager>
 }
 
-function SwipePager({ page, onPageChange, children, swipeEnabled = true, pagerBlockedRef }: Omit<Props, 'staticRender' | 'autoHeight'>) {
+function SwipePager({ page, onPageChange, children, swipeEnabled = SWIPE_NAVIGATION.tabs, pagerBlockedRef }: Omit<Props, 'staticRender' | 'autoHeight'>) {
   const count = (children as React.ReactNode[]).length
   const [containerWidth, setContainerWidth] = useState(Dimensions.get('window').width)
   const translateX = useRef(new Animated.Value(-page * containerWidth)).current

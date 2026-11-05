@@ -131,7 +131,7 @@ export default function BadgesScreen() {
             </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          <View testID="badges-grid" style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             {BADGE_DEFINITIONS.map(def => {
               const badge = badges.find(b => b.badge_type === def.type)
               const isSelected = detailDef?.type === def.type
@@ -167,7 +167,7 @@ export default function BadgesScreen() {
             Unlock borders by earning attendance badges.
           </Text>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.lg }}>
+          <View role="radiogroup" aria-label="Profile border" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.lg }}>
             <BorderSwatch
               label="None"
               size="lg"

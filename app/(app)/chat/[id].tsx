@@ -1,16 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  View,
-  ScrollView,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  Image,
-  Pressable,
-  Modal,
-  Alert,
-} from 'react-native'
+import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Image, Pressable, Modal, Alert } from 'react-native'
 import { Text, TextInput } from '../../../components/ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
@@ -39,6 +28,7 @@ import type { MessageWithDetails, MentionUser } from '../../../types'
 import { profileAvatarSmallUri, profileDisplayName, confirmDestructive } from '../../../utils'
 import { chatAlert } from '../../../utils/chatUtils'
 import { routes } from '../../../utils/routes'
+import { Spinner } from '../../../components/ui/Spinner'
 
 const AVATAR_SIZE = 36
 
@@ -637,7 +627,7 @@ export default function ChatRoomScreen() {
               }}
             >
               {sending || uploadingImage ? (
-                <ActivityIndicator size="small" color={canSend ? theme.colors.white : theme.colors.subtext} />
+                <Spinner size="small" color={canSend ? theme.colors.white : theme.colors.subtext} />
               ) : (
                 <Ionicons name="send" size={16} color={canSend ? theme.colors.white : theme.colors.subtext} />
               )}

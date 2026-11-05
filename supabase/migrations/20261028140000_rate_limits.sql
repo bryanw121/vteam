@@ -61,8 +61,11 @@ drop trigger if exists trg_rate_limit_feedback on public.feedback_submissions;
 create trigger trg_rate_limit_feedback before insert on public.feedback_submissions
   for each row execute function public.rate_limit_insert('feedback', '5', '3600');
 
--- DM creation: same behavior as before, plus a limit on NEW conversations only,
--- and a fixed search_path (it is SECURITY DEFINER).
+-- DM creation: same behavior as before, plus a limit on NEW conversations only.
+-- Builds on main's 20261028160000_definer_search_path.sql, which fixed its
+-- search_path to `public, pg_temp` and limited EXECUTE to authenticated: the body
+-- below qualifies every name, so it uses the stricter empty search_path, and
+-- CREATE OR REPLACE keeps those grants.
 create or replace function public.find_or_create_dm(other_user_id uuid)
 returns uuid
 language plpgsql
