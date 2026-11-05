@@ -52,6 +52,7 @@ export default function DeleteAccountScreen() {
         </View>
         <Text style={shared.body}>
           Deleting your account removes your profile, photos, messages, comments, RSVPs and settings.
+          Your points and any ad-free time you bought with them are lost too.
           Past events you hosted and kudos you gave stay for the people involved, without your name.
         </Text>
       </View>
