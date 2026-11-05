@@ -138,6 +138,7 @@ function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStar
         onRemove={isOwner ? onRemove : undefined}
         menuLabel={`Actions for ${profileDisplayName(profile)}`}
         removeLabel={`Remove ${profileDisplayName(profile)}`}
+        testID={`roster-menu-${profile.id}`}
       />
     </View>
   )
@@ -222,6 +223,7 @@ type CardCornerControlProps = {
   onRemove?: () => void
   menuLabel: string
   removeLabel: string
+  testID?: string
 }
 
 /**
@@ -230,7 +232,7 @@ type CardCornerControlProps = {
  * presses register; web uses a responder View (a GH touchable there loses to
  * the card's gestures), native a gesture-handler touchable. 44pt hit area.
  */
-function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel }: CardCornerControlProps) {
+function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel, testID }: CardCornerControlProps) {
   const activate = onOpenMenu ?? onRemove
   if (!activate) return null
   const label = onOpenMenu ? menuLabel : removeLabel
@@ -242,6 +244,7 @@ function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel }: Car
       style={[onOpenMenu ? shared.rowMenuTrigger : styles.removeBtn, styles.removeBtnHit]}
       accessibilityRole="button"
       accessibilityLabel={label}
+      testID={testID}
     >
       {glyph}
     </View>
@@ -252,6 +255,7 @@ function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel }: Car
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={label}
+      testID={testID}
     >
       {glyph}
     </GHTouchableOpacity>
