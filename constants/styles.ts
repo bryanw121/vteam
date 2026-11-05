@@ -234,6 +234,26 @@ export const shared = StyleSheet.create({
     color: theme.colors.timeInk, letterSpacing: -0.2,
   },
   timePillLabelLg: { fontSize: theme.font.size.lgm },
+  // Weather on outdoor games (#165): card chip next to the TimePill, event page row.
+  forecastChip: {
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start',
+    paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full,
+    borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.card,
+  },
+  forecastChipRain: { backgroundColor: theme.colors.accent + '1A', borderColor: theme.colors.accent + '66' },
+  forecastChipHeat: { backgroundColor: theme.colors.warm + '1F', borderColor: theme.colors.warm + '73' },
+  forecastChipLabel: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong },
+  forecastChipLabelRain: { color: theme.colors.accent },
+  forecastChipLabelHeat: { color: theme.colors.warm },
+  forecastCells: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: theme.spacing.sm },
+  forecastCell: {
+    minWidth: 56, flexGrow: 0, alignItems: 'center', paddingVertical: 6, paddingHorizontal: 8,
+    borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.background,
+  },
+  forecastCellInGame: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
+  forecastCellTime: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
+  forecastCellTemp: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lgs, color: theme.colors.text },
+  forecastCellPop: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
   externalCard: {
     backgroundColor: theme.colors.card,
     borderRadius: 20,
@@ -417,7 +437,7 @@ export const shared = StyleSheet.create({
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: theme.font.size.smd,
     fontWeight: font.weight.semibold,
-    color: colors.subtext,
+    color: colors.subtextStrong,
   },
   chipLabelActive:     { color: colors.onPrimary },
   chipLabelActiveTint: { color: colors.primary },
@@ -584,6 +604,20 @@ export const shared = StyleSheet.create({
 
   // ── Wrapping row of Chips (forms) ─────────────────────────
   chipRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs, marginTop: theme.spacing.xs, marginBottom: theme.spacing.xs },
+  // Settings → Notifications: example of the reminder a player will get.
+  reminderPreview: {
+    marginTop: theme.spacing.sm,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 2,
+  },
+  reminderPreviewTitle: { fontFamily: theme.fonts.bodySemiBold, fontWeight: '600', fontSize: theme.font.size.md, color: theme.colors.text },
+  // Secondary text on settings cards and in the inbox: `caption`/`label` in a colour that passes WCAG AA there.
+  captionStrong: { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong },
+  labelStrong: { fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong, marginBottom: theme.spacing.xs },
 
   // ── One-time banner (components/ui/OneTimeBanner) ────────
   oneTimeBanner: {
@@ -856,4 +890,15 @@ export const shared = StyleSheet.create({
     borderRadius: 18, paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
   },
   settingsPreviewBubbleText: { fontFamily: fonts.body, fontSize: font.size.md, color: colors.onPrimary },
+
+  // ── Leave sheet (components/event/LeaveSheet, #171) ────────
+  leaveSubtitle: { fontFamily: fonts.body, fontSize: font.size.sm, color: colors.subtextStrong, marginTop: -spacing.sm, marginBottom: spacing.md },
+  leaveLines: { gap: spacing.md, marginBottom: spacing.md },
+  leaveLine: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  leaveLineIcon: { marginTop: 1 },
+  leaveLineText: { flex: 1, fontFamily: fonts.body, fontSize: font.size.md, lineHeight: 20, color: colors.subtextStrong },
+  leaveLineStrong: { fontFamily: fonts.bodySemiBold, fontWeight: '600', color: colors.text },
+  leaveReasonLabel: { fontFamily: fonts.body, fontSize: font.size.sm, color: colors.subtextStrong, marginBottom: spacing.xs },
+  leaveNote: { marginTop: spacing.sm, marginBottom: spacing.md, fontSize: font.size.base, minHeight: 44 },
+  leaveActions: { gap: spacing.sm },
 })

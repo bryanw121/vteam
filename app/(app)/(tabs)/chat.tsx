@@ -1,13 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  View,
-  FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  Platform,
-} from 'react-native'
+import { View, FlatList, TouchableOpacity, Modal, Pressable, Platform } from 'react-native'
 import { Text, TextInput } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
 import { Image } from 'expo-image'
@@ -27,6 +19,7 @@ import type { ConversationRow, Profile } from '../../../types'
 import { useSession } from '../../../contexts/session'
 import { SignInPrompt } from '../../../components/SignInPrompt'
 import { ScreenState } from '../../../components/ui'
+import { Spinner } from '../../../components/ui/Spinner'
 
 function conversationTitle(row: ConversationRow): string {
   if (row.type === 'club') return row.club_name ?? 'Club Chat'
@@ -105,7 +98,7 @@ function NewDMModal({ visible, onDismiss, onSelect, silencedUserIds, myId }: {
 
         {searching ? (
           <View style={{ padding: theme.spacing.xl, alignItems: 'center' }}>
-            <ActivityIndicator color={theme.colors.primary} />
+            <Spinner color={theme.colors.primary} />
           </View>
         ) : (
           <FlatList
@@ -280,7 +273,7 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
               {preview}
             </Text>
             {hasUnread && (
-              <View style={{
+              <View testID="conversation-unread" style={{
                 minWidth: 20, height: 20, borderRadius: 10,
                 backgroundColor: theme.colors.primary,
                 alignItems: 'center', justifyContent: 'center',

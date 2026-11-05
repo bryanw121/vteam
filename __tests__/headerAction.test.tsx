@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import { Share, StyleSheet, View } from 'react-native'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
@@ -8,7 +8,6 @@ import { EventHeaderActions } from '../components/event/EventHeaderActions'
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 20, bottom: 34, left: 0, right: 0 }),
 }))
-jest.mock('expo-linking', () => ({ createURL: (p: string) => `vteam://${p}` }))
 
 const flat = (el: { props: { style?: unknown } }) => StyleSheet.flatten(el.props.style as never) ?? {}
 
@@ -95,6 +94,32 @@ describe('event header actions', () => {
       measure.mockRestore()
       jest.useRealTimers()
     }
+  })
+})
+
+describe('Share sends an https link (#130)', () => {
+  it('native share sheet: title + Central time + https link, never vteam://', async () => {
+    const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' })
+    try {
+      renderHeader({ eventId: 'abc-123', title: 'Sand Doubles', eventDate: '2026-10-31T21:00:00' })
+      await act(async () => { fireEvent.press(screen.getByTestId('event-share-button')) })
+      expect(share).toHaveBeenCalledTimes(1)
+      const content = share.mock.calls[0][0] as { message: string; url?: string }
+      const sent = `${content.message} ${content.url ?? ''}`
+      expect(sent).toContain('https://vteamvolleyball.com/event/abc-123')
+      expect(sent).not.toContain('vteam://')
+      expect(content.message).toContain('"Sand Doubles" · Sat, Oct 31, 4:00 PM on vteam')
+      // The link is sent once: as `url` on iOS, in the text elsewhere.
+      expect(sent.match(/https:\/\//g)).toHaveLength(1)
+    } finally {
+      share.mockRestore()
+    }
+  })
+
+  it('no longer builds links with expo-linking', () => {
+    const src = readFileSync(resolve(__dirname, '../components/event/EventHeaderActions.tsx'), 'utf8')
+    expect(src).not.toMatch(/createURL|window\.location\.href/)
+    expect(src).toMatch(/shareUrl\(routes\.event\(eventId\)\)/)
   })
 })
 

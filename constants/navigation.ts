@@ -71,6 +71,26 @@ export function tabIndexFromPath(path: string): number {
   return tabForPath(path).pageIndex
 }
 
+/**
+ * Swipe navigation in the iOS and Android apps. Turned off (Oct 2026) after
+ * swipes kept navigating by accident. The code is kept, so either switch
+ * brings its gesture back:
+ * - `tabs`: swipe left/right between the main tabs (Events / Clubs / Chat /
+ *   Profile) and between an event's tabs (Details / People / ...). Both are
+ *   `components/Pager`, whose `swipeEnabled` defaults to this.
+ * - `back`: iOS swipe from the left edge to go back on stack screens, swipe
+ *   from anywhere on Settings screens (`fullScreenGestureEnabled`), and swipe
+ *   down to close the Host modal. Every Stack's `gestureEnabled` reads this.
+ *   Android's system back button/gesture is the OS's and always works.
+ * Web never had either: narrow web renders the pager statically, and the
+ * browser's own swipe-back can't be turned off by a page.
+ * `__tests__/swipeNavigation.test.ts` keeps every layout reading these flags.
+ */
+export const SWIPE_NAVIGATION = {
+  tabs: false,
+  back: false,
+} as const
+
 export type CreateMenuOption = {
   label: string
   path: RouteString

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, View } from 'react-native'
 import { Text } from '../ui/Text'
 import type { RefreshControlProps } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -10,6 +10,7 @@ import { Button } from '../Button'
 import { DiscussionComposer } from '../DiscussionComposer'
 import type { MentionUser, TournamentCommentWithAuthor } from '../../types'
 import { CommentRow } from './CommentRow'
+import { Spinner } from '../ui/Spinner'
 
 type Props = {
   /** Pull-to-refresh for the whole tournament page. */
@@ -76,7 +77,7 @@ export function DiscussionTab({ comments, hasEarlier, loadingEarlier, onLoadEarl
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={insets.top + 88}>
       {loading && comments.length === 0 ? (
-        <View style={shared.centered}><ActivityIndicator color={theme.colors.primary} /></View>
+        <View style={shared.centered}><Spinner color={theme.colors.primary} /></View>
       ) : error && comments.length === 0 ? (
         <View style={shared.screenStateCenter}>
           <Text style={[shared.caption, shared.emptyStateBody]}>Couldn't load the discussion.</Text>
@@ -110,7 +111,7 @@ export function DiscussionTab({ comments, hasEarlier, loadingEarlier, onLoadEarl
               style={shared.loadEarlierButton}
             >
               {loadingEarlier
-                ? <ActivityIndicator size="small" color={theme.colors.primary} />
+                ? <Spinner size="small" color={theme.colors.primary} />
                 : <Text style={shared.loadEarlierLabel}>Load earlier comments</Text>}
             </TouchableOpacity>
           ) : null}

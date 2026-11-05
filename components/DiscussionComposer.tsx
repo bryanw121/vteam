@@ -3,19 +3,13 @@
  * Handles @mention autocomplete, reply-to banner, edit mode, and host announcement toggle.
  */
 import React, { useMemo, useRef, useState } from 'react'
-import {
-  ActivityIndicator,
-  Platform,
-  ScrollView,
-  Switch,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { Platform, ScrollView, Switch, TouchableOpacity, View } from 'react-native'
 import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Input } from './Input'
 import { theme } from '../constants'
 import type { MentionUser } from '../types'
+import { Spinner } from './ui/Spinner'
 
 export type DiscussionComposerProps = {
   /** User IDs/names available for @mention autocomplete. Pass [] to disable mentions. */
@@ -167,6 +161,7 @@ export function DiscussionComposer({
             {announcementLabel}
           </Text>
           <Switch
+            accessibilityLabel={announcementLabel}
             value={isAnnouncement}
             onValueChange={setIsAnnouncement}
             trackColor={{ false: theme.colors.border, true: theme.colors.primary + '99' }}
@@ -247,7 +242,7 @@ export function DiscussionComposer({
           }}
         >
           {posting
-            ? <ActivityIndicator size="small" color={theme.colors.white} />
+            ? <Spinner size="small" color={theme.colors.white} />
             : <Ionicons name={isEditing ? 'checkmark' : 'send'} size={20} color={theme.colors.white} />}
         </TouchableOpacity>
       </View>

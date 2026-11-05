@@ -110,6 +110,14 @@ describe('requireWebhookAuth', () => {
     expect(requireWebhookAuth(req)?.status).toBe(401)
   })
 
+  it('reads the env reader it is given instead of Deno.env', () => {
+    globals.Deno = undefined
+    const env = (key: string) => ({ SUPABASE_SERVICE_ROLE_KEY: SERVICE_KEY } as Record<string, string>)[key]
+    const req = { headers: headers({ authorization: `Bearer ${SERVICE_KEY}` }) } as Request
+    expect(requireWebhookAuth(req, env)).toBeNull()
+    expect(requireWebhookAuth({ headers: headers({}) } as Request, env)?.status).toBe(401)
+  })
+
   it('returns 401 (not a crash) when run outside Deno with no env', () => {
     globals.Deno = undefined
     const req = { headers: headers({ authorization: `Bearer ${SERVICE_KEY}` }) } as Request

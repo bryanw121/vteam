@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { ActivityIndicator, TouchableOpacity, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { shared, theme, SURFACE_ACCENTS, SURFACE_LABELS } from '../constants'
@@ -9,6 +9,7 @@ import { formatSessionTimeRange, signupHost } from '../utils/feedItems'
 import { describeNewTime } from '../lib/schelagg'
 import { useOutsideSessionLink } from '../hooks/useOutsideSessionLink'
 import { ConfirmDialog } from './ui'
+import { Spinner } from './ui/Spinner'
 
 type Props = { session: ExternalSession }
 
@@ -124,7 +125,7 @@ function ExternalSessionCardInner({ session }: Props) {
           <View style={shared.externalSignup}>
             <Text style={shared.externalSignupLabel}>{link.checking ? 'Checking with the venue…' : signupLabel}</Text>
             {link.checking
-              ? <ActivityIndicator size="small" color={theme.colors.text} testID="external-session-checking" />
+              ? <Spinner size="small" color={theme.colors.text} testID="external-session-checking" />
               : <Ionicons name="open-outline" size={13} color={theme.colors.text} />}
           </View>
         )}

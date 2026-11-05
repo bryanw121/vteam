@@ -1,0 +1,14 @@
+{
+  "tasks": {
+    "lint": "deno lint",
+    "check": "deno check --frozen */index.ts */handler.test.ts _shared/*.ts",
+    "test": "deno test"
+  },
+  "lint": {
+    "rules": { "tags": ["recommended"] }
+  },
+  "test": {
+    "include": ["*/handler.test.ts"]
+  },
+  "lock": { "path": "./deno.lock" }
+}

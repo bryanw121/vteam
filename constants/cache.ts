@@ -22,4 +22,8 @@ export const STALE = {
   conversations: 30_000,
   /** Court availability from Schelagg (Book a court). Its API caches 60s, so refetching sooner gains nothing. */
   courts: 60_000,
+  /** NWS hourly forecast per court (useForecast). The proxy's CDN copy is fresh for 30 min too. */
+  forecast: 30 * 60_000,
+  /** Curated reference lists that change only by migration (major_cities). */
+  reference: 60 * 60_000,
 } as const

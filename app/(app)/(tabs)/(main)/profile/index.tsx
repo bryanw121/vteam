@@ -27,12 +27,14 @@ import { useFocusRefetch } from '../../../../../lib/query'
 import { useFriends } from '../../../../../hooks/useFriends'
 import { useSilencedUsers } from '../../../../../hooks/useSilencedUsers'
 import { visibleIncoming } from '../../../../../utils/friends'
+import { pointsBalanceKey, usePointsBalance } from '../../../../../hooks/usePoints'
 import { routes } from '../../../../../utils/routes'
 import type { Profile, ProfilePatch, ToastState, UserBadge } from '../../../../../types'
 
 type Props = {
   profile: Profile
   totalCheers: number
+  totalPoints: number
   badges: UserBadge[]
   saving: boolean
   updateProfile: (patch: ProfilePatch) => Promise<boolean>
@@ -43,7 +45,7 @@ type Props = {
 }
 
 /** The loaded Profile tab: hero card, then either the settings menu or the edit form. */
-function MyProfileBody({ profile, totalCheers, badges, saving, updateProfile, setDisplaySlot, checkBadges, refreshing, onRefresh }: Props) {
+function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, updateProfile, setDisplaySlot, checkBadges, refreshing, onRefresh }: Props) {
   const router = useRouter()
   const tour = useTour()
   const { data: friends } = useFriends()
@@ -92,6 +94,7 @@ function MyProfileBody({ profile, totalCheers, badges, saving, updateProfile, se
     <View style={[shared.screen, { position: 'relative' }, docScrollActive && ({ flex: undefined } as object)]}>
       <DocScrollView
         docScroll={docScrollActive}
+        memoryKey={`tab:profile:${section}`}
         contentContainerStyle={[shared.scrollContent, { paddingBottom: tabBarHeight + 32 }]}
         onScroll={handleScroll}
         scrollEventThrottle={100}
@@ -112,6 +115,7 @@ function MyProfileBody({ profile, totalCheers, badges, saving, updateProfile, se
           uploader={uploader}
           mode={section}
           totalCheers={totalCheers}
+          totalPoints={totalPoints}
           displayedBadges={displayedBadges}
           onEdit={() => setSection('edit')}
         />
@@ -153,11 +157,13 @@ function MyProfileSignedIn() {
 
   const me = useMyProfile({ enabled: isActive })
   const cheers = useMyCheersCount({ enabled: isActive })
+  const points = usePointsBalance(userId, { enabled: isActive })
   const { badges, checkBadges, fetchBadges, setDisplaySlot } = useBadges({ enabled: isActive })
 
   // Refetch on focus / foreground only while visible, and only when stale.
   useFocusRefetch(isActive && userId ? myProfileKey(userId) : null)
   useFocusRefetch(isActive && userId ? myCheersCountKey(userId) : null)
+  useFocusRefetch(isActive && userId ? pointsBalanceKey(userId) : null)
   useFocusRefetch(isActive && userId ? badgesKey(userId) : null)
 
   // Award any newly earned badges (throttled inside checkBadges).
@@ -170,7 +176,7 @@ function MyProfileSignedIn() {
   async function handleRefresh() {
     setRefreshing(true)
     try {
-      await Promise.all([me.refetch({ force: true }), cheers.refetch({ force: true }), fetchBadges(true)])
+      await Promise.all([me.refetch({ force: true }), cheers.refetch({ force: true }), points.refetch({ force: true }), fetchBadges(true)])
     } finally {
       setRefreshing(false)
     }
@@ -192,6 +198,7 @@ function MyProfileSignedIn() {
     <MyProfileBody
       profile={profile}
       totalCheers={cheers.data ?? 0}
+      totalPoints={points.data ?? 0}
       badges={badges}
       saving={me.isSaving}
       updateProfile={me.updateProfile}

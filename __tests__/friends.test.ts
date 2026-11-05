@@ -133,6 +133,13 @@ describe('friends migration', () => {
     expect(sqlTypes).toEqual([...NOTIFICATION_TYPES].sort())
   })
 
+  it('the down restores every other type and drops only the friend ones', () => {
+    const down = read('supabase/migrations/20261028203837_friends.down.sql')
+    const list = down.match(/add constraint notifications_notification_type_check[\s\S]*?array\[([\s\S]*?)\]::text\[\]/)?.[1] ?? ''
+    const sqlTypes = [...list.matchAll(/'([a-z_]+)'/g)].map(m => m[1]).sort()
+    expect(sqlTypes).toEqual(NOTIFICATION_TYPES.filter(t => t !== 'friend_request' && t !== 'friend_accepted').sort())
+  })
+
   it('every SECURITY DEFINER function pins search_path and no RPC is granted to anon', () => {
     const fns = migration.split(/create or replace function /).slice(1)
     for (const fn of fns) {

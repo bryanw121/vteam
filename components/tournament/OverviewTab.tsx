@@ -1,5 +1,5 @@
 import React from 'react'
-import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native'
+import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { Text } from '../ui/Text'
 import type { RefreshControlProps } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -14,6 +14,7 @@ import type { PendingInvite } from '../../types'
 import { MiniButton } from './TournamentBits'
 import { ts } from './tournamentStyles'
 import { VenmoPayButton } from '../VenmoPayButton'
+import { Spinner } from '../ui/Spinner'
 
 type Props = {
   /** Pull-to-refresh for the whole tournament page. */
@@ -80,7 +81,7 @@ export function OverviewTab(p: Props) {
             </TouchableOpacity>
             <TouchableOpacity onPress={p.onWithdraw} disabled={p.withdrawing}>
               {p.withdrawing
-                ? <ActivityIndicator size="small" color={theme.colors.error} />
+                ? <Spinner size="small" color={theme.colors.error} />
                 : <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.error }}>Withdraw</Text>}
             </TouchableOpacity>
           </View>
