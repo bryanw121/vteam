@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
-import { Platform, View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { Platform, View, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { Text } from './ui/Text'
 import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme, shared } from '../constants'
 import { routes } from '../utils/routes'
 import type { EventCommentWithAuthor } from '../types'
-import { resolveProfileAvatarUriSmall, profileDisplayName, formatCommentTime } from '../utils'
+import { profileAvatarSmallUri, profileDisplayName, formatCommentTime } from '../utils'
 import { ProfileAvatar } from './ProfileAvatar'
 
 const SEGMENT_RE = /(https?:\/\/[^\s]+|@\w+)/g
@@ -91,17 +91,8 @@ export function EventCommentRow({
   indent = 0,
 }: Props) {
   const router = useRouter()
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
   const p = comment.profiles
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      const { uri } = await resolveProfileAvatarUriSmall(p?.avatar_url)
-      if (!cancelled) setAvatarUri(uri)
-    })()
-    return () => { cancelled = true }
-  }, [p?.avatar_url])
+  const avatarUri = profileAvatarSmallUri(p?.avatar_url)
 
   const name = p ? profileDisplayName(p) : 'Member'
   const isAnnouncement = comment.is_announcement && indent === 0

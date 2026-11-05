@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
-import { View, Text, TouchableOpacity, TextInput, Animated, Modal, ActivityIndicator } from 'react-native'
+import { View, TouchableOpacity, Animated, Modal } from 'react-native'
+import { Text, TextInput } from '../../components/ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import * as Linking from 'expo-linking'
@@ -12,6 +13,8 @@ import { GoogleLogo } from '../../components/GoogleLogo'
 import { shared, theme } from '../../constants'
 import { routes, toRoute } from '../../utils/routes'
 import { takeGuestReturnPath } from '../../utils/authGate'
+import { AgreementLine } from '../../components/legal/AgreementLine'
+import { Spinner } from '../../components/ui/Spinner'
 
 function obfuscateEmail(email: string): string {
   const [local, domain] = email.split('@')
@@ -193,7 +196,7 @@ export default function Login() {
             ...(ball.right !== undefined ? { right: `${ball.right}%` } : { left: `${ball.left ?? 0}%` }),
           }}
         >
-          <Animated.Text style={{ fontSize: 64, opacity: 0.55, transform: [{ scale: scales[i] }] }}>
+          <Animated.Text style={{ fontSize: theme.font.emoji.giant, opacity: 0.55, transform: [{ scale: scales[i] }] }}>
             🏐
           </Animated.Text>
         </TouchableOpacity>
@@ -206,10 +209,10 @@ export default function Login() {
           style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}
         >
           <View style={{ backgroundColor: theme.colors.card, borderRadius: 24, padding: 32, alignItems: 'center', gap: 12, maxWidth: 300 }}>
-            <Text style={{ fontSize: 48 }}>🏐🏆🏐</Text>
-            <Text style={{ fontSize: 22, fontWeight: 'bold', color: theme.colors.primary, textAlign: 'center' }}>You're a natural!</Text>
-            <Text style={{ fontSize: 15, color: '#666', textAlign: 'center' }}>10 spikes. The team needs you. Now go sign in.</Text>
-            <Text style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>tap to dismiss</Text>
+            <Text style={{ fontSize: theme.font.emoji.hero }}>🏐🏆🏐</Text>
+            <Text style={{ fontSize: theme.font.heading.md, fontWeight: 'bold', color: theme.colors.primary, textAlign: 'center' }}>You're a natural!</Text>
+            <Text style={{ fontSize: theme.font.size.lgs, color: '#666', textAlign: 'center' }}>10 spikes. The team needs you. Now go sign in.</Text>
+            <Text style={{ fontSize: theme.font.size.sm, color: '#aaa', marginTop: 4 }}>tap to dismiss</Text>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -218,7 +221,7 @@ export default function Login() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <Text style={shared.authTitle}>vteam</Text>
           <View style={{ backgroundColor: 'rgba(124,77,255,0.15)', borderWidth: 1, borderColor: 'rgba(124,77,255,0.4)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 2 }}>
-            <Text style={{ fontSize: 10, fontWeight: '700', color: theme.colors.primary, letterSpacing: 1 }}>BETA</Text>
+            <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primary, letterSpacing: 1 }}>BETA</Text>
           </View>
         </View>
 
@@ -272,6 +275,11 @@ export default function Login() {
                   error={otpError}
                 />
                 <Button label="Send code" onPress={handleSendOtp} loading={otpLoading} disabled={!otpEmail} />
+                <AgreementLine
+                  action="continuing"
+                  onOpenTerms={() => router.push(routes.terms())}
+                  onOpenPrivacy={() => router.push(routes.privacy())}
+                />
               </>
             ) : (
               <>
@@ -357,7 +365,7 @@ export default function Login() {
                 }}
               >
                 {socialLoading === 'google' ? (
-                  <ActivityIndicator size="small" color={theme.colors.subtext} />
+                  <Spinner size="small" color={theme.colors.subtext} />
                 ) : (
                   <GoogleLogo size={18} />
                 )}
@@ -381,6 +389,12 @@ export default function Login() {
                 </Text>
               </TouchableOpacity>
             </View>
+            {/* A first Google / Apple / email-code sign-in creates an account. */}
+            <AgreementLine
+              action="continuing"
+              onOpenTerms={() => router.push(routes.terms())}
+              onOpenPrivacy={() => router.push(routes.privacy())}
+            />
 
             <TouchableOpacity style={shared.authLink} onPress={() => { setForgotMode(true); setResetEmail(identifier.includes('@') ? identifier : '') }}>
               <Text style={shared.authLinkText}>Forgot password?</Text>

@@ -5,6 +5,7 @@
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { e2eCredentials, E2E_TITLE_PREFIX, STALE_FIXTURE_HOURS, SUPABASE_ANON_KEY, SUPABASE_URL } from './env'
+import { withNetworkRetry } from './retry'
 
 /** This run's title prefix, e.g. `[e2e r123-1]`; see E2E_RUN_TAG in ./env. */
 export const TITLE_PREFIX = E2E_TITLE_PREFIX
@@ -22,7 +23,12 @@ function daysFromNow(days: number, hour = 19): string {
   return d.toISOString()
 }
 
-async function signInE2eClient(): Promise<{ supabase: SupabaseClient; userId: string }> {
+/** A Node-side Supabase client signed in as the e2e account (retries network flakes). */
+export function signInE2eClient(): Promise<{ supabase: SupabaseClient; userId: string }> {
+  return withNetworkRetry(signInOnce, { label: 'e2e sign-in' })
+}
+
+async function signInOnce(): Promise<{ supabase: SupabaseClient; userId: string }> {
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   const { username, password } = e2eCredentials()
   const { data: email, error: rpcError } = await supabase.rpc('get_email_by_username', {

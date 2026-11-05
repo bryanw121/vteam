@@ -30,6 +30,7 @@ describe('routes', () => {
     expect(routes.conversation('m1')).toBe('/chat/m1')
     expect(routes.tournament('t1')).toBe('/tournament/t1')
     expect(routes.tournamentCreate()).toBe('/tournament/create')
+    expect(routes.tournaments()).toBe('/tournaments')
     expect(routes.notifications()).toBe('/notifications')
   })
 
@@ -48,6 +49,14 @@ describe('routes', () => {
     expect(routes.host({ edit: 'e1', maxAttendees: 10, mode: 'templates' })).toBe(
       '/host?edit=e1&maxAttendees=10&mode=templates',
     )
+    // "Already booked? Create a vteam event for it" from Book a court
+    expect(routes.host({ location: 'Roots · Treehouse Gym', surface: 'indoor' })).toBe(
+      '/host?location=Roots%20%C2%B7%20Treehouse%20Gym&surface=indoor',
+    )
+  })
+
+  it('builds the public Book a court route', () => {
+    expect(routes.book()).toBe('/book')
   })
 
   it('builds settings routes', () => {
@@ -55,6 +64,7 @@ describe('routes', () => {
     expect(routes.settings('account')).toBe('/settings/account')
     expect(routes.settings('notifications')).toBe('/settings/notifications')
     expect(routes.settings('badges')).toBe('/settings/badges')
+    expect(routes.settings('ad-free')).toBe('/settings/ad-free')
   })
 
   it('builds group routes', () => {

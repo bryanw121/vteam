@@ -1,7 +1,9 @@
-import { TouchableOpacity, Text, ActivityIndicator, StyleProp, ViewStyle } from 'react-native'
+import { TouchableOpacity, StyleProp, ViewStyle } from 'react-native'
+import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { shared, theme } from '../constants'
 import type { IoniconName } from '../types'
+import { Spinner } from './ui/Spinner'
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
 type Size = 'sm' | 'md' | 'touch'
@@ -62,7 +64,7 @@ export function Button({
       accessibilityState={inactive ? { disabled: true, busy: !!loading } : undefined}
     >
       {loading
-        ? <ActivityIndicator color={tinted ? theme.colors.primary : theme.colors.white} />
+        ? <Spinner color={tinted ? theme.colors.primary : theme.colors.white} />
         : (
           <>
             {icon && <Ionicons name={icon} size={iconSize} color={contentColor} />}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, TouchableOpacity, View } from 'react-native'
+import { Text } from '../ui/Text'
 import { theme } from '../../constants'
 import { Button } from '../Button'
 import { Input } from '../Input'
@@ -22,7 +23,7 @@ function TeamPicker({ label, teams, value, onSelect }: {
 }) {
   return (
     <View style={{ gap: 6 }}>
-      <Text style={{ fontSize: 12, color: theme.colors.subtext }}>{label}</Text>
+      <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.subtext }}>{label}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
         <View style={{ flexDirection: 'row', gap: 6 }}>
           {teams.map(t => (
@@ -31,7 +32,7 @@ function TeamPicker({ label, teams, value, onSelect }: {
               onPress={() => onSelect(t.id)}
               style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: value === t.id ? theme.colors.primary : theme.colors.border }}
             >
-              <Text style={{ fontSize: 12, color: value === t.id ? theme.colors.onPrimary : theme.colors.text }}>{t.name}</Text>
+              <Text style={{ fontSize: theme.font.size.sm, color: value === t.id ? theme.colors.onPrimary : theme.colors.text }}>{t.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -58,7 +59,7 @@ export function MatchEditForm({ match, teams, saving, onSave, onCancel }: Props)
 
   return (
     <View style={{ gap: 10 }}>
-      <Text style={{ fontSize: 13, fontWeight: '700', color: theme.colors.subtext, textTransform: 'uppercase', letterSpacing: 0.6 }}>Edit Match</Text>
+      <Text style={{ fontSize: theme.font.size.smd, fontWeight: '700', color: theme.colors.subtext, textTransform: 'uppercase', letterSpacing: 0.6 }}>Edit Match</Text>
       <Input label="Court" value={court} onChangeText={setCourt} placeholder="Court A" containerStyle={{ marginBottom: 0 }} inputStyle={{ backgroundColor: theme.colors.background }} />
       <Input
         label="Start time"

@@ -1,7 +1,7 @@
 import { Platform, StyleSheet } from 'react-native'
 import { theme } from './theme'
 
-const { colors, spacing, font, radius, shadow } = theme
+const { colors, spacing, font, radius, shadow, fonts } = theme
 
 export const shared = StyleSheet.create({
 
@@ -157,7 +157,7 @@ export const shared = StyleSheet.create({
     width: '85%',
     ...shadow.md,
   },
-  modalEmoji:    { fontSize: 48 },
+  modalEmoji:    { fontSize: theme.font.emoji.hero },
   modalTitle:    { fontSize: font.size.lg, fontWeight: font.weight.bold,   color: colors.text,    textAlign: 'center' },
   modalBody:     { fontSize: font.size.sm, fontWeight: font.weight.regular, color: colors.subtext, textAlign: 'center' },
   modalButton: {
@@ -208,7 +208,7 @@ export const shared = StyleSheet.create({
     justifyContent: 'center',
   },
   playerCardAvatarInitial: {
-    fontSize: 13,
+    fontSize: theme.font.size.smd,
     fontWeight: font.weight.bold,
     letterSpacing: 0.5,
   },
@@ -220,6 +220,38 @@ export const shared = StyleSheet.create({
 
   // ─── Update required screen ───────────────────────────────────────────────
   // ── External session card (Schelagg sessions in the Events feed) ─────────
+  // TimePill: event start time, its own high-contrast colour
+  timePill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start',
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.time,
+    borderWidth: 1, borderColor: theme.colors.timeBorder,
+  },
+  timePillLabel: {
+    fontFamily: theme.fonts.bodySemiBold, fontWeight: '800', fontSize: theme.font.size.lgs,
+    color: theme.colors.timeInk, letterSpacing: -0.2,
+  },
+  timePillLabelLg: { fontSize: theme.font.size.lgm },
+  // Weather on outdoor games (#165): card chip next to the TimePill, event page row.
+  forecastChip: {
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start',
+    paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full,
+    borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.card,
+  },
+  forecastChipRain: { backgroundColor: theme.colors.accent + '1A', borderColor: theme.colors.accent + '66' },
+  forecastChipHeat: { backgroundColor: theme.colors.warm + '1F', borderColor: theme.colors.warm + '73' },
+  forecastChipLabel: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong },
+  forecastChipLabelRain: { color: theme.colors.accent },
+  forecastChipLabelHeat: { color: theme.colors.warm },
+  forecastCells: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: theme.spacing.sm },
+  forecastCell: {
+    minWidth: 56, flexGrow: 0, alignItems: 'center', paddingVertical: 6, paddingHorizontal: 8,
+    borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.background,
+  },
+  forecastCellInGame: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
+  forecastCellTime: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
+  forecastCellTemp: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lgs, color: theme.colors.text },
+  forecastCellPop: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
   externalCard: {
     backgroundColor: theme.colors.card,
     borderRadius: 20,
@@ -241,12 +273,12 @@ export const shared = StyleSheet.create({
   },
   externalDay: {
     fontFamily: theme.fonts.bodySemiBold,
-    fontSize: 10,
+    fontSize: font.size.xs,
     letterSpacing: 1,
   },
   externalDate: {
     fontFamily: theme.fonts.display,
-    fontSize: 28,
+    fontSize: theme.font.heading.xl,
     lineHeight: 30,
     letterSpacing: -1.2,
   },
@@ -283,6 +315,14 @@ export const shared = StyleSheet.create({
     borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primarySoft,
   },
+  /** What the last-mile check found: a new time (warning) or cancelled / gone (error). */
+  externalFinding: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.sm,
+    color: theme.colors.warning,
+    marginTop: theme.spacing.xxs,
+  },
+  externalFindingCanceled: { color: theme.colors.error },
   externalSignupLabel: {
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: theme.font.size.sm,
@@ -393,9 +433,9 @@ export const shared = StyleSheet.create({
   chipActiveTint:  { backgroundColor: colors.primary + '24', borderColor: colors.primary },
   chipLabel: {
     fontFamily: theme.fonts.bodySemiBold,
-    fontSize: 12.5,
+    fontSize: theme.font.size.smd,
     fontWeight: font.weight.semibold,
-    color: colors.subtext,
+    color: colors.subtextStrong,
   },
   chipLabelActive:     { color: colors.onPrimary },
   chipLabelActiveTint: { color: colors.primary },
@@ -441,7 +481,7 @@ export const shared = StyleSheet.create({
   },
   screenHeaderTitle: {
     fontFamily: theme.fonts.display,
-    fontSize: 34,
+    fontSize: theme.font.heading.xxl,
     lineHeight: 34,
     letterSpacing: -1.2,
     color: colors.text,
@@ -455,6 +495,47 @@ export const shared = StyleSheet.create({
   emptyState:       { alignItems: 'center', paddingTop: spacing.xxl, paddingHorizontal: spacing.lg, gap: spacing.sm },
   emptyStateBody:   { textAlign: 'center', maxWidth: 320 },
   emptyStateAction: { fontSize: font.size.sm, color: colors.primary, fontWeight: font.weight.medium },
+  // EventDetailSkeleton: placeholders in the event page's final layout
+  skeletonBlock: { backgroundColor: theme.colors.card, borderRadius: 16 },
+  /** "Load earlier comments" at the top of a discussion: full-width, 44pt touch target. */
+  loadEarlierButton: {
+    minHeight: 44, alignItems: 'center', justifyContent: 'center', alignSelf: 'center',
+    paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.xs,
+    ...(Platform.OS === 'web' ? ({ cursor: 'pointer', touchAction: 'manipulation' } as object) : null),
+  },
+  loadEarlierLabel: { fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primary },
+  /** Host form while a cold edit link loads: one field-shaped block. */
+  skeletonField: { height: 48, borderRadius: 12, backgroundColor: theme.colors.card },
+  skeletonLabel: { width: 96, height: 10, borderRadius: 5, backgroundColor: theme.colors.card, marginBottom: 8 },
+  /** Chat (web): "New messages" pill over the list while scrolled up. */
+  chatNewMessagesPill: {
+    position: 'absolute', bottom: theme.spacing.md, alignSelf: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44,
+    paddingHorizontal: theme.spacing.md, borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primary, ...theme.shadow.md,
+    ...(Platform.OS === 'web' ? ({ cursor: 'pointer', touchAction: 'manipulation' } as object) : null),
+  },
+  chatNewMessagesLabel: { fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.onPrimary },
+  chatListEdge: { alignItems: 'center', justifyContent: 'center', minHeight: theme.spacing.md, paddingVertical: theme.spacing.xs },
+  skeletonHero: {
+    marginHorizontal: theme.spacing.md, marginTop: theme.spacing.xs, marginBottom: theme.spacing.sm,
+    height: 128, borderRadius: 22, backgroundColor: theme.colors.card,
+  },
+  skeletonTabs: {
+    flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center',
+    height: 44, borderBottomWidth: 1, borderBottomColor: theme.colors.border,
+  },
+  skeletonTab: { width: 56, height: 10, borderRadius: 5, backgroundColor: theme.colors.card },
+  // RefreshControl.web: pull-to-refresh wrapper and its spinner
+  pullWrapper: { position: 'relative' },
+  // DocPullToRefresh: zero-size in-flow anchor; its indicator is pinned to the viewport
+  pullAnchor: { height: 0, overflow: 'visible' },
+  pullIndicatorFixed: { position: 'fixed' as 'absolute', top: 0, left: '50%', marginLeft: -18, alignSelf: undefined },
+  pullIndicator: {
+    position: 'absolute', top: 0, alignSelf: 'center', zIndex: 10,
+    width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border,
+  },
   screenStateCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.sm },
   screenStateSpinner: { marginTop: spacing.xl },
 
@@ -521,6 +602,20 @@ export const shared = StyleSheet.create({
 
   // ── Wrapping row of Chips (forms) ─────────────────────────
   chipRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs, marginTop: theme.spacing.xs, marginBottom: theme.spacing.xs },
+  // Settings → Notifications: example of the reminder a player will get.
+  reminderPreview: {
+    marginTop: theme.spacing.sm,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 2,
+  },
+  reminderPreviewTitle: { fontFamily: theme.fonts.bodySemiBold, fontWeight: '600', fontSize: theme.font.size.md, color: theme.colors.text },
+  // Secondary text on settings cards and in the inbox: `caption`/`label` in a colour that passes WCAG AA there.
+  captionStrong: { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong },
+  labelStrong: { fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong, marginBottom: theme.spacing.xs },
 
   // ── One-time banner (components/ui/OneTimeBanner) ────────
   oneTimeBanner: {
@@ -540,6 +635,56 @@ export const shared = StyleSheet.create({
   oneTimeBannerText: { flex: 1, paddingVertical: theme.spacing.sm, gap: theme.spacing.xxs },
   oneTimeBannerTitle: { color: theme.colors.text, fontSize: theme.font.size.smd, fontFamily: theme.fonts.bodySemiBold },
   oneTimeBannerBody: { color: theme.colors.subtext, fontSize: theme.font.size.sm, fontFamily: theme.fonts.body, lineHeight: 18 },
+  /** The banner's link (e.g. "Check out our tour"): text-styled, but a full 44pt touch target. */
+  oneTimeBannerAction: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', marginTop: -theme.spacing.xs, marginBottom: -theme.spacing.sm },
+  oneTimeBannerActionText: { color: theme.colors.primary, fontSize: theme.font.size.smd, fontFamily: theme.fonts.bodySemiBold, textDecorationLine: 'underline' },
+
+  // ── Guided tour overlay (components/tour/TourOverlay) ─────
+  tourRoot: { ...StyleSheet.absoluteFillObject, zIndex: 1000, elevation: 1000 },
+  tourScrim: { position: 'absolute', backgroundColor: theme.colors.tourScrim },
+  tourRing: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    borderRadius: theme.radius.sm,
+  },
+  tourCard: {
+    position: 'absolute',
+    backgroundColor: theme.colors.card,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.xs,
+    paddingBottom: theme.spacing.md,
+    gap: theme.spacing.xs,
+    shadowColor: theme.colors.black,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 12,
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as object : {}),
+  },
+  tourArrow: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    transform: [{ rotate: '45deg' }],
+  },
+  tourArrowUp: { top: -7, borderTopWidth: 1, borderLeftWidth: 1 },
+  tourArrowDown: { bottom: -7, borderBottomWidth: 1, borderRightWidth: 1 },
+  tourCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },
+  tourProgress: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs },
+  tourDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.border },
+  tourDotActive: { width: 16, backgroundColor: theme.colors.primary },
+  tourStepCount: { marginLeft: theme.spacing.xs, color: theme.colors.subtext, fontSize: theme.font.size.sm, fontFamily: theme.fonts.bodyMedium },
+  tourSkip: { minHeight: 44, minWidth: 44, alignItems: 'flex-end', justifyContent: 'center', marginRight: -theme.spacing.xs, paddingHorizontal: theme.spacing.xs },
+  tourSkipText: { color: theme.colors.subtext, fontSize: theme.font.size.md, fontFamily: theme.fonts.bodyMedium },
+  tourTitle: { color: theme.colors.text, fontSize: theme.font.size.lg, fontFamily: theme.fonts.display, letterSpacing: -0.2 },
+  tourBody: { color: theme.colors.subtext, fontSize: theme.font.size.md, fontFamily: theme.fonts.body, lineHeight: 20 },
+  tourActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
 
   // ── Events feed: refresh failed, showing older events ─────
   feedStaleNotice: {
@@ -557,7 +702,201 @@ export const shared = StyleSheet.create({
   feedStaleNoticeMobile: { marginHorizontal: theme.spacing.lg },
   feedStaleNoticeText: { color: theme.colors.warning, fontSize: theme.font.size.sm, fontFamily: theme.fonts.bodyMedium },
 
+  // ── Create (+) menu (components/CreateMenuList) ──────────
+  createMenuOverlay: { gap: theme.spacing.md, alignItems: 'flex-end' },
+  createMenuPanel: {
+    gap: theme.spacing.md,
+    alignItems: 'stretch',
+    minWidth: 220,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    ...theme.shadow.md,
+  },
+  createMenuSection: { gap: theme.spacing.sm },
+  createMenuCaption: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.xs,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: theme.colors.subtext,
+  },
+  createMenuCaptionOverlay: { color: theme.colors.text, textAlign: 'right', paddingRight: theme.spacing.xs },
+  createMenuPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    minHeight: 44,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.full,
+    borderWidth: 1,
+  },
+  createMenuPillOverlay: {
+    alignSelf: 'flex-end',
+    backgroundColor: theme.colors.fabMenuChip,
+    borderColor: theme.colors.fabMenuChipBorder,
+    shadowColor: theme.colors.black,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  createMenuPillPanel: { backgroundColor: theme.colors.background, borderColor: theme.colors.border },
+  createMenuLabel: { fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text },
+
+  // ── Book a court (app/(app)/book.tsx, components/book) ─────
+  /** Lines up with ScreenHeader's own lg inset. */
+  bookContent: { paddingHorizontal: theme.spacing.lg, gap: theme.spacing.md },
+  bookIntro: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.font.size.md,
+    lineHeight: 20,
+    color: theme.colors.subtext,
+  },
+  bookDayStrip: { gap: theme.spacing.sm, paddingVertical: theme.spacing.xxs },
+  bookDay: {
+    width: 58,
+    minHeight: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    ...(Platform.OS === 'web' ? ({ cursor: 'pointer', touchAction: 'manipulation' } as object) : null),
+  },
+  bookDayActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  bookDayDow: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.xs,
+    letterSpacing: 0.4,
+    color: theme.colors.subtext,
+  },
+  bookDayDate: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lg, color: theme.colors.text },
+  bookDayTextActive: { color: theme.colors.onPrimary },
+  bookDayDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'transparent' },
+  bookDayDotFree: { backgroundColor: theme.colors.cool },
+  bookDayDotOnActive: { backgroundColor: theme.colors.onPrimary },
+  bookChips: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
+  bookFreshness: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.xs + 2 },
+  bookFreshnessOld: {
+    padding: theme.spacing.sm + 2,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.warning,
+    backgroundColor: theme.colors.card,
+  },
+  bookFreshnessText: { flex: 1, fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, lineHeight: 17, color: theme.colors.subtext },
+  bookFreshnessTextOld: { color: theme.colors.warning, fontFamily: theme.fonts.bodyMedium },
+  bookError: {
+    gap: theme.spacing.xxs,
+    padding: theme.spacing.sm + 2,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.error,
+    backgroundColor: theme.colors.card,
+  },
+  bookErrorText: { fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.sm, color: theme.colors.error },
+  bookDayHeading: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+  },
+  bookDayHeadingText: { fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lg, color: theme.colors.text },
+  bookLegend: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md },
+  bookLegendItem: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs },
+  bookLegendSwatch: { width: 14, height: 10, borderRadius: 3 },
+  bookLegendFree: { backgroundColor: theme.colors.cool + '33' },
+  bookLegendBooked: { backgroundColor: theme.colors.error },
+  bookLegendClosed: { backgroundColor: theme.colors.borderSoft },
+  bookLegendNow: { width: 2, height: 12, backgroundColor: theme.colors.hot },
+  bookLegendText: { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext },
+  bookFacility: {
+    gap: theme.spacing.sm + 2,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+  },
+  bookFacilityHead: { gap: theme.spacing.xs + 2 },
+  bookFacilityName: { fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lg, color: theme.colors.text },
+  bookMetaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: theme.spacing.xs + 2 },
+  bookMetaText: { flexShrink: 1, fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext },
+  bookPill: { paddingHorizontal: theme.spacing.sm, paddingVertical: 3, borderRadius: theme.radius.full },
+  bookPillText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, letterSpacing: 0.3 },
+  bookPillPrice: { backgroundColor: theme.colors.primarySoft },
+  bookPillPriceText: { color: theme.colors.text },
+  bookPillWarn: { borderWidth: 1, borderColor: theme.colors.warning },
+  bookPillWarnText: { color: theme.colors.warning },
+  bookSummary: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, lineHeight: 20 },
+  bookSummaryFree: { color: theme.colors.cool },
+  bookSummaryNone: { color: theme.colors.subtext },
+  bookGrid: { flexDirection: 'row' },
+  bookGridLabels: { width: 72, flexShrink: 0, paddingRight: theme.spacing.sm },
+  bookGridLabelRow: { justifyContent: 'center' },
+  bookGridLabel: { fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.xs, color: theme.colors.text },
+  bookGridScroll: { flex: 1 },
+  bookGridHint: { marginTop: theme.spacing.xxs, textAlign: 'right', fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext },
+  bookActions: { gap: theme.spacing.xs + 2, marginTop: theme.spacing.xxs },
+  bookNote: { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, lineHeight: 17, color: theme.colors.subtext },
+  bookFollowUp: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: theme.spacing.xs,
+    minHeight: 44,
+    ...(Platform.OS === 'web' ? ({ cursor: 'pointer', touchAction: 'manipulation' } as object) : null),
+  },
+  bookFollowUpText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primary },
+  bookFootnote: { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, lineHeight: 16, color: theme.colors.subtext },
+
   // ── ScreenContainer ───────────────────────────────────────
   screenContainerWide:  { flex: 1, alignItems: 'center' },
   screenContainerInner: { flex: 1, width: '100%' },
+
+  // ── Legal pages (/terms, /privacy) and the sign-up agreement line ──────
+  legalBody:        { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, gap: spacing.md },
+  legalUpdated:     { fontFamily: fonts.body, fontSize: font.size.sm, color: colors.subtext },
+  legalHeading:     { fontFamily: fonts.displaySemiBold, fontSize: font.size.lg, color: colors.text, marginTop: spacing.md },
+  legalText:        { fontFamily: fonts.body, fontSize: font.size.lgs, lineHeight: 23, color: colors.text },
+  legalBold:        { fontFamily: fonts.bodySemiBold },
+  legalPlaceholder: { fontFamily: fonts.bodyMedium, color: colors.warning, backgroundColor: colors.warning + '22' },
+  legalListItem:    { flexDirection: 'row', gap: spacing.sm, paddingLeft: spacing.xs },
+  legalBullet:      { fontFamily: fonts.body, fontSize: font.size.lgs, lineHeight: 23, color: colors.primary },
+  legalTableRow:    { backgroundColor: colors.card, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, padding: spacing.md, gap: spacing.xs },
+  legalTableLabel:  { fontFamily: fonts.bodyMedium, fontSize: font.size.sm, color: colors.subtext, textTransform: 'uppercase', letterSpacing: 0.5 },
+  agreementLine:    { fontFamily: fonts.body, fontSize: font.size.xs, lineHeight: 16, color: colors.subtext, textAlign: 'center', marginTop: spacing.md },
+  agreementLink:    { color: colors.primary, textDecorationLine: 'underline' },
+
+  // Settings → Display (text size)
+  settingsOptionRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    minHeight: 52, paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+    backgroundColor: colors.card,
+  },
+  settingsOptionRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
+  settingsOptionLabel:     { flex: 1, fontFamily: fonts.bodyMedium, fontSize: font.size.md, color: colors.subtext },
+  settingsPreviewBubble: {
+    alignSelf: 'flex-end', maxWidth: '85%', backgroundColor: colors.primary,
+    borderRadius: 18, paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+  },
+  settingsPreviewBubbleText: { fontFamily: fonts.body, fontSize: font.size.md, color: colors.onPrimary },
+
+  // ── Leave sheet (components/event/LeaveSheet, #171) ────────
+  leaveSubtitle: { fontFamily: fonts.body, fontSize: font.size.sm, color: colors.subtextStrong, marginTop: -spacing.sm, marginBottom: spacing.md },
+  leaveLines: { gap: spacing.md, marginBottom: spacing.md },
+  leaveLine: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  leaveLineIcon: { marginTop: 1 },
+  leaveLineText: { flex: 1, fontFamily: fonts.body, fontSize: font.size.md, lineHeight: 20, color: colors.subtextStrong },
+  leaveLineStrong: { fontFamily: fonts.bodySemiBold, fontWeight: '600', color: colors.text },
+  leaveReasonLabel: { fontFamily: fonts.body, fontSize: font.size.sm, color: colors.subtextStrong, marginBottom: spacing.xs },
+  leaveNote: { marginTop: spacing.sm, marginBottom: spacing.md, fontSize: font.size.base, minHeight: 44 },
+  leaveActions: { gap: spacing.sm },
 })

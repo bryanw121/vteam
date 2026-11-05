@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  View, Text, FlatList, TouchableOpacity, TextInput,
-  ActivityIndicator, Modal, Pressable, Platform, RefreshControl,
-} from 'react-native'
+import { View, FlatList, TouchableOpacity, Modal, Pressable, Platform } from 'react-native'
+import { Text, TextInput } from '../../../components/ui/Text'
+import { RefreshControl } from '../../../components/RefreshControl'
 import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter, Stack } from 'expo-router'
@@ -20,6 +19,7 @@ import type { ConversationRow, Profile } from '../../../types'
 import { useSession } from '../../../contexts/session'
 import { SignInPrompt } from '../../../components/SignInPrompt'
 import { ScreenState } from '../../../components/ui'
+import { Spinner } from '../../../components/ui/Spinner'
 
 function conversationTitle(row: ConversationRow): string {
   if (row.type === 'club') return row.club_name ?? 'Club Chat'
@@ -98,7 +98,7 @@ function NewDMModal({ visible, onDismiss, onSelect, silencedUserIds, myId }: {
 
         {searching ? (
           <View style={{ padding: theme.spacing.xl, alignItems: 'center' }}>
-            <ActivityIndicator color={theme.colors.primary} />
+            <Spinner color={theme.colors.primary} />
           </View>
         ) : (
           <FlatList
@@ -273,13 +273,13 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
               {preview}
             </Text>
             {hasUnread && (
-              <View style={{
+              <View testID="conversation-unread" style={{
                 minWidth: 20, height: 20, borderRadius: 10,
                 backgroundColor: theme.colors.primary,
                 alignItems: 'center', justifyContent: 'center',
                 paddingHorizontal: 5, flexShrink: 0,
               }}>
-                <Text style={{ fontFamily: theme.fonts.bodyBold, fontSize: 11, color: theme.colors.white }}>
+                <Text style={{ fontFamily: theme.fonts.bodyBold, fontSize: theme.font.size.xs, color: theme.colors.white }}>
                   {item.unread_count > 99 ? '99+' : item.unread_count}
                 </Text>
               </View>
@@ -297,10 +297,10 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
       <View style={{ paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.md, paddingBottom: 4 }}>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
           <View>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: 11, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 1, textTransform: 'uppercase' }}>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 1, textTransform: 'uppercase' }}>
               Direct messages
             </Text>
-            <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 34, letterSpacing: -1.2, color: theme.colors.text, lineHeight: 38, marginTop: 1 }}>
+            <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.heading.xxl, letterSpacing: -1.2, color: theme.colors.text, lineHeight: 38, marginTop: 1 }}>
               Chat
             </Text>
           </View>
@@ -333,7 +333,7 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
           }}
         >
           <Ionicons name="search-outline" size={16} color={theme.colors.subtext} />
-          <Text style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.subtext }}>Search people</Text>
+          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext }}>Search people</Text>
         </TouchableOpacity>
       </View>
 

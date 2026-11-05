@@ -127,3 +127,42 @@ describe('lastMessagePreview', () => {
     expect(lastMessagePreview(row, MY_ID, silenced)).toBe('hi')
   })
 })
+
+describe('nextFirstItemIndex (web virtualized list, #3)', () => {
+  const { nextFirstItemIndex } = require('../utils/chatUtils') as typeof import('../utils/chatUtils')
+  const rows = (...ids: string[]) => ids.map(id => ({ id }))
+
+  it('starts at the base and stays put on the first render', () => {
+    expect(nextFirstItemIndex({ firstId: null, firstIndex: 1000 }, rows('a', 'b'))).toBe(1000)
+  })
+
+  it('drops by the number of messages prepended before the old first one', () => {
+    expect(nextFirstItemIndex({ firstId: 'c', firstIndex: 1000 }, rows('a', 'b', 'c', 'd'))).toBe(998)
+  })
+
+  it('appends, edits and a removed first row leave it unchanged', () => {
+    expect(nextFirstItemIndex({ firstId: 'a', firstIndex: 1000 }, rows('a', 'b', 'new'))).toBe(1000)
+    expect(nextFirstItemIndex({ firstId: 'gone', firstIndex: 1000 }, rows('b', 'c'))).toBe(1000)
+  })
+})
+
+describe('web chat list wiring (#3)', () => {
+  const { readFileSync } = require('fs') as typeof import('fs')
+  const { resolve } = require('path') as typeof import('path')
+  const web = readFileSync(resolve(__dirname, '../components/ChatMessageList.web.tsx'), 'utf8')
+  const screen = readFileSync(resolve(__dirname, '../app/(app)/chat/[id].tsx'), 'utf8')
+
+  it('virtualizes with react-virtuoso, opening at the end and loading older on startReached', () => {
+    expect(web).toMatch(/from 'react-virtuoso'/)
+    expect(web).toMatch(/initialTopMostItemIndex=\{\{ index: 'LAST', align: 'end' \}\}/)
+    expect(web).toMatch(/firstItemIndex=\{firstItemIndex\}/)
+    expect(web).toMatch(/startReached=\{startReached\}/)
+    expect(web).toMatch(/followOutput=\{followOutput\}/)
+  })
+
+  it('the screen no longer renders every message on web or scrolls to end before paint', () => {
+    expect(screen).not.toMatch(/useLayoutEffect/)
+    expect(screen).not.toMatch(/ascendingMessages\.map/)
+    expect(screen).toMatch(/<ChatMessageList/)
+  })
+})

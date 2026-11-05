@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, TouchableOpacity, View } from 'react-native'
+import { Text } from '../../../../components/ui/Text'
+import { RefreshControl } from '../../../../components/RefreshControl'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { supabase } from '../../../../lib/supabase'
@@ -8,6 +10,7 @@ import { EventCard } from '../../../../components/EventCard'
 import { shared, EVENT_CARD_LIST_SELECT_MINIMAL } from '../../../../constants'
 import { theme } from '../../../../constants/theme'
 import type { EventWithDetails } from '../../../../types'
+import { Spinner } from '../../../../components/ui/Spinner'
 
 type HistoryFilter = 'attended' | 'hosted'
 const HISTORY_LIMIT = 20
@@ -121,7 +124,7 @@ export default function ProfileHistoryScreen() {
           <View style={shared.mt_md} />
 
           {loading ? (
-            <ActivityIndicator color={theme.colors.primary} />
+            <Spinner color={theme.colors.primary} />
           ) : error ? (
             <Text style={shared.errorText}>{error}</Text>
           ) : events.length === 0 ? (

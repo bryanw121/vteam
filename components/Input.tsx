@@ -1,5 +1,6 @@
 import { forwardRef, useState, ReactNode } from 'react'
-import { TextInput, Text, View, TouchableOpacity, TextInputProps, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native'
+import { View, TouchableOpacity, TextInputProps, StyleProp, ViewStyle, TextStyle, Platform } from 'react-native'
+import { Text, TextInput } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { shared, theme } from '../constants'
 
@@ -53,7 +54,7 @@ export const Input = forwardRef<TextInput, Props>(function Input(
             !!error && shared.inputError,
             (showPasswordToggle || !!right) && { paddingRight: 44 },
             // Prevent iOS Safari auto-zoom (triggered when font-size < 16px)
-            Platform.OS === 'web' && { fontSize: 16 },
+            Platform.OS === 'web' && { fontSize: theme.font.size.base },
             inputStyle,
           ]}
           value={value}

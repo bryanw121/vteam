@@ -1,4 +1,5 @@
 import type { Surface } from '../types'
+import { theme } from './theme'
 // ─── Venues ───────────────────────────────────────────────────────────────────
 // Add new locations here — the form picker reads from this array automatically.
 
@@ -98,6 +99,13 @@ export const SURFACE_OPTIONS: { id: Surface; label: string }[] = [
 ]
 
 export const SURFACE_LABELS: Record<Surface, string> = { indoor: 'Indoor', sand: 'Sand', grass: 'Grass' }
+
+/** Accent per surface: outside-session cards and Book a court venues. */
+export const SURFACE_ACCENTS: Record<Surface, string> = {
+  indoor: theme.colors.primary,
+  sand:   theme.colors.warm,
+  grass:  theme.colors.cool,
+}
 
 // ─── Supabase list queries (EventCard / feeds) ─────────────────────────────────
 /**

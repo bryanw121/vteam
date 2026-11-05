@@ -1,4 +1,5 @@
 import type { Href } from 'expo-router'
+import type { Surface } from '../types'
 
 /**
  * Typed route builders — the one place route strings are written and the one
@@ -37,8 +38,11 @@ export type SettingsSection =
   | 'cheers'
   | 'silenced'
   | 'notifications'
+  | 'display'
   | 'feedback'
   | 'badges'
+  | 'ad-free'
+  | 'experimental'
 
 export type HostRouteOptions = {
   /** Event id to edit. */
@@ -47,6 +51,10 @@ export type HostRouteOptions = {
   maxAttendees?: number
   /** Open the host screen on the template picker. */
   mode?: 'templates'
+  /** Prefill the location (e.g. a venue name from Book a court). */
+  location?: string
+  /** Prefill the surface. */
+  surface?: Surface
 }
 
 export const routes = {
@@ -67,16 +75,33 @@ export const routes = {
   conversation: (id: string) => href(`/chat/${id}`),
   tournament: (id: string) => href(`/tournament/${id}`),
   tournamentCreate: () => href('/tournament/create'),
+  tournaments: () => href('/tournaments'),
 
   host: (opts: HostRouteOptions = {}) => {
     const query: string[] = []
     if (opts.edit !== undefined) query.push(`edit=${encodeURIComponent(opts.edit)}`)
     if (opts.maxAttendees !== undefined) query.push(`maxAttendees=${opts.maxAttendees}`)
     if (opts.mode !== undefined) query.push(`mode=${opts.mode}`)
+    if (opts.location) query.push(`location=${encodeURIComponent(opts.location)}`)
+    if (opts.surface !== undefined) query.push(`surface=${opts.surface}`)
     return href(query.length ? `/host?${query.join('&')}` : '/host')
   },
 
+  /** Court availability at venues that rent by the hour; booking itself happens on the venue's site. Public. */
+  book: () => href('/book'),
+
+  /** Terms and Conditions / Privacy Policy. Public (outside the auth gate). */
+  terms: () => href('/terms'),
+  privacy: () => href('/privacy'),
+
   notifications: () => href('/notifications'),
+
+  /** Experimental scorekeeper (Settings → Experimental features). Matches live on the device. */
+  scorekeeper: () => href('/scorekeeper'),
+  scorekeeperNew: () => href('/scorekeeper/new'),
+  scorekeeperMatch: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}`),
+  scorekeeperSheet: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/sheet`),
+  scorekeeperCopy: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/copy`),
   settings: (section?: SettingsSection) => href(section ? `/settings/${section}` : '/settings'),
 
   // ── Groups ──────────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
+import { Text } from '../ui/Text'
 import { theme } from '../../constants'
 import { ScreenHeader } from '../ui'
 import type { EventsHeaderProps } from '../../types'
@@ -34,6 +35,6 @@ const styles = StyleSheet.create({
     color: theme.colors.subtext,
     textTransform: 'uppercase',
   },
-  title: { fontFamily: theme.fonts.display, fontSize: 44, lineHeight: 46, letterSpacing: -1.6, color: theme.colors.text, marginTop: 2 },
+  title: { fontFamily: theme.fonts.display, fontSize: theme.font.heading.hero, lineHeight: 46, letterSpacing: -1.6, color: theme.colors.text, marginTop: 2 },
   dot: { color: theme.colors.primary },
 })

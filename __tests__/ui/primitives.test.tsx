@@ -21,7 +21,6 @@ describe('theme tokens', () => {
     expect(theme.colors.onPrimary).toBe('#FFFFFF')
     expect(theme.colors.medalGold).toBe('#FFD54F')
     expect(theme.gradients.brand).toHaveLength(3)
-    expect(theme.font.size.xxs).toBe(10)
     expect(theme.font.size.smd).toBe(13)
     expect(theme.font.size.lgs).toBe(15)
   })

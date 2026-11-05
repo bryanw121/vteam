@@ -2,13 +2,13 @@ import React, { useState } from 'react'
 import {
   Modal,
   Pressable,
-  RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from 'react-native'
+import { Text } from '../../../../components/ui/Text'
+import { RefreshControl } from '../../../../components/RefreshControl'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -131,7 +131,7 @@ export default function BadgesScreen() {
             </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          <View testID="badges-grid" style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             {BADGE_DEFINITIONS.map(def => {
               const badge = badges.find(b => b.badge_type === def.type)
               const isSelected = detailDef?.type === def.type
@@ -167,7 +167,7 @@ export default function BadgesScreen() {
             Unlock borders by earning attendance badges.
           </Text>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.lg }}>
+          <View role="radiogroup" aria-label="Profile border" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.lg }}>
             <BorderSwatch
               label="None"
               size="lg"
@@ -338,7 +338,7 @@ function BadgeDetailPanel({ def, badge, onClose, bottomInset, animStyle }: Badge
                   )}
                 </View>
                 {earned && earnedTier === t.tier && (
-                  <Text style={{ fontSize: 10, color: topColor, fontWeight: theme.font.weight.semibold }}>
+                  <Text style={{ fontSize: theme.font.size.xs, color: topColor, fontWeight: theme.font.weight.semibold }}>
                     Current
                   </Text>
                 )}

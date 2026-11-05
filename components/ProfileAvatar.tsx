@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { View, Platform, ActivityIndicator, Pressable } from 'react-native'
+import { View, Platform, Pressable } from 'react-native'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import Svg, { Circle, Path, Polygon } from 'react-native-svg'
@@ -13,6 +13,7 @@ import Animated, {
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../constants/theme'
 import type { Profile } from '../types'
+import { Spinner } from './ui/Spinner'
 
 const RING = 3
 
@@ -184,7 +185,7 @@ export function ProfileAvatar({ uri, border, size, loading = false, onPress, onD
   const picture = (
     <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: theme.colors.border, alignItems: 'center', justifyContent: 'center' }}>
       {loading ? (
-        <ActivityIndicator color={theme.colors.primary} />
+        <Spinner color={theme.colors.primary} />
       ) : uri ? (
         <Image source={{ uri }} style={{ width: size, height: size }} contentFit="cover" transition={200} accessibilityIgnoresInvertColors />
       ) : (

@@ -1,15 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react'
-import {
-  ActivityIndicator, Modal, Platform, ScrollView,
-  Text, TextInput, TouchableOpacity, View,
-} from 'react-native'
+import { Modal, Platform, ScrollView, TouchableOpacity, View } from 'react-native'
+import type { StyleProp, ViewStyle } from 'react-native'
+import { Text, TextInput } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { supabase } from '../lib/supabase'
 import { theme } from '../constants'
 import { LOCATIONS } from '../constants/events'
 import { formatVenueDisplay } from '../utils'
+import { placeAddress } from '../utils/clubLocation'
 import type { GooglePlacePrediction, LocationValue } from '../types'
+import { Spinner } from './ui/Spinner'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,12 @@ type Props = {
   onChange: (loc: LocationValue) => void
   userId: string | null
   recentVenues?: LocationValue[]
+  /** Trigger text when nothing is chosen. */
+  placeholder?: string
+  /** Hide the curated "Other" pseudo-venue (it has no address; meaningless outside the event form). */
+  hideOtherVenue?: boolean
+  /** Extra style for the trigger row, e.g. to make it look and tap like a form input. */
+  triggerStyle?: StyleProp<ViewStyle>
 }
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -88,7 +95,7 @@ function SectionHeader({ label }: { label: string }) {
   return (
     <Text style={{
       fontFamily: theme.fonts.bodySemiBold,
-      fontSize: 10.5,
+      fontSize: theme.font.size.xs,
       color: theme.colors.subtext,
       letterSpacing: 0.8,
       textTransform: 'uppercase',
@@ -130,14 +137,14 @@ function ResultRow({
       </View>
       <View style={{ flex: 1 }}>
         <Text
-          style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 14, color: theme.colors.text }}
+          style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.text }}
           numberOfLines={1}
         >
           {title}
         </Text>
         {subtitle ? (
           <Text
-            style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.subtext, marginTop: 1 }}
+            style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: 1 }}
             numberOfLines={1}
           >
             {subtitle}
@@ -150,7 +157,7 @@ function ResultRow({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function LocationPickerField({ value, onChange, recentVenues = [] }: Props) {
+export function LocationPickerField({ value, onChange, recentVenues = [], placeholder = 'Search for a venue…', hideOtherVenue = false, triggerStyle }: Props) {
   const [open, setOpen]           = useState(false)
   const [query, setQuery]         = useState('')
   const [results, setResults]     = useState<GooglePrediction[]>([])
@@ -212,6 +219,9 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
         display: formatVenueDisplay(prediction),
         latitude: coords?.lat ?? null,
         longitude: coords?.lng ?? null,
+        name: prediction.structured_formatting.main_text?.trim() || prediction.description,
+        address: placeAddress(prediction),
+        placeId: prediction.place_id,
       })
     } finally {
       setSelecting(false)
@@ -229,7 +239,8 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
   }
 
   const filteredCommon = LOCATIONS.filter(loc =>
-    !query || loc.label.toLowerCase().includes(query.toLowerCase()),
+    (!hideOtherVenue || loc.address) &&
+    (!query || loc.label.toLowerCase().includes(query.toLowerCase())),
   )
 
   const hasContent = recentVenues.length > 0 || filteredCommon.length > 0 || results.length > 0
@@ -237,7 +248,7 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
   return (
     <>
       {/* ── Trigger ── */}
-      <TouchableOpacity testID="location-picker-trigger" onPress={openSheet} activeOpacity={0.7} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
+      <TouchableOpacity testID="location-picker-trigger" onPress={openSheet} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel={value?.display || placeholder} style={[{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }, triggerStyle]}>
         <Ionicons
           name="location-outline"
           size={16}
@@ -246,11 +257,11 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
         <Text style={{
           flex: 1,
           fontFamily: theme.fonts.body,
-          fontSize: 15,
+          fontSize: theme.font.size.lgs,
           color: value?.display ? theme.colors.text : theme.colors.subtext,
           fontWeight: '500',
         }}>
-          {value?.display || 'Search for a venue…'}
+          {value?.display || placeholder}
         </Text>
         {value?.display ? (
           <TouchableOpacity hitSlop={8} onPress={clear}>
@@ -295,13 +306,13 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
                 style={{
                   flex: 1,
                   fontFamily: theme.fonts.body,
-                  fontSize: 15,
+                  fontSize: theme.font.size.lgs,
                   color: theme.colors.text,
                   ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}),
                 }}
               />
               {loading || selecting
-                ? <ActivityIndicator size="small" color={theme.colors.primary} />
+                ? <Spinner size="small" color={theme.colors.primary} />
                 : query.length > 0
                   ? <TouchableOpacity hitSlop={8} onPress={() => setQuery('')}>
                       <Ionicons name="close-circle" size={16} color={theme.colors.subtext} />
@@ -309,7 +320,7 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
                   : null}
             </View>
             <TouchableOpacity onPress={close} hitSlop={8}>
-              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 14, color: theme.colors.primary }}>
+              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primary }}>
                 Cancel
               </Text>
             </TouchableOpacity>
@@ -344,7 +355,7 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
                     icon="business-outline"
                     title={loc.label}
                     subtitle={loc.address}
-                    onPress={() => selectDirect({ display: loc.label, latitude: null, longitude: null })}
+                    onPress={() => selectDirect({ display: loc.label, latitude: null, longitude: null, name: loc.label, address: loc.address ?? null, placeId: null })}
                   />
                 ))}
               </>
@@ -369,14 +380,14 @@ export function LocationPickerField({ value, onChange, recentVenues = [] }: Prop
 
             {/* Empty state */}
             {query.length >= MIN_LEN && !loading && !hasContent && (
-              <Text style={{ textAlign: 'center', color: theme.colors.subtext, fontSize: 13, padding: 32 }}>
+              <Text style={{ textAlign: 'center', color: theme.colors.subtext, fontSize: theme.font.size.smd, padding: 32 }}>
                 No venues found
               </Text>
             )}
 
             {/* Prompt when nothing typed yet */}
             {query.length === 0 && !hasContent && (
-              <Text style={{ textAlign: 'center', color: theme.colors.subtext, fontSize: 13, padding: 32 }}>
+              <Text style={{ textAlign: 'center', color: theme.colors.subtext, fontSize: theme.font.size.smd, padding: 32 }}>
                 Type to search for a venue
               </Text>
             )}

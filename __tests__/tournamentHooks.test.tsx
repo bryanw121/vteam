@@ -125,6 +125,8 @@ describe('useTournamentData: cold open', () => {
     expect(waves()).toBe(1)
     expect(tables()).toEqual([
       'profiles',
+      // The newest comment page and every announcement, in parallel (#8).
+      'tournament_comments',
       'tournament_comments',
       'tournament_prizes',
       'tournament_rules',
@@ -140,7 +142,7 @@ describe('useTournamentData: cold open', () => {
     renderHook(() => useTournamentData('t1', null, { loadMatches: false }))
     await settleAll()
     expect(waves()).toBe(1)
-    expect(tables()).toEqual(['tournament_comments', 'tournament_prizes', 'tournament_rules', 'tournament_teams', 'tournaments'])
+    expect(tables()).toEqual(['tournament_comments', 'tournament_comments', 'tournament_prizes', 'tournament_rules', 'tournament_teams', 'tournaments'])
   })
 
   it('matches are fetched only once the Schedule tab asks for them', async () => {
@@ -238,7 +240,7 @@ describe('useTournamentActions', () => {
       format: 'pool_play',
       startDate: new Date('2026-11-01T15:00:00Z'),
       teamIds: ['a', 'b', 'c', 'd', 'e', 'f'],
-      config: { numCourts: 2, matchDuration: 45, breakDuration: 10, gamesPerTeam: null },
+      config: { numCourts: 2, matchDuration: 45, breakDuration: 10, gamesPerTeam: null, teamsPerPool: null, restBetweenMatches: false },
       random: () => 0.3,
     })
     const { result } = renderHook(() => useTournamentActions('t1', 'org'))
@@ -262,7 +264,7 @@ describe('useTournamentActions', () => {
     mockFake.rpcResult = { data: null, error: { message: 'Only the organizer can change the schedule' } }
     const { result } = renderHook(() => useTournamentActions('t1', 'u1'))
     await act(async () => {
-      const p = result.current.replaceSchedule.mutate({ pools: [], matches: [] })
+      const p = result.current.replaceSchedule.mutate({ pools: [], matches: [], bracket: [] })
       await Promise.resolve()
       await settleWave()
       await p
@@ -282,5 +284,72 @@ describe('useTournamentActions', () => {
     })
     expect(outcome).toBeUndefined()
     expect(mockNotify).toHaveBeenCalled()
+  })
+
+  async function runToEnd(p: Promise<unknown>) {
+    for (let i = 0; i < 8; i++) {
+      await Promise.resolve()
+      await settleWave()
+    }
+    return p
+  }
+
+  it('schedule with refs and a bracket: the RPC, then one update per ref team, then one bracket insert', async () => {
+    mockFake.fixtures = { tournament_matches: [{ id: 'x' }] }
+    const schedule = generateSchedule({
+      format: 'round_robin',
+      startDate: new Date('2026-11-01T15:00:00Z'),
+      teamIds: ['a', 'b', 'c'],
+      refs: true,
+      config: { numCourts: 1, matchDuration: 45, breakDuration: 10, gamesPerTeam: null, teamsPerPool: null, restBetweenMatches: false },
+    })
+    const bracket = generateSchedule({
+      format: 'bracket', startDate: new Date('2026-11-01T15:00:00Z'), teamIds: ['a', 'b'],
+      config: { numCourts: 1, matchDuration: 45, breakDuration: 10, gamesPerTeam: null, teamsPerPool: null, restBetweenMatches: false },
+    }).bracket
+    const { result } = renderHook(() => useTournamentActions('t1', 'org'))
+    await act(async () => { await runToEnd(result.current.replaceSchedule.mutate({ ...schedule, bracket })) })
+    const kinds = mockFake.requests.map(r => `${r.kind}:${r.name}:${r.wave}`)
+    expect(kinds[0]).toBe('rpc:replace_tournament_schedule:0')
+    // Three matches, each reffed by the third team: three ref updates in one wave.
+    const refUpdates = mockFake.requests.filter(r => r.name === 'tournament_matches' && r.ops.includes('update'))
+    expect(refUpdates).toHaveLength(3)
+    expect(new Set(refUpdates.map(r => r.wave)).size).toBe(1)
+    const inserts = mockFake.requests.filter(r => r.name === 'tournament_matches' && r.ops.includes('insert'))
+    expect(inserts).toHaveLength(1)
+    expect(mockNotify).not.toHaveBeenCalled()
+  })
+
+  it('recording a result: sets replaced, match completed, winner advanced, then the status', async () => {
+    mockFake.fixtures = { tournament_matches: [{ id: 'x' }], tournaments: [{ id: 't1' }], tournament_sets: [] }
+    const { result } = renderHook(() => useTournamentActions('t1', 'org'))
+    let outcome: unknown
+    await act(async () => {
+      outcome = await runToEnd(result.current.recordResult.mutate({
+        matchId: 'm1', winnerId: 'a', forfeit: false,
+        sets: [{ set_number: 1, team_a_score: 25, team_b_score: 20 }],
+        writes: { advances: [{ matchId: 'm9', column: 'team_a_id', teamId: 'a' }], nextStatus: 'completed', podium: { first: 'a', second: 'b', thirds: [] }, blocked: null },
+      }))
+    })
+    expect(outcome).toBe(true)
+    const seq = mockFake.requests.map(r => `${r.name}:${r.ops.filter(o => ['delete', 'insert', 'update'].includes(o)).join(',')}`)
+    expect(seq).toEqual([
+      'tournament_sets:delete',
+      'tournament_sets:insert',
+      'tournament_matches:update',
+      'tournament_matches:update',
+      'tournaments:update',
+    ])
+    expect(mockNotify).not.toHaveBeenCalled()
+  })
+
+  it('seeding a bracket refuses when bracket results already exist', async () => {
+    mockFake.fixtures = { tournament_matches: [{ id: 'played' }] }
+    const { result } = renderHook(() => useTournamentActions('t1', 'org'))
+    let outcome: unknown = 'unset'
+    await act(async () => { outcome = await runToEnd(result.current.seedBracket.mutate([])) })
+    expect(outcome).toBeUndefined()
+    expect(mockNotify).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ message: expect.stringMatching(/already has results/) }))
+    expect(mockFake.requests.some(r => r.ops.includes('delete'))).toBe(false)
   })
 })

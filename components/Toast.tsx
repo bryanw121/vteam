@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { Animated, Text, View, Platform } from 'react-native'
+import { Animated, Platform, TouchableOpacity } from 'react-native'
+import { Text } from './ui/Text'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../constants/theme'
+import type { ToastAction } from '../types'
 
 type Variant = 'error' | 'success' | 'info'
 
@@ -12,6 +14,8 @@ type Props = {
   visible: boolean
   onHide: () => void
   duration?: number
+  /** Optional button on the right (e.g. "Message host"). Tapping it hides the toast. */
+  action?: ToastAction
 }
 
 const VARIANTS: Record<Variant, { bg: string; icon: string; color: string; text: string }> = {
@@ -20,7 +24,7 @@ const VARIANTS: Record<Variant, { bg: string; icon: string; color: string; text:
   info:    { bg: '#F3F0FF', icon: 'information-circle', color: theme.colors.primary, text: '#1C1140' },
 }
 
-export function Toast({ message, variant = 'error', visible, onHide, duration = 3500 }: Props) {
+export function Toast({ message, variant = 'error', visible, onHide, duration = 3500, action }: Props) {
   const insets = useSafeAreaInsets()
   const opacity = useRef(new Animated.Value(0)).current
   const translateY = useRef(new Animated.Value(-12)).current
@@ -49,7 +53,7 @@ export function Toast({ message, variant = 'error', visible, onHide, duration = 
 
   return (
     <Animated.View
-      pointerEvents="none"
+      pointerEvents={action ? 'box-none' : 'none'}
       style={{
         position: 'absolute',
         top: insets.top + theme.spacing.sm,
@@ -89,6 +93,17 @@ export function Toast({ message, variant = 'error', visible, onHide, duration = 
       }}>
         {message}
       </Text>
+      {action && (
+        <TouchableOpacity
+          onPress={() => { action.onPress(); onHide() }}
+          accessibilityRole="button"
+          hitSlop={8}
+          style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: theme.spacing.sm }}
+          testID="toast-action"
+        >
+          <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: text, textDecorationLine: 'underline' }}>{action.label}</Text>
+        </TouchableOpacity>
+      )}
     </Animated.View>
   )
 }

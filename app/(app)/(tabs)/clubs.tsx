@@ -4,16 +4,9 @@
 */
 
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Alert,
-} from 'react-native'
+import { FlatList, TouchableOpacity, View, Alert } from 'react-native'
+import { Text, TextInput } from '../../../components/ui/Text'
+import { RefreshControl } from '../../../components/RefreshControl'
 import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -31,6 +24,7 @@ import { useTabsActive, useTabsShell } from '../../../contexts/tabs'
 import { resolveClubAvatarUri } from '../../../utils'
 import { routes } from '../../../utils/routes'
 import type { ClubListItem, MajorCity } from '../../../types'
+import { Spinner } from '../../../components/ui/Spinner'
 
 /** List payload: member count; membership embed is added when signed in. */
 const CLUB_LIST_SELECT_BASE =
@@ -147,7 +141,7 @@ function ClubCard({ club, userId, listKey, isOwner, isMember, onPress }: ClubCar
             end={{ x: 1, y: 1 }}
             style={{ width: 54, height: 54, alignItems: 'center', justifyContent: 'center' }}
           >
-            <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 24, color: theme.colors.white, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
+            <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.xl, color: theme.colors.white, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
               {initial}
             </Text>
           </LinearGradient>
@@ -155,17 +149,17 @@ function ClubCard({ club, userId, listKey, isOwner, isMember, onPress }: ClubCar
       </View>
 
       <View style={{ flex: 1, gap: 3, minWidth: 0 }}>
-        <Text style={{ fontFamily: theme.fonts.display, fontSize: 16, letterSpacing: -0.3, color: theme.colors.text }} numberOfLines={1}>
+        <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.base, letterSpacing: -0.3, color: theme.colors.text }} numberOfLines={1}>
           {club.name}
         </Text>
-        <Text style={{ fontFamily: theme.fonts.body, fontSize: 11.5, color: theme.colors.subtext }} numberOfLines={1}>
+        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext }} numberOfLines={1}>
           {resolvedMajorCity(club)?.display_name ?? 'Unknown'} · {count} members{isOwner ? ' · Owner' : ''}
         </Text>
       </View>
 
       {isMember ? (
         <View style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, backgroundColor: theme.colors.cool + '20' }}>
-          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 12, color: theme.colors.cool }}>✓ Joined</Text>
+          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.cool }}>✓ Joined</Text>
         </View>
       ) : (
         <TouchableOpacity
@@ -174,8 +168,8 @@ function ClubCard({ club, userId, listKey, isOwner, isMember, onPress }: ClubCar
           style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: theme.colors.primary, opacity: join.isPending ? 0.6 : 1 }}
         >
           {join.isPending
-            ? <ActivityIndicator size="small" color={theme.colors.white} />
-            : <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 12, color: theme.colors.white }}>Join</Text>
+            ? <Spinner size="small" color={theme.colors.white} />
+            : <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.white }}>Join</Text>
           }
         </TouchableOpacity>
       )}
@@ -281,7 +275,7 @@ export default function ClubsScreen() {
         justifyContent: 'space-between',
         gap: theme.spacing.md,
       }}>
-        <Text style={{ fontFamily: theme.fonts.display, fontSize: 34, letterSpacing: -1.2, color: theme.colors.text, lineHeight: 38, flex: 1 }}>
+        <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.xxl, letterSpacing: -1.2, color: theme.colors.text, lineHeight: 38, flex: 1 }}>
           Clubs
         </Text>
         {isGuest ? <SignInButton /> : (
@@ -301,7 +295,7 @@ export default function ClubsScreen() {
           }}
         >
           <Ionicons name="add" size={20} color={theme.colors.white} />
-          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 13, color: theme.colors.white }}>Create</Text>
+          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.white }}>Create</Text>
         </TouchableOpacity>
         )}
       </View>
@@ -325,7 +319,7 @@ export default function ClubsScreen() {
                 borderColor: theme.colors.border,
               }}
             >
-              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 12, color: active ? theme.colors.white : theme.colors.text }}>
+              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: active ? theme.colors.white : theme.colors.text }}>
                 {f.label}
               </Text>
             </TouchableOpacity>
@@ -354,7 +348,7 @@ export default function ClubsScreen() {
             style={{
               flex: 1,
               fontFamily: theme.fonts.body,
-              fontSize: 16,
+              fontSize: theme.font.size.base,
               color: theme.colors.text,
               padding: 0,
             }}
@@ -398,8 +392,10 @@ export default function ClubsScreen() {
       ) : docScrollActive ? (
         <DocScrollView
           docScroll
+          memoryKey="tab:clubs"
           style={shared.screen}
           contentContainerStyle={{ paddingBottom: tabBarHeight + 32 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={theme.colors.primary} />}
         >
           {listHeader}
           {visibleClubs.length === 0

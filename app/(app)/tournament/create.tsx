@@ -1,8 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'
-import {
-  View, Text, ScrollView, TouchableOpacity, TextInput,
-  KeyboardAvoidingView, Platform, ActivityIndicator,
-} from 'react-native'
+import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native'
+import { Text, TextInput } from '../../../components/ui/Text'
 import { useRouter, Stack } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -13,6 +11,7 @@ import { routes } from '../../../utils/routes'
 import { DatePickerField } from '../../../components/DatePickerField'
 import { notifyError, notifyInfo } from '../../../utils/notify'
 import type { TournamentDraft, TournamentFormat, TournamentBracketType, Club } from '../../../types'
+import { Spinner } from '../../../components/ui/Spinner'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -68,10 +67,10 @@ function StepIndicator({ current }: { current: number }) {
               }}>
                 {done
                   ? <Ionicons name="checkmark" size={14} color={theme.colors.primary} />
-                  : <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: 11, color: active ? theme.colors.onPrimary : theme.colors.subtext }}>{i + 1}</Text>
+                  : <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.xs, color: active ? theme.colors.onPrimary : theme.colors.subtext }}>{i + 1}</Text>
                 }
               </View>
-              <Text style={{ fontFamily: theme.fonts.body, fontSize: 9, color: active ? theme.colors.primary : theme.colors.subtext, letterSpacing: 0.3 }}>
+              <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: active ? theme.colors.primary : theme.colors.subtext, letterSpacing: 0.3 }}>
                 {label}
               </Text>
             </View>
@@ -88,7 +87,7 @@ function SectionLabel({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; l
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10, marginTop: 6 }}>
       <Ionicons name={icon} size={13} color={theme.colors.subtext} />
-      <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 10.5, letterSpacing: 1, textTransform: 'uppercase', color: theme.colors.subtext }}>
+      <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, letterSpacing: 1, textTransform: 'uppercase', color: theme.colors.subtext }}>
         {label}
       </Text>
     </View>
@@ -98,7 +97,7 @@ function SectionLabel({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; l
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View style={{ marginBottom: theme.spacing.md }}>
-      <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 12, color: theme.colors.subtext, marginBottom: 6 }}>{label}</Text>
+      <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginBottom: 6 }}>{label}</Text>
       {children}
     </View>
   )
@@ -130,7 +129,7 @@ function TextBox({
         paddingHorizontal: 14,
         paddingVertical: 11,
         fontFamily: theme.fonts.body,
-        fontSize: 14,
+        fontSize: theme.font.size.md,
         color: theme.colors.text,
         minHeight: multiline ? 80 : undefined,
         textAlignVertical: multiline ? 'top' : undefined,
@@ -151,7 +150,7 @@ function NumericStepper({ value, onChange, min = 0, max = 99 }: {
       >
         <Ionicons name="remove" size={16} color={theme.colors.text} />
       </TouchableOpacity>
-      <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: 18, color: theme.colors.text, minWidth: 40, textAlign: 'center' }}>{value}</Text>
+      <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lg, color: theme.colors.text, minWidth: 40, textAlign: 'center' }}>{value}</Text>
       <TouchableOpacity
         onPress={() => onChange(Math.min(max, value + 1))}
         style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', justifyContent: 'center' }}
@@ -170,8 +169,8 @@ function Toggle({ value, onChange, label, sub }: { value: boolean; onChange: (v:
       style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: theme.colors.card, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 10 }}
     >
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 14, color: theme.colors.text }}>{label}</Text>
-        {sub && <Text style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.subtext, marginTop: 2 }}>{sub}</Text>}
+        <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>{label}</Text>
+        {sub && <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: 2 }}>{sub}</Text>}
       </View>
       <View style={{
         width: 44, height: 26, borderRadius: 13,
@@ -210,7 +209,7 @@ function StepBasicInfo({ draft, update, clubs }: {
       <View style={[shared.card, { marginBottom: 16 }]}>
         <Field label="Associate with club">
           {clubs.length === 0
-            ? <Text style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.subtext }}>You must be a club member to host a tournament.</Text>
+            ? <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext }}>You must be a club member to host a tournament.</Text>
             : <View style={{ gap: 8 }}>
                 {clubs.map(c => (
                   <TouchableOpacity
@@ -224,7 +223,7 @@ function StepBasicInfo({ draft, update, clubs }: {
                       borderColor: draft.clubId === c.id ? theme.colors.primary : theme.colors.border,
                     }}
                   >
-                    <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 14, color: theme.colors.text }}>{c.name}</Text>
+                    <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>{c.name}</Text>
                     {draft.clubId === c.id && <Ionicons name="checkmark-circle" size={18} color={theme.colors.primary} />}
                   </TouchableOpacity>
                 ))}
@@ -253,7 +252,7 @@ function StepBasicInfo({ draft, update, clubs }: {
                 borderColor: active ? theme.colors.primary : theme.colors.border,
               }}
             >
-              <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: 16, color: active ? theme.colors.primary : theme.colors.text }}>{opt.label}</Text>
+              <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.base, color: active ? theme.colors.primary : theme.colors.text }}>{opt.label}</Text>
             </TouchableOpacity>
           )
         })}
@@ -316,10 +315,10 @@ function StepFormat({ draft, update }: { draft: TournamentDraft; update: (p: Par
                 borderColor: active ? theme.colors.primary : theme.colors.border,
               }}
             >
-              <Text style={{ fontSize: 28 }}>{opt.icon}</Text>
+              <Text style={{ fontSize: theme.font.emoji.xl }}>{opt.icon}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: 15, color: theme.colors.text }}>{opt.label}</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.subtext, marginTop: 2 }}>{opt.description}</Text>
+                <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.text }}>{opt.label}</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: 2 }}>{opt.description}</Text>
               </View>
               {active && <Ionicons name="checkmark-circle" size={22} color={theme.colors.primary} />}
             </TouchableOpacity>
@@ -347,9 +346,9 @@ function StepFormat({ draft, update }: { draft: TournamentDraft; update: (p: Par
                     borderWidth: 2, borderColor: active ? theme.colors.primary : theme.colors.border,
                   }}
                 >
-                  <Text style={{ fontSize: 24 }}>{opt.icon}</Text>
-                  <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: 13, color: theme.colors.text, textAlign: 'center' }}>{opt.label}</Text>
-                  <Text style={{ fontFamily: theme.fonts.body, fontSize: 11, color: theme.colors.subtext, textAlign: 'center' }}>{opt.sub}</Text>
+                  <Text style={{ fontSize: theme.font.emoji.lg }}>{opt.icon}</Text>
+                  <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.smd, color: theme.colors.text, textAlign: 'center' }}>{opt.label}</Text>
+                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext, textAlign: 'center' }}>{opt.sub}</Text>
                 </TouchableOpacity>
               )
             })}
@@ -363,8 +362,8 @@ function StepFormat({ draft, update }: { draft: TournamentDraft; update: (p: Par
           <View style={[shared.card, { marginBottom: 20 }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View>
-                <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 14, color: theme.colors.text }}>Teams that advance per pool</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.subtext, marginTop: 2 }}>Top N teams move to the next stage</Text>
+                <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>Teams that advance per pool</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: 2 }}>Top N teams move to the next stage</Text>
               </View>
               <NumericStepper value={draft.teamsAdvancePerPool} onChange={v => update({ teamsAdvancePerPool: v })} min={1} max={8} />
             </View>
@@ -392,15 +391,15 @@ function StepRegistration({ draft, update }: { draft: TournamentDraft; update: (
       <View style={[shared.card, { marginBottom: 16 }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <View>
-            <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 14, color: theme.colors.text }}>Max teams</Text>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.subtext, marginTop: 2 }}>Leave empty for unlimited</Text>
+            <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>Max teams</Text>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: 2 }}>Leave empty for unlimited</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <TouchableOpacity
               onPress={() => update({ maxTeams: null })}
               style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: draft.maxTeams === null ? theme.colors.primarySoft : theme.colors.background, borderWidth: 1, borderColor: draft.maxTeams === null ? theme.colors.primary : theme.colors.border }}
             >
-              <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 11, color: draft.maxTeams === null ? theme.colors.primary : theme.colors.subtext }}>∞</Text>
+              <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.xs, color: draft.maxTeams === null ? theme.colors.primary : theme.colors.subtext }}>∞</Text>
             </TouchableOpacity>
             <NumericStepper
               value={draft.maxTeams ?? 8}
@@ -412,13 +411,13 @@ function StepRegistration({ draft, update }: { draft: TournamentDraft; update: (
 
         <View style={{ height: 1, backgroundColor: theme.colors.border, marginBottom: 16 }} />
 
-        <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 13, color: theme.colors.subtext, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>Roster size</Text>
+        <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.smd, color: theme.colors.subtext, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>Roster size</Text>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 14, color: theme.colors.text }}>Minimum players</Text>
+          <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>Minimum players</Text>
           <NumericStepper value={draft.minRosterSize} onChange={v => update({ minRosterSize: Math.min(v, draft.maxRosterSize) })} min={1} max={draft.maxRosterSize} />
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 14, color: theme.colors.text }}>Maximum players</Text>
+          <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>Maximum players</Text>
           <NumericStepper value={draft.maxRosterSize} onChange={v => update({ maxRosterSize: Math.max(v, draft.minRosterSize) })} min={draft.minRosterSize} max={20} />
         </View>
       </View>
@@ -479,8 +478,8 @@ function StepRules({ draft, update }: { draft: TournamentDraft; update: (p: Part
           <View key={row.key}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 14, color: theme.colors.text }}>{row.label}</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: 11.5, color: theme.colors.subtext, marginTop: 2 }}>{row.sub}</Text>
+                <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>{row.label}</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: 2 }}>{row.sub}</Text>
               </View>
               <NumericStepper
                 value={draft[row.key] as number}
@@ -497,8 +496,8 @@ function StepRules({ draft, update }: { draft: TournamentDraft; update: (p: Part
       <View style={[shared.card, { marginBottom: 16 }]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View>
-            <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 14, color: theme.colors.text }}>Sets to win a match</Text>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.subtext, marginTop: 2 }}>Best of {draft.setsToWin * 2 - 1}</Text>
+            <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>Sets to win a match</Text>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: 2 }}>Best of {draft.setsToWin * 2 - 1}</Text>
           </View>
           <NumericStepper value={draft.setsToWin} onChange={v => update({ setsToWin: v })} min={1} max={3} />
         </View>
@@ -514,7 +513,7 @@ function StepRules({ draft, update }: { draft: TournamentDraft; update: (p: Part
         />
         {draft.pointCap !== null && (
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
-            <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 14, color: theme.colors.text }}>Cap at</Text>
+            <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>Cap at</Text>
             <NumericStepper value={draft.pointCap} onChange={v => update({ pointCap: v })} min={draft.winningScore} max={60} />
           </View>
         )}
@@ -529,8 +528,8 @@ function PreviewRow({ icon, label, value }: { icon: keyof typeof Ionicons.glyphM
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
       <Ionicons name={icon} size={16} color={theme.colors.subtext} />
-      <Text style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.subtext, width: 110 }}>{label}</Text>
-      <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 13, color: theme.colors.text, flex: 1 }}>{value}</Text>
+      <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext, width: 110 }}>{label}</Text>
+      <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.smd, color: theme.colors.text, flex: 1 }}>{value}</Text>
     </View>
   )
 }
@@ -560,37 +559,37 @@ function StepPreview({ draft, clubs, onSaveDraft, onPublish, saving }: {
         position: 'relative', overflow: 'hidden',
       }}>
         <View pointerEvents="none" style={{ position: 'absolute', right: -10, top: -20 }}>
-          <Text style={{ fontSize: 120, opacity: 0.12 }}>🏆</Text>
+          <Text style={{ fontSize: theme.font.watermark.lg, opacity: 0.12 }}>🏆</Text>
         </View>
         <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
           <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, backgroundColor: theme.colors.accent }}>
-            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 11, color: theme.colors.accentInk }}>
+            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.accentInk }}>
               {draft.startDate ? fmtDate(draft.startDate) : 'Date TBD'}
             </Text>
           </View>
           <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' }}>
-            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 11, color: 'rgba(255,255,255,0.85)' }}>
+            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: 'rgba(255,255,255,0.85)' }}>
               🏆 {FORMAT_LABELS[draft.format]}
             </Text>
           </View>
         </View>
-        <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 24, letterSpacing: -0.6, color: theme.colors.onPrimary, lineHeight: 28 }}>
+        <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.xl, letterSpacing: -0.6, color: theme.colors.onPrimary, lineHeight: 28 }}>
           {draft.title || 'Untitled Tournament'}
         </Text>
         {draft.location ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 8 }}>
             <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.6)" />
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>{draft.location}</Text>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: 'rgba(255,255,255,0.6)' }}>{draft.location}</Text>
           </View>
         ) : null}
         <View style={{ flexDirection: 'row', gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
           <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, backgroundColor: 'rgba(255,255,255,0.12)' }}>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: 'rgba(255,255,255,0.75)' }}>
               {draft.price > 0 ? `$${draft.price} entry` : 'Free entry'}
             </Text>
           </View>
           <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, backgroundColor: 'rgba(255,255,255,0.12)' }}>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: 'rgba(255,255,255,0.75)' }}>
               {draft.maxTeams ? `Up to ${draft.maxTeams} teams` : 'Unlimited teams'}
             </Text>
           </View>
@@ -607,7 +606,7 @@ function StepPreview({ draft, clubs, onSaveDraft, onPublish, saving }: {
       </View>
 
       <View style={[shared.card, { marginBottom: 24 }]}>
-        <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: theme.colors.subtext, marginBottom: 8 }}>Scoring Rules</Text>
+        <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, letterSpacing: 1, textTransform: 'uppercase', color: theme.colors.subtext, marginBottom: 8 }}>Scoring Rules</Text>
         <PreviewRow icon="remove-outline"       label="Starting score"  value={`${draft.startingScore}–${draft.startingScore}`} />
         <PreviewRow icon="flag-outline"         label="Win a set"       value={`${draft.winningScore} pts (win by ${draft.winByMargin})`} />
         <PreviewRow icon="star-outline"         label="Deciding set"    value={`${draft.decidingSetScore} pts`} />
@@ -625,8 +624,8 @@ function StepPreview({ draft, clubs, onSaveDraft, onPublish, saving }: {
           style={{ backgroundColor: theme.colors.primary, borderRadius: 14, padding: 16, alignItems: 'center' }}
         >
           {saving
-            ? <ActivityIndicator color={theme.colors.onPrimary} />
-            : <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: 15, color: theme.colors.onPrimary }}>Publish Tournament</Text>
+            ? <Spinner color={theme.colors.onPrimary} />
+            : <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.onPrimary }}>Publish Tournament</Text>
           }
         </TouchableOpacity>
         <TouchableOpacity
@@ -634,9 +633,9 @@ function StepPreview({ draft, clubs, onSaveDraft, onPublish, saving }: {
           disabled={saving}
           style={{ backgroundColor: theme.colors.card, borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}
         >
-          <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 15, color: theme.colors.text }}>Save as Draft</Text>
+          <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.lgs, color: theme.colors.text }}>Save as Draft</Text>
         </TouchableOpacity>
-        <Text style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.subtext, textAlign: 'center', paddingHorizontal: 20 }}>
+        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, textAlign: 'center', paddingHorizontal: 20 }}>
           Drafts are only visible to you. You can publish any time from the tournament page.
         </Text>
       </View>
@@ -786,7 +785,7 @@ export default function TournamentCreateScreen() {
           <TouchableOpacity onPress={goBack} hitSlop={8} style={{ padding: 4 }}>
             <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
           </TouchableOpacity>
-          <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: 16, color: theme.colors.text }}>
+          <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.base, color: theme.colors.text }}>
             Create Tournament
           </Text>
           <View style={{ width: 32 }} />
@@ -822,13 +821,13 @@ export default function TournamentCreateScreen() {
             onPress={goBack}
             style={{ flex: 1, padding: 14, borderRadius: 14, backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center' }}
           >
-            <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 15, color: theme.colors.text }}>Back</Text>
+            <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.lgs, color: theme.colors.text }}>Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={goNext}
             style={{ flex: 2, padding: 14, borderRadius: 14, backgroundColor: theme.colors.primary, alignItems: 'center' }}
           >
-            <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: 15, color: theme.colors.onPrimary }}>Continue</Text>
+            <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.onPrimary }}>Continue</Text>
           </TouchableOpacity>
         </View>
       )}

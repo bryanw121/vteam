@@ -1,11 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, RefreshControl, ScrollView, Text, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
+import { Text } from '../../../../components/ui/Text'
+import { RefreshControl } from '../../../../components/RefreshControl'
 import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { supabase } from '../../../../lib/supabase'
 import { getSessionUser } from '../../../../lib/sessionUser'
 import { EventCard } from '../../../../components/EventCard'
 import { shared, theme, EVENT_CARD_LIST_SELECT_MINIMAL } from '../../../../constants'
 import type { EventWithDetails } from '../../../../types'
+import { Spinner } from '../../../../components/ui/Spinner'
 
 export default function ProfileHostedEventsScreen() {
   useStackBackTitle('Hosted events')
@@ -51,7 +54,7 @@ export default function ProfileHostedEventsScreen() {
 
   if (loading) return (
     <View style={[shared.screen, { alignItems: 'center', justifyContent: 'center' }]}>
-      <ActivityIndicator color={theme.colors.primary} />
+      <Spinner color={theme.colors.primary} />
     </View>
   )
 

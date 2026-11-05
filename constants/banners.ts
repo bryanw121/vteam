@@ -8,9 +8,10 @@ import type { BannerDef } from '../types'
  */
 export const BANNERS = {
   austinPilot: {
-    id: 'austin-pilot-v1',
-    title: "We're piloting in Austin",
-    body: "vteam is starting with Austin volleyball. Set your home city in your profile and we'll show sessions near you as we add them.",
+    id: 'austin-pilot-v2',
+    title: "We're piloting in Austin!",
+    body: "Set your home city in your profile and we'll show sessions near you as we add them. New to Vteam?",
+    action: { label: 'Check out our tour', type: 'startTour', tourId: 'intro' },
   },
 } satisfies Record<string, BannerDef>
 

@@ -1,5 +1,6 @@
 import React, { memo, useMemo } from 'react'
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { Text } from './ui/Text'
 import { theme } from '../constants'
 import { parseEventDate } from '../utils'
 import { MY_EVENTS_RAIL_CAP } from '../hooks/useMyUpcomingEvents'

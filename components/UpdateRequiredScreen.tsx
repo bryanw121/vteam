@@ -1,4 +1,5 @@
-import { Linking, Platform, Text, View } from 'react-native'
+import { Linking, Platform, View } from 'react-native'
+import { Text } from './ui/Text'
 import { Button } from './Button'
 import { shared, theme } from '../constants'
 import type { UpdateRequirement } from '../types'

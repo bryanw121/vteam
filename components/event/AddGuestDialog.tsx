@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '../ui/Text'
 import { Button } from '../Button'
 import { Input } from '../Input'
 import { theme } from '../../constants'

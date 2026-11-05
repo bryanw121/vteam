@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native'
+import { View, ScrollView, TouchableOpacity } from 'react-native'
+import { Text } from '../../../components/ui/Text'
+import { RefreshControl } from '../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
@@ -14,6 +16,7 @@ import { normalizeProfileRow, PROFILE_BRIEF_SELECT } from '../../../hooks/useMyP
 import { routes } from '../../../utils/routes'
 import { useSilencedUsers } from '../../../hooks/useSilencedUsers'
 import { useOpenDm } from '../../../hooks/useOpenDm'
+import { usePointsBalance } from '../../../hooks/usePoints'
 import {
   resolveProfileAvatarUriWithError,
   volleyballSkillLevelLabel,
@@ -21,6 +24,7 @@ import {
   confirmDestructive,
 } from '../../../utils'
 import type { Profile, UserBadge } from '../../../types'
+import { Spinner } from '../../../components/ui/Spinner'
 
 const POS_ABBREV: Record<string, string> = {
   setter: 'S',
@@ -46,6 +50,7 @@ export default function UserProfileDetail() {
   const [refreshing, setRefreshing] = useState(false)
   const [toast, setToast] = useState<{ message: string; variant: 'error' | 'success' | 'info' } | null>(null)
   const { silencedUserIds, silenceUser, unsilenceUser } = useSilencedUsers()
+  const points = usePointsBalance(id)
 
   const loadProfile = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true)
@@ -88,7 +93,7 @@ export default function UserProfileDetail() {
   async function handleRefresh() {
     setRefreshing(true)
     try {
-      await loadProfile({ silent: true })
+      await Promise.all([loadProfile({ silent: true }), points.refetch({ force: true })])
     } finally {
       setRefreshing(false)
     }
@@ -155,7 +160,7 @@ export default function UserProfileDetail() {
       </View>
 
       {loading ? (
-        <View style={shared.centered}><ActivityIndicator color={theme.colors.primary} /></View>
+        <View style={shared.centered}><Spinner color={theme.colors.primary} /></View>
       ) : !profile ? (
         <ScrollView
           style={shared.screen}
@@ -208,7 +213,7 @@ export default function UserProfileDetail() {
               <View style={{ flex: 1, gap: 4 }}>
                 <Text style={{
                   fontFamily: theme.fonts.body,
-                  fontSize: 10.5, fontWeight: '700',
+                  fontSize: theme.font.size.xs, fontWeight: '700',
                   color: 'rgba(255,255,255,0.55)',
                   letterSpacing: 1, textTransform: 'uppercase',
                 }}>
@@ -216,7 +221,7 @@ export default function UserProfileDetail() {
                 </Text>
                 <Text style={{
                   fontFamily: theme.fonts.display,
-                  fontSize: 22, letterSpacing: -0.5,
+                  fontSize: theme.font.heading.md, letterSpacing: -0.5,
                   color: theme.colors.white, lineHeight: 24,
                 }}>
                   {displayName}
@@ -232,7 +237,7 @@ export default function UserProfileDetail() {
                       }}>
                         <Text style={{
                           fontFamily: theme.fonts.displaySemiBold,
-                          fontSize: 11, color: theme.colors.accentInk,
+                          fontSize: theme.font.size.xs, color: theme.colors.accentInk,
                         }}>{POS_ABBREV[pos] ?? pos}</Text>
                       </View>
                     ))}
@@ -253,25 +258,29 @@ export default function UserProfileDetail() {
               </Text>
             ) : null}
 
-            {/* Stat trio */}
+            {/* Stats */}
             <View style={{
               flexDirection: 'row', gap: 1, marginTop: 14,
               borderRadius: 14, overflow: 'hidden',
               backgroundColor: 'rgba(255,255,255,0.08)', width: '100%',
             }}>
               <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
-                <Text style={{ fontFamily: theme.fonts.display, fontSize: 26, letterSpacing: -1, color: theme.colors.accent }}>
+                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.accent }}>
                   {profile.skill_level ? volleyballSkillLevelLabel(profile.skill_level) : '—'}
                 </Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Skill</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Skill</Text>
               </View>
               <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
-                <Text style={{ fontFamily: theme.fonts.display, fontSize: 26, letterSpacing: -1, color: theme.colors.white }}>{totalCheers}</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Cheers</Text>
+                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{totalCheers}</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Cheers</Text>
               </View>
               <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
-                <Text style={{ fontFamily: theme.fonts.display, fontSize: 26, letterSpacing: -1, color: theme.colors.white }}>0</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Trophies</Text>
+                <Text testID="user-profile-points-count" style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{points.data ?? 0}</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Points</Text>
+              </View>
+              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
+                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>0</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Trophies</Text>
               </View>
             </View>
 
@@ -296,7 +305,7 @@ export default function UserProfileDetail() {
           <View style={{ marginTop: theme.spacing.lg }}>
             <Text style={{
               fontFamily: theme.fonts.display, fontWeight: '700',
-              fontSize: 18, color: theme.colors.text, marginBottom: theme.spacing.sm,
+              fontSize: theme.font.size.lg, color: theme.colors.text, marginBottom: theme.spacing.sm,
             }}>Trophy case</Text>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               {([
@@ -315,10 +324,10 @@ export default function UserProfileDetail() {
                     backgroundColor: t.color,
                     alignItems: 'center', justifyContent: 'center', marginBottom: 6,
                   }}>
-                    <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 18, color: theme.colors.background }}>{t.place}</Text>
+                    <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lg, color: theme.colors.background }}>{t.place}</Text>
                   </View>
-                  <Text style={{ fontFamily: theme.fonts.bodyBold, fontSize: 10.5, color: theme.colors.text, letterSpacing: 0.2 }}>{t.label}</Text>
-                  <Text style={{ fontFamily: theme.fonts.body, fontSize: 9.5, color: theme.colors.subtext, marginTop: 1 }}>—</Text>
+                  <Text style={{ fontFamily: theme.fonts.bodyBold, fontSize: theme.font.size.xs, color: theme.colors.text, letterSpacing: 0.2 }}>{t.label}</Text>
+                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext, marginTop: 1 }}>—</Text>
                 </View>
               ))}
             </View>
@@ -328,7 +337,7 @@ export default function UserProfileDetail() {
           <View style={{ marginTop: theme.spacing.lg }}>
             <Text style={{
               fontFamily: theme.fonts.display, fontWeight: '700',
-              fontSize: 18, color: theme.colors.text, marginBottom: theme.spacing.sm,
+              fontSize: theme.font.size.lg, color: theme.colors.text, marginBottom: theme.spacing.sm,
             }}>Profile actions</Text>
 
             <View style={[shared.card, { padding: 0, overflow: 'hidden', gap: 0 }]}>

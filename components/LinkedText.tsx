@@ -1,4 +1,5 @@
-import { Platform, Text, Pressable } from 'react-native'
+import { Platform, Pressable } from 'react-native'
+import { Text } from './ui/Text'
 import * as Linking from 'expo-linking'
 import { theme } from '../constants/theme'
 

@@ -1,4 +1,5 @@
-import { Image, Modal, Pressable, Text, View } from 'react-native'
+import { Image, Modal, Pressable, View } from 'react-native'
+import { Text } from '../ui/Text'
 import { theme } from '../../constants'
 import { ProfileAvatar } from '../ProfileAvatar'
 import type { Profile } from '../../types'

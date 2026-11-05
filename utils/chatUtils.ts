@@ -389,3 +389,17 @@ export function createDebouncedCall(fn: () => void, delayMs: number): DebouncedC
     isPending: () => timer !== null,
   }
 }
+
+/**
+ * The first-item index for `ascending`, given what it was for the previous
+ * list: lowered by however many messages now sit before the old first one
+ * (an older page was prepended). Appends and edits leave it unchanged.
+ */
+export function nextFirstItemIndex(
+  prev: { firstId: string | null; firstIndex: number },
+  ascending: readonly { id: string }[],
+): number {
+  if (!prev.firstId) return prev.firstIndex
+  const k = ascending.findIndex(m => m.id === prev.firstId)
+  return k > 0 ? prev.firstIndex - k : prev.firstIndex
+}

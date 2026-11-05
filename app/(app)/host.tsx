@@ -1,29 +1,32 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ActivityIndicator, ScrollView, Text, TextInput, View, TouchableOpacity, Switch, Modal, StyleSheet, Platform, RefreshControl } from 'react-native'
+import { ScrollView, View, TouchableOpacity, Switch, Modal, StyleSheet, Platform } from 'react-native'
+import { Text, TextInput } from '../../components/ui/Text'
+import { RefreshControl } from '../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { Sentry } from '../../lib/sentry'
-import { invalidate, queryKey, useQuery } from '../../lib/query'
+import { getQueryData, invalidate, queryKey, useQuery } from '../../lib/query'
+import { eventKeys } from '../../hooks/event/keys'
+import { HostFormSkeleton } from '../../components/host/HostFormSkeleton'
 import { DatePickerField } from '../../components/DatePickerField'
 import { LocationPickerField } from '../../components/LocationPickerField'
 import type { LocationValue } from '../../types'
 import { TemplatesView } from '../../components/host/TemplatesView'
 import { Chip, ScreenState } from '../../components/ui'
-import { shared, theme, STALE, SURFACE_OPTIONS, DAY_LABELS_SHORT, DURATION_OPTIONS, DEFAULT_DURATION_MINUTES, GENERIC_ERROR_MESSAGE } from '../../constants'
+import { shared, theme, STALE, EVENT_EDIT_SELECT, SURFACE_OPTIONS, DAY_LABELS_SHORT, DURATION_OPTIONS, DEFAULT_DURATION_MINUTES, GENERIC_ERROR_MESSAGE } from '../../constants'
 import type { RecurrenceCadence } from '../../constants'
 import { routes } from '../../utils/routes'
 import { useSession } from '../../contexts/session'
 import { useTags } from '../../hooks/useTags'
 import { cleanDate, diffTagIds, isSurface, normalizePriceText, parsePrice, sanitizePriceInput } from '../../utils'
 import { defaultRecurrenceEndDate, generateEventDates } from '../../utils/recurrence'
-import type { CreateEventForm, OwnedClubOption, Tag, UserEventTemplate } from '../../types'
+import type { CreateEventForm, EventEditSource, EventWithDetails, OwnedClubOption, Tag, UserEventTemplate } from '../../types'
+import { Spinner } from '../../components/ui/Spinner'
 
 const EMPTY_TAGS: Tag[] = []
 const EMPTY_CLUBS: OwnedClubOption[] = []
 const TEMPLATE_SELECT = 'id, user_id, name, title, description, location, max_attendees, created_at'
-const EDIT_EVENT_SELECT =
-  'id, title, description, location, latitude, longitude, event_date, duration_minutes, max_attendees, price, venmo_handle, requires_approval, surface, club_id, event_tags (tag_id)'
 
 function roundToNearest5(): Date {
   const d = new Date()
@@ -45,6 +48,36 @@ const EMPTY_FORM: CreateEventForm = {
   venmoHandle: '',
   requiresApproval: false,
   surface: null,
+}
+
+/** The edit form's fields from an event row (the edit fetch, or the cached detail row). */
+function formFromEvent(data: EventEditSource): CreateEventForm {
+  return {
+    title: data.title,
+    description: data.description ?? '',
+    location: data.location ?? '',
+    locationLatitude: data.latitude ?? null,
+    locationLongitude: data.longitude ?? null,
+    date: new Date(data.event_date),
+    durationMinutes: data.duration_minutes ?? DEFAULT_DURATION_MINUTES,
+    maxAttendees: data.max_attendees,
+    priceText: data.price != null ? Number(data.price).toFixed(2) : '',
+    venmoHandle: data.venmo_handle ?? '',
+    requiresApproval: data.requires_approval ?? false,
+    surface: isSurface(data.surface) ? data.surface : null,
+  }
+}
+
+/**
+ * The event detail page caches EVENT_DETAIL_SELECT under `event:<id>`, which
+ * carries every field the edit form needs. Coming from that page the form can
+ * paint at once; the edit fetch still runs and refreshes it (see loadEventForEdit).
+ */
+function cachedEditSource(editId: string | undefined): EventEditSource | null {
+  if (!editId) return null
+  const row = getQueryData<EventWithDetails | null>(eventKeys.root(editId))
+  if (!row || !('latitude' in row) || !('venmo_handle' in row)) return null
+  return row as unknown as EventEditSource
 }
 
 const CADENCE_OPTIONS: { value: RecurrenceCadence; label: string }[] = [
@@ -75,14 +108,23 @@ export default function HostEventScreen() {
     if (router.canGoBack()) router.back()
     else router.replace(routes.app())
   }
-  const { mode: modeParam, edit: editId, maxAttendees: maxAttendeesParam } = useLocalSearchParams<{ mode?: string; edit?: string; maxAttendees?: string }>()
+  const {
+    mode: modeParam, edit: editId, maxAttendees: maxAttendeesParam, location: locationParam, surface: surfaceParam,
+  } = useLocalSearchParams<{ mode?: string; edit?: string; maxAttendees?: string; location?: string; surface?: string }>()
   const isEdit = !!editId
+  // Read once on mount: the cached detail row seeds the form's initial state.
+  const [seed] = useState(() => cachedEditSource(editId))
 
   const [view, setView] = useState<'form' | 'templates'>(modeParam === 'templates' ? 'templates' : 'form')
-  const [form, setForm] = useState<CreateEventForm>({
+  const [form, setForm] = useState<CreateEventForm>(() => seed ? formFromEvent(seed) : {
     ...EMPTY_FORM,
     maxAttendees: (() => { const n = parseInt(maxAttendeesParam ?? '', 10); return Number.isFinite(n) && n > 0 ? n : null })(),
+    // "Already booked? Create a vteam event for it" (Book a court) passes the venue and its surface.
+    location: typeof locationParam === 'string' ? locationParam.slice(0, 200) : '',
+    surface: isSurface(surfaceParam) ? surfaceParam : null,
   })
+  const formRef = useRef(form)
+  formRef.current = form
   const [recurrence, setRecurrence] = useState({
     enabled: false,
     days: [] as number[],
@@ -102,10 +144,13 @@ export default function HostEventScreen() {
   // Tags (shared, cached) and the form's selection of them
   const tagsQuery = useTags()
   const availableTags = tagsQuery.data ?? EMPTY_TAGS
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
+  const seedTagIds = seed ? seed.event_tags.map(et => et.tag_id) : []
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(seedTagIds)
+  const selectedTagIdsRef = useRef(selectedTagIds)
+  selectedTagIdsRef.current = selectedTagIds
   // The tag set as it exists in the DB, so the save diffs against that rather
   // than against mutated UI state. Set on load, refreshed after each save.
-  const originalTagIdsRef = useRef<string[]>([])
+  const originalTagIdsRef = useRef<string[]>(seedTagIds)
 
   // Clubs the host owns can be attached to the event
   const ownedClubsQuery = useQuery<OwnedClubOption[]>(
@@ -124,7 +169,9 @@ export default function HostEventScreen() {
     { staleMs: STALE.feed, enabled: !!userId },
   )
   const ownedClubs = ownedClubsQuery.data ?? EMPTY_CLUBS
-  const [selectedClubId, setSelectedClubId] = useState<string | null>(null)
+  const [selectedClubId, setSelectedClubId] = useState<string | null>(seed?.club_id ?? null)
+  const selectedClubIdRef = useRef(selectedClubId)
+  selectedClubIdRef.current = selectedClubId
 
   // Venues from the host's past events, offered as quick picks in the location field
   const venuesQuery = useQuery<LocationValue[]>(
@@ -168,41 +215,53 @@ export default function HostEventScreen() {
   )
 
   // Editing: the event being edited is loaded into the form once
-  const [editState, setEditState] = useState<'idle' | 'loading' | 'loaded' | 'error'>(isEdit ? 'loading' : 'idle')
+  const [editState, setEditState] = useState<'idle' | 'loading' | 'loaded' | 'error'>(seed ? 'loaded' : isEdit ? 'loading' : 'idle')
+  /**
+   * What the form showed when last filled from the server (seed or fetch). A
+   * later fetch only replaces the form while it is still exactly this, so a
+   * background refresh never overwrites what the host has started typing.
+   */
+  const filledRef = useRef<{ form: CreateEventForm; tags: string[]; club: string | null } | null>(
+    seed ? { form, tags: selectedTagIds, club: selectedClubId } : null,
+  )
   const [durationModalOpen, setDurationModalOpen] = useState(false)
   const [hostPullRefreshing, setHostPullRefreshing] = useState(false)
 
-  const loadEventForEdit = useCallback(async (id: string): Promise<boolean> => {
+  const loadEventForEdit = useCallback(async (id: string, opts?: { force?: boolean }): Promise<boolean> => {
     const { data, error } = await supabase
       .from('events')
-      .select(EDIT_EVENT_SELECT)
+      .select(EVENT_EDIT_SELECT)
       .eq('id', id)
       .single()
     if (error || !data) return false
 
-    setForm({
-      title: data.title,
-      description: data.description ?? '',
-      location: data.location ?? '',
-      locationLatitude: data.latitude ?? null,
-      locationLongitude: data.longitude ?? null,
-      date: new Date(data.event_date),
-      durationMinutes: data.duration_minutes ?? DEFAULT_DURATION_MINUTES,
-      maxAttendees: data.max_attendees,
-      priceText: data.price != null ? Number(data.price).toFixed(2) : '',
-      venmoHandle: data.venmo_handle ?? '',
-      requiresApproval: data.requires_approval ?? false,
-      surface: isSurface(data.surface) ? data.surface : null,
-    })
     const loadedTagIds = (data.event_tags ?? []).map((et: { tag_id: string }) => et.tag_id)
-    setSelectedTagIds(loadedTagIds)
+    // The save diffs tags against the server's set, so this always tracks the fetch.
     originalTagIdsRef.current = loadedTagIds
-    setSelectedClubId(data.club_id ?? null)
+    const filled = filledRef.current
+    const untouched = !filled || (
+      formRef.current === filled.form
+      && selectedTagIdsRef.current === filled.tags
+      && selectedClubIdRef.current === filled.club
+    )
+    if (!untouched && !opts?.force) return true
+
+    const nextForm = formFromEvent(data)
+    const nextClub = data.club_id ?? null
+    setForm(nextForm)
+    setSelectedTagIds(loadedTagIds)
+    setSelectedClubId(nextClub)
+    filledRef.current = { form: nextForm, tags: loadedTagIds, club: nextClub }
     return true
   }, [])
 
   const loadEdit = useCallback(async () => {
     if (!editId) return
+    // Seeded from the cache: the form is already up; refresh it quietly.
+    if (filledRef.current) {
+      await loadEventForEdit(editId)
+      return
+    }
     setEditState('loading')
     setEditState((await loadEventForEdit(editId)) ? 'loaded' : 'error')
   }, [editId, loadEventForEdit])
@@ -213,7 +272,8 @@ export default function HostEventScreen() {
     void loadEdit()
   }, [editId, userId, sessionLoading, loadEdit])
 
-  const initialLoading = sessionLoading || tagsQuery.isLoading || editState === 'loading'
+  // Only the edit row gates the form: tags, clubs and venues fill in when they land.
+  const initialLoading = editState === 'loading' || (isEdit && sessionLoading && !seed)
 
   async function refreshHostContext() {
     setHostPullRefreshing(true)
@@ -223,7 +283,8 @@ export default function HostEventScreen() {
         ownedClubsQuery.refetch({ force: true }),
         venuesQuery.refetch({ force: true }),
         view === 'templates' ? templatesQuery.refetch({ force: true }) : undefined,
-        editId && userId ? loadEventForEdit(editId) : undefined,
+        // Pull to refresh is an explicit ask for the server's copy.
+        editId && userId ? loadEventForEdit(editId, { force: true }) : undefined,
       ])
     } finally {
       setHostPullRefreshing(false)
@@ -493,27 +554,27 @@ export default function HostEventScreen() {
     )
   }
 
+  const backHeaderOptions = {
+    title: '',
+    headerLeft: () => (
+      <TouchableOpacity onPress={goBack} style={{ paddingRight: 8 }} accessibilityRole="button" accessibilityLabel="Go back">
+        <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+      </TouchableOpacity>
+    ),
+  }
+
   if (initialLoading) {
     return (
       <>
-        <Stack.Screen options={{ title: '' }} />
-        <View style={[shared.screen, shared.centered]}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
+        <Stack.Screen options={backHeaderOptions} />
+        <HostFormSkeleton />
       </>
     )
   }
 
   return (
     <>
-      <Stack.Screen options={{
-        title: '',
-        headerLeft: () => (
-          <TouchableOpacity onPress={goBack} style={{ paddingRight: 8 }}>
-            <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-        ),
-      }} />
+      <Stack.Screen options={backHeaderOptions} />
       <Modal visible={successModal} transparent animationType="none" onRequestClose={() => setSuccessModal(false)}>
         <TouchableOpacity style={shared.modalOverlay} onPress={() => setSuccessModal(false)}>
           <View style={shared.modalCard}>
@@ -548,16 +609,24 @@ export default function HostEventScreen() {
       >
         {/* Header */}
         <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 32, letterSpacing: -1.1, color: theme.colors.text }}>
+          <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.xxl, letterSpacing: -1.1, color: theme.colors.text }}>
             {isEdit ? 'Edit event.' : 'New event.'}
           </Text>
-          <Text style={{ fontFamily: theme.fonts.body, fontSize: 13, color: theme.colors.subtext, marginTop: 3 }}>
+          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext, marginTop: 3 }}>
             Fill in the basics — you can edit later.
           </Text>
         </View>
 
         {/* ── Event type toggle ── */}
         {(() => {
+          // Tags load beside the form: hold their space so the fields below don't jump.
+          if (tagsQuery.isLoading) {
+            return (
+              <View testID="host-tags-loading" style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+                <View style={[shared.skeletonBlock, { flex: 1, height: 64, borderRadius: 18 }]} />
+              </View>
+            )
+          }
           const typeTags = availableTags.filter(t => t.category === 'event_type' && t.name !== 'Tournament')
           if (typeTags.length === 0) return null
           const TYPE_META: Record<string, { color: string; subtitle: string }> = {
@@ -588,11 +657,11 @@ export default function HostEventScreen() {
                       borderColor: theme.colors.border,
                     }}
                   >
-                    <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 17, letterSpacing: -0.3, color: selected ? theme.colors.white : theme.colors.text }}>
+                    <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lgm, letterSpacing: -0.3, color: selected ? theme.colors.white : theme.colors.text }}>
                       {tag.name}
                     </Text>
                     {meta.subtitle ? (
-                      <Text style={{ fontFamily: theme.fonts.body, fontSize: 11, color: selected ? 'rgba(255,255,255,0.75)' : theme.colors.subtext, marginTop: 2 }}>
+                      <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: selected ? 'rgba(255,255,255,0.75)' : theme.colors.subtext, marginTop: 2 }}>
                         {meta.subtitle}
                       </Text>
                     ) : null}
@@ -650,7 +719,7 @@ export default function HostEventScreen() {
             activeOpacity={0.7}
             style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}
           >
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: 15, color: theme.colors.text, fontWeight: '500' }}>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.lgs, color: theme.colors.text, fontWeight: '500' }}>
               {DURATION_OPTIONS.find(o => o.minutes === form.durationMinutes)?.label ?? 'Select'}
             </Text>
             <Ionicons name="chevron-down" size={16} color={theme.colors.subtext} />
@@ -737,7 +806,7 @@ export default function HostEventScreen() {
                       }}
                     >
                       <Text style={{
-                        fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 12.5,
+                        fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.smd,
                         color: active ? theme.colors.background : theme.colors.text,
                       }}>{tag.name}</Text>
                     </TouchableOpacity>
@@ -766,7 +835,7 @@ export default function HostEventScreen() {
         <View style={hostStyles.fieldCard}>
           <Text style={hostStyles.fieldLabel}>Price (optional)</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 15, color: theme.colors.subtext }}>$</Text>
+            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.subtext }}>$</Text>
             <TextInput
               testID="event-price-input"
               // Bound to raw text. Never round-trip through parseFloat on
@@ -786,7 +855,7 @@ export default function HostEventScreen() {
             <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 12 }}>
               <Text style={hostStyles.fieldLabel}>Venmo handle (optional)</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 15, color: theme.colors.subtext }}>@</Text>
+                <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.subtext }}>@</Text>
                 <TextInput
                   value={form.venmoHandle}
                   onChangeText={v => setField('venmoHandle', v.replace(/^@/, ''))}
@@ -850,6 +919,7 @@ export default function HostEventScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={hostStyles.fieldLabel}>Repeat</Text>
               <Switch
+                accessibilityLabel="Repeat this event"
                 value={recurrence.enabled}
                 onValueChange={v => setRecurrence(prev => ({ ...prev, enabled: v }))}
                 trackColor={{ false: theme.colors.border, true: theme.colors.primary + '80' }}
@@ -903,7 +973,7 @@ export default function HostEventScreen() {
                   <DatePickerField value={recurrence.endDate} onChange={d => setRecurrence(prev => ({ ...prev, endDate: d }))} />
                 </View>
                 {eventCount > 0 && (
-                  <Text style={{ fontFamily: theme.fonts.body, fontSize: 12, color: theme.colors.primary }}>
+                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.primary }}>
                     {eventCount} event{eventCount !== 1 ? 's' : ''} will be created
                   </Text>
                 )}
@@ -928,7 +998,7 @@ export default function HostEventScreen() {
                       backgroundColor: active ? theme.colors.primary : theme.colors.border,
                     }}
                   >
-                    <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 13, color: active ? theme.colors.white : theme.colors.text }}>
+                    <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: active ? theme.colors.white : theme.colors.text }}>
                       {club.name}
                     </Text>
                   </TouchableOpacity>
@@ -944,6 +1014,7 @@ export default function HostEventScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={hostStyles.fieldLabel}>Save as template</Text>
               <Switch
+                accessibilityLabel="Save as template"
                 value={saveAsTemplate}
                 onValueChange={setSaveAsTemplate}
                 trackColor={{ false: theme.colors.border, true: theme.colors.primary + '80' }}
@@ -975,8 +1046,8 @@ export default function HostEventScreen() {
           }}
         >
           {loading
-            ? <ActivityIndicator color={theme.colors.background} />
-            : <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 15, letterSpacing: 0.2, color: theme.colors.background }}>
+            ? <Spinner color={theme.colors.background} />
+            : <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lgs, letterSpacing: 0.2, color: theme.colors.background }}>
                 {isEdit ? 'Save changes' : (eventCount > 1 ? `Publish ${eventCount} events` : 'Publish event')}
               </Text>
           }
@@ -998,7 +1069,7 @@ const hostStyles = StyleSheet.create({
   },
   fieldLabel: {
     fontFamily: theme.fonts.bodySemiBold,
-    fontSize: 10.5,
+    fontSize: theme.font.size.xs,
     fontWeight: '700',
     color: theme.colors.subtext,
     letterSpacing: 0.8,
@@ -1013,7 +1084,7 @@ const hostStyles = StyleSheet.create({
   },
   fieldInput: {
     fontFamily: theme.fonts.body,
-    fontSize: 15,
+    fontSize: theme.font.size.lgs,
     color: theme.colors.text,
     fontWeight: '500',
     paddingVertical: 2,

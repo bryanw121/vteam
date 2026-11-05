@@ -64,6 +64,21 @@ test.describe('Events', () => {
     await expect(page.getByTestId('filter-tournament').first()).toBeVisible()
   })
 
+  // Players should never misread what time they're signing up for: the start
+  // time is its own high-contrast pill on the feed card and the event page. Not
+  // anchored: the clock icon renders as a private-use glyph in the same text.
+  test('the start time is its own pill on the feed card and the event page', async ({ page }) => {
+    const cardTime = page.getByTestId('events-feed').getByTestId('event-card-time').first()
+    await expect(cardTime).toBeVisible({ timeout: 20000 })
+    await expect(cardTime).toHaveText(/\d{1,2}:\d{2}\s(AM|PM)/)
+
+    await page.getByText(OPEN_PLAY_EVENT).first().click()
+    await page.waitForURL(/\/event\//, { timeout: 20000 })
+    const heroTime = page.getByTestId('event-hero-time')
+    await expect(heroTime).toBeVisible({ timeout: 20000 })
+    await expect(heroTime).toHaveText(/\d{1,2}:\d{2}\s(AM|PM)/)
+  })
+
   // Filter chips are clicked by testID, never by visible text: an event card's
   // type tag renders the exact same strings ("Tournament", "Open Play"), so a
   // text locator's .first() can resolve to the tag instead of the chip — and
@@ -119,16 +134,21 @@ test.describe('Events', () => {
     await expect(page.getByText('Duration').first()).toBeVisible({ timeout: 15000 })
   })
 
-  test('open an event, then join and leave it', async ({ page }) => {
+  test('open an event, then join and leave it through the leave sheet', async ({ page }) => {
     await page.getByText(OPEN_PLAY_EVENT).first().click()
     await page.waitForURL(/\/event\//, { timeout: 20000 })
 
     const joinBtn = page.getByText('Join event', { exact: true })
-    const leaveBtn = page.getByText('Leave event', { exact: true })
+    // By its label, not just the testID: while the join is still saving the button
+    // shows a spinner (and ignores taps), and the label only appears once it is done.
+    const leaveBtn = page.getByTestId('leave-event').getByText('Leave event', { exact: true })
+    const sheetLeave = page.getByTestId('leave-confirm')
+    const stayIn = page.getByTestId('leave-cancel')
 
     // State-tolerant: a prior run may have left the account attending.
     if (await leaveBtn.isVisible().catch(() => false)) {
       await leaveBtn.click()
+      await sheetLeave.click()
       await expect(joinBtn).toBeVisible({ timeout: 15000 })
     }
 
@@ -137,8 +157,31 @@ test.describe('Events', () => {
     await expect(leaveBtn).toBeVisible({ timeout: 15000 })
     await expect(page.getByText("You're going", { exact: true }).first()).toBeVisible()
 
-    // Leave → back to Join (cleans up shared-account state).
+    // Leave opens the sheet (#171); Stay in keeps the spot.
     await leaveBtn.click()
+    await expect(page.getByText('Leave this game?', { exact: true })).toBeVisible()
+    // Open spots and points, never the host notice (this account hosts the fixture).
+    await expect(page.getByTestId('leave-line-points')).toBeVisible()
+    await expect(page.getByTestId('leave-line-hostNotified')).toHaveCount(0)
+    await expect(stayIn).toBeFocused()
+    await stayIn.click()
+    await expect(page.getByText('Leave this game?', { exact: true })).toHaveCount(0)
+    await expect(leaveBtn).toBeVisible()
+
+    // Esc is Stay in too.
+    await leaveBtn.click()
+    await expect(sheetLeave).toBeVisible()
+    await expect(stayIn).toBeFocused()
+    // react-native-web's Modal ignores Esc until its open animation has finished (~300ms), so retry the key.
+    await expect(async () => {
+      await page.keyboard.press('Escape')
+      await expect(sheetLeave).toHaveCount(0, { timeout: 500 })
+    }).toPass({ timeout: 5000 })
+    await expect(leaveBtn).toBeVisible()
+
+    // Leave game → back to Join (cleans up shared-account state).
+    await leaveBtn.click()
+    await sheetLeave.click()
     await expect(joinBtn).toBeVisible({ timeout: 15000 })
   })
 

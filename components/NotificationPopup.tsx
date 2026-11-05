@@ -1,16 +1,10 @@
 import React from 'react'
-import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { FlatList, Modal, Pressable, TouchableOpacity, View } from 'react-native'
+import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../constants'
 import type { Notification } from '../types'
+import { Spinner } from './ui/Spinner'
 
 type Props = {
   visible: boolean
@@ -105,7 +99,7 @@ export function NotificationPopup({
           ListEmptyComponent={
             loading ? (
               <View style={{ padding: theme.spacing.lg, alignItems: 'center' }}>
-                <ActivityIndicator color={theme.colors.primary} />
+                <Spinner color={theme.colors.primary} />
               </View>
             ) : (
               <View style={{ paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.lg, alignItems: 'center', gap: theme.spacing.sm }}>

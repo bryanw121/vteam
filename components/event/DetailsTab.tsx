@@ -1,15 +1,20 @@
-import React, { useEffect, useState } from 'react'
-import { Platform, View, Text, TouchableOpacity, Alert, RefreshControl } from 'react-native'
+import React from 'react'
+import { Platform, View, TouchableOpacity, Alert } from 'react-native'
+import { Text } from '../ui/Text'
+import { RefreshControl } from '../RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import * as Linking from 'expo-linking'
 import * as Calendar from 'expo-calendar'
 import { ProfileAvatar } from '../ProfileAvatar'
 import { DocScrollView } from '../DocScrollView'
 import { LinkedText } from '../LinkedText'
+import { VenmoPayButton } from '../VenmoPayButton'
+import { PaidToggle } from './PaidToggle'
+import { ForecastRow } from './ForecastRow'
 import { shared, theme, LOCATIONS } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
-import type { EventData } from '../../types'
-import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, resolveProfileAvatarUriSmall } from '../../utils'
+import type { EventData, EventPaymentsApi } from '../../types'
+import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, profileAvatarSmallUri } from '../../utils'
 
 function formatEndTime(startIso: string, durationMinutes: number): string {
   const normalized = /[Z+]/.test(startIso) ? startIso : startIso + 'Z'
@@ -80,13 +85,7 @@ function HostRow({
   border?: Profile['selected_border']; label: string; isMe: boolean
   onMessage: () => void; onPress: () => void
 }) {
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
-  useEffect(() => {
-    if (!avatarUrl) return
-    let cancelled = false
-    resolveProfileAvatarUriSmall(avatarUrl).then(({ uri }) => { if (!cancelled) setAvatarUri(uri) })
-    return () => { cancelled = true }
-  }, [avatarUrl])
+  const avatarUri = profileAvatarSmallUri(avatarUrl)
   return (
     <TouchableOpacity
       activeOpacity={isMe ? 1 : 0.75}
@@ -95,12 +94,12 @@ function HostRow({
     >
       <ProfileAvatar uri={avatarUri} border={border ?? null} size={44} />
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: theme.fonts.body, fontSize: 10.5, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.8, textTransform: 'uppercase' }}>{label}</Text>
-        <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 16, color: theme.colors.text, letterSpacing: -0.2 }}>{name}</Text>
+        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.8, textTransform: 'uppercase' }}>{label}</Text>
+        <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.base, color: theme.colors.text, letterSpacing: -0.2 }}>{name}</Text>
       </View>
       {!isMe && (
         <TouchableOpacity onPress={onMessage} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border }} hitSlop={4}>
-          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 12, color: theme.colors.text }}>Message</Text>
+          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.text }}>Message</Text>
         </TouchableOpacity>
       )}
     </TouchableOpacity>
@@ -109,7 +108,7 @@ function HostRow({
 
 type Props = {
   event: EventWithDetails
-  /** Co-hosts, viewer (id + profile for the Venmo note) and pull-to-refresh. */
+  /** Co-hosts, viewer id and pull-to-refresh. */
   data: EventData
   eventStatus: AttendanceStatus
   isOwner: boolean
@@ -119,6 +118,8 @@ type Props = {
   onOpenProfile: (userId: string) => void
   onMessageHost: (hostId: string) => void
   onManageCohosts: () => void
+  /** "I've paid" toggle; null when the viewer can't set one (free event, not on the roster, the creator). */
+  payments: EventPaymentsApi | null
 }
 
 export function DetailsTab({
@@ -132,8 +133,9 @@ export function DetailsTab({
   onOpenProfile,
   onMessageHost,
   onManageCohosts,
+  payments,
 }: Props) {
-  const { refreshing, refresh: onRefresh, cohosts, userId, viewerProfile: currentUserProfile } = data
+  const { refreshing, refresh: onRefresh, cohosts, userId } = data
   const totalAttending = eventStatus.count
   return (
     <DocScrollView
@@ -159,11 +161,11 @@ export function DetailsTab({
               <View key={s.l} style={{ flex: 1, backgroundColor: theme.colors.card, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 10, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center' }}>
                 <Text
                   testID={s.l === 'Price' ? 'event-price-stat' : undefined}
-                  style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 20, letterSpacing: -0.5, color: theme.colors.text }}
+                  style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.heading.sm, letterSpacing: -0.5, color: theme.colors.text }}
                 >
                   {s.k}
                 </Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: 10, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.7, textTransform: 'uppercase', marginTop: 2 }}>{s.l}</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.7, textTransform: 'uppercase', marginTop: 2 }}>{s.l}</Text>
               </View>
             ))}
           </View>
@@ -342,6 +344,9 @@ export function DetailsTab({
           )
         })() : null}
 
+        {/* Forecast row: sand / grass events with coordinates (#165) */}
+        <ForecastRow event={event} />
+
         {/* Difficulty row */}
         {(() => {
           const diffTags = (event.event_tags ?? [])
@@ -401,44 +406,27 @@ export function DetailsTab({
         </>
 
         {/* Pay via Venmo — shown to non-owners when price > 0 and venmo_handle set */}
-        {!isOwner && event.price != null && event.price > 0 && event.venmo_handle && (() => {
-          const handle = event.venmo_handle
-          const amount = formatPriceAmount(event.price)
-          const name = currentUserProfile ? profileDisplayName(currentUserProfile) : ''
-          const date = new Date(event.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-          const noteParts = [event.title, 'entry fee', name, date].filter(Boolean)
-          const note = encodeURIComponent(noteParts.join(' — '))
-          const deepLink = `venmo://paycharge?txn=pay&recipients=${handle}&amount=${amount}&note=${note}`
-          const webLink = `https://venmo.com/${handle}?txn=pay&amount=${amount}&note=${note}`
-          return (
-            <TouchableOpacity
-              onPress={() => {
-                if (Platform.OS === 'web') {
-                  window.open(webLink, '_blank')
-                } else {
-                  void Linking.openURL(deepLink).catch(() => Linking.openURL(webLink))
-                }
-              }}
-              style={{
-                flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-                gap: 8, marginTop: theme.spacing.sm, paddingVertical: 12,
-                borderRadius: theme.radius.md, backgroundColor: '#008CFF',
-              }}
-            >
-              <Text style={{ fontSize: 18 }}>💸</Text>
-              <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.white }}>
-                Pay ${amount} via Venmo
-              </Text>
-            </TouchableOpacity>
-          )
-        })()}
+        {!isOwner && event.price != null && event.price > 0 && event.venmo_handle && (
+          <View style={{ marginTop: theme.spacing.sm }}>
+            <VenmoPayButton
+              handle={event.venmo_handle}
+              amount={formatPriceAmount(event.price)}
+              title={event.title}
+              date={event.event_date}
+              label={`Pay $${formatPriceAmount(event.price)} via Venmo`}
+            />
+          </View>
+        )}
+        {payments && (
+          <PaidToggle paid={payments.iPaid} saving={payments.saving} onChange={payments.setPaid} />
+        )}
 
       </View>
 
       {/* ── About / description card ── */}
       {event.description ? (
         <View style={{ backgroundColor: theme.colors.card, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: theme.colors.border, marginBottom: theme.spacing.md }}>
-          <Text style={{ fontFamily: theme.fonts.body, fontSize: 10.5, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>About</Text>
+          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>About</Text>
           <LinkedText text={event.description} style={{ fontSize: theme.font.size.sm, color: theme.colors.text, lineHeight: 20 }} />
         </View>
       ) : null}

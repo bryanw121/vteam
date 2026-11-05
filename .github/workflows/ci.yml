@@ -12,9 +12,15 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# CI builds and tests against the "vteam beta" Supabase project, never the live
+# one: e2e signs in, writes fixtures and opens realtime channels, and suites on
+# the live project once exhausted its disk IO and timed out real sign-ins.
+# Beta is a schema copy of live with only seeded test users (e2ebot, e2ebuddy)
+# and reference tables. The anon key is public by design (it ships in every
+# client bundle), so it lives here rather than in a secret.
 env:
-  EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
-  EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+  EXPO_PUBLIC_SUPABASE_URL: https://uifolvbwtrbcmfrvelnl.supabase.co
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpZm9sdmJ3dHJiY21mcnZlbG5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NTY2OTUsImV4cCI6MjEwODUzMjY5NX0.8CcvfSOI3LNZ8KQ9OadOyN2dVy8lYiBeSVFzfC5ihh8
 
 jobs:
   docs:
@@ -31,7 +37,7 @@ jobs:
   unit:
     name: Unit tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,7 +46,45 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test -- --passWithNoTests
+      # Coverage is collected on every run; Jest fails it when a total drops
+      # below the floor in package.json (jest.coverageThreshold), which sits a
+      # little under the current numbers so it only catches regressions.
+      - run: npm test -- --passWithNoTests --coverage
+      - name: Coverage summary
+        if: always() && hashFiles('coverage/coverage-summary.json') != ''
+        run: node scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload coverage report
+        if: always() && hashFiles('coverage/coverage-summary.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+      - run: node --test scripts/*.test.mjs scripts/shots/*.test.mjs
+
+  # The Deno edge functions' real request handlers (supabase/functions/*/handler.ts),
+  # run against a fake Supabase client and a stubbed fetch: no network for the
+  # tests, no secrets, never touches live or beta. Only `deno task check` needs the
+  # network, to load supabase-js from esm.sh for the index.ts entry points.
+  edge-functions:
+    name: Edge functions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - uses: actions/checkout@v4
+      # v2.0.5, pinned by commit SHA.
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
+        with:
+          deno-version: 2.9.6
+      - run: deno task lint
+      # --frozen (in the task): fails if esm.sh serves something deno.lock doesn't record.
+      - run: deno task check
+      # --allow-env only: any real network call fails the test (and stubFetch
+      # throws on any URL a test did not script).
+      - run: deno task test --allow-env
 
   # The web build runs in parallel with docs/unit, outside the shared e2e lock,
   # so the serialized e2e job only installs and runs tests.
@@ -50,17 +94,100 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # migration safety diffs against the PR base
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
       - run: npm ci
+      # Live and beta must have the same schema: CI tests against beta, the app
+      # runs on live. Fails when a migration reached only one of them.
+      - name: Schema drift (live vs beta)
+        run: npm run db:drift
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # reads the state of PRs in beta's ledger
+      # Migrations reach live before the PR's code is deployed: flag drops,
+      # renames, type changes and new required columns (expand, then contract).
+      - name: Migration safety
+        if: github.event_name == 'pull_request'
+        run: node scripts/migration-safety.mjs origin/${{ github.event.pull_request.base.ref }}
       - run: npm run build:web
       - uses: actions/upload-artifact@v4
         with:
           name: web-dist
           path: dist/
           retention-days: 1
+      # Second export against the scripts/shots mock project (same env as
+      # scripts/shots/compare.mjs), for the a11y job: every Supabase call is
+      # answered from fixtures, so it needs no secrets and never touches beta.
+      - name: Web build (shots mock, for a11y)
+        # --clear: the first export warmed the Metro cache with the beta URL inlined.
+        run: npx expo export -p web --clear --output-dir dist-mock
+        env:
+          CI: '1'
+          EXPO_NO_TELEMETRY: '1'
+          EXPO_PUBLIC_SUPABASE_URL: https://shotsmock.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: shots-mock-anon-key
+          EXPO_PUBLIC_SENTRY_DSN: ''
+          EXPO_PUBLIC_APP_ENV: development
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist-mock
+          path: dist-mock/
+          retention-days: 1
+
+  # axe-core (WCAG 2.1 AA) on every scripts/shots screen, mobile and desktop,
+  # against the mock export: no secrets, no Supabase, so it is not in the e2e
+  # concurrency groups. Fails on a serious/critical violation that is not in
+  # scripts/shots/a11y-baseline.json (see CLAUDE.md "Test layers").
+  a11y:
+    name: Accessibility (axe)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - name: Install Chromium system deps
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist-mock
+          path: dist-mock/
+      - name: Badge artwork browser check
+        run: node scripts/shots/badge-artwork-flow.mjs --dist dist-mock --out a11y-report/badge-artwork
+      - name: Chat badge browser check
+        run: node scripts/shots/chat-unread-flow.mjs --dist dist-mock --out a11y-report/chat-unread
+      - name: axe scan vs baseline
+        run: npm run a11y -- --dist dist-mock --out a11y-report
+      - name: Job summary
+        if: always() && hashFiles('a11y-report/summary.md') != ''
+        run: cat a11y-report/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload a11y report
+        if: always() && hashFiles('a11y-report/a11y-report.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report
+          path: a11y-report/
+          retention-days: 14
 
   e2e-shard:
     name: E2E (${{ matrix.shard }})
@@ -69,6 +196,15 @@ jobs:
     # squash of a PR that already passed. Skipping the post-merge rerun halves
     # the load on the project's disk IO budget.
     if: github.event_name == 'pull_request'
+    # One e2e suite at a time across ALL PRs: each shard shares a repo-wide
+    # group with the same shard of every other PR's run. Runs share the e2e
+    # account and its seed conversation on the beta project, and overlapping
+    # suites from five PRs once exhausted the (then shared, live) project's disk
+    # IO. GitHub keeps one pending job per group, so with three or more PRs
+    # queued the middle one's shard is cancelled: re-run its failed jobs.
+    concurrency:
+      group: e2e-beta-supabase-${{ matrix.shard }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [build-web]
@@ -80,9 +216,13 @@ jobs:
           - shard: chat
             specs: e2e/chat.spec.ts
           - shard: events
-            specs: e2e/events.spec.ts
+            specs: e2e/events.spec.ts e2e/tournament-flow.spec.ts e2e/weather.spec.ts
+          # Row level security + RPC integration tests (no browser). In the
+          # matrix, so they share the one-suite-at-a-time group with the others.
+          - shard: api
+            specs: e2e/rls.spec.ts
           - shard: other
-            specs: e2e/guest.spec.ts e2e/profile.spec.ts
+            specs: e2e/guest.spec.ts e2e/legal.guest.spec.ts e2e/tour.guest.spec.ts e2e/pull-to-refresh.guest.spec.ts e2e/metrics.guest.spec.ts e2e/profile.spec.ts e2e/reminders.spec.ts e2e/book.guest.spec.ts e2e/book.spec.ts e2e/textSize.spec.ts e2e/surfaces.spec.ts e2e/scrollRestore.spec.ts
     # Credentials of the dedicated e2e account (repository secrets). Required:
     # e2e/env.ts fails fast with a clear message when they are missing, which is
     # also what happens on PRs from forks (secrets are not exposed to them).

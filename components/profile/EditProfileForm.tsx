@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, View } from 'react-native'
+import { Text } from '../ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { BADGE_DEFINITIONS, PROFILE_BORDERS, badgeTierLabel, badgeTitle, isBorderUnlocked, shared, theme } from '../../constants'
 import type { ProfileBorderType } from '../../constants'
@@ -53,8 +54,8 @@ function PositionOptionChip({ label, rank, onPress }: { label: string; rank?: nu
       }}
     >
       {active && (
-        <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 9, fontWeight: theme.font.weight.bold, color: theme.colors.onPrimary, lineHeight: 12 }}>{rank}</Text>
+        <View style={{ width: 19, height: 19, borderRadius: 10, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: theme.font.size.xs, fontWeight: theme.font.weight.bold, color: theme.colors.onPrimary, lineHeight: 13 }}>{rank}</Text>
         </View>
       )}
       <Text style={{
@@ -133,15 +134,16 @@ export function EditProfileForm({ profile, badges, saving, onSave, onSetBorder, 
           {skillLevel !== null && <ClearLink onPress={() => setSkillLevel(null)} />}
         </View>
         <Text style={[shared.caption, shared.mt_xs]}>Shown to hosts when you join events so they can balance teams.</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
+        <View role="radiogroup" aria-label="Skill level" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginTop: theme.spacing.sm }}>
           {VOLLEYBALL_SKILL_LEVEL_OPTIONS.map(opt => {
             const active = skillLevel === opt.value
             return (
               <Pressable
                 key={opt.value}
                 onPress={() => setSkillLevel(active ? null : opt.value)}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: active }}
+                role="radio"
+                aria-checked={active}
+                aria-label={opt.label}
                 style={{
                   borderRadius: theme.radius.full,
                   borderWidth: 1,
@@ -249,7 +251,7 @@ export function EditProfileForm({ profile, badges, saving, onSave, onSetBorder, 
       <View style={[shared.card, { marginTop: theme.spacing.md }]}>
         <Text style={shared.subheading}>Profile Border</Text>
         <Text style={[shared.caption, shared.mt_xs]}>Select a border for your avatar.</Text>
-        <View style={{ flexDirection: 'row', gap: theme.spacing.lg, marginTop: theme.spacing.md, flexWrap: 'wrap' }}>
+        <View role="radiogroup" aria-label="Profile border" style={{ flexDirection: 'row', gap: theme.spacing.lg, marginTop: theme.spacing.md, flexWrap: 'wrap' }}>
           <BorderSwatch label="None" selected={!profile.selected_border} unlocked onPress={() => onSetBorder(null)} />
           {PROFILE_BORDERS.map(border => {
             const unlocked = isBorderUnlocked(border, earned)

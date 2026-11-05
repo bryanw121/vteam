@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Animated, Image, Platform, Text, View } from 'react-native'
+import { Animated, Image, Platform, View } from 'react-native'
+import { Text } from '../components/ui/Text'
 import { useFonts } from 'expo-font'
 import {
   SpaceGrotesk_400Regular,
@@ -15,16 +16,18 @@ import {
 } from '@expo-google-fonts/inter'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router'
+import Head from 'expo-router/head'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider, useSession } from '../contexts/session'
-import { routes, toRoute } from '../utils/routes'
+import { TextScaleProvider } from '../contexts/textScale'
+import { isAppPath, routes, toRoute } from '../utils/routes'
 import { isProtectedPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
 import { supabase } from '../lib/supabase'
-import { theme } from '../constants'
+import { APP_NAME, theme, SWIPE_NAVIGATION } from '../constants'
 import { initSentry, Sentry } from '../lib/sentry'
 import { SentryErrorBoundary } from '../components/SentryErrorBoundary'
-import { registerPushToken } from '../utils/pushNotifications'
+import { registerPushToken, subscribeToPushTaps } from '../utils/pushNotifications'
 import { useMinVersion } from '../hooks/useMinVersion'
 import { useCacheUserScope } from '../hooks/useCacheUserScope'
 import { UpdateRequiredScreen } from '../components/UpdateRequiredScreen'
@@ -63,9 +66,9 @@ function AppSplash({ opacity }: { opacity: Animated.Value }) {
         end={{ x: 1, y: 1 }}
         style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 }}
       >
-        <Text style={{ fontSize: 48, fontWeight: '800', color: theme.colors.white, letterSpacing: -1 }}>vteam</Text>
+        <Text style={{ fontSize: theme.font.heading.splash, fontWeight: '800', color: theme.colors.white, letterSpacing: -1 }}>vteam</Text>
         <View style={{ backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: theme.colors.white, letterSpacing: 1.5 }}>BETA</Text>
+          <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.white, letterSpacing: 1.5 }}>BETA</Text>
         </View>
       </LinearGradient>
     </Animated.View>
@@ -75,7 +78,9 @@ function AppSplash({ opacity }: { opacity: Animated.Value }) {
 function RootLayout() {
   return (
     <SessionProvider>
-      <RootNavigator />
+      <TextScaleProvider>
+        <RootNavigator />
+      </TextScaleProvider>
     </SessionProvider>
   )
 }
@@ -134,6 +139,18 @@ function RootNavigator() {
     void registerPushToken()
   }, [userId])
 
+  // Tapping a push (any type, chat included) opens its deep link. Paths are
+  // checked again here: only in-app paths reach the router. Waits for the
+  // navigator and the restored session (so a cold-start tap isn't bounced to
+  // login); the auth gate still applies to whatever opens.
+  const navReady = hydrated && !loading
+  useEffect(() => {
+    if (!navReady) return
+    return subscribeToPushTaps(path => {
+      if (isAppPath(path)) router.push(toRoute(path))
+    })
+  }, [navReady]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Keep Sentry user context in sync with auth state
   useEffect(() => {
     Sentry.setUser(userId ? { id: userId } : null)
@@ -168,17 +185,30 @@ function RootNavigator() {
     <SentryErrorBoundary>
     <SafeAreaProvider>
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {/*
+        Browser tab title. Outside the hydration gate on purpose: the static
+        export renders it into every page's <title> (Expo Router's head manager
+        otherwise leaves an empty one, which tabs show as "Untitled"), and the
+        client renders the same string, so there is nothing to mismatch.
+      */}
+      {Platform.OS === 'web' && (
+        <Head>
+          <title>{APP_NAME}</title>
+        </Head>
+      )}
       {hydrated && (
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: theme.colors.background },
             headerTintColor: theme.colors.primary,
             headerShadowVisible: false,
-            gestureEnabled: true,
+            gestureEnabled: SWIPE_NAVIGATION.back,
           }}
         >
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(app)" options={{ headerShown: false }} />
+          <Stack.Screen name="terms" options={{ headerShown: false, title: 'Terms and Conditions' }} />
+          <Stack.Screen name="privacy" options={{ headerShown: false, title: 'Privacy Policy' }} />
         </Stack>
       )}
 

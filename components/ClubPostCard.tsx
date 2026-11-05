@@ -1,27 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Alert,
-  Platform,
-  Modal,
-  Pressable,
-  KeyboardAvoidingView,
-} from 'react-native'
+import React, { useState } from 'react'
+import { View, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform, Modal, Pressable, KeyboardAvoidingView } from 'react-native'
+import { Text, TextInput } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter } from 'expo-router'
 import { supabase } from '../lib/supabase'
 import { shared, theme, CLUB_POST_COMMENT_MAX, CLUB_POST_BODY_MAX } from '../constants'
 import { routes } from '../utils/routes'
 import type { ClubPostCommentWithAuthor, ClubPostWithFeed } from '../types'
-import { profileDisplayName, resolveProfileAvatarUriSmall } from '../utils'
+import { profileAvatarSmallUri, profileDisplayName } from '../utils'
 import { ProfileAvatar } from './ProfileAvatar'
 import { LinkedText } from './LinkedText'
+import { Spinner } from './ui/Spinner'
 
 function formatPostTime(iso: string): string {
   const normalized = /[Z+]/.test(iso) ? iso : iso + 'Z'
@@ -51,7 +40,6 @@ export function ClubPostCard({
   onDataChanged,
 }: ClubPostCardProps) {
   const router = useRouter()
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
   const [likeBusy, setLikeBusy] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
   const [commentBusy, setCommentBusy] = useState(false)
@@ -61,14 +49,8 @@ export function ClubPostCard({
   const likeCount = post.club_post_likes?.[0]?.count ?? 0
   const comments = post.club_post_comments ?? []
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      const { uri } = await resolveProfileAvatarUriSmall(author?.avatar_url)
-      if (!cancelled) setAvatarUri(uri)
-    })()
-    return () => { cancelled = true }
-  }, [author?.avatar_url])
+  // Public bucket: the URL is built synchronously, so the avatar paints on the first render.
+  const avatarUri = profileAvatarSmallUri(author?.avatar_url)
 
   async function toggleLike() {
     if (!currentUserId || !isClubMember || likeBusy) return
@@ -153,7 +135,7 @@ export function ClubPostCard({
           accessibilityLabel={likedByMe ? 'Unlike' : 'Like'}
         >
           {likeBusy ? (
-            <ActivityIndicator size="small" color={theme.colors.primary} />
+            <Spinner size="small" color={theme.colors.primary} />
           ) : (
             <Ionicons
               name={likedByMe ? 'heart' : 'heart-outline'}
@@ -209,7 +191,7 @@ export function ClubPostCard({
                 style={[styles.commentSend, (!commentDraft.trim() || commentBusy) && { opacity: 0.45 }]}
               >
                 {commentBusy
-                  ? <ActivityIndicator size="small" color={theme.colors.primary} />
+                  ? <Spinner size="small" color={theme.colors.primary} />
                   : <Ionicons name="send" size={18} color={theme.colors.primary} />
                 }
               </TouchableOpacity>
@@ -223,17 +205,8 @@ export function ClubPostCard({
 
 function ClubPostCommentLine({ comment }: { comment: ClubPostCommentWithAuthor }) {
   const router = useRouter()
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
   const p = comment.profiles
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      const { uri } = await resolveProfileAvatarUriSmall(p?.avatar_url)
-      if (!cancelled) setAvatarUri(uri)
-    })()
-    return () => { cancelled = true }
-  }, [p?.avatar_url])
+  const avatarUri = profileAvatarSmallUri(p?.avatar_url)
 
   const name = p ? profileDisplayName(p) : 'Member'
 
@@ -361,7 +334,7 @@ export function ClubPostComposerModal({ visible, clubId, onClose, onCreated }: C
                   style={[shared.buttonBase, shared.buttonPrimary, { flex: 1 }, (busy || !body.trim()) && shared.buttonDisabled]}
                 >
                   {busy
-                    ? <ActivityIndicator color={theme.colors.white} />
+                    ? <Spinner color={theme.colors.white} />
                     : <Text style={shared.buttonLabelPrimary}>Post</Text>
                   }
                 </TouchableOpacity>

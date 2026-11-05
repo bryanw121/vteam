@@ -1,5 +1,7 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
-import { Platform, View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, RefreshControl } from 'react-native'
+import React, { useState, useRef, useCallback, useMemo } from 'react'
+import { Platform, View, TouchableOpacity, StyleSheet } from 'react-native'
+import { Text } from '../ui/Text'
+import { RefreshControl } from '../RefreshControl'
 import { GestureDetector, Gesture, TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler'
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -10,9 +12,11 @@ import { IconButton } from '../ui'
 import { RosterActionsSheet } from './RosterActionsSheet'
 import { shared, theme, TEAM_COLORS, TEAM_COLOR_NAMES } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus, EventGuest, RosterAction, RosterActionContext, RosterMenu } from '../../types'
-import { profileDisplayName, resolveProfileAvatarUriSmall, hostRosterSkillAndPositionsLine } from '../../utils'
+import { profileDisplayName, profileAvatarSmallUri, hostRosterSkillAndPositionsLine } from '../../utils'
 import { guestRowActions, hasRosterMenu, memberRowActions } from '../../utils/rosterActions'
-import type { EventAttendanceApi, EventData, EventTeamsApi, TeamDragApi } from '../../types'
+import { attendeesPaid } from '../../hooks/event/derive'
+import type { EventAttendanceApi, EventData, EventPaymentsApi, EventTeamsApi, TeamDragApi } from '../../types'
+import { Spinner } from '../ui/Spinner'
 
 // ─── Draggable cards (People tab only) ───────────────────────────────────────
 
@@ -31,20 +35,14 @@ type DraggableCardProps = {
    * instead of the bare ✕, so Remove lives inside it rather than competing with it.
    */
   onOpenMenu?: () => void
+  /** Hosts on a paid event: whether this player marked "I've paid". Undefined hides the badge. */
+  paid?: boolean
 }
 
-function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStart, onDragMove, onDragEnd, onRemove, onTogglePin, onOpenMenu }: DraggableCardProps) {
+function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStart, onDragMove, onDragEnd, onRemove, onTogglePin, onOpenMenu, paid }: DraggableCardProps) {
   const scale = useSharedValue(1)
   const opacity = useSharedValue(1)
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
-  useEffect(() => {
-    if (!profile.avatar_url) return
-    let cancelled = false
-    resolveProfileAvatarUriSmall(profile.avatar_url).then(({ uri }) => {
-      if (!cancelled) setAvatarUri(uri)
-    })
-    return () => { cancelled = true }
-  }, [profile.avatar_url])
+  const avatarUri = profileAvatarSmallUri(profile.avatar_url)
 
   // Stable wrappers so the gesture closure never captures stale callbacks
   const cbRef = useRef({ onDragStart, onDragMove, onDragEnd, onTogglePin })
@@ -111,6 +109,12 @@ function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStar
                     {hostRosterSkillAndPositionsLine(profile)}
                   </Text>
                 ) : null}
+                {paid && (
+                  <View testID="roster-paid-badge" accessibilityLabel="Marked paid" style={styles.paidBadge}>
+                    <Ionicons name="checkmark" size={11} color={theme.colors.success} />
+                    <Text style={styles.paidBadgeText}>Paid</Text>
+                  </View>
+                )}
               </View>
               {isOwner && isPinned && teamColor && (
                 <Ionicons name="lock-closed" size={13} color={theme.colors.subtext} />
@@ -266,6 +270,8 @@ type Props = {
   onMessage?: (userId: string) => void
   /** Users the viewer has silenced: the roster never offers to message them. */
   silencedUserIds: ReadonlySet<string>
+  /** Hosts/co-hosts on a paid event: who marked "I've paid". Null hides payment UI. */
+  payments: EventPaymentsApi | null
 }
 
 export function PeopleTab({
@@ -284,8 +290,11 @@ export function PeopleTab({
   onDeny,
   onMessage,
   silencedUserIds,
+  payments,
 }: Props) {
-  const { refreshing, refresh: onRefresh } = data
+  const { refreshing } = data
+  const onRefresh = () => Promise.all([data.refresh(), payments?.refetch()])
+  const paidCount = payments ? attendeesPaid(data.roster.attendees, payments.paidUserIds) : 0
   const { attendees, attendingGuests: guests, adderUsernames, requestedProfiles, waitlistProfiles, waitlistGuests } = data.roster
   const {
     assignments, numTeams, setNumTeams, hasTeams, savingTeams,
@@ -332,6 +341,7 @@ export function PeopleTab({
         onRemove={() => onRemoveAttendee(profile)}
         onTogglePin={() => onTogglePin(profile.id)}
         onOpenMenu={openMenu(profileDisplayName(profile), memberRowActions(profile, actionCtx, removeAttendee(profile)))}
+        paid={payments ? payments.paidUserIds.has(profile.id) : undefined}
       />
     )
     if (eventStatus.isOwner) {
@@ -403,6 +413,16 @@ export function PeopleTab({
           )}
         </View>
       </View>
+
+      {payments && attendees.length > 0 && (
+        <View testID="roster-paid-summary" style={[shared.row, { gap: 6, marginBottom: theme.spacing.sm }]}>
+          <Ionicons name="cash-outline" size={14} color={theme.colors.subtext} />
+          <Text style={shared.caption}>
+            {paidCount} of {attendees.length} marked paid
+            {guests.length > 0 ? ' · +1 guests are covered by whoever added them' : ''}
+          </Text>
+        </View>
+      )}
 
       {attendees.length === 0 && guests.length === 0
         ? <Text style={shared.caption}>no one yet — be the first!</Text>
@@ -510,7 +530,7 @@ export function PeopleTab({
                   style={{ paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.sm, backgroundColor: theme.colors.success, borderRadius: theme.radius.md }}
                 >
                   {processingRequest === profile.id
-                    ? <ActivityIndicator size="small" color={theme.colors.white} />
+                    ? <Spinner size="small" color={theme.colors.white} />
                     : <Text style={{ color: theme.colors.white, fontSize: theme.font.size.sm, fontWeight: theme.font.weight.medium }}>Approve</Text>
                   }
                 </TouchableOpacity>
@@ -594,6 +614,24 @@ export function PeopleTab({
 }
 
 const styles = StyleSheet.create({
+  paidBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 3,
+    gap: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.success + '1A',
+    borderWidth: 1,
+    borderColor: theme.colors.success + '40',
+  },
+  paidBadgeText: {
+    fontSize: theme.font.size.xs,
+    fontWeight: theme.font.weight.semibold,
+    color: theme.colors.success,
+  },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',

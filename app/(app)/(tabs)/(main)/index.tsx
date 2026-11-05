@@ -1,8 +1,11 @@
 import React, { useState, useRef, useMemo, useCallback, memo, useEffect, useLayoutEffect } from 'react'
 import { useRouter } from 'expo-router'
-import { Dimensions, Platform, View, ScrollView, SectionList, Text, RefreshControl, TouchableOpacity, PanResponder, Animated, ActivityIndicator, StyleSheet } from 'react-native'
+import { Dimensions, Platform, View, ScrollView, SectionList, TouchableOpacity, PanResponder, Animated, StyleSheet } from 'react-native'
+import { Text } from '../../../../components/ui/Text'
+import { DocPullToRefresh, RefreshControl } from '../../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFeedRsvp, useMonthEvents } from '../../../../hooks/useMonthEvents'
+import { useDocScrollMemory } from '../../../../hooks/useDocScrollMemory'
 import { useNotifications } from '../../../../hooks/useNotifications'
 import { useIsNarrowWeb } from '../../../../hooks/useIsNarrowWeb'
 import { EventCard, RowEventCard } from '../../../../components/EventCard'
@@ -13,11 +16,13 @@ import { EventsHeader } from '../../../../components/events/EventsHeader'
 import { FilterChips } from '../../../../components/events/FilterChips'
 import { SurfaceFilter } from '../../../../components/events/SurfaceFilter'
 import { FeedEmpty } from '../../../../components/events/FeedEmpty'
+import { AllTournamentsLink } from '../../../../components/events/AllTournamentsLink'
 import { NextUpCard } from '../../../../components/events/NextUpCard'
 import { IconButton } from '../../../../components/ui'
 import { myStatusFor, useMyUpcomingEvents } from '../../../../hooks/useMyUpcomingEvents'
 import { NotificationPopup } from '../../../../components/NotificationPopup'
-import { BANNERS, BREAKPOINTS, FEED_STALE_NOTICE, shared, theme } from '../../../../constants'
+import { BANNERS, BREAKPOINTS, COMPACT_TEXT_SCALE, FEED_STALE_NOTICE, TIGHT_TEXT_SCALE, TOUR_TARGETS, shared, theme } from '../../../../constants'
+import { TourTarget } from '../../../../components/tour/TourTarget'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
 import type { EventWithDetails, FeedFilter, FeedFilterChip, Notification, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
@@ -25,11 +30,19 @@ import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters,
 import { useTabsShell } from '../../../../contexts/tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSession } from '../../../../contexts/session'
+import { useTextScale } from '../../../../contexts/textScale'
 import { useRequireSignIn } from '../../../../hooks/useRequireSignIn'
 import { SignInButton } from '../../../../components/SignInButton'
 import { addMonths } from '../../../../utils/monthKeys'
 import { routes, isAppPath, toRoute } from '../../../../utils/routes'
 import { eventLocalDateKey, localDateKey, surfaceOf } from '../../../../utils'
+import { useAdsEnabled } from '../../../../hooks/useAdsEnabled'
+import { useFeedAds } from '../../../../hooks/useFeedAds'
+import { useFeedForecasts } from '../../../../hooks/useForecast'
+import { planFeedAds } from '../../../../utils/feedAds'
+import { FeedBanner } from '../../../../components/ads/FeedBanner'
+import { SponsoredLabel } from '../../../../components/ads/SponsoredLabel'
+import { Spinner } from '../../../../components/ui/Spinner'
 
 const _now = new Date()
 const TODAY = localDateKey(_now)
@@ -192,6 +205,9 @@ export default function EventsScreen() {
   const docScrollRef        = useRef(docScrollActive)
   docScrollRef.current      = docScrollActive
   const feedContentRef      = useRef<View>(null)
+  // Narrow web: come back to the same place in the feed after an event page
+  // (the browser's back remounts this screen; see hooks/useDocScrollMemory).
+  const feedDocLayout       = useDocScrollMemory('tab:events', docScrollActive, feedContentRef)
 
   useEffect(() => {
     if (!docScrollActive || typeof window === 'undefined') return
@@ -330,6 +346,15 @@ export default function EventsScreen() {
   // "Next up" links to an event page, so it skips sessions at other venues.
   const nextClubEvent = useMemo(() => allEvents.find(e => !e._external), [allEvents])
 
+  // Ads: everything goes through useAdsEnabled + planFeedAds; the render paths
+  // below only ask "is this sponsored?" and "what follows this item?".
+  const showAds = useAdsEnabled()
+  const feedAds = useFeedAds(showAds)
+  const adPlan = useMemo(() => planFeedAds(allEvents, feedAds, showAds), [allEvents, feedAds, showAds])
+  // Weather chips for sand / grass events in the next 7 days (#165): one request per court.
+  const forecasts = useFeedForecasts(allEvents)
+  const sponsoredIds = useMemo(() => new Set(showAds ? feedAds?.sponsoredEventIds ?? [] : []), [showAds, feedAds])
+
   const headerRight = isGuest ? <SignInButton /> : (
     <IconButton
       icon={notifOpen ? 'notifications' : 'notifications-outline'}
@@ -356,14 +381,17 @@ export default function EventsScreen() {
   const filterChips = (
     <>
       <OneTimeBanner banner={BANNERS.austinPilot} style={isMobile ? shared.feedStaleNoticeMobile : undefined} />
-      <FilterChips
-        chips={visibleChips}
-        active={activeFilter}
-        onSelect={selectFilter}
-        mineCount={myUpcoming.length}
-        wide={!isMobile}
-      />
-      <SurfaceFilter active={surfaceFilter} onSelect={selectSurface} wide={!isMobile} />
+      <TourTarget id={TOUR_TARGETS.feedFilters}>
+        <FilterChips
+          chips={visibleChips}
+          active={activeFilter}
+          onSelect={selectFilter}
+          mineCount={myUpcoming.length}
+          wide={!isMobile}
+        />
+        <SurfaceFilter active={surfaceFilter} onSelect={selectSurface} wide={!isMobile} />
+      </TourTarget>
+      {activeFilter === 'tournament' && <AllTournamentsLink onPress={() => router.push(routes.tournaments())} />}
       {staleNotice}
     </>
   )
@@ -448,27 +476,46 @@ export default function EventsScreen() {
                   : d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
                 return (
                   <View key={month} style={{ marginBottom: 32 }}>
-                    <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 20, letterSpacing: -0.4, color: theme.colors.text, marginBottom: 12 }}>
+                    <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.heading.sm, letterSpacing: -0.4, color: theme.colors.text, marginBottom: 12 }}>
                       {label}
                     </Text>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                      {monthEvents.map(item => (
-                        <View key={item.id} style={{ width: 'calc(50% - 5px)' as any }}>
-                          {item._external ? <ExternalSessionCard session={item._external} /> : <RowEventCard
-                            event={item}
+                      {monthEvents.map(item => {
+                        const renderRowCard = (event: EventWithDetails) => (
+                          <RowEventCard
+                            event={event}
                             currentUserId={currentUserId}
-                            onRsvp={item._isTournament ? undefined : handleRsvp}
-                            rsvpPending={isRsvpPending(item.id)}
-                          />}
-                        </View>
-                      ))}
+                            onRsvp={event._isTournament ? undefined : handleRsvp}
+                            rsvpPending={isRsvpPending(event.id)}
+                            forecast={forecasts.get(event.id)}
+                          />
+                        )
+                        return (
+                          <React.Fragment key={item.id}>
+                            <View style={{ width: 'calc(50% - 5px)' as any }}>
+                              {sponsoredIds.has(item.id) && <SponsoredLabel />}
+                              {item._external ? <ExternalSessionCard session={item._external} /> : renderRowCard(item)}
+                            </View>
+                            {adPlan.get(item.id)?.map(ad => ad.kind === 'banner' ? (
+                              <View key={`ad-${ad.banner.id}`} style={{ width: '100%' }}>
+                                <FeedBanner banner={ad.banner} />
+                              </View>
+                            ) : (
+                              <View key={`sponsored-${ad.event.id}`} style={{ width: 'calc(50% - 5px)' as any }}>
+                                <SponsoredLabel />
+                                {renderRowCard(ad.event)}
+                              </View>
+                            ))}
+                          </React.Fragment>
+                        )
+                      })}
                     </View>
                   </View>
                 )
               })}
 
               {loading && (
-                <ActivityIndicator style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+                <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
               )}
             </>
           )}
@@ -490,7 +537,7 @@ export default function EventsScreen() {
           >
             {/* Mini calendar */}
             <Text style={feedStyles.railLabel}>This week</Text>
-            <View style={{ backgroundColor: theme.colors.background, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 20, overflow: 'hidden' }}>
+            <TourTarget id={TOUR_TARGETS.calendar} style={{ backgroundColor: theme.colors.background, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 20, overflow: 'hidden' }}>
               <MonthGridContent
                 month={monthForIdx(curMonthPage)}
                 selectedDate={selectedDate}
@@ -499,7 +546,7 @@ export default function EventsScreen() {
                 onPrevMonth={goPrevMonth}
                 onNextMonth={goNextMonth}
               />
-            </View>
+            </TourTarget>
 
             {/* Your next event */}
             {nextClubEvent && (
@@ -532,7 +579,7 @@ export default function EventsScreen() {
         <EventsHeader wide={false} right={headerRight} />
 
         {/* Calendar strip */}
-        <View>
+        <TourTarget id={TOUR_TARGETS.calendar}>
           <WeekPager
             curWeekPage={curWeekPage}
             selectedDate={selectedDate}
@@ -541,7 +588,7 @@ export default function EventsScreen() {
             onPrevWeek={goPrevWeek}
             onNextWeek={goNextWeek}
           />
-        </View>
+        </TourTarget>
 
         {filterChips}
       </View>
@@ -559,8 +606,9 @@ export default function EventsScreen() {
           </View>
         )
 
-        const renderEvent = (item: EventWithDetails) => (
+        const renderCard = (item: EventWithDetails) => (
           <View style={{ paddingHorizontal: theme.spacing.lg }}>
+            {sponsoredIds.has(item.id) && <SponsoredLabel />}
             {item._external ? (
               <ExternalSessionCard session={item._external} />
             ) : (
@@ -569,17 +617,37 @@ export default function EventsScreen() {
                 currentUserId={currentUserId}
                 onRsvp={item._isTournament ? undefined : handleRsvp}
                 rsvpPending={isRsvpPending(item.id)}
+                forecast={forecasts.get(item.id)}
               />
             )}
           </View>
         )
+
+        // The card, then any ads planned after it (planFeedAds).
+        const renderEvent = (item: EventWithDetails) => {
+          const ads = adPlan.get(item.id)
+          if (!ads) return renderCard(item)
+          return (
+            <>
+              {renderCard(item)}
+              {ads.map(ad => ad.kind === 'banner' ? (
+                <View key={`ad-${ad.banner.id}`} style={{ paddingHorizontal: theme.spacing.lg }}>
+                  <FeedBanner banner={ad.banner} />
+                </View>
+              ) : (
+                <React.Fragment key={`sponsored-${ad.event.id}`}>{renderCard(ad.event)}</React.Fragment>
+              ))}
+            </>
+          )
+        }
 
         // Doc-scroll mode: plain View in document flow — the BODY scrolls
         // (window scroll listener above handles load-more + tab bar hide).
         // Keep full tree mounted so Safari/Chrome can collapse URL bars.
         if (docScrollActive) {
           return (
-            <View ref={feedContentRef} style={{ paddingBottom: tabBarHeight + 32 }}>
+            <View ref={feedContentRef} onLayout={feedDocLayout} style={{ paddingBottom: tabBarHeight + 32 }}>
+              <DocPullToRefresh {...refreshControl.props} />
               <View style={{ paddingHorizontal: theme.spacing.lg }}>{railNode}</View>
               <View testID="events-feed">
               {emptyOrLoading ?? sections.map(section => (
@@ -591,7 +659,7 @@ export default function EventsScreen() {
                 </View>
               ))}
               {loading && sections.length > 0 && (
-                <ActivityIndicator style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+                <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
               )}
               </View>
             </View>
@@ -628,6 +696,7 @@ export default function EventsScreen() {
               <View style={{ paddingHorizontal: theme.spacing.lg }}>{railNode}</View>
             }
             renderItem={({ item }) => renderEvent(item)}
+            extraData={forecasts}
             renderSectionHeader={({ section }) => renderSectionHeader(section)}
             stickySectionHeadersEnabled={false}
             initialNumToRender={6}
@@ -648,7 +717,7 @@ export default function EventsScreen() {
             }}
             ListFooterComponent={
               loading && sections.length > 0
-                ? <ActivityIndicator style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+                ? <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
                 : null
             }
             refreshControl={refreshControl}
@@ -725,10 +794,18 @@ type WeekStripContentProps = {
 
 const DAY_ABBREVS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
+/** Width a three-letter day name ("WED") needs at 1x; narrower cells (small phones, large text) get "We". */
+const WEEK_DAY_NAME_WIDTH = 30
+
 const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate, markedDates, onSelectDate, onPrevWeek, onNextWeek }: WeekStripContentProps) {
+  const [rowWidth, setRowWidth] = useState(0)
+  const { appScale, osScale } = useTextScale()
+  const textScale = Math.min(appScale * osScale, TIGHT_TEXT_SCALE)
+  const compact = rowWidth > 0 && (rowWidth - 6 * 6) / 7 < WEEK_DAY_NAME_WIDTH * textScale
+  const dayNames = compact ? DAY_LABELS : DAY_ABBREVS
   return (
     <View style={{ paddingBottom: theme.spacing.sm, paddingTop: theme.spacing.xs }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+      <View onLayout={e => setRowWidth(e.nativeEvent.layout.width)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         {weekDays.map(day => {
           // `day` is a local-midnight Date; toISOString() would shift it to the
           // previous day for any viewer at a positive UTC offset.
@@ -751,19 +828,19 @@ const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate
                 gap: 3,
               }}
             >
-              <Text style={{
+              <Text numberOfLines={1} maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={{
                 fontFamily: theme.fonts.body,
-                fontSize: 9,
+                fontSize: theme.font.size.xs,
                 fontWeight: theme.font.weight.bold,
-                letterSpacing: 0.8,
+                letterSpacing: compact ? 0 : 0.8,
                 color: isSelected ? theme.colors.white : theme.colors.subtext,
                 opacity: isSelected ? 0.7 : 1,
               }}>
-                {DAY_ABBREVS[day.getDay()]}
+                {dayNames[day.getDay()]}
               </Text>
-              <Text style={{
+              <Text numberOfLines={1} maxFontSizeMultiplier={compact ? COMPACT_TEXT_SCALE : TIGHT_TEXT_SCALE} style={{
                 fontFamily: theme.fonts.display,
-                fontSize: 20,
+                fontSize: theme.font.heading.sm,
                 lineHeight: 22,
                 color: isSelected ? theme.colors.white : isToday ? theme.colors.primary : theme.colors.text,
               }}>
@@ -829,7 +906,7 @@ const MonthGridContent = memo(function MonthGridContent({ month, selectedDate, m
       {/* Day-of-week labels */}
       <View style={{ flexDirection: 'row', marginBottom: 4 }}>
         {DAY_LABELS.map(d => (
-          <Text key={d} style={{ flex: 1, textAlign: 'center', fontFamily: theme.fonts.bodySemiBold, fontSize: 10, fontWeight: theme.font.weight.bold, letterSpacing: 0.8, color: theme.colors.subtext }}>
+          <Text key={d} style={{ flex: 1, textAlign: 'center', fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, fontWeight: theme.font.weight.bold, letterSpacing: 0.8, color: theme.colors.subtext }}>
             {d}
           </Text>
         ))}
@@ -986,20 +1063,20 @@ const feedStyles = StyleSheet.create({
   },
   sectionDate: {
     fontFamily: theme.fonts.display,
-    fontSize: 20,
+    fontSize: theme.font.heading.sm,
     color: theme.colors.text,
     letterSpacing: -0.3,
   },
   sectionCountText: {
     fontFamily: theme.fonts.body,
-    fontSize: 12,
+    fontSize: theme.font.size.sm,
     fontWeight: theme.font.weight.semibold,
     color: theme.colors.subtext,
   },
   /** Desktop right-rail section labels ("This week", "Next up"). */
   railLabel: {
     fontFamily: theme.fonts.body,
-    fontSize: 11,
+    fontSize: theme.font.size.xs,
     fontWeight: '700',
     letterSpacing: 1,
     color: theme.colors.subtext,

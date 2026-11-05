@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react'
-import { View, Text, Image, Pressable, TouchableOpacity, Platform } from 'react-native'
+import { View, Image, Pressable, TouchableOpacity, Platform } from 'react-native'
+import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../constants/theme'
 import { AnchorOptionsMenu } from './AnchorOptionsMenu'
@@ -204,7 +205,7 @@ export function MessageBubble({
                 }}>
                   {message.content}
                   {message.edited_at && !unsent
-                    ? <Text style={{ fontSize: 10, color: isOwn ? 'rgba(255,255,255,0.6)' : theme.colors.subtext, fontStyle: 'italic' }}>{' (edited)'}</Text>
+                    ? <Text style={{ fontSize: theme.font.size.xs, color: isOwn ? 'rgba(255,255,255,0.6)' : theme.colors.subtext, fontStyle: 'italic' }}>{' (edited)'}</Text>
                     : null}
                 </Text>
               )}
@@ -236,9 +237,9 @@ export function MessageBubble({
                 shadowRadius: 2,
                 elevation: 2,
               }}>
-                <Text style={{ fontSize: 13 }}>{emoji}</Text>
+                <Text style={{ fontSize: theme.font.size.smd }}>{emoji}</Text>
                 {count > 1 && (
-                  <Text style={{ fontSize: 11, color: theme.colors.subtext }}>{count}</Text>
+                  <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }}>{count}</Text>
                 )}
               </View>
             ))}
@@ -249,7 +250,7 @@ export function MessageBubble({
       {/* Timestamp / sending / failed indicator */}
       <Text style={{
         fontFamily: failed ? theme.fonts.bodySemiBold : theme.fonts.body,
-        fontSize: failed ? theme.font.size.xs : 10,
+        fontSize: theme.font.size.xs,
         color: failed ? theme.colors.error : message._sending ? theme.colors.primary : theme.colors.subtext,
         marginTop: 2,
         marginHorizontal: 4,

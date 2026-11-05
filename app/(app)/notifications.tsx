@@ -1,13 +1,8 @@
 import React, { useCallback } from 'react'
 import { useFocusEffect } from 'expo-router'
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { FlatList, TouchableOpacity, View } from 'react-native'
+import { Text } from '../../components/ui/Text'
+import { RefreshControl } from '../../components/RefreshControl'
 import { Stack, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useNotifications } from '../../hooks/useNotifications'
@@ -15,6 +10,7 @@ import { shared, theme } from '../../constants'
 import { routes, isAppPath, toRoute } from '../../utils/routes'
 import { formatShortTime } from '../../utils/notificationUtils'
 import type { Notification } from '../../types'
+import { Spinner } from '../../components/ui/Spinner'
 
 export default function NotificationsScreen() {
   const router = useRouter()
@@ -95,7 +91,7 @@ export default function NotificationsScreen() {
           }}
           ListEmptyComponent={
             loading ? (
-              <ActivityIndicator color={theme.colors.primary} style={{ marginTop: theme.spacing.xl }} />
+              <Spinner color={theme.colors.primary} style={{ marginTop: theme.spacing.xl }} />
             ) : (
               <View style={{ alignItems: 'center', paddingTop: theme.spacing.xl, gap: theme.spacing.sm }}>
                 <Ionicons name="notifications-off-outline" size={40} color={theme.colors.subtext} />
@@ -132,7 +128,7 @@ export default function NotificationsScreen() {
                   <Text
                     style={{
                       fontSize: theme.font.size.sm,
-                      color: theme.colors.subtext,
+                      color: theme.colors.subtextStrong,
                       marginTop: theme.spacing.xs,
                       lineHeight: 20,
                     }}
@@ -140,7 +136,7 @@ export default function NotificationsScreen() {
                   >
                     {item.body}
                   </Text>
-                  <Text style={[shared.caption, { marginTop: theme.spacing.sm }]}>
+                  <Text style={[shared.captionStrong, { marginTop: theme.spacing.sm }]}>
                     {formatShortTime(item.created_at)}
                   </Text>
                 </View>

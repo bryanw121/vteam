@@ -1,5 +1,6 @@
 import React from 'react'
-import { Platform, TouchableOpacity, Text, View, useWindowDimensions, StyleSheet } from 'react-native'
+import { Platform, TouchableOpacity, View, useWindowDimensions, StyleSheet } from 'react-native'
+import { Text } from './ui/Text'
 import { Slot, usePathname, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated'

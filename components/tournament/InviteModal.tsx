@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { FlatList, Modal, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, Modal, TouchableOpacity, View } from 'react-native'
+import { Text } from '../ui/Text'
 import { theme } from '../../constants'
 import { TOURNAMENT_GENERIC_ERROR } from '../../constants/tournamentCopy'
 import { buildMemberSearchFilter } from '../../utils'
@@ -55,7 +56,7 @@ export function InviteModal({ visible, onClose, viewerId, teams, invitingId, onI
             inputStyle={{ height: 44, paddingVertical: 0 }}
           />
           <TouchableOpacity onPress={close} hitSlop={8}>
-            <Text style={{ color: theme.colors.primary, fontSize: 14 }}>Cancel</Text>
+            <Text style={{ color: theme.colors.primary, fontSize: theme.font.size.md }}>Cancel</Text>
           </TouchableOpacity>
         </View>
         {error && <Text style={{ textAlign: 'center', padding: 16, color: theme.colors.error }}>{error}</Text>}
@@ -68,9 +69,9 @@ export function InviteModal({ visible, onClose, viewerId, teams, invitingId, onI
             return (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: theme.colors.text }}>{name}</Text>
-                  <Text style={{ fontSize: 12, color: theme.colors.subtext }}>@{item.username}</Text>
-                  {alreadyOnTeam && <Text style={{ fontSize: 11, color: theme.colors.subtext }}>Already registered</Text>}
+                  <Text style={{ fontSize: theme.font.size.md, fontWeight: '600', color: theme.colors.text }}>{name}</Text>
+                  <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.subtext }}>@{item.username}</Text>
+                  {alreadyOnTeam && <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }}>Already registered</Text>}
                 </View>
                 {!alreadyOnTeam && (
                   <Button label="Invite" size="sm" fullWidth={false} loading={invitingId === item.id} onPress={() => onInvite(item.id)} />

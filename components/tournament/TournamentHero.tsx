@@ -1,5 +1,6 @@
 import React from 'react'
-import { Text, TouchableOpacity, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
+import { Text } from '../ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { theme } from '../../constants'
@@ -48,7 +49,7 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack }: Prop
       {/* Trophy watermark */}
       <Text style={{
         position: 'absolute', right: -4, bottom: -10,
-        fontSize: 110, opacity: 0.07,
+        fontSize: theme.font.watermark.md, opacity: 0.07,
       }} selectable={false}>🏆</Text>
 
       <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 16, position: 'relative' }}>
@@ -66,13 +67,13 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack }: Prop
 
         <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
           <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.1)' }}>
-            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 11, color: 'rgba(255,255,255,0.75)', letterSpacing: 0.3 }}>
+            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: 'rgba(255,255,255,0.75)', letterSpacing: 0.3 }}>
               {FORMAT_LABELS[tournament.format] ?? tournament.format}
             </Text>
           </View>
         </View>
 
-        <Text accessibilityRole="header" style={{ fontFamily: theme.fonts.display, fontSize: 26, letterSpacing: -0.8, lineHeight: 30, color: theme.colors.text, marginBottom: 8 }}>
+        <Text accessibilityRole="header" style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -0.8, lineHeight: 30, color: theme.colors.text, marginBottom: 8 }}>
           {tournament.title}
         </Text>
 
@@ -80,12 +81,12 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack }: Prop
           {!!tournament.location && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.5)" />
-              <Text style={{ fontFamily: theme.fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>{tournament.location}</Text>
+              <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: 'rgba(255,255,255,0.6)' }}>{tournament.location}</Text>
             </View>
           )}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.5)" />
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: 'rgba(255,255,255,0.6)' }}>
               {new Date(tournament.start_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </Text>
           </View>
@@ -105,7 +106,7 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack }: Prop
           <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
             {(tournament.skill_levels ?? []).map(s => (
               <View key={s} style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: theme.colors.primary + '30' }}>
-                <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 11, color: theme.colors.primary }}>{SKILL_LEVEL_LABELS[s] ?? s}</Text>
+                <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.primary }}>{SKILL_LEVEL_LABELS[s] ?? s}</Text>
               </View>
             ))}
           </View>

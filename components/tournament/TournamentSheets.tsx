@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { ScrollView, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native'
+import { ScrollView, TouchableOpacity, View, useWindowDimensions } from 'react-native'
+import { Text } from '../ui/Text'
 import { theme } from '../../constants'
 import { BottomSheet } from '../ui'
 import { Button } from '../Button'
@@ -32,7 +33,7 @@ export function RegisterSheet({ visible, onDismiss, tournament, busy, onSubmit }
       accessibilityState={{ selected: active }}
       style={{ flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 2, borderColor: active ? theme.colors.primary : theme.colors.border, alignItems: 'center' }}
     >
-      <Text style={{ fontSize: 14, color: active ? theme.colors.primary : theme.colors.subtext, fontWeight: '600' }}>{label}</Text>
+      <Text style={{ fontSize: theme.font.size.md, color: active ? theme.colors.primary : theme.colors.subtext, fontWeight: '600' }}>{label}</Text>
     </TouchableOpacity>
   )
 
@@ -46,18 +47,19 @@ export function RegisterSheet({ visible, onDismiss, tournament, busy, onSubmit }
       {!freeAgent ? (
         <>
           <Input label="Team name" value={name} onChangeText={setName} placeholder="e.g. Block Party" inputStyle={sheetInput} containerStyle={{ marginBottom: 8 }} />
-          <Text style={{ fontSize: 12, color: theme.colors.subtext, marginBottom: 20 }}>
+          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.subtext, marginBottom: 20 }}>
             Roster size: {tournament.min_roster_size}–{tournament.max_roster_size} players. You'll be the captain.
           </Text>
         </>
       ) : (
-        <Text style={{ fontSize: 13, color: theme.colors.subtext, marginBottom: 20 }}>
+        <Text style={{ fontSize: theme.font.size.smd, color: theme.colors.subtext, marginBottom: 20 }}>
           You'll be placed in the free agent pool. You can request to join a team later, or the organizer may assign you.
         </Text>
       )}
 
       <Button
         label="Register"
+        testID="register-submit"
         loading={busy}
         disabled={!freeAgent && !name.trim()}
         onPress={() => { void onSubmit({ name: name.trim(), freeAgent }) }}
@@ -76,7 +78,7 @@ export function JoinRequestSheet({ team, onDismiss, busy, onSend }: {
 }) {
   return (
     <BottomSheet visible={!!team} onDismiss={onDismiss} title="Request to Join">
-      <Text style={{ fontSize: 14, color: theme.colors.subtext, marginBottom: 20 }}>
+      <Text style={{ fontSize: theme.font.size.md, color: theme.colors.subtext, marginBottom: 20 }}>
         Send a join request to <Text style={{ color: theme.colors.text, fontWeight: '600' }}>{team?.name}</Text>. The captain will be notified.
       </Text>
       <Button label="Send Request" loading={busy} onPress={() => team && onSend(team)} />
@@ -97,7 +99,7 @@ export function PickTeamSheet({ visible, title, subtitle, teams, onPick, onDismi
   const { height } = useWindowDimensions()
   return (
     <BottomSheet visible={visible} onDismiss={onDismiss} title={title}>
-      <Text style={{ fontSize: 13, color: theme.colors.subtext, marginBottom: 16 }}>{subtitle}</Text>
+      <Text style={{ fontSize: theme.font.size.smd, color: theme.colors.subtext, marginBottom: 16 }}>{subtitle}</Text>
       <ScrollView style={{ maxHeight: height * 0.45 }}>
         {teams.map(t => (
           <TouchableOpacity
@@ -105,8 +107,8 @@ export function PickTeamSheet({ visible, title, subtitle, teams, onPick, onDismi
             onPress={() => onPick(t)}
             style={{ paddingVertical: 14, paddingHorizontal: 4, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
           >
-            <Text style={{ fontSize: 15, color: theme.colors.text }}>{t.name}</Text>
-            <Text style={{ fontSize: 12, color: theme.colors.subtext }}>{t.members.length} player{t.members.length !== 1 ? 's' : ''}</Text>
+            <Text style={{ fontSize: theme.font.size.lgs, color: theme.colors.text }}>{t.name}</Text>
+            <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.subtext }}>{t.members.length} player{t.members.length !== 1 ? 's' : ''}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>

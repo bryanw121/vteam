@@ -30,7 +30,7 @@ import { addMonths, bucketByMonthKey, enumerateMonths, monthEndIso, monthKeyFrom
 import { readFeedSnapshot, SNAPSHOT_MONTHS, writeFeedSnapshot } from '../utils/feedSnapshot'
 import { fetchEventCardPreviews, previewsFromRows, withEventCardPreviews } from '../utils/eventCardPreviews'
 import { isFeedRpcUnavailable, parseFeedSpan } from '../utils/feedSpan'
-import { normalizeExternalSessions, normalizeTournaments } from '../utils/feedItems'
+import { isFeedItemOver, normalizeExternalSessions, normalizeTournaments } from '../utils/feedItems'
 import { notifyError, notifyInfo } from '../utils/notify'
 import { eventKeys } from './event/keys'
 import type { EventCardPreviews, EventWithDetails, ExternalSession, FeedRsvpResult, FeedRsvpVars, FeedSpanRows } from '../types'
@@ -461,15 +461,30 @@ export function useMonthEvents() {
     return () => sub.remove()
   }, [refetchStale])
 
+  // Ended items leave the feed: re-checked every minute, so a session drops off once it's over
+  // without a refetch. Items with no known end (tournaments) stay for the rest of their day.
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNowMs(Date.now()), 60_000)
+    return () => clearInterval(t)
+  }, [])
+
   const monthData = slots.map(s => s.data)
+  // The minute tick only changes the list when an item actually ends; otherwise the previous
+  // array is kept, so the feed doesn't re-render every minute.
+  const lastEvents = useRef<EventWithDetails[] | null>(null)
   const events = useMemo(() => {
     const today = startOfToday()
-    return monthData
+    const list = monthData
       .flatMap(d => d ?? [])
-      .filter(e => e.event_date >= today)
+      .filter(e => e.event_date >= today && !isFeedItemOver(e, nowMs))
       .sort((a, b) => a.event_date.localeCompare(b.event_date))
+    const prev = lastEvents.current
+    if (prev && prev.length === list.length && prev.every((e, i) => e === list[i])) return prev
+    lastEvents.current = list
+    return list
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, monthData)
+  }, [...monthData, nowMs])
 
   const loadedMonths = useMemo(
     () => months.filter((_, i) => monthData[i] !== undefined),

@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react'
 import type { Ionicons } from '@expo/vector-icons'
 import { routes, type RouteString } from '../utils/routes'
+import type { CreateMenuSectionKey } from '../types'
 
 /**
  * The only definition of the app's tabs and the create menu. The sidebar
@@ -70,21 +71,68 @@ export function tabIndexFromPath(path: string): number {
   return tabForPath(path).pageIndex
 }
 
+/**
+ * Swipe navigation in the iOS and Android apps. Turned off (Oct 2026) after
+ * swipes kept navigating by accident. The code is kept, so either switch
+ * brings its gesture back:
+ * - `tabs`: swipe left/right between the main tabs (Events / Clubs / Chat /
+ *   Profile) and between an event's tabs (Details / People / ...). Both are
+ *   `components/Pager`, whose `swipeEnabled` defaults to this.
+ * - `back`: iOS swipe from the left edge to go back on stack screens, swipe
+ *   from anywhere on Settings screens (`fullScreenGestureEnabled`), and swipe
+ *   down to close the Host modal. Every Stack's `gestureEnabled` reads this.
+ *   Android's system back button/gesture is the OS's and always works.
+ * Web never had either: narrow web renders the pager statically, and the
+ * browser's own swipe-back can't be turned off by a page.
+ * `__tests__/swipeNavigation.test.ts` keeps every layout reading these flags.
+ */
+export const SWIPE_NAVIGATION = {
+  tabs: false,
+  back: false,
+} as const
+
 export type CreateMenuOption = {
   label: string
   path: RouteString
+  icon: ComponentProps<typeof Ionicons>['name']
+  /** Guests are sent to sign in first (creating on vteam); false = anyone may open it. */
+  requiresAuth: boolean
+}
+
+export type CreateMenuSection = {
+  key: CreateMenuSectionKey
+  /** Small caption above the group. */
+  title: string
+  options: readonly CreateMenuOption[]
 }
 
 /**
  * The create ("+") menu: the bottom bar's centre button on mobile and the FAB on
- * wide web. Both render this list.
+ * wide web. Both render these sections top to bottom, so the vteam group (the
+ * common case) sits right above the button. Two kinds of choice:
+ * - book a court at a venue: browse open court time, then book on the venue's
+ *   own site (public, guests included);
+ * - create on vteam: needs an account.
  *
  * Note: on wide web the FAB is only shown on the Events tab (pathname === '/'),
  * while mobile shows the button on every tab. That difference is long-standing
  * and intentionally unchanged.
  */
-export const CREATE_MENU: readonly CreateMenuOption[] = [
-  { label: 'Open Play',     path: routes.host({ maxAttendees: 18 }) },
-  { label: 'Tournament',    path: routes.tournamentCreate() },
-  { label: 'From Template', path: routes.host({ mode: 'templates' }) },
+export const CREATE_MENU: readonly CreateMenuSection[] = [
+  {
+    key: 'venue',
+    title: 'Book at a venue',
+    options: [
+      { label: 'Book a court', path: routes.book(), icon: 'calendar-clear-outline', requiresAuth: false },
+    ],
+  },
+  {
+    key: 'vteam',
+    title: 'Create on vteam',
+    options: [
+      { label: 'Open Play',     path: routes.host({ maxAttendees: 18 }), icon: 'people-outline', requiresAuth: true },
+      { label: 'Tournament',    path: routes.tournamentCreate(),         icon: 'trophy-outline', requiresAuth: true },
+      { label: 'From Template', path: routes.host({ mode: 'templates' }), icon: 'copy-outline',  requiresAuth: true },
+    ],
+  },
 ]

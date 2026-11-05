@@ -1,9 +1,11 @@
 import { supabase } from '../../lib/supabase'
-import { queryKey } from '../../lib/query'
+import { getQueryData, queryKey } from '../../lib/query'
+import { COMMENTS_PAGE, keepLoadedOlder, mergeComments, missingParentIds, pageFromNewestFirst } from '../../utils/commentPages'
 import type {
-  GeneratedSchedule, MyRegistration, PendingInvite, TablesInsert, Tournament, TournamentCommentWithAuthor,
-  TournamentCore, TournamentInviteCandidate, TournamentJoinRequestWithRequester, TournamentMatchRow,
-  TournamentPrize, TournamentRules, TournamentTeam, TournamentTeamWithRoster, TournamentViewer,
+  GeneratedSchedule, MyRegistration, PendingInvite, SetScore, TablesInsert, TimedBracketMatch, Tournament, TournamentCommentWithAuthor,
+  TournamentCommentsPage, TournamentCore, TournamentInviteCandidate, TournamentJoinRequestWithRequester, TournamentMatchRow,
+  TournamentPoolWithTeams, TournamentPrize, TournamentResultWrites, TournamentRules, TournamentStatus, TournamentTeam,
+  TournamentTeamWithRoster, TournamentViewer,
 } from '../../types'
 
 /**
@@ -21,6 +23,7 @@ export const tournamentKeys = {
   teams: (id: string) => queryKey('tournament', id, 'teams'),
   comments: (id: string) => queryKey('tournament', id, 'comments'),
   matches: (id: string) => queryKey('tournament', id, 'matches'),
+  pools: (id: string) => queryKey('tournament', id, 'pools'),
   mine: (id: string, userId: string | null) => queryKey('tournament', id, 'mine', userId),
   /** Prefix covering `mine` for any user. */
   minePrefix: (id: string) => queryKey('tournament', id, 'mine'),
@@ -53,7 +56,9 @@ const COMMENT_SELECT =
   'id, tournament_id, user_id, body, parent_id, mentions, is_announcement, edited_at, deleted_at, created_at, profiles!tournament_comments_user_id_fkey(id, username, first_name, last_name, avatar_url, selected_border)'
 
 const MATCH_COLUMNS =
-  'id, tournament_id, pool_id, stage, round, match_number, team_a_id, team_b_id, court, scheduled_at, status, winner_id, bracket_round_name, is_losers_bracket'
+  'id, tournament_id, pool_id, stage, round, match_number, team_a_id, team_b_id, court, scheduled_at, status, winner_id, bracket_round_name, is_losers_bracket, ref_team_id, tournament_sets(set_number, team_a_score, team_b_score)'
+
+const POOL_SELECT = 'id, name, display_order, tournament_pool_teams(team_id)'
 
 const INVITE_SELECT = 'id, tournament_id, team_id, inviter_id, invitee_id, status, created_at, tournament_teams!inner(name)'
 
@@ -91,7 +96,8 @@ export async function fetchTournamentCore(id: string): Promise<TournamentCore> {
   return {
     // `status`/`format`/… come back as `string`; the DB CHECK constraints guarantee the unions.
     tournament: tournament as Tournament | null,
-    rules: rules satisfies TournamentRules | null,
+    // A cast, not `satisfies`: the generated row may carry columns this select leaves out (another PR's, on beta).
+    rules: rules as TournamentRules | null,
     prizes: (prizes ?? []) satisfies TournamentPrize[],
   }
 }
@@ -106,18 +112,56 @@ export async function fetchTeams(id: string): Promise<TournamentTeamWithRoster[]
   })) as TournamentTeamWithRoster[]
 }
 
-export async function fetchComments(id: string): Promise<TournamentCommentWithAuthor[]> {
-  const data = await ok(
-    supabase.from('tournament_comments').select(COMMENT_SELECT).eq('tournament_id', id).order('created_at', { ascending: true }),
-  )
-  return (data ?? []) as TournamentCommentWithAuthor[]
+/**
+ * One page of the discussion (newest COMMENTS_PAGE, oldest first). The first
+ * page also carries every announcement, since the Overview tab lists them all
+ * however old. Parents of replies older than the page come in one `IN` query.
+ */
+export async function fetchCommentsPage(id: string, before?: string): Promise<TournamentCommentsPage> {
+  let pageQuery = supabase
+    .from('tournament_comments')
+    .select(COMMENT_SELECT)
+    .eq('tournament_id', id)
+    .order('created_at', { ascending: false })
+    .limit(COMMENTS_PAGE + 1)
+  if (before) pageQuery = pageQuery.lt('created_at', before)
+  const [newestFirst, announcements] = await Promise.all([
+    ok(pageQuery),
+    before
+      ? Promise.resolve([])
+      : ok(supabase.from('tournament_comments').select(COMMENT_SELECT).eq('tournament_id', id).eq('is_announcement', true)),
+  ])
+  const page = pageFromNewestFirst((newestFirst ?? []) as TournamentCommentWithAuthor[])
+  const rows = mergeComments((announcements ?? []) as TournamentCommentWithAuthor[], page.rows)
+  const missing = missingParentIds(rows)
+  const parents = missing.length
+    ? ((await ok(supabase.from('tournament_comments').select(COMMENT_SELECT).in('id', missing))) ?? []) as TournamentCommentWithAuthor[]
+    : []
+  return { ...page, rows: mergeComments(parents, rows) }
+}
+
+/** The newest page, keeping older pages already loaded (writes invalidate this key). */
+export async function fetchComments(id: string): Promise<TournamentCommentsPage> {
+  const latest = await fetchCommentsPage(id)
+  return keepLoadedOlder(getQueryData<TournamentCommentsPage>(tournamentKeys.comments(id)), latest)
 }
 
 export async function fetchMatches(id: string): Promise<TournamentMatchRow[]> {
   const data = await ok(
     supabase.from('tournament_matches').select(MATCH_COLUMNS).eq('tournament_id', id).order('round').order('match_number'),
   )
-  return (data ?? []) as TournamentMatchRow[]
+  return (data ?? []).map(({ tournament_sets, ...m }) => ({
+    ...m,
+    sets: [...(tournament_sets ?? [])].sort((a, b) => a.set_number - b.set_number),
+  })) as TournamentMatchRow[]
+}
+
+export async function fetchPools(id: string): Promise<TournamentPoolWithTeams[]> {
+  const data = await ok(supabase.from('tournament_pools').select(POOL_SELECT).eq('tournament_id', id).order('display_order'))
+  return (data ?? []).map(p => ({
+    id: p.id, name: p.name, display_order: p.display_order,
+    team_ids: (p.tournament_pool_teams ?? []).map(t => t.team_id),
+  }))
 }
 
 /**
@@ -276,14 +320,112 @@ export async function publishSchedule(id: string): Promise<void> {
   await mustAffect(supabase.from('tournaments').update({ schedule_published: true }).eq('id', id).select('id'), 'Publishing the schedule')
 }
 
-/** One transaction: delete old matches/pools, create the new ones, stamp schedule_generated_at. */
+function bracketInsertRows(tournamentId: string, rows: readonly TimedBracketMatch[]): TablesInsert<'tournament_matches'>[] {
+  return rows.map(r => ({
+    tournament_id: tournamentId,
+    stage: r.stage,
+    round: r.round,
+    match_number: r.match_number,
+    is_losers_bracket: r.is_losers_bracket,
+    bracket_round_name: r.bracket_round_name,
+    team_a_id: r.team_a_id,
+    team_b_id: r.team_b_id,
+    court: r.court,
+    scheduled_at: r.scheduled_at,
+    status: r.status,
+  }))
+}
+
+/**
+ * Replace the schedule. The RPC swaps matches and pools in one transaction and
+ * stamps schedule_generated_at; it does not take referees or losers-bracket
+ * flags, so those follow: one update per referee team (pool and round-robin
+ * match numbers are unique, so they identify the new rows), then one insert of
+ * the bracket rows. Re-running the whole thing is safe (the RPC starts over).
+ */
 export async function replaceSchedule(tournamentId: string, schedule: GeneratedSchedule): Promise<number> {
   const count = await ok(supabase.rpc('replace_tournament_schedule', {
     p_tournament_id: tournamentId,
     p_matches: schedule.matches,
     p_pools: schedule.pools,
   }))
-  return typeof count === 'number' ? count : schedule.matches.length
+
+  const byRef = new Map<string, number[]>()
+  for (const m of schedule.matches) {
+    if (m.ref_team_id) byRef.set(m.ref_team_id, [...(byRef.get(m.ref_team_id) ?? []), m.match_number])
+  }
+  if (byRef.size > 0) {
+    await Promise.all([...byRef].map(([refId, numbers]) => ok(
+      supabase.from('tournament_matches').update({ ref_team_id: refId })
+        .eq('tournament_id', tournamentId).neq('stage', 'bracket').in('match_number', numbers),
+    )))
+  }
+
+  if (schedule.bracket.length > 0) {
+    await ok(supabase.from('tournament_matches').insert(bracketInsertRows(tournamentId, schedule.bracket)))
+  }
+  return (typeof count === 'number' ? count : schedule.matches.length) + schedule.bracket.length
+}
+
+/**
+ * Create (or recreate) the elimination bracket after pool play: remove any
+ * unplayed bracket rows, then insert the new ones. Refused when a bracket match
+ * already has a result, so recorded games are never thrown away.
+ */
+export async function seedBracket(tournamentId: string, rows: readonly TimedBracketMatch[]): Promise<void> {
+  const played = await ok(
+    supabase.from('tournament_matches').select('id')
+      .eq('tournament_id', tournamentId).eq('stage', 'bracket').not('winner_id', 'is', null).limit(1),
+  )
+  if ((played ?? []).length > 0) throw new Error('The bracket already has results, so it can no longer be reseeded.')
+  await ok(supabase.from('tournament_matches').delete().eq('tournament_id', tournamentId).eq('stage', 'bracket'))
+  await ok(supabase.from('tournament_matches').insert(bracketInsertRows(tournamentId, rows)))
+}
+
+/**
+ * Record a result: replace the match's set scores, mark it completed with the
+ * winner, move teams into the bracket slots it feeds, then update the
+ * tournament status (in progress, or completed once the final is in). Each
+ * step is an idempotent overwrite, so retrying after a failure is safe.
+ */
+export async function recordResult(args: {
+  tournamentId: string
+  matchId: string
+  winnerId: string
+  sets: readonly SetScore[]
+  forfeit: boolean
+  writes: TournamentResultWrites
+}): Promise<void> {
+  const { tournamentId, matchId, winnerId, sets, forfeit, writes } = args
+  await ok(supabase.from('tournament_sets').delete().eq('match_id', matchId))
+  if (sets.length > 0) {
+    await ok(supabase.from('tournament_sets').insert(sets.map(s => ({
+      match_id: matchId, set_number: s.set_number, team_a_score: s.team_a_score, team_b_score: s.team_b_score,
+      completed_at: new Date().toISOString(),
+    }))))
+  }
+  await mustAffect(
+    supabase.from('tournament_matches').update({ winner_id: winnerId, status: forfeit ? 'forfeit' : 'completed' })
+      .eq('id', matchId).select('id'),
+    'The result',
+  )
+  await Promise.all(writes.advances.map(a => mustAffect(
+    supabase.from('tournament_matches').update({ [a.column]: a.teamId }).eq('id', a.matchId).select('id'),
+    'Moving the winner on',
+  )))
+  if (writes.nextStatus) await setTournamentStatus(tournamentId, writes.nextStatus)
+}
+
+export async function setTournamentStatus(id: string, status: TournamentStatus): Promise<void> {
+  await mustAffect(supabase.from('tournaments').update({ status }).eq('id', id).select('id'), 'The tournament status')
+}
+
+/** Save organizer seeds (1 = strongest; null clears). One update per changed team, in parallel. */
+export async function saveSeeds(seeds: readonly { teamId: string; seed: number | null }[]): Promise<void> {
+  await Promise.all(seeds.map(s => mustAffect(
+    supabase.from('tournament_teams').update({ seed: s.seed }).eq('id', s.teamId).select('id'),
+    'Saving seeds',
+  )))
 }
 
 export async function saveMatch(args: { matchId: string; scheduledAt: string; court: string; teamAId: string | null; teamBId: string | null }): Promise<void> {

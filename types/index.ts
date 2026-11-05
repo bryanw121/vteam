@@ -8,6 +8,10 @@
 // narrowed to non-null.
 
 import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database'
+import type { TabKey } from '../constants/navigation'
+import type { ReactElement } from 'react'
+import type { ActivityIndicatorProps } from 'react-native'
+import type { BracketMatchInsert, SetScore } from './tournament'
 
 /** The client's database type. Kept as an alias so callers don't care how it's assembled. */
 export type AppDatabase = Database
@@ -89,6 +93,8 @@ export const NOTIFICATION_PREF_TYPES = [
   'join_request',
   'request_approved',
   'request_denied',
+  'event_reminder',
+  'late_dropout',
 ] as const
 
 /** Must match the `notifications_notification_type_check` constraint in Supabase exactly. */
@@ -121,6 +127,17 @@ export type NotificationData = {
   cheer_id?: string
   deep_link?: string
   badge_type?: string
+  /** late_dropout: the player who left. */
+  user_id?: string
+}
+
+/** The `data` of a push as the app receives it (send-notification-push / send-chat-push). */
+export type PushData = {
+  deep_link?: unknown
+  event_id?: unknown
+  conversation_id?: unknown
+  notification_id?: unknown
+  notification_type?: unknown
 }
 
 /**
@@ -151,6 +168,26 @@ export type Event = Pick<EventRow,
   | 'max_attendees' | 'created_at' | 'club_id'>
   & Partial<Pick<EventRow,
     'cancelled_at' | 'price' | 'venmo_handle' | 'latitude' | 'longitude' | 'requires_approval' | 'skill_levels' | 'surface'>>
+
+// ─── Share links and previews (#130) ──────────────────────────────────────────
+
+/** The guest-visible `events` columns a link preview reads (`EVENT_PREVIEW_COLUMNS`). */
+export type EventPreviewRow = Pick<EventRow, 'id' | 'title' | 'event_date' | 'location' | 'max_attendees'>
+  & Partial<Pick<EventRow, 'cancelled_at' | 'price' | 'duration_minutes'>>
+
+/** What a preview describes: an open event, a cancelled or finished one, or none (generic card). */
+export type EventPreviewState = 'upcoming' | 'cancelled' | 'ended' | 'missing'
+
+/** Plain-text preview copy (`utils/eventShare.buildEventMeta`); escaped when written into HTML. */
+export type EventPreviewMeta = {
+  state: EventPreviewState
+  /** `og:title` / `<title>`. */
+  title: string
+  /** `og:description`; the only place with the time-stamped "as of" spots count. */
+  description: string
+  /** `og:image:alt`. */
+  imageAlt: string
+}
 
 /** Court surface. Same values on club events (`events.surface`) and outside sessions (`external_sessions.surface`). */
 export type Surface = 'indoor' | 'sand' | 'grass'
@@ -218,6 +255,30 @@ export type MentionUser = {
 export type EventCommentWithAuthor = EventComment & {
   profiles: Pick<Profile, 'id' | 'username' | 'first_name' | 'last_name' | 'avatar_url' | 'selected_border'> | null
 }
+
+/** What the host edit form is filled from: EVENT_EDIT_SELECT (a subset of the detail row). */
+export type EventEditSource = Pick<
+  Tables<'events'>,
+  | 'id' | 'title' | 'description' | 'location' | 'latitude' | 'longitude' | 'event_date' | 'duration_minutes'
+  | 'max_attendees' | 'price' | 'venmo_handle' | 'requires_approval' | 'surface' | 'club_id'
+> & { event_tags: { tag_id: string }[] }
+
+/**
+ * A cached, paged discussion (event or tournament comments): a window of the
+ * newest comments (oldest first) plus whether older ones exist on the server.
+ */
+export type CommentPage<T> = {
+  rows: T[]
+  hasEarlier: boolean
+  /**
+   * `created_at` of the oldest comment loaded by paging (not counting old
+   * parents fetched for replies): "Load earlier" asks for comments before it.
+   */
+  cursor: string | null
+}
+
+/** `eventKeys.comments`. */
+export type EventCommentsPage = CommentPage<EventCommentWithAuthor>
 
 /**
  * `event_guests` table
@@ -363,9 +424,25 @@ export type MembershipType = 'open' | 'invite'
 export type MajorCity = Tables<'major_cities'>
 
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
-export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners'> & {
+export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
   home_city: MajorCity | null
 }
+
+/** Allowed values of `user_settings.reminder_lead_minutes` (its check constraint): 1 hour, 2 hours, a day. */
+export type ReminderLeadMinutes = 60 | 120 | 1440
+
+/** A row of Settings → Notifications: label, optional subtitle and a switch. */
+export type NotificationSettingRowProps = {
+  label: string
+  subtitle?: string
+  value: boolean
+  disabled?: boolean
+  onValueChange: (v: boolean) => void
+  testID?: string
+}
+
+/** Title and body of an event reminder (`event_reminder_text` in the database; `utils/reminders.ts` mirrors it). */
+export type ReminderCopy = { title: string; body: string }
 
 /**
  * A one-time banner (constants/banners.ts): shown the first time someone opens
@@ -376,6 +453,101 @@ export type BannerDef = {
   id: string
   title: string
   body: string
+  /** Optional link under the body (e.g. "Check out our tour"). Tapping it also hides the banner. */
+  action?: BannerAction
+}
+
+/**
+ * What a banner's link does. A well-known action id rather than a callback, so
+ * banners stay plain data in constants/banners.ts; OneTimeBanner runs it.
+ * Add a member here (and a case in OneTimeBanner) for a new kind of action.
+ */
+export type BannerAction = { label: string; type: 'startTour'; tourId: TourId }
+
+// ─── Ads (constants/ads.ts, hooks/useFeedAds.ts, utils/feedAds.ts) ──────────
+
+/** An active house banner (`ad_banners`), as the feed renders it. */
+export type AdBanner = Pick<Tables<'ad_banners'>, 'id' | 'title' | 'body' | 'image_url' | 'link_url' | 'display_order'>
+
+/** What the feed may show as ads: active banners and the ids of events with an active sponsorship. */
+export type FeedAds = {
+  banners: AdBanner[]
+  sponsoredEventIds: string[]
+}
+
+/** One ad rendered after a feed item (utils/feedAds.ts `planFeedAds`). */
+export type FeedAdPlacement =
+  | { kind: 'banner'; banner: AdBanner }
+  | { kind: 'sponsored'; event: EventWithDetails }
+
+/** `get_ad_free_status()`: the offer (cost in points, days) plus the caller's balance and ad-free expiry. */
+export type AdFreeStatus = {
+  cost: number
+  days: number
+  balance: number
+  ad_free_until: string | null
+}
+
+/** `redeem_ad_free()`: the new status, and whether the points were spent. */
+export type AdFreeRedeemResult = AdFreeStatus & {
+  ok: boolean
+  reason?: 'insufficient_points'
+}
+
+// ─── Tours (constants/tours.ts, contexts/tour.tsx) ───────────────────────────
+
+export type TourId = 'intro'
+
+/** Where the step's card sits relative to its target. 'auto' picks the side with more room. */
+export type TourPlacement = 'auto' | 'top' | 'bottom'
+
+export type TourStepDef = {
+  /** Id a `<TourTarget id>` (or `useTourTarget(id)`) registers. Steps whose target isn't on screen are skipped. */
+  target: string
+  title: string
+  /** One plain sentence. */
+  body: string
+  /** Tab the target lives on; the tour switches there first. Omit for targets on every tab (the tab bar). */
+  tab?: TabKey
+  placement?: TourPlacement
+}
+
+export type TourDef = {
+  id: TourId
+  steps: readonly TourStepDef[]
+}
+
+/** Where the tour was started from (for analytics and debugging). */
+export type TourSource = 'banner' | 'profile_menu' | 'other'
+
+/** What the tab shell hands the tour so it can move between tabs (registered by the tabs layout). */
+export type TourShell = {
+  /** Switch to TABS[index], leaving any stack screen (settings, a profile) first. */
+  showTab: (index: number) => void
+  /** Bring back chrome that hides on scroll (the mobile tab bar) so its targets can be highlighted. */
+  revealChrome: () => void
+}
+
+/** `useTour()`: start or stop a tour from anywhere under the app layout. */
+export type TourControls = {
+  start: (id: TourId, source?: TourSource) => void
+  stop: () => void
+  active: boolean
+}
+
+/** A rectangle in window coordinates (what `measureInWindow` reports). */
+export type TourRect = { x: number; y: number; width: number; height: number }
+
+export type TourSize = { width: number; height: number }
+
+export type TourInsets = { top: number; right: number; bottom: number; left: number }
+
+/** Where the tour card goes: top-left corner, which side of the target, and the arrow's x inside the card. */
+export type TourCardPosition = { x: number; y: number; side: 'top' | 'bottom'; arrowX: number }
+
+/** Anything `measureInWindow` can be called on (a host View ref on native and web). */
+export type TourMeasurable = {
+  measureInWindow: (callback: (x: number, y: number, width: number, height: number) => void) => void
 }
 
 /**
@@ -594,6 +766,21 @@ export type MessageWithDetails = Message & {
   _failed?: boolean
 }
 
+/** `ChatMessageList` (native inverted FlatList / web react-virtuoso). */
+export type ChatMessageListProps = {
+  /** Newest first, as `useMessages` returns them. */
+  messages: MessageWithDetails[]
+  /** The viewer: their own new message always scrolls the list to the bottom. */
+  myId: string | null
+  renderMessage: (item: MessageWithDetails) => ReactElement
+  hasMore: boolean
+  onLoadMore: () => void
+  refreshing: boolean
+  onRefresh: () => void
+  /** The finger dragged the list (dismiss the keyboard). */
+  onUserDrag: () => void
+}
+
 // ─── Badge Types ──────────────────────────────────────────────────────────────
 
 export type CardBgType = 'ember' | 'frost' | 'aurora'
@@ -694,6 +881,9 @@ export type TournamentCommentWithAuthor = TournamentComment & {
   replies?: TournamentCommentWithAuthor[]
 }
 
+/** `tournamentKeys.comments`: the newest page, every announcement, and parents of loaded replies. */
+export type TournamentCommentsPage = CommentPage<TournamentCommentWithAuthor>
+
 // ─── Tournament Team Management ───────────────────────────────────────────────
 
 export type TournamentTeamInvitationStatus = 'pending' | 'accepted' | 'declined'
@@ -762,6 +952,12 @@ export type SessionState = {
 
 export type IoniconName = keyof typeof import('@expo/vector-icons').Ionicons.glyphMap
 
+/** `components/ui/Spinner`: an ActivityIndicator that always has an accessible name. */
+export type SpinnerProps = ActivityIndicatorProps & {
+  /** What is loading, read by screen readers ("Loading events"). Defaults to "Loading". */
+  label?: string
+}
+
 export type ScreenStateProps = {
   /** Show the spinner. Ignored once `ready` is true so a background refetch never blanks the screen. */
   loading?: boolean
@@ -797,6 +993,8 @@ export type ChipProps = {
   onPress: () => void
   badge?: number | string
   variant?: ChipVariant
+  /** 'radio' for one choice out of a set (inside a `role="radiogroup"`): exposes `aria-checked`, which web and native both read. Default 'button' (a filter). */
+  role?: 'button' | 'radio'
   testID?: string
 }
 
@@ -840,6 +1038,12 @@ export type ConfirmDialogProps = {
   onConfirm: () => void
   onCancel: () => void
   loading?: boolean
+  /** Extra content between the body and the buttons (e.g. the leave sheet's lines and reason chips). */
+  children?: import('react').ReactNode
+  /** Card width on wide screens (default 320; it never exceeds 92% of the window). */
+  width?: number
+  /** Replace the default `confirm-dialog-*` test ids' prefix. */
+  testIDPrefix?: string
 }
 
 export type BottomSheetProps = {
@@ -899,6 +1103,9 @@ export type OwnedClubOption = { id: string; name: string }
 
 // ─── Tournament detail screen + schedule generator ────────────────────────────
 
+export * from './tournament'
+export * from './scoresheet'
+
 // ─── Schedule generator ───────────────────────────────────────────────────────
 
 export type ScheduleConfig = {
@@ -909,6 +1116,10 @@ export type ScheduleConfig = {
   breakDuration: number
   /** Max opponents each team faces; null = full round robin. */
   gamesPerTeam: number | null
+  /** Target pool size for pool formats; null = automatic (about four). */
+  teamsPerPool: number | null
+  /** Never schedule a team in two consecutive slots when avoidable (may lengthen the day). */
+  restBetweenMatches: boolean
 }
 
 export type ScheduleInput = {
@@ -918,6 +1129,15 @@ export type ScheduleInput = {
   /** Registered team ids, in registration order. */
   teamIds: string[]
   config: ScheduleConfig
+  /** Organizer seeds by team id (1 = strongest). Unseeded teams are left out. */
+  seeds?: Readonly<Record<string, number | null>>
+  /** Assign referee teams (tournaments.has_refs). */
+  refs?: boolean
+  /** Bracket-only format: elimination type and whether to play a third-place match. */
+  bracketType?: TournamentBracketType
+  thirdPlace?: boolean
+  /** Team pairs to keep in different pools (see PoolAssignInput.avoid). */
+  avoid?: ReadonlyMap<string, number>
   /** Injected for tests; defaults to Math.random. Only used to deal pool play teams. */
   random?: () => number
 }
@@ -941,11 +1161,19 @@ export type ScheduleMatch = {
   court: string
   scheduled_at: string
   status: 'scheduled'
+  /** Referee team; the RPC ignores it, so it is written in a follow-up update. */
+  ref_team_id: string | null
 }
+
+/** A bracket row with its time and court, ready to insert. */
+export type TimedBracketMatch = BracketMatchInsert & { court: string; scheduled_at: string; status: 'scheduled' }
 
 export type GeneratedSchedule = {
   pools: SchedulePool[]
+  /** Pool play / round robin matches (saved through replace_tournament_schedule). */
   matches: ScheduleMatch[]
+  /** Elimination rows (bracket-only format; pool formats seed theirs after pool play). */
+  bracket: TimedBracketMatch[]
 }
 
 // ─── Screen data ──────────────────────────────────────────────────────────────
@@ -979,14 +1207,18 @@ export type MyRegistration = {
 export type TournamentMatchRow = Pick<
   TournamentMatch,
   | 'id' | 'tournament_id' | 'pool_id' | 'stage' | 'round' | 'match_number' | 'team_a_id' | 'team_b_id'
-  | 'court' | 'scheduled_at' | 'status' | 'winner_id' | 'bracket_round_name' | 'is_losers_bracket'
->
+  | 'court' | 'scheduled_at' | 'status' | 'winner_id' | 'bracket_round_name' | 'is_losers_bracket' | 'ref_team_id'
+> & {
+  /** Set scores, in set order. */
+  sets: SetScore[]
+}
 
 /** Which destructive action the confirm dialog is asking about. */
 export type TournamentConfirm =
   | { kind: 'withdraw' }
   | { kind: 'removeTeam'; teamId: string; teamName: string }
   | { kind: 'deleteComment'; commentId: string }
+  | { kind: 'seedBracket' }
 
 /** A profile offered by the tournament invite search. */
 export type TournamentInviteCandidate = Pick<Profile, 'id' | 'username' | 'first_name' | 'last_name' | 'avatar_url'>
@@ -1017,6 +1249,7 @@ export type ZoneLayout = { top: number; bottom: number }
 export type EventData = ReturnType<typeof import('../hooks/event/useEventData').useEventData>
 export type EventAttendanceApi = ReturnType<typeof import('../hooks/event/useEventAttendance').useEventAttendance>
 export type EventCommentsApi = ReturnType<typeof import('../hooks/event/useEventComments').useEventComments>
+export type EventPaymentsApi = ReturnType<typeof import('../hooks/event/useEventPayments').useEventPayments>
 export type EventCheersApi = ReturnType<typeof import('../hooks/event/useEventCheers').useEventCheers>
 export type CohostsApi = ReturnType<typeof import('../hooks/event/useCohosts').useCohosts>
 export type EventTeamsApi = ReturnType<typeof import('../hooks/event/useEventTeams').useEventTeams>
@@ -1050,6 +1283,36 @@ export type SelfAttendanceAction =
   | 'requestToJoin'
   | 'cancelRequest'
   | 'rerequest'
+
+/** One run of a leave-sheet line; `strong` runs are bold (the part that matters). */
+export type LeaveConsequencePart = { text: string; strong?: boolean }
+
+/**
+ * One line on the leave sheet (#171), from `leaveConsequences()` in
+ * utils/leaveConsequences.ts. Only the lines that apply are produced, in display order.
+ */
+export type LeaveConsequence = {
+  kind: 'waitlist' | 'full' | 'open' | 'approval' | 'hostNotified' | 'paid' | 'points'
+  icon: IoniconName
+  parts: LeaveConsequencePart[]
+}
+
+/** What `leaveConsequences` needs from the event row, plus the host's display name. */
+export type LeaveEventInfo = Pick<EventWithDetails, 'event_date' | 'max_attendees' | 'requires_approval' | 'price' | 'event_tags'> & {
+  hostName: string
+}
+
+/** Roster counts as the event page derives them (`computeEventStatus`): `count` includes +1 guests. */
+export type LeaveRosterInfo = Pick<AttendanceStatus, 'count' | 'isFull' | 'spotsLeft' | 'waitlistCount'>
+
+/** The viewer's side: hosts and co-hosts aren't told about their own dropout; `paid` is their "I've paid" flag. */
+export type LeaveViewerInfo = { isHostOrCohost: boolean; paid: boolean }
+
+/** A reason chip on the leave sheet (`LEAVE_REASONS` in constants/copy.ts). */
+export type LeaveReason = 'something_came_up' | 'sick' | 'injured' | 'work'
+
+/** Toast with an optional action button (e.g. "Message host" after a failed leave note). */
+export type ToastAction = { label: string; onPress: () => void }
 
 /** Host removing someone from the roster (the X on a card). */
 export type RemoveTarget =
@@ -1192,7 +1455,16 @@ export type LocationValue = {
   display: string
   latitude: number | null
   longitude: number | null
+  /** Set by LocationPickerField: the place's own name (Places `main_text`, or a curated venue label). */
+  name?: string
+  /** Set by LocationPickerField: a readable address, when known. */
+  address?: string | null
+  /** Google Places place_id, when the location came from Places search. */
+  placeId?: string | null
 }
+
+/** The `clubs` location columns (#13), as written on create / edit. All null = no fixed location. */
+export type ClubLocationFields = Pick<Tables<'clubs'>, 'location_name' | 'location_address' | 'latitude' | 'longitude' | 'place_id'>
 
 // ─── Badges, previews, tournament tabs ─────────────────────────────────────────
 
@@ -1242,3 +1514,245 @@ export type StoredFeedFilters = {
 }
 
 export type TournamentTabName = (typeof import('../constants/tournamentCopy').TOURNAMENT_TABS)[number]
+
+// ─── Schelagg court availability and session checks (lib/schelagg, utils/courts) ─
+
+/** "HH:MM" Austin local time; "24:00" is midnight at the end of the day. */
+export type HHMM = string
+
+/** [start, end] as "HH:MM" strings, Austin local time. */
+export type HHMMRange = [HHMM, HHMM]
+
+/** [startMin, endMin], minutes after Austin midnight (0–1440). */
+export type MinuteRange = [number, number]
+
+export type CourtsCourt = {
+  name: string
+  /** Booked blocks per YYYY-MM-DD (Austin). A date with no entry has no bookings. */
+  days: Record<string, HHMMRange[]>
+}
+
+export type CourtsFacility = {
+  id: string
+  name: string
+  /** Free text; may carry a price after " · " (e.g. "Leander · $50/hr"). */
+  city: string
+  surface: Surface
+  courts: CourtsCourt[]
+}
+
+export type CourtsVenue = {
+  id: string
+  /** The venue's public booking page. */
+  calendar: string
+  /**
+   * The booking page opened on one day: a template with `{date}` (YYYY-MM-DD),
+   * e.g. Skedda's `…/booking?viewdate={date}`. Absent when the platform has no
+   * per-day link; use `calendar` then (utils/courts.venueCalendarUrl).
+   */
+  calendarDay?: string
+  /** Opening hours per weekday, 0 = Sunday; null = closed that day. */
+  hours: (HHMMRange | null)[]
+  facilities: CourtsFacility[]
+  /** The live load failed; this is the last good copy. */
+  stale?: boolean
+}
+
+export type CourtsError = { venue?: string; calendar?: string; message?: string }
+
+/** GET {SCHELAGG_API_BASE}/api/courts and {SCHELAGG_SITE_BASE}/data/courts.json. */
+export type CourtsResponse = {
+  fetchedAt: string
+  /** First date covered, YYYY-MM-DD (Austin). */
+  from: string
+  days: number
+  venues: CourtsVenue[]
+  errors: CourtsError[]
+}
+
+/** What useCourtAvailability returns: the response plus where it came from. */
+export type CourtsData = CourtsResponse & { source: 'live' | 'static' }
+
+/** "Now" in Austin, whatever the device's time zone. */
+export type AustinNow = { iso: string; minutes: number }
+
+export type CourtLane = {
+  name: string
+  /** Short label for the grid ("Court 1" for "HP Court 1"). */
+  label: string
+  booked: MinuteRange[]
+  free: MinuteRange[]
+}
+
+/** One facility on one day, ready to draw (utils/courts.facilityDay). */
+export type FacilityDay = {
+  key: string
+  facility: CourtsFacility
+  venue: CourtsVenue
+  /** City without the price part. */
+  city: string
+  /** Price pulled out of the city text, e.g. "$50/hr"; null when unknown. */
+  price: string | null
+  /** False when the venue is closed that weekday. */
+  open: boolean
+  openMin: number
+  closeMin: number
+  /** False when the data does not cover this date. */
+  covered: boolean
+  lanes: CourtLane[]
+  /** Union of every court's free time (≥ COURT_MIN_FREE_MIN), clipped to now on today. */
+  freeSummary: MinuteRange[]
+}
+
+export type DayOption = { iso: string; dow: number; isToday: boolean }
+
+export type SessionCheckStatus = 'scheduled' | 'canceled' | 'changed' | 'gone' | 'unknown'
+
+/** 200 body of GET {SCHELAGG_API_BASE}/api/check?session=<id>. */
+export type SessionCheckResult = {
+  id: string
+  status: SessionCheckStatus
+  /** With status "changed": the fields that differ from what was published (e.g. ["start", "end"]). */
+  changes?: string[]
+  /** The session as the source has it now (Schelagg schema v2), when found. Times are local to `timezone`. */
+  session?: {
+    id?: string
+    date?: string
+    start?: string
+    end?: string | null
+    timezone?: string
+    canceled?: boolean
+    signup?: { url?: string | null } | null
+  } | null
+  /** The same, shaped like an occurrences.json row (absolute instants); may be null. */
+  occurrence?: { starts_at?: string; ends_at?: string | null; canceled?: boolean; signup_url?: string | null } | null
+  checkedAt?: string
+}
+
+/** What to do with a tap on an outside session's sign-up link. */
+export type SessionLinkDecision =
+  | { action: 'open' }
+  | { action: 'confirm'; kind: 'canceled' | 'gone' }
+  | {
+      action: 'confirm'
+      kind: 'changed'
+      /** ISO instants of the new time, when known. */
+      startsAt: string | null
+      endsAt: string | null
+      changes: string[]
+      /** The source's sign-up link for the moved session (a moved Volleyworld class has a new one); null = keep the old. */
+      signupUrl: string | null
+    }
+
+/** The dialog an outside session card shows after a check, or when the browser blocked the new tab. */
+export type SessionLinkNotice =
+  | Exclude<SessionLinkDecision, { action: 'open' }>
+  | { action: 'confirm'; kind: 'blocked' }
+
+export type CreateMenuSectionKey = 'vteam' | 'venue'
+
+// ─── Usage metrics (lib/analytics.ts) ─────────────────────────────────────────
+
+export type AnalyticsEventName = (typeof import('../constants/analytics').ANALYTICS_EVENTS)[keyof typeof import('../constants/analytics').ANALYTICS_EVENTS]
+
+/** Small, flat props only: they're stored as a JSON object capped at 1 KB. */
+export type AnalyticsProps = Record<string, string | number | boolean | null>
+
+// ─── Legal pages (/terms, /privacy) ───────────────────────────────────────────
+
+/** A run of inline text in a legal document. `placeholder` marks "[fill in on publish]"-style gaps. */
+export type LegalSpan = { text: string; bold?: boolean; placeholder?: boolean }
+
+/** One block of the Markdown subset the legal pages use (utils/legalMarkdown.ts). */
+export type LegalBlock =
+  | { type: 'title'; spans: LegalSpan[] }
+  | { type: 'heading'; spans: LegalSpan[] }
+  | { type: 'paragraph'; spans: LegalSpan[] }
+  | { type: 'list'; items: LegalSpan[][] }
+  | { type: 'table'; header: LegalSpan[][]; rows: LegalSpan[][][] }
+
+/** The two links behind a "Pay via Venmo" button (`utils/venmo.ts`). */
+export type VenmoLinks = {
+  /** The Venmo app's own scheme; opened directly on iOS/Android. */
+  app: string
+  /** Venmo's web pay page; used on web and as the native fallback. */
+  web: string
+}
+
+// ─── Text size (#43) ──────────────────────────────────────────────────────────
+
+/** The in-app text size setting (Settings → Display). Stored on the device. */
+export type TextSizeId = 'small' | 'default' | 'large' | 'xlarge'
+
+export type TextSizeOption = {
+  id: TextSizeId
+  label: string
+  /** Multiplier on every font size token. Composes with the OS / browser text size. */
+  scale: number
+}
+
+export type TextScaleContextValue = {
+  /** The chosen setting. */
+  size: TextSizeId
+  /** The setting's multiplier (1 at Default). */
+  appScale: number
+  /** The OS (native Dynamic Type / font scale) or browser (root font size / 16) text size. */
+  osScale: number
+  setSize: (size: TextSizeId) => void
+}
+
+/** react-native-web's ScrollView instance: exposes the DOM node that scrolls (web only). */
+export type WebScrollableRef = { getScrollableNode?: () => HTMLElement } | null
+
+// ─── Weather on outdoor games (#165) ─────────────────────────────────────────
+
+/** One hour of the National Weather Service hourly forecast, trimmed by `api/forecast.ts`. */
+export type ForecastHour = {
+  /** Start of the hour (ISO 8601 with offset, as NWS sends it). */
+  t: string
+  tempF: number
+  /** Chance of precipitation, 0–100. */
+  pop: number
+  /** Wind speed in mph (the top of a "5 to 10 mph" range). */
+  windMph: number
+  /** NWS short forecast ("Sunny", "Chance Rain Showers"). */
+  short: string
+  /** Condition from the NWS icon URL: `day/skc`, `night/rain_showers`, ... (empty when unknown). */
+  icon: string
+  /** Relative humidity, 0–100. */
+  rh: number
+}
+
+/** `GET /api/forecast` body: the hourly series for one court (coordinates rounded to 2 decimals). */
+export type Forecast = {
+  /** When NWS last updated the forecast (ISO 8601). */
+  updatedAt: string
+  hours: ForecastHour[]
+}
+
+/** Whether an event gets a forecast now (`show`), only later (`later`: more than 7 days out), or never. */
+export type ForecastWindow = 'show' | 'later' | null
+
+/** An hourly cell on the event page: game hours are highlighted. */
+export type ForecastCell = ForecastHour & { inGame: boolean }
+
+/** Neutral, or a warning style: rain likely, or dangerous heat. */
+export type ForecastTone = 'neutral' | 'rain' | 'heat'
+
+/** What the card chip and the event page say about the game hours (`forecastSummary`). */
+export type ForecastSummary = {
+  tone: ForecastTone
+  /** Card chip text: "☀️ 78°", "🌧 70% rain", "🔥 97°". */
+  chipLabel: string
+  /** Event page headline: "Rain likely during the game", "Hot: feels like 97°F", or the NWS short forecast. */
+  headline: string
+  /** Event page line under the headline: temperature, wind and rain chance. */
+  detail: string
+  /** Screen reader label for the chip: "Forecast: 70 percent chance of rain". */
+  a11yLabel: string
+  /** Emoji for the condition (used by the event page icon). */
+  emoji: string
+}
+
+/** A rounded court position: the forecast cache key. */
+export type ForecastCourt = { lat: number; lng: number }

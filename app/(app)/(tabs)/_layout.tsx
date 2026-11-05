@@ -1,19 +1,24 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFocusEffect, Stack, usePathname, useRouter } from "expo-router";
-import { Animated, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Platform, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Text } from "../../../components/ui/Text";
 import { BlurView } from "expo-blur";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Slot } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabsActiveContext, TabsContext, TabsShellContext } from "../../../contexts/tabs";
 import { useWebNav } from "../../../contexts/webNav";
-import { theme, BREAKPOINTS, TABS, CREATE_MENU, tabIndexFromPath } from "../../../constants";
+import { theme, BREAKPOINTS, TABS, TIGHT_TEXT_SCALE, tabIndexFromPath, SWIPE_NAVIGATION } from "../../../constants";
+import type { CreateMenuOption } from "../../../constants";
+import { CreateMenuList } from "../../../components/CreateMenuList";
 import { useChatUnread } from "../../../hooks/useChatUnread";
 import { useDocScrollMode } from "../../../hooks/useDocScrollMode";
 import { useIsNarrowWeb } from "../../../hooks/useIsNarrowWeb";
 import { shouldRefreshEventsOnFocus } from "../../../utils/monthKeys";
 import { useRequireSignIn } from "../../../hooks/useRequireSignIn";
-import type { RouteString } from "../../../utils/routes";
+import { useTourShell } from "../../../contexts/tour";
+import { TourTarget } from "../../../components/tour/TourTarget";
+import { TOUR_TARGETS } from "../../../constants";
 
 // The bottom bar renders TABS (constants/navigation.ts) in pager order, with the
 // create button inserted before the Chat tab.
@@ -96,13 +101,13 @@ export default function TabsLayout() {
   }, [fabAnim]);
 
   const requireSignIn = useRequireSignIn();
+  // Anyone may open the menu: "Book a court" is public. Creating on vteam asks
+  // guests to sign in when they pick it (goCreate).
   const openFab = useCallback(() => {
-    // Hosting needs an account; guests go to sign-in and come back here.
-    if (!requireSignIn()) return;
     fabOpenRef.current = true;
     setFabOpen(true);
     Animated.spring(fabAnim, { toValue: 1, useNativeDriver: true, tension: 120, friction: 8 }).start();
-  }, [fabAnim, requireSignIn]);
+  }, [fabAnim]);
 
   const goToTab = useCallback((index: number) => {
     setActiveTabIndex(index);
@@ -118,9 +123,25 @@ export default function TabsLayout() {
     goToTab(tabIndex);
   }
 
-  function goHost(path: RouteString) {
+  // Let a guided tour move between tabs. Wide web routes each tab as a page;
+  // mobile / narrow web switches the pager (leaving a stack screen first).
+  const wideWeb = Platform.OS === "web" && !isNarrowWeb;
+  useTourShell({
+    showTab: index => {
+      if (wideWeb) {
+        if (pathname !== TABS[index].path) webNav.goToTab(index);
+      } else if (index !== activeTabIndex || pathname !== TABS[index].path) {
+        handleTabPress(index);
+      }
+    },
+    revealChrome: () => setTabBarHidden(false),
+  });
+
+  function goCreate(option: CreateMenuOption) {
     closeFab();
-    setTimeout(() => router.push(path), 160);
+    // Creating on vteam needs an account; guests go to sign-in and come back here.
+    if (option.requiresAuth && !requireSignIn()) return;
+    setTimeout(() => router.push(option.path), 160);
   }
 
   const tabsShellValue = useMemo(() => ({
@@ -192,9 +213,9 @@ export default function TabsLayout() {
               headerShadowVisible: false,
               headerTintColor: theme.colors.primary,
               headerStyle: { backgroundColor: theme.colors.background },
-              gestureEnabled: true,
+              gestureEnabled: SWIPE_NAVIGATION.back,
               animation: "slide_from_right",
-              ...(Platform.OS === "ios" && !isMain
+              ...(SWIPE_NAVIGATION.back && Platform.OS === "ios" && !isMain
                 ? { fullScreenGestureEnabled: true }
                 : {}),
               contentStyle: {
@@ -231,35 +252,12 @@ export default function TabsLayout() {
               position: (Platform.OS === 'web' ? 'fixed' : 'absolute') as any,
               bottom: tabBarHeight + theme.spacing.sm,
               right: theme.spacing.lg,
-              gap: theme.spacing.sm,
               alignItems: "flex-end",
               opacity: fabAnim,
               transform: [{ translateY: fabAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
             }}
           >
-            {CREATE_MENU.map(opt => (
-              <TouchableOpacity
-                key={opt.label}
-                onPress={() => goHost(opt.path)}
-                style={{
-                  backgroundColor: theme.colors.fabMenuChip,
-                  borderRadius: theme.radius.full,
-                  paddingVertical: theme.spacing.sm,
-                  paddingHorizontal: theme.spacing.lg,
-                  borderWidth: 1,
-                  borderColor: theme.colors.fabMenuChipBorder,
-                  shadowColor: theme.colors.black,
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.22,
-                  shadowRadius: 8,
-                  elevation: 6,
-                }}
-              >
-                <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            <CreateMenuList variant="overlay" onSelect={goCreate} />
           </Animated.View>
         )}
 
@@ -300,9 +298,13 @@ export default function TabsLayout() {
 
                 // Insert Create button between Clubs and Chat
                 const createBtn = tab.key === 'chat' ? (
+                  <TourTarget key="create" id={TOUR_TARGETS.create}>
                   <TouchableOpacity
-                    key="create"
                     onPress={fabOpen ? closeFab : openFab}
+                    accessibilityRole="button"
+                    accessibilityLabel={fabOpen ? 'Close create menu' : 'Create'}
+                    accessibilityState={{ expanded: fabOpen }}
+                    testID="create-menu-button"
                     style={{
                       width: 46, height: 46, borderRadius: 15,
                       backgroundColor: fabOpen ? theme.colors.accent + 'CC' : theme.colors.accent,
@@ -318,15 +320,17 @@ export default function TabsLayout() {
                       <Ionicons name="add" size={24} color={theme.colors.accentInk} />
                     </Animated.View>
                   </TouchableOpacity>
+                  </TourTarget>
                 ) : null;
 
                 return (
                   <React.Fragment key={tab.key}>
                     {createBtn}
+                    <TourTarget id={TOUR_TARGETS.tab(tab.key)} style={{ flex: 1 }}>
                     <TouchableOpacity
                       onPress={() => handleTabPress(tab.pageIndex)}
                       style={{
-                        flex: 1, alignItems: "center", gap: 3,
+                        alignItems: "center", gap: 3,
                         paddingVertical: 6, borderRadius: 14,
                         backgroundColor: active ? 'rgba(255,255,255,0.12)' : 'transparent',
                       }}
@@ -338,21 +342,21 @@ export default function TabsLayout() {
                           color={active ? theme.colors.white : 'rgba(255,255,255,0.5)'}
                         />
                         {badge > 0 && (
-                          <View style={{
+                          <View testID="chat-unread-badge" style={{
                             position: "absolute", top: -4, right: -7,
-                            minWidth: 15, height: 15, borderRadius: 8,
+                            minWidth: 18, height: 18, borderRadius: 9,
                             backgroundColor: theme.colors.hot,
                             alignItems: "center", justifyContent: "center",
                             paddingHorizontal: 2,
                           }}>
-                            <Text style={{ fontFamily: theme.fonts.bodyBold, fontSize: 8, color: theme.colors.white, lineHeight: 10 }}>
+                            <Text maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={{ fontFamily: theme.fonts.bodyBold, fontSize: theme.font.size.xs, color: theme.colors.white, lineHeight: 13 }}>
                               {badge > 99 ? "99+" : badge}
                             </Text>
                           </View>
                         )}
                       </View>
-                      <Text style={{
-                        fontSize: 9,
+                      <Text numberOfLines={1} maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={{
+                        fontSize: theme.font.size.xs,
                         fontFamily: active ? theme.fonts.bodySemiBold : theme.fonts.body,
                         color: active ? theme.colors.white : 'rgba(255,255,255,0.5)',
                         letterSpacing: 0.3,
@@ -360,6 +364,7 @@ export default function TabsLayout() {
                         {tab.mobileLabel}
                       </Text>
                     </TouchableOpacity>
+                    </TourTarget>
                   </React.Fragment>
                 );
               })}
