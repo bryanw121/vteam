@@ -133,9 +133,11 @@ describe('resultWrites', () => {
     expect(resultWrites({ match: matches[0], winnerId: 'x', matches, tournament }).nextStatus).toBeNull()
   })
 
-  it('a completed tournament stays completed (no status write) when a result is corrected', () => {
+  it('correcting the final of a completed tournament: no status write, but the new podium (trophies are rewritten)', () => {
     const matches = bracketMatches(2)
-    expect(resultWrites({ match: matches[0], winnerId: 's2', matches, tournament: T({ status: 'completed' }) }).nextStatus).toBeNull()
+    const w = resultWrites({ match: matches[0], winnerId: 's2', matches, tournament: T({ status: 'completed' }) })
+    expect(w.nextStatus).toBeNull()
+    expect(w.podium).toEqual({ first: 's2', second: 's1', thirds: [] })
   })
 })
 

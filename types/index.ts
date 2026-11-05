@@ -11,7 +11,7 @@ import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './datab
 import type { TabKey } from '../constants/navigation'
 import type { ReactElement } from 'react'
 import type { ActivityIndicatorProps } from 'react-native'
-import type { BracketMatchInsert, SetScore } from './tournament'
+import type { BracketMatchInsert, SetScore, TiebreakerKey } from './tournament'
 
 /** The client's database type. Kept as an alias so callers don't care how it's assembled. */
 export type AppDatabase = Database
@@ -854,7 +854,8 @@ export type Tournament = Override<Tables<'tournaments'>, {
   bracket_type: TournamentBracketType | null
 }>
 
-export type TournamentRules = Tables<'tournament_rules'>
+/** `tiebreakers` holds only TiebreakerKey values (CHECK constraint). */
+export type TournamentRules = Override<Tables<'tournament_rules'>, { tiebreakers: TiebreakerKey[] }>
 
 export type TournamentTeam = Override<Tables<'tournament_teams'>, { status: TournamentTeamStatus }>
 
@@ -900,6 +901,10 @@ export type TournamentDraft = {
   winByMargin: number
   pointCap: number | null
   setsToWin: number
+  /** Standings tiebreakers after wins, in order. */
+  tiebreakers: TiebreakerKey[]
+  /** Single elimination: play off third place (otherwise both semifinal losers share it). */
+  thirdPlaceMatch: boolean
 }
 
 // ─── Tournament Discussion ────────────────────────────────────────────────────
