@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { View, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
+import { View, TouchableOpacity, Alert } from 'react-native'
 import { Text, TextInput } from '../../components/ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
@@ -13,6 +13,7 @@ import { routes, toRoute } from '../../utils/routes'
 import { takeGuestReturnPath } from '../../utils/authGate'
 import { AgreementLine } from '../../components/legal/AgreementLine'
 import { TERMS_VERSION } from '../../constants/legal'
+import { Spinner } from '../../components/ui/Spinner'
 
 export default function Register() {
   const router = useRouter()
@@ -140,7 +141,7 @@ export default function Register() {
             }}
           >
             {socialLoading ? (
-              <ActivityIndicator size="small" color={theme.colors.subtext} />
+              <Spinner size="small" color={theme.colors.subtext} />
             ) : (
               <GoogleLogo size={18} />
             )}

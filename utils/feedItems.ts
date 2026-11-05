@@ -1,4 +1,5 @@
 import type { EventWithDetails, ExternalSession, Tag } from '../types'
+import { parseEventDate } from './eventDate'
 
 /**
  * The Events feed renders one list of `EventWithDetails`. Tournaments and
@@ -97,4 +98,14 @@ export function signupHost(url: string): string {
   } catch {
     return 'their site'
   }
+}
+
+/**
+ * Whether a feed item has finished by `nowMs`, so the feed can drop it.
+ * Its end is `event_date + duration_minutes`. Items without a duration (tournaments, outside
+ * sessions with no posted end) have no known end: they stay for the rest of their day.
+ */
+export function isFeedItemOver(event: Pick<EventWithDetails, 'event_date' | 'duration_minutes'>, nowMs: number): boolean {
+  if (!event.duration_minutes || event.duration_minutes <= 0) return false
+  return parseEventDate(event.event_date).getTime() + event.duration_minutes * 60_000 <= nowMs
 }

@@ -1,12 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react'
-import {
-  View,
-  ScrollView,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-} from 'react-native'
+import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native'
 import { Text, TextInput } from '../../../components/ui/Text'
 import { useRouter, Stack } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -21,6 +14,7 @@ import type { TournamentDraft, TournamentFormat, TournamentBracketType, Club } f
 import { TIEBREAKER_LABELS } from '../../../constants/tournamentCopy'
 import { DEFAULT_TIEBREAKERS } from '../../../lib/tournamentStandings'
 import { IconButton } from '../../../components/ui'
+import { Spinner } from '../../../components/ui/Spinner'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -670,7 +664,7 @@ function StepPreview({ draft, clubs, onSaveDraft, onPublish, saving }: {
           style={{ backgroundColor: theme.colors.primary, borderRadius: 14, padding: 16, alignItems: 'center' }}
         >
           {saving
-            ? <ActivityIndicator color={theme.colors.onPrimary} />
+            ? <Spinner color={theme.colors.onPrimary} />
             : <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.onPrimary }}>Publish Tournament</Text>
           }
         </TouchableOpacity>

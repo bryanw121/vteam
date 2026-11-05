@@ -15,6 +15,7 @@ const PROTECTED_ROUTES: string[] = [
   routes.notifications(),
   routes.settings(),
   routes.clubCreate(),
+  routes.scorekeeper(),
 ]
 
 export function isProtectedPath(pathname: string): boolean {
