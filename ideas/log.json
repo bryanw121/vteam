@@ -195,5 +195,29 @@
     "status": "approved",
     "summary": "Typed matrix of anon/stranger/owner access for all 51 tables (19 asserted today); unit test fails on a table without an entry; generated probes in the api e2e shard on beta.",
     "issue": 186
+  },
+  {
+    "date": "2026-11-06",
+    "n": 1,
+    "title": "\"I'm going\" on venue sessions: see who from vteam is going, get a reminder and a cancel notice",
+    "bucket": "new-feature",
+    "status": "proposed",
+    "summary": "external_session_going table (anon read, own insert for upcoming non-canceled sessions), get_external_going batch RPC, going row + toggle on ExternalSessionCard, public /session/[id] page, session_reminder via send_event_reminders and session_cancelled via trigger on the Schelagg ingest. Live: 46 upcoming venue sessions vs 0 vteam games. No points."
+  },
+  {
+    "date": "2026-11-06",
+    "n": 2,
+    "title": "Push notifications on the web: install on iPhone, one-tap enable, reminders that reach a phone",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "manifest + tiny sw.js, pushNotifications.web.ts with webPushState (needs-install/ask/on/blocked), Settings card with iPhone Add to Home Screen steps, push_tokens.web_keys, Web Push (VAPID) in send-notification-push/send-chat-push with 410 cleanup. Live has 0 push tokens and all usage is web."
+  },
+  {
+    "date": "2026-11-06",
+    "n": 3,
+    "title": "Host form in pieces: pure form logic, a save hook, and one transactional save_event RPC",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "Split app/(app)/host.tsx (1,114 lines, 16 useState, 15 supabase.from calls) into utils/hostForm.ts (tested), useHostForm/useHostContext/useSaveEvent and 7 section components; SECURITY INVOKER save_event RPC writes events + tags + waitlist promotion in one transaction, removing partial-save outcomes and an unchecked client-side promotion."
   }
 ]

@@ -1,0 +1,54 @@
+<html><head><link rel="stylesheet" href="base.css"><style>
+.srow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--borderSoft);font-size:15px}
+.srow:last-child{border-bottom:none}
+.lbl{font-size:13px;font-weight:700;color:var(--subS);margin-bottom:4px}
+.safari{height:64px;border-top:1px solid var(--borderSoft);display:flex;justify-content:space-around;align-items:center;color:#8aa8ff;font-size:20px;background:#17152a}
+.url{margin:0 18px 6px;background:#25223a;border-radius:10px;height:34px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--subS)}
+.step{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.4}
+.num{width:24px;height:24px;border-radius:50%;background:var(--primarySoft);color:var(--timeInk);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.ios{position:absolute;left:50px;right:50px;top:300px;background:rgba(40,38,55,.97);border-radius:14px;text-align:center;overflow:hidden;color:#fff}
+.ios p{padding:16px 16px 4px;font-weight:600;font-size:16px}.ios small{display:block;padding:0 16px 14px;font-size:13px;color:#c9c6dc}
+.ios .b{border-top:1px solid #4a4760;padding:11px;color:#6fa3ff;font-size:16px}
+.lock{background:linear-gradient(160deg,#2b1c5c,#0f0d1d 60%)}
+.clock{text-align:center;margin-top:40px;font-size:76px;font-weight:300;letter-spacing:-2px}
+.date{text-align:center;font-size:18px;color:#d9d4ff}
+.notif{margin:0 12px;background:rgba(60,56,84,.85);border-radius:18px;padding:12px 14px;display:flex;gap:10px}
+.appic{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#4FC3F7,#7C4DFF,#E040FB);flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+</style></head><body>
+<div class="col"><span class="tag">BEFORE · MOCK</span><div class="phone"><div class="status"><span>9:41</span><span class="dots">●●● ▮</span></div><div class="url">🔒 vteamvolleyball.com</div><div class="body">
+<span class="back">‹ Profile</span><h1>Notifications</h1>
+<div class="sub" style="line-height:1.45">Choose which updates you want, in the app and as push notifications on your phone.</div>
+<div class="card"><div class="lbl">Push on this phone</div>
+<div class="srow">Event reminders<span class="toggle on"></span></div><div class="srow">Cheers<span class="toggle on"></span></div><div class="srow">Waitlist<span class="toggle on"></span></div><div class="srow">Cancellations<span class="toggle on"></span></div></div>
+<div class="note"><b>These switches do nothing here.</b> All 51 recorded usage events (41 people) came from the web, and live has <b>0 push tokens</b>: push is native-only (utils/pushNotifications.ts returns early on web). Reminders, waitlist promotions and cancellations only reach someone who opens the inbox.</div>
+</div><div class="safari">‹ › ⬆ ▢ ⧉</div><span class="mock">MOCK</span></div>
+<div class="cap"><b>Today on iPhone Safari</b><span>settings/notifications.tsx shows native push toggles on web</span></div></div>
+
+<div class="col"><span class="tag after">AFTER · MOCK</span><div class="phone"><div class="status"><span>9:41</span><span class="dots">●●● ▮</span></div><div class="url">🔒 vteamvolleyball.com</div><div class="body">
+<span class="back">‹ Profile</span><h1>Notifications</h1>
+<div class="card" style="display:flex;flex-direction:column;gap:12px;border-color:var(--primary)"><h2>Get game reminders on this iPhone</h2>
+<div class="subS" style="line-height:1.45">iPhone only sends web notifications to apps on your Home Screen. It takes two taps and works like an app.</div>
+<div class="step"><span class="num">1</span><span>Tap <b>Share</b> <span style="color:#8aa8ff">⬆</span> in Safari's toolbar</span></div>
+<div class="step"><span class="num">2</span><span>Choose <b>Add to Home Screen</b>, then open vteam from there</span></div>
+<div class="step"><span class="num">3</span><span>Come back here and tap <b>Turn on notifications</b></span></div>
+<div class="sub">Not now? Your inbox still has everything.</div></div>
+<div class="card"><div class="lbl">In the app</div><div class="srow">Event reminders<span class="toggle on"></span></div><div class="srow">Cheers<span class="toggle on"></span></div></div>
+</div><div class="safari">‹ › <span style="outline:2px solid var(--primary);border-radius:8px;padding:0 6px">⬆</span> ▢ ⧉</div><span class="mock">MOCK</span></div>
+<div class="cap"><b>In a Safari tab: how to install, then enable</b><span>webPushState() = 'needs-install' (iOS, not standalone)</span></div></div>
+
+<div class="col"><span class="tag after">AFTER · MOCK</span><div class="phone"><div class="status"><span>9:43</span><span class="dots">●●● ▮</span></div><div class="body">
+<span class="back">‹ Profile</span><h1>Notifications</h1>
+<div class="card" style="display:flex;flex-direction:column;gap:12px"><h2>Push on this device</h2><div class="subS">Reminders before your games, waitlist spots, cancellations and messages.</div><div class="btn primary">Turn on notifications</div></div>
+<div class="card"><div class="lbl">Push on this device</div><div class="srow">Event reminders<span class="toggle dis"></span></div><div class="srow">Waitlist<span class="toggle dis"></span></div><div class="srow">Cancellations<span class="toggle dis"></span></div></div>
+<div class="sub" style="line-height:1.45">Desktop Chrome, Edge, Firefox, Safari and Android Chrome show the same button without the install steps.</div>
+</div><div class="dim" style="background:rgba(0,0,0,.35)"></div><div class="ios"><p>“vteam” Would Like to Send You Notifications</p><small>Notifications may include alerts, sounds, and icon badges.</small><div class="b">Don't Allow</div><div class="b" style="font-weight:600">Allow</div></div><span class="mock">MOCK</span></div>
+<div class="cap"><b>Installed: one tap, then the system prompt</b><span>requestPermission() only from the button press (Safari requires a gesture)</span></div></div>
+
+<div class="col"><span class="tag after">AFTER · MOCK</span><div class="phone lock"><div class="status"><span></span><span class="dots">●●● ▮</span></div>
+<div class="date">Thursday, November 12</div><div class="clock">5:00</div><div style="height:300px"></div>
+<div class="notif"><div class="appic">V</div><div style="flex:1"><div class="row" style="justify-content:space-between"><b style="font-size:14px">vteam</b><span style="font-size:12px;color:#c9c6dc">now</span></div><div style="font-size:14px;font-weight:600;margin-top:2px">Thursday Indoor 6s at 7:00 PM</div><div style="font-size:14px;color:#e2deff">Starts in 2 hours · Eastside Rec Gym</div></div></div>
+<div style="height:10px"></div>
+<div class="notif" style="opacity:.85"><div class="appic">V</div><div style="flex:1"><div class="row" style="justify-content:space-between"><b style="font-size:14px">vteam</b><span style="font-size:12px;color:#c9c6dc">2h ago</span></div><div style="font-size:14px;font-weight:600;margin-top:2px">You're off the waitlist</div><div style="font-size:14px;color:#e2deff">A spot opened in Sunday Sand 4s. Tap to see it.</div></div></div>
+<span class="mock">MOCK</span></div>
+<div class="cap"><b>The same rows that already go to the inbox</b><span>Tap opens data.deep_link through isAppPath (service worker → app)</span></div></div>
+</body></html>

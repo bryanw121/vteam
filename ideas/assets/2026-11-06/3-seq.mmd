@@ -1,0 +1,21 @@
+sequenceDiagram
+  participant App as App (useSaveEvent)
+  participant PR as PostgREST / RLS
+  participant F as save_event() (SECURITY INVOKER)
+  participant T as Triggers (capacity, material change, waitlist_promoted)
+  App->>PR: POST rpc/save_event {edit_id?, event, dates[], tag_ids[]}
+  PR->>F: run as authenticated (auth.uid())
+  F->>F: validate (title, duration, dates ≤ 52, price ≥ 0)
+  alt create
+    F->>PR: INSERT events (one row per date) [RLS: created_by = auth.uid()]
+  else edit
+    F->>PR: UPDATE events WHERE id = edit_id [RLS: creator only]
+    F->>T: material-change trigger notifies attendees (unchanged)
+  end
+  F->>PR: event_tags: delete removed, insert added (same transaction)
+  opt edit raised max_attendees
+    F->>PR: UPDATE event_attendees SET status='attending'<br/>oldest waitlisted, FOR UPDATE, up to new spots
+    PR->>T: notify_on_waitlist_promoted (unchanged)
+  end
+  F-->>App: {event_ids[]} — or error: nothing was written
+  App->>App: invalidate feed / club / event(id) / templates

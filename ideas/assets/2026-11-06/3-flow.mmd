@@ -1,0 +1,19 @@
+flowchart LR
+  subgraph B["Before: app/(app)/host.tsx · 1,114 lines"]
+    direction TB
+    S1["16 useState + 2 useEffect<br/>form, recurrence, tags, club,<br/>template, modal, outcome"]
+    S2["handleSubmit ≈ 190 lines<br/>events update/insert<br/>event_tags add/remove + manual rollback<br/>waitlist promote: read → count → update<br/>(errors ignored)<br/>template insert"]
+    S3["15 inline form sections<br/>(type, title, location, date, duration,<br/>players, levels, description, price,<br/>surface, approval, repeat, club, template, submit)"]
+    S4["hostStyles: 8 local styles"]
+  end
+  subgraph A["After: same screen, ~250 lines"]
+    direction TB
+    U["utils/hostForm.ts (pure, unit-tested)<br/>formFromEvent · validateHostForm<br/>toEventPayload · eventDates"]
+    H1["hooks/host/useHostForm.ts<br/>state + setField + recurrence"]
+    H2["hooks/host/useSaveEvent.ts<br/>useMutation → rpc save_event<br/>invalidates feed · club · event · templates"]
+    C["components/host/*Section.tsx<br/>Basics · Players · Price · Options<br/>Repeat · Club · SaveTemplate"]
+    R["save_event(...) RPC<br/>one transaction, SECURITY INVOKER (RLS applies)<br/>events + event_tags + waitlist promotion"]
+    U --> H1 --> H2 --> R
+    H1 --> C
+  end
+  B -. "4 small PRs, tests first" .-> A

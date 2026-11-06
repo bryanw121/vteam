@@ -1,0 +1,23 @@
+sequenceDiagram
+  participant U as Player (iPhone Home Screen app / desktop browser)
+  participant App as App (pushNotifications.web.ts)
+  participant SW as Service worker (public/sw.js)
+  participant PR as PostgREST / RLS
+  participant DB as Postgres (notifications trigger)
+  participant Edge as send-notification-push / send-chat-push
+  participant PS as Browser push service (Apple / FCM / Mozilla)
+  U->>App: tap "Turn on notifications"
+  App->>U: Notification.requestPermission() (from the tap)
+  App->>SW: register('/sw.js'), pushManager.subscribe(VAPID public key)
+  SW-->>App: {endpoint, keys.p256dh, keys.auth}
+  App->>PR: upsert push_tokens {token: endpoint, platform: 'web', web_keys}
+  PR->>PR: RLS "Users manage own push tokens" (user_id = auth.uid())
+  DB->>Edge: Database Webhook on notifications INSERT (unchanged)
+  Edge->>Edge: honour notification_prefs.push.type, split tokens: expo vs web
+  Edge->>PS: POST endpoint (VAPID JWT, aes128gcm payload: title, body, deep_link)
+  PS-->>Edge: 201, or 404/410 gone
+  Edge->>DB: delete push_tokens row on 404/410
+  PS->>SW: push event → showNotification()
+  U->>SW: tap notification
+  SW->>App: focus/open window, postMessage {deep_link}
+  App->>App: isAppPath(deep_link) → router.push(toRoute(deep_link))

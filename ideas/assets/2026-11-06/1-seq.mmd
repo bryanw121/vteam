@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant App
+  participant PR as PostgREST / RLS
+  participant DB as Postgres (tables + triggers)
+  participant Cron as pg_cron
+  participant Feed as Schelagg feed (public JSON)
+  participant Edge as send-notification-push
+  App->>PR: POST rpc/get_external_going({session_ids}) (anon or user)
+  PR->>DB: count + 3 previews per session, viewer's own flag
+  DB-->>App: [{session_id, going_count, previews[], me}]
+  App->>PR: INSERT external_session_going {session_id} (user)
+  PR->>DB: RLS: user_id = auth.uid() AND session upcoming, not canceled
+  Cron->>DB: send_event_reminders() every 10 min (extended)
+  DB->>DB: going rows starting within reminder_lead_minutes, reminded_at is null
+  DB->>DB: INSERT notifications session_reminder (deep_link /session/<id>), set reminded_at
+  DB->>Edge: Database Webhook on notifications INSERT (live only)
+  Cron->>Feed: ingest_schelagg_feed() hourly :25
+  Feed-->>DB: upsert / delete upcoming rows
+  DB->>DB: BEFORE DELETE / UPDATE OF canceled trigger on external_sessions: session_cancelled to going players

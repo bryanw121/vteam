@@ -1,0 +1,56 @@
+<html><head><link rel="stylesheet" href="base.css"><style>
+.ext{display:flex;gap:12px;background:var(--card);border-radius:16px;padding:14px;border:1px solid var(--borderSoft)}
+.dcol{width:44px;text-align:center;flex:none}.dcol .d{font-size:11px;font-weight:700;letter-spacing:.08em}.dcol .n{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700}
+.kick{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);font-weight:600}
+.ttl{font-size:16px;font-weight:700;margin:6px 0 2px}.meta{font-size:13px;color:var(--subS)}
+.su{margin-top:8px;font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center}
+.going{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--borderSoft)}
+.gbtn{border:1px solid var(--primary);color:var(--text);background:var(--primarySoft);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600}
+.gbtn.off{background:transparent;border-color:var(--border);color:var(--subS)}
+.inbox{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--borderSoft)}
+.ic{width:36px;height:36px;border-radius:50%;background:var(--primarySoft);display:flex;align-items:center;justify-content:center;flex:none;font-size:16px}
+.person{display:flex;align-items:center;gap:10px;padding:7px 0}
+.person .av{width:34px;height:34px;margin:0;font-size:12px}
+</style></head><body>
+<div class="col"><span class="tag">BEFORE · MOCK</span><div class="phone"><div class="status"><span>6:42</span><span class="dots">●●● ▮</span></div><div class="body">
+<h1>Events</h1><div class="row" style="gap:8px"><span class="chipc on">All</span><span class="chipc">Mine</span><span class="chipc">Indoor</span><span class="chipc">Sand</span></div>
+<div class="sub" style="font-weight:600;color:var(--subS)">Thursday, Nov 12</div>
+<div class="ext"><div class="dcol" style="color:var(--accent)"><div class="d">THU</div><div class="n">12</div></div><div style="flex:1"><div class="row" style="justify-content:space-between"><span class="kick">Indoor · Open play</span><span class="pill">◷ 7:00–9:30 PM</span></div><div class="ttl">Coed Open Play</div><div class="meta">Eastside Rec Gym</div><div class="meta">Intermediate+ · $12</div><div class="su">Sign up on eastsiderec.example ↗</div></div></div>
+<div class="ext"><div class="dcol" style="color:var(--warm)"><div class="d">SAT</div><div class="n">14</div></div><div style="flex:1"><div class="row" style="justify-content:space-between"><span class="kick">Sand · Doubles</span><span class="pill">◷ 9:00–11 AM</span></div><div class="ttl">Saturday Sand Doubles</div><div class="meta">Lakeline Sand Courts</div><div class="meta">All levels · $8</div><div class="su">Sign up on lakelinesand.example ↗</div></div></div>
+<div class="note"><b>A dead end for the club.</b> 46 upcoming venue sessions fill the feed (0 vteam games right now), but tapping one just leaves the app. Nobody can see who else is going, and vteam can't remind you or tell you it was canceled.</div>
+</div><div class="tabbar"><span class="on">Events</span><span>Clubs</span><span>Chat</span><span>Profile</span></div><span class="mock">MOCK</span></div>
+<div class="cap"><b>Today: venue sessions are link-outs</b><span>components/ExternalSessionCard.tsx (whole card opens signup_url)</span></div></div>
+
+<div class="col"><span class="tag after">AFTER · MOCK</span><div class="phone"><div class="status"><span>6:42</span><span class="dots">●●● ▮</span></div><div class="body">
+<h1>Events</h1><div class="row" style="gap:8px"><span class="chipc on">All</span><span class="chipc">Mine</span><span class="chipc">Indoor</span><span class="chipc">Sand</span></div>
+<div class="sub" style="font-weight:600;color:var(--subS)">Thursday, Nov 12</div>
+<div class="ext" style="flex-direction:column;gap:0"><div class="row" style="align-items:flex-start;gap:12px"><div class="dcol" style="color:var(--accent)"><div class="d">THU</div><div class="n">12</div></div><div style="flex:1"><div class="row" style="justify-content:space-between"><span class="kick">Indoor · Open play</span><span class="pill">◷ 7:00–9:30 PM</span></div><div class="ttl">Coed Open Play</div><div class="meta">Eastside Rec Gym</div><div class="meta">Intermediate+ · $12</div><div class="su">Sign up on eastsiderec.example ↗</div></div></div>
+<div class="going"><div class="row" style="gap:8px"><span><span class="av" style="background:#7C4DFF">MC</span><span class="av" style="background:#00a98f">JR</span><span class="av" style="background:#d4572f">AL</span></span><span class="subS">Maya, Jon +1 going</span></div><span class="gbtn">✓ Going</span></div></div>
+<div class="ext" style="flex-direction:column;gap:0"><div class="row" style="align-items:flex-start;gap:12px"><div class="dcol" style="color:var(--warm)"><div class="d">SAT</div><div class="n">14</div></div><div style="flex:1"><div class="row" style="justify-content:space-between"><span class="kick">Sand · Doubles</span><span class="pill">◷ 9:00–11 AM</span></div><div class="ttl">Saturday Sand Doubles</div><div class="meta">Lakeline Sand Courts</div><div class="meta">All levels · $8</div><div class="su">Sign up on lakelinesand.example ↗</div></div></div>
+<div class="going"><span class="sub">No one from vteam yet</span><span class="gbtn off">I'm going</span></div></div>
+</div><div class="tabbar"><span class="on">Events</span><span>Clubs</span><span>Chat</span><span>Profile</span></div><span class="mock">MOCK</span></div>
+<div class="cap"><b>Feed card: who's going + one-tap "I'm going"</b><span>Card body opens the session page; the sign-up row still links out</span></div></div>
+
+<div class="col"><span class="tag after">AFTER · MOCK</span><div class="phone"><div class="status"><span>6:43</span><span class="dots">●●● ▮</span></div><div class="body">
+<span class="back">‹ Events</span><span class="kick">Indoor · Open play · at a venue</span><h1>Coed Open Play</h1>
+<div class="card" style="display:flex;flex-direction:column;gap:6px"><div style="font-weight:600">Thursday, November 12</div><span class="pill" style="align-self:flex-start">◷ 7:00 PM – 9:30 PM</span><div class="subS">📍 Eastside Rec Gym · Indoor</div><div class="subS">Intermediate+ · $12 at the door</div></div>
+<div class="btn primary">Sign up on eastsiderec.example ↗</div>
+<div class="btn ghost" style="border-color:var(--primary);background:var(--primarySoft)">✓ You're going · Undo</div>
+<div class="sub" style="line-height:1.45">"Going" tells the club you'll be there. It doesn't save you a spot: sign up with the venue too.</div>
+<div class="card"><h2 style="margin-bottom:6px">Going from vteam · 4</h2>
+<div class="person"><span class="av" style="background:#7C4DFF">MC</span><div><div>Maya Chen</div><div class="sub">Setter</div></div></div>
+<div class="person"><span class="av" style="background:#00a98f">JR</span><div><div>Jon Reyes</div><div class="sub">Outside Hitter</div></div></div>
+<div class="person"><span class="av" style="background:#d4572f">AL</span><div><div>Ana Lopez</div><div class="sub">Libero</div></div></div>
+<div class="person"><span class="av" style="background:#3a64c8">YO</span><div><div>You</div></div></div></div>
+</div><span class="mock">MOCK</span></div>
+<div class="cap"><b>Session page (public, shareable)</b><span>new app/(app)/session/[id].tsx · routes.externalSession(id)</span></div></div>
+
+<div class="col"><span class="tag after">AFTER · MOCK</span><div class="phone"><div class="status"><span>5:00</span><span class="dots">●●● ▮</span></div><div class="body">
+<span class="back">‹ Back</span><h1>Notifications</h1>
+<div class="inbox"><div class="ic">⏰</div><div><div style="font-weight:600;font-size:15px">Coed Open Play at 7:00 PM</div><div class="subS" style="margin-top:2px">Starts in 2 hours · Eastside Rec Gym. Maya and 2 others are going. Signed up with the venue?</div><div class="sub" style="margin-top:4px">5:00 PM</div></div></div>
+<div class="inbox"><div class="ic" style="background:#3a1616">✕</div><div><div style="font-weight:600;font-size:15px">Saturday Sand Doubles was canceled</div><div class="subS" style="margin-top:2px">Lakeline Sand Courts took it off their schedule. You'd said you were going.</div><div class="sub" style="margin-top:4px">Yesterday</div></div></div>
+<div class="inbox"><div class="ic">👋</div><div><div style="font-weight:600;font-size:15px">Jon is going to Coed Open Play too</div><div class="subS" style="margin-top:2px">Thu 7:00 PM · Eastside Rec Gym</div><div class="sub" style="margin-top:4px">Tue</div></div></div>
+<div class="card" style="margin-top:6px"><h2 style="font-size:15px">Notes</h2><div class="sub" style="line-height:1.5;margin-top:4px">Reminder uses your lead time (Settings → Notifications → Reminders). Cancel notice fires when the hourly Schelagg ingest marks the session canceled or drops it. "Also going" is opt-in, off by default, once per session. No points: vteam can't see who showed up.</div></div>
+</div><span class="mock">MOCK</span></div>
+<div class="cap"><b>Reminder and cancel notice</b><span>session_reminder / session_cancelled rows; push via send-notification-push</span></div></div>
+</body></html>
