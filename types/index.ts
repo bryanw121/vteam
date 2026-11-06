@@ -365,6 +365,14 @@ export type FeedSnapshot = {
   months: Record<string, EventWithDetails[]>
 }
 
+/** Last visit's per-viewer reads kept on the device (lib/querySnapshot): cache key → data. */
+export type QuerySnapshot = {
+  v: 1
+  savedAt: number
+  owner: string | null
+  entries: Record<string, unknown>
+}
+
 /** Row of `external_sessions`: a session another Austin venue or group runs, pulled hourly from the Schelagg feed (ingest_schelagg_feed). */
 export type ExternalSession = Pick<
   Override<Tables<'external_sessions'>, { surface: 'indoor' | 'sand' | 'grass' | null }>,
