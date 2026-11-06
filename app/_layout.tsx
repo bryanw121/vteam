@@ -31,8 +31,11 @@ import { registerPushToken, subscribeToPushTaps } from '../utils/pushNotificatio
 import { useMinVersion } from '../hooks/useMinVersion'
 import { useCacheUserScope } from '../hooks/useCacheUserScope'
 import { UpdateRequiredScreen } from '../components/UpdateRequiredScreen'
+import { startQuerySnapshot } from '../lib/querySnapshot'
 
 initSentry()
+// Last visit's profile / settings / chat list into the cache before the first render (web).
+startQuerySnapshot()
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const AVATARS_BUCKET = 'avatars'
