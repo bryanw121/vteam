@@ -210,8 +210,10 @@
     "n": 2,
     "title": "Push notifications on the web: install on iPhone, one-tap enable, reminders that reach a phone",
     "bucket": "end-user-experience",
-    "status": "proposed",
-    "summary": "manifest + tiny sw.js, pushNotifications.web.ts with webPushState (needs-install/ask/on/blocked), Settings card with iPhone Add to Home Screen steps, push_tokens.web_keys, Web Push (VAPID) in send-notification-push/send-chat-push with 410 cleanup. Live has 0 push tokens and all usage is web."
+    "status": "approved",
+    "summary": "manifest + tiny sw.js, pushNotifications.web.ts with webPushState (needs-install/ask/on/blocked), Settings card with iPhone Add to Home Screen steps, push_tokens.web_keys, Web Push (VAPID) in send-notification-push/send-chat-push with 410 cleanup. Live has 0 push tokens and all usage is web.",
+    "issue": 189,
+    "note": "Bryan asked why install steps were included; kept after explaining iPhone Safari only allows web push for Home Screen web apps."
   },
   {
     "date": "2026-11-06",
