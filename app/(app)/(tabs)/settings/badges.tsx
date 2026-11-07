@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
+  Animated,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,13 +11,6 @@ import {
 } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-} from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFocusRefetch } from '../../../../lib/query'
@@ -53,31 +48,32 @@ export default function BadgesScreen() {
   const [detailDef, setDetailDef] = useState<BadgeDef | null>(null)
   const [detailMounted, setDetailMounted] = useState(false)
   const [listRefreshing, setListRefreshing] = useState(false)
-  const detailProgress = useSharedValue(0)
+  // Core Animated rather than Reanimated: keeps Reanimated out of the web
+  // entry chunk, where only the lazily loaded event screen needs it (#193).
+  const detailProgress = useRef(new Animated.Value(0)).current
+  const useNativeDriver = Platform.OS !== 'web'
 
-  const detailTranslateStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: (1 - detailProgress.value) * 400 }],
-  }))
-  const detailBackdropStyle = useAnimatedStyle(() => ({
-    opacity: detailProgress.value,
-  }))
+  const detailTranslateStyle = {
+    transform: [{ translateY: detailProgress.interpolate({ inputRange: [0, 1], outputRange: [400, 0] }) }],
+  }
+  const detailBackdropStyle = { opacity: detailProgress }
 
   function openDetail(def: BadgeDef) {
     setDetailDef(def)
     setDetailMounted(true)
-    detailProgress.value = 0
-    detailProgress.value = withTiming(1, { duration: 280 })
+    detailProgress.setValue(0)
+    Animated.timing(detailProgress, { toValue: 1, duration: 280, useNativeDriver }).start()
   }
 
   function closeDetail() {
-    detailProgress.value = withTiming(0, { duration: 220 }, (finished) => {
-      'worklet'
+    Animated.timing(detailProgress, { toValue: 0, duration: 220, useNativeDriver }).start(({ finished }) => {
       if (finished) {
-        runOnJS(setDetailMounted)(false)
-        runOnJS(setDetailDef)(null)
+        setDetailMounted(false)
+        setDetailDef(null)
       }
     })
   }
+
 
   // Both lists refetch on focus only when stale (badges are written server-side, rarely).
   useFocusRefetch(userId ? badgesKey(userId) : null)
@@ -231,7 +227,7 @@ type BadgeDetailPanelProps = {
   badge: UserBadge | null
   onClose: () => void
   bottomInset: number
-  animStyle: ReturnType<typeof useAnimatedStyle>
+  animStyle: { transform: { translateY: Animated.AnimatedInterpolation<number> }[] }
 }
 
 function BadgeDetailPanel({ def, badge, onClose, bottomInset, animStyle }: BadgeDetailPanelProps) {

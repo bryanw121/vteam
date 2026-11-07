@@ -1,3 +1,4 @@
+import { EVENT_TIME_ZONE } from '../constants/time'
 import { COURT_GRID_START_MIN, COURT_MIN_FREE_MIN, COURTS_OLD_AFTER_MS } from '../constants/schelagg'
 import type {
   AustinNow, CourtsData, CourtsFacility, CourtsVenue, DayOption, FacilityDay, HHMMRange, MinuteRange,
@@ -10,7 +11,7 @@ import type {
  * reads the same whatever time zone the device is in.
  */
 
-export const AUSTIN_TZ = 'America/Chicago'
+export const AUSTIN_TZ = EVENT_TIME_ZONE
 const DAY_MIN = 24 * 60
 
 /** "07:30" → 450; "24:00" → 1440. NaN for anything else. */

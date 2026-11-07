@@ -384,5 +384,34 @@
       "aria-progressbar-name": 2,
       "color-contrast": 11
     }
+  },
+  "welcome-position": {
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "welcome-level": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "welcome-city": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "event-people-balanced": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 7
+    }
   }
 }

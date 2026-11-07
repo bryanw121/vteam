@@ -24,4 +24,14 @@ export const ANALYTICS_EVENTS = {
   leaveConfirmed: 'leave_confirmed',
   /** Stay in / Esc / back / scrim. */
   leaveCancelled: 'leave_cancelled',
+  /** Player setup (#156) opened after sign-in. */
+  playerSetupShown: 'player_setup_shown',
+  /** Next on a step. props: { step: 'position' | 'level' | 'city' } */
+  playerSetupStepDone: 'player_setup_step_done',
+  /** Skip. props: { step } (the step it was on) */
+  playerSetupSkipped: 'player_setup_skipped',
+  /** Done on the last step. */
+  playerSetupCompleted: 'player_setup_completed',
+  /** The Events feed's first rows were in hand (#184). props: { ms (since navigation start), source: snapshot | prefetch | fetch, cold } */
+  feedFirstPaint: 'feed_first_paint',
 } as const

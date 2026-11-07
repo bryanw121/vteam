@@ -15,6 +15,7 @@ import { shared, theme, LOCATIONS } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
 import type { EventData, EventPaymentsApi } from '../../types'
 import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, profileAvatarSmallUri } from '../../utils'
+import { profilePrefetchProps } from '../../hooks/useUserProfile'
 
 function formatEndTime(startIso: string, durationMinutes: number): string {
   const normalized = /[Z+]/.test(startIso) ? startIso : startIso + 'Z'
@@ -192,7 +193,7 @@ export function DetailsTab({
                   border={h.border}
                   label={h.label}
                   isMe={h.isMe}
-                  onPress={() => onOpenProfile(h.id)}
+                  onPress={() => onOpenProfile(h.id)} {...profilePrefetchProps(h.id)}
                   onMessage={() => onMessageHost(h.id)}
                 />
               </View>
