@@ -13,6 +13,9 @@ import {
   STALE,
 } from '../constants'
 import { supabase } from '../lib/supabase'
+import { feedPrefetchAge, takeFeedPrefetch } from '../lib/feedPrefetch'
+import { track } from '../lib/analytics'
+import { ANALYTICS_EVENTS } from '../constants/analytics'
 import { getSessionUser } from '../lib/sessionUser'
 import {
   getQueryData,
@@ -93,9 +96,26 @@ export function __resetFeedState(): void {
  * if someone else turns out to be signed in, the owner check in the hook resets
  * the feed before their RSVP state could show.
  */
+/**
+ * feed_first_paint (#184): when the first feed rows were in hand, and from
+ * where. `ms` is since navigation start; `cold` marks a server that took over
+ * 1 s (prefetch: since the <head> request started). Once per page load.
+ */
+let firstPaintTracked = false
+function trackFirstPaint(source: 'snapshot' | 'prefetch' | 'fetch', startedAt?: number): void {
+  if (firstPaintTracked || typeof performance === 'undefined') return
+  firstPaintTracked = true
+  const ms = Math.round(performance.now())
+  const prefetchAt = feedPrefetchAge()
+  const serverMs = source === 'prefetch' && prefetchAt !== null ? Date.now() - prefetchAt
+    : startedAt !== undefined ? Date.now() - startedAt : null
+  track(ANALYTICS_EVENTS.feedFirstPaint, { ms, source, cold: serverMs !== null && serverMs > 1000 })
+}
+
 function seedFromSnapshot(): void {
   const snap = readFeedSnapshot()
   if (!snap) return
+  trackFirstPaint('snapshot')
   const months = Object.keys(snap.months).sort()
   months.forEach(m => setQueryData(feedMonthKey(m), snap.months[m]))
   invalidate(FEED_PREFIX, { refetchActive: false })
@@ -170,7 +190,31 @@ function bucketFeed(
  * caller then runs the three queries); latches it off for the session when the
  * error says it will keep failing.
  */
+/**
+ * The request app/+html.tsx started from the page's <head> for this span and
+ * viewer (#184), if any: its rows, or null to fetch as usual (no match, too
+ * old, or it failed: a failed prefetch never shows an error).
+ */
+async function adoptFeedPrefetch(rangeStart: string, rangeEnd: string): Promise<unknown | null> {
+  const pending = takeFeedPrefetch(rangeStart, rangeEnd)
+  if (!pending) return null
+  try {
+    return await pending
+  } catch {
+    return null
+  }
+}
+
 async function fetchFeedSpanRpc(rangeStart: string, rangeEnd: string, externalSince: string): Promise<FeedSpanRows | null> {
+  const prefetched = await adoptFeedPrefetch(rangeStart, rangeEnd)
+  if (prefetched !== null) {
+    const rows = parseFeedSpan(prefetched)
+    if (rows) {
+      trackFirstPaint('prefetch')
+      return rows
+    }
+  }
+  const startedAt = Date.now()
   const { data, error } = await supabase.rpc('get_feed_span', {
     p_start: rangeStart,
     p_end: rangeEnd,
@@ -182,6 +226,7 @@ async function fetchFeedSpanRpc(rangeStart: string, rangeEnd: string, externalSi
     return null
   }
   const rows = parseFeedSpan(data)
+  if (rows) trackFirstPaint('fetch', startedAt)
   if (!rows) {
     feedRpcEnabled = false
     console.warn('[useMonthEvents] get_feed_span returned an unexpected shape, using separate queries')
