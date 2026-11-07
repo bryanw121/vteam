@@ -1,76 +1,46 @@
-import React, { useCallback, useState } from 'react'
+import React, { useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { useFocusEffect } from 'expo-router'
-import { supabase } from '../../../../lib/supabase'
+import { useFocusRefetch } from '../../../../lib/query'
+import { useSession } from '../../../../contexts/session'
+import { cheersSummaryKey, useCheersSummary } from '../../../../hooks/useCheersSummary'
+import { ScreenState } from '../../../../components/ui'
+import { CHEERS_LOAD_ERROR } from '../../../../constants/copy'
 import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { shared, theme, CHEER_TYPES } from '../../../../constants'
 import { CheerRadarChart } from '../../../../components/CheerRadarChart'
-import type { CheerType } from '../../../../types'
-import { Spinner } from '../../../../components/ui/Spinner'
 
 export default function ProfileCheersScreen() {
   useStackBackTitle('Cheers')
 
-  const [loading, setLoading] = useState(true)
-  const [totalReceived, setTotalReceived] = useState(0)
-  const [counts, setCounts] = useState<Partial<Record<CheerType, number>>>({})
-  const [totalGiven, setTotalGiven] = useState(0)
+  const { userId } = useSession()
+  const summary = useCheersSummary()
+  // Refetch on focus only when stale (it used to reload on every visit).
+  useFocusRefetch(cheersSummaryKey(userId))
   const [refreshing, setRefreshing] = useState(false)
-
-  async function loadCheerData() {
-    const { data: { session } } = await supabase.auth.getSession()
-    const userId = session?.user?.id
-    if (!userId) return
-
-    const [receivedRes, givenRes] = await Promise.all([
-      supabase.from('cheers').select('cheer_type').eq('receiver_id', userId),
-      supabase.from('cheers').select('id', { count: 'exact', head: true }).eq('giver_id', userId),
-    ])
-
-    const rows = (receivedRes.data ?? []) as { cheer_type: CheerType }[]
-    const c: Partial<Record<CheerType, number>> = {}
-    for (const row of rows) c[row.cheer_type] = (c[row.cheer_type] ?? 0) + 1
-
-    setTotalReceived(rows.length)
-    setCounts(c)
-    setTotalGiven(givenRes.count ?? 0)
-  }
-
-  useFocusEffect(
-    useCallback(() => {
-      void (async () => {
-        setLoading(true)
-        try {
-          await loadCheerData()
-        } finally {
-          setLoading(false)
-        }
-      })()
-    }, []),
-  )
+  const totalReceived = summary.data?.totalReceived ?? 0
+  const totalGiven = summary.data?.totalGiven ?? 0
+  const counts = summary.data?.counts ?? {}
 
   async function handleRefresh() {
     setRefreshing(true)
     try {
-      await loadCheerData()
+      await summary.refetch({ force: true })
     } finally {
       setRefreshing(false)
     }
   }
 
-  if (loading) {
-    return (
-      <View style={[shared.screen, shared.centered]}>
-        <Spinner color={theme.colors.primary} />
-      </View>
-    )
-  }
-
   return (
     <View style={shared.screen}>
+      <ScreenState
+        loading={summary.isLoading}
+        ready={summary.data !== undefined}
+        error={summary.error ? CHEERS_LOAD_ERROR : null}
+        onRetry={() => void summary.refetch({ force: true })}
+      >
       <ScrollView
         contentContainerStyle={shared.scrollContentSubpage}
         refreshControl={
@@ -112,6 +82,7 @@ export default function ProfileCheersScreen() {
         )}
 
       </ScrollView>
+      </ScreenState>
     </View>
   )
 }
