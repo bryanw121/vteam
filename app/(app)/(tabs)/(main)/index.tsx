@@ -1023,45 +1023,64 @@ function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPre
 
   return (
     <View>
-      {/* ‹ Month › : which month the strip is on, with arrows to step a week at a time. */}
-      <View style={weekNavStyles.row}>
-        <IconButton icon="chevron-back" label="Previous week" onPress={() => stepWeek(-1)} testID="week-prev" />
-        <Text
-          testID="week-month-label"
-          accessibilityRole="header"
-          accessibilityLiveRegion="polite"
-          numberOfLines={1}
-          style={weekNavStyles.month}
-        >
-          {monthLabel}
-        </Text>
-        <IconButton icon="chevron-forward" label="Next week" onPress={() => stepWeek(1)} testID="week-next" />
-      </View>
-      <View
-        style={{ overflow: 'hidden' }}
-        onLayout={e => {
-          const w = e.nativeEvent.layout.width
-          widthRef.current = w
-          if (w !== width) { setWidth(w); translateX.setValue(-w) }
-        }}
-        {...panResponder.panHandlers}
+      {/* Which month the strip is on. */}
+      <Text
+        testID="week-month-label"
+        accessibilityRole="header"
+        accessibilityLiveRegion="polite"
+        numberOfLines={1}
+        style={weekNavStyles.month}
       >
-        {width > 0 && (
-          <Animated.View style={{ flexDirection: 'row', width: width * 3, transform: [{ translateX }] }}>
-            {([-1, 0, 1] as const).map(offset => (
-              <View key={offset} style={{ width, paddingHorizontal: theme.spacing.lg }}>
-                <WeekStripContent
-                  weekDays={getWeekDays(weekForIdx(curWeekPage + offset))}
-                  selectedDate={selectedDate}
-                  markedDates={markedDates}
-                  onSelectDate={onSelectDate}
-                  onPrevWeek={snapToPrev}
-                  onNextWeek={snapToNext}
-                />
-              </View>
-            ))}
-          </Animated.View>
-        )}
+        {monthLabel}
+      </Text>
+      {/* ‹ days › : arrows either side of the week step it a week at a time. */}
+      <View style={weekNavStyles.row}>
+        <TouchableOpacity
+          testID="week-prev"
+          onPress={() => stepWeek(-1)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+          accessibilityRole="button"
+          accessibilityLabel="Previous week"
+          style={weekNavStyles.arrow}
+        >
+          <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
+        <View
+          style={{ flex: 1, overflow: 'hidden' }}
+          onLayout={e => {
+            const w = e.nativeEvent.layout.width
+            widthRef.current = w
+            if (w !== width) { setWidth(w); translateX.setValue(-w) }
+          }}
+          {...panResponder.panHandlers}
+        >
+          {width > 0 && (
+            <Animated.View style={{ flexDirection: 'row', width: width * 3, transform: [{ translateX }] }}>
+              {([-1, 0, 1] as const).map(offset => (
+                <View key={offset} style={{ width }}>
+                  <WeekStripContent
+                    weekDays={getWeekDays(weekForIdx(curWeekPage + offset))}
+                    selectedDate={selectedDate}
+                    markedDates={markedDates}
+                    onSelectDate={onSelectDate}
+                    onPrevWeek={snapToPrev}
+                    onNextWeek={snapToNext}
+                  />
+                </View>
+              ))}
+            </Animated.View>
+          )}
+        </View>
+        <TouchableOpacity
+          testID="week-next"
+          onPress={() => stepWeek(1)}
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Next week"
+          style={weekNavStyles.arrow}
+        >
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
       </View>
     </View>
   )
@@ -1071,13 +1090,20 @@ const weekNavStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.xs,
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  arrow: {
+    width: 32,
+    height: 44,
+    borderRadius: theme.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   month: {
-    flex: 1,
     textAlign: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xs,
     fontFamily: theme.fonts.display,
     fontSize: theme.font.size.lg,
     color: theme.colors.text,
