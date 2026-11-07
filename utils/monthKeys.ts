@@ -66,3 +66,21 @@ export function shouldRefreshEventsOnFocus(
 ): boolean {
   return blurredAtMs != null && nowMs - blurredAtMs >= minBlurMs
 }
+
+/**
+ * Month label for a week that starts on `weekStart` (local midnight):
+ * "November 2026", or "Nov – Dec 2026" / "Dec 2026 – Jan 2027" when the week
+ * straddles two months.
+ */
+export function weekMonthLabel(weekStart: Date): string {
+  const end = new Date(weekStart)
+  end.setDate(weekStart.getDate() + 6)
+  if (end.getMonth() === weekStart.getMonth()) {
+    return weekStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  }
+  const short = (d: Date) => d.toLocaleDateString('en-US', { month: 'short' })
+  if (end.getFullYear() === weekStart.getFullYear()) {
+    return `${short(weekStart)} – ${short(end)} ${end.getFullYear()}`
+  }
+  return `${short(weekStart)} ${weekStart.getFullYear()} – ${short(end)} ${end.getFullYear()}`
+}

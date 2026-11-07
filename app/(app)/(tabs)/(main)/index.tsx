@@ -33,7 +33,7 @@ import { useSession } from '../../../../contexts/session'
 import { useTextScale } from '../../../../contexts/textScale'
 import { useRequireSignIn } from '../../../../hooks/useRequireSignIn'
 import { SignInButton } from '../../../../components/SignInButton'
-import { addMonths } from '../../../../utils/monthKeys'
+import { addMonths, weekMonthLabel } from '../../../../utils/monthKeys'
 import { routes, isAppPath, toRoute } from '../../../../utils/routes'
 import { eventLocalDateKey, localDateKey, surfaceOf } from '../../../../utils'
 import { useAdsEnabled } from '../../../../hooks/useAdsEnabled'
@@ -305,6 +305,7 @@ export default function EventsScreen() {
 
   const goPrevWeek  = useCallback(() => setCurWeekPage(p => p - 1), [])
   const goNextWeek  = useCallback(() => setCurWeekPage(p => p + 1), [])
+  const goToday     = useCallback(() => selectDate(TODAY), [selectDate])
   const goPrevMonth = useCallback(() => setCurMonthPage(p => p - 1), [])
   const goNextMonth = useCallback(() => setCurMonthPage(p => p + 1), [])
 
@@ -587,6 +588,7 @@ export default function EventsScreen() {
             onSelectDate={selectDate}
             onPrevWeek={goPrevWeek}
             onNextWeek={goNextWeek}
+            onToday={goToday}
           />
         </TourTarget>
 
@@ -962,9 +964,10 @@ type WeekPagerProps = {
   onSelectDate: (date: string) => void
   onPrevWeek: () => void
   onNextWeek: () => void
+  onToday: () => void
 }
 
-function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPrevWeek, onNextWeek }: WeekPagerProps) {
+function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPrevWeek, onNextWeek, onToday }: WeekPagerProps) {
   const [width, setWidth] = useState(0)
   const widthRef = useRef(0)
   const translateX = useRef(new Animated.Value(0)).current
@@ -982,35 +985,98 @@ function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPre
     if (widthRef.current > 0) translateX.setValue(-widthRef.current)
   }, [curWeekPage])
 
+  const monthLabel = weekMonthLabel(weekForIdx(curWeekPage))
+  const onThisWeek = curWeekPage === WEEK_CENTER
+
   return (
-    <View
-      style={{ overflow: 'hidden' }}
-      onLayout={e => {
-        const w = e.nativeEvent.layout.width
-        widthRef.current = w
-        if (w !== width) { setWidth(w); translateX.setValue(-w) }
-      }}
-      {...panResponder.panHandlers}
-    >
-      {width > 0 && (
-        <Animated.View style={{ flexDirection: 'row', width: width * 3, transform: [{ translateX }] }}>
-          {([-1, 0, 1] as const).map(offset => (
-            <View key={offset} style={{ width, paddingHorizontal: theme.spacing.lg }}>
-              <WeekStripContent
-                weekDays={getWeekDays(weekForIdx(curWeekPage + offset))}
-                selectedDate={selectedDate}
-                markedDates={markedDates}
-                onSelectDate={onSelectDate}
-                onPrevWeek={snapToPrev}
-                onNextWeek={snapToNext}
-              />
-            </View>
-          ))}
-        </Animated.View>
-      )}
+    <View>
+      {/* Which month the strip is on, with arrows to step a week at a time. */}
+      <View style={weekNavStyles.row}>
+        <Text
+          testID="week-month-label"
+          accessibilityRole="header"
+          accessibilityLiveRegion="polite"
+          numberOfLines={1}
+          style={weekNavStyles.month}
+        >
+          {monthLabel}
+        </Text>
+        {!onThisWeek && (
+          <TouchableOpacity
+            testID="week-today"
+            onPress={onToday}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Go to this week"
+            style={weekNavStyles.today}
+          >
+            <Text maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={weekNavStyles.todayLabel}>Today</Text>
+          </TouchableOpacity>
+        )}
+        <IconButton icon="chevron-back" label="Previous week" onPress={snapToPrev} testID="week-prev" />
+        <IconButton icon="chevron-forward" label="Next week" onPress={snapToNext} testID="week-next" />
+      </View>
+      <View
+        style={{ overflow: 'hidden' }}
+        onLayout={e => {
+          const w = e.nativeEvent.layout.width
+          widthRef.current = w
+          if (w !== width) { setWidth(w); translateX.setValue(-w) }
+        }}
+        {...panResponder.panHandlers}
+      >
+        {width > 0 && (
+          <Animated.View style={{ flexDirection: 'row', width: width * 3, transform: [{ translateX }] }}>
+            {([-1, 0, 1] as const).map(offset => (
+              <View key={offset} style={{ width, paddingHorizontal: theme.spacing.lg }}>
+                <WeekStripContent
+                  weekDays={getWeekDays(weekForIdx(curWeekPage + offset))}
+                  selectedDate={selectedDate}
+                  markedDates={markedDates}
+                  onSelectDate={onSelectDate}
+                  onPrevWeek={snapToPrev}
+                  onNextWeek={snapToNext}
+                />
+              </View>
+            ))}
+          </Animated.View>
+        )}
+      </View>
     </View>
   )
 }
+
+const weekNavStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xs,
+  },
+  month: {
+    flex: 1,
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.size.lg,
+    color: theme.colors.text,
+  },
+  today: {
+    paddingHorizontal: theme.spacing.md,
+    height: 38,
+    borderRadius: theme.radius.full,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  todayLabel: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
+    color: theme.colors.primary,
+  },
+})
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
