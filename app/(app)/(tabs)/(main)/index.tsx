@@ -978,11 +978,30 @@ function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPre
 
   const { panResponder, snapToPrev, snapToNext, internalNavRef } = usePager(widthRef, translateX, onPrevRef, onNextRef)
 
+  // The arrows change the week at once (so the label updates and quick taps
+  // all count), then slide the new week in from the side it came from.
+  const slideFromRef = useRef<1 | -1 | null>(null)
+  const stepWeek = useCallback((dir: 1 | -1) => {
+    slideFromRef.current = dir
+    if (dir > 0) onNextRef.current()
+    else onPrevRef.current()
+  }, [])
+
   useLayoutEffect(() => {
     const fromSwipe = internalNavRef.current
     internalNavRef.current = false
+    const slide = slideFromRef.current
+    slideFromRef.current = null
     if (!fromSwipe) translateX.stopAnimation()
-    if (widthRef.current > 0) translateX.setValue(-widthRef.current)
+    const w = widthRef.current
+    if (w <= 0) return
+    if (slide) {
+      // The week just left sits one page to the side: start there, settle on the middle page.
+      translateX.setValue(slide > 0 ? 0 : -2 * w)
+      Animated.spring(translateX, { toValue: -w, useNativeDriver: true, tension: 60, friction: 11 }).start()
+    } else {
+      translateX.setValue(-w)
+    }
   }, [curWeekPage])
 
   const monthLabel = weekMonthLabel(weekForIdx(curWeekPage))
@@ -1013,8 +1032,8 @@ function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPre
             <Text maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={weekNavStyles.todayLabel}>Today</Text>
           </TouchableOpacity>
         )}
-        <IconButton icon="chevron-back" label="Previous week" onPress={snapToPrev} testID="week-prev" />
-        <IconButton icon="chevron-forward" label="Next week" onPress={snapToNext} testID="week-next" />
+        <IconButton icon="chevron-back" label="Previous week" onPress={() => stepWeek(-1)} testID="week-prev" />
+        <IconButton icon="chevron-forward" label="Next week" onPress={() => stepWeek(1)} testID="week-next" />
       </View>
       <View
         style={{ overflow: 'hidden' }}
