@@ -133,12 +133,12 @@ describe('shareUrl', () => {
 
 describe('server-shared modules stay dependency-free', () => {
   // api/ functions import these; a react-native or supabase import would break the Edge bundle.
-  it.each(['constants/share.ts', 'constants/theme.ts', 'constants/selects.ts', 'utils/eventDate.ts', 'utils/price.ts', 'utils/eventShare.ts', 'api/_lib/eventPreview.ts', 'constants/weather.ts', 'api/_lib/forecast.ts', 'api/forecast.ts'])('%s', file => {
+  it.each(['constants/share.ts', 'constants/time.ts', 'constants/theme.ts', 'constants/selects.ts', 'utils/eventDate.ts', 'utils/price.ts', 'utils/eventShare.ts', 'api/_lib/eventPreview.ts', 'constants/weather.ts', 'api/_lib/forecast.ts', 'api/forecast.ts'])('%s', file => {
     const src = readFileSync(resolve(__dirname, '..', file), 'utf8')
     const imports = [...src.matchAll(/^import\s+(type\s+)?[^'"]*['"]([^'"]+)['"]/gm)]
     for (const [, isType, spec] of imports) {
       if (isType) continue
-      expect([spec, file]).toEqual([expect.stringMatching(/^\.\.?\/(\.\.\/)?(constants\/(share|selects|weather)|utils\/(eventDate|price))$|^\.\/(eventDate|price|_lib\/forecast)$/), file])
+      expect([spec, file]).toEqual([expect.stringMatching(/^\.\.?\/(\.\.\/)?(constants\/(share|selects|weather)|utils\/(eventDate|price))$|^\.\/(eventDate|price|time|_lib\/forecast)$/), file])
     }
   })
 })

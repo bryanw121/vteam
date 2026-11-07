@@ -1,10 +1,12 @@
 /**
- * Share links (#130). No imports: the Vercel functions in `api/` load this too.
+ * Share links (#130). Imports only constants/time (itself import-free): the
+ * Vercel functions in `api/` load this too.
  *
  * A shared event is always an `https://` link to the web app, never the
  * `vteam://` scheme, so it opens for anyone (guest browsing) and link-preview
  * crawlers can fetch it (`api/event-page.ts` adds the rich preview tags).
  */
+import { EVENT_TIME_ZONE } from './time'
 
 /** The production web app. Override per build with `EXPO_PUBLIC_WEB_ORIGIN`. */
 export const DEFAULT_WEB_ORIGIN = 'https://vteamvolleyball.com'
@@ -35,4 +37,4 @@ export function shareUrl(path: string): string {
  * link previews): the pilot region's, so every recipient reads the same time
  * whatever their phone or the server is set to. Per-region once we expand.
  */
-export const SHARE_TIME_ZONE = 'America/Chicago'
+export const SHARE_TIME_ZONE = EVENT_TIME_ZONE
