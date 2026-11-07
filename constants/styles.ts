@@ -190,7 +190,40 @@ export const shared = StyleSheet.create({
     fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.timeInk, backgroundColor: colors.primarySoft,
     borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
   },
+  // Player setup after sign-up (#156).
+  welcomeBody: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl, gap: spacing.sm },
+  welcomeTitle: { fontFamily: fonts.display, fontSize: font.heading.lg, fontWeight: font.weight.bold, color: colors.text },
+  welcomeLead: { fontSize: font.size.md, color: colors.subtextStrong, marginBottom: spacing.md, lineHeight: font.lineHeight.normal },
+  welcomeOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  welcomeOption: {
+    minHeight: 44, justifyContent: 'center', borderRadius: radius.full, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.card, paddingHorizontal: spacing.md,
+  },
+  welcomeOptionOn: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  welcomeOptionLabel: { fontSize: font.size.md, color: colors.text },
+  welcomeHint: { fontSize: font.size.sm, color: colors.subtextStrong },
+  welcomeOptionLabelOn: { fontWeight: font.weight.semibold, color: colors.timeInk },
+  welcomeLevelRow: {
+    minHeight: 56, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: 2, justifyContent: 'center',
+  },
+  welcomeLiveTag: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.cool, borderWidth: 1, borderColor: colors.cool,
+    borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
+  welcomeSkip: { minHeight: 44, minWidth: 44, alignItems: 'flex-end', justifyContent: 'center' },
+  welcomeSkipText: { fontSize: font.size.md, color: colors.subtextStrong, fontWeight: font.weight.semibold },
+  welcomeFooter: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.md },
+  welcomeDots: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xs },
+  welcomeDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.border },
+  welcomeDotOn: { width: 20, backgroundColor: colors.primary },
   teamHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
+  // Team header chips (#149): average tier and setter count.
+  teamSummaryChip: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.timeInk,
+    backgroundColor: colors.primarySoft, borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
+  teamSummaryChipSetter: { color: colors.cool, backgroundColor: colors.card },
   teamDot: { width: 8, height: 8, borderRadius: 4 },
   teamHeading: { fontSize: font.size.sm, fontWeight: font.weight.semibold },
   /** One bordered player/guest row (drag card in People, cheer card in Cheers). */

@@ -8,7 +8,8 @@ import {
 } from '../utils/leaveConsequences'
 import type { LeaveEventInfo, LeaveRosterInfo, LeaveViewerInfo, Tag } from '../types'
 
-// npm test runs with TZ=America/Chicago. The start is 2026-11-12 19:00 CST (Thu) = 01:00Z on the 13th.
+// The start is 2026-11-12 19:00 in EVENT_TIME_ZONE (Thu, CST) = 01:00Z on the 13th. Text that
+// reaches the host is written in that zone, so these pass whatever TZ the tests run in.
 const START = '2026-11-13T01:00:00'
 const START_MS = Date.parse('2026-11-13T01:00:00Z')
 const HOUR = 3_600_000
@@ -109,11 +110,16 @@ describe('leaveConsequences: approval, host notice, money, points', () => {
 })
 
 describe('leaveSubtitle', () => {
+  // The subtitle is the player's own screen: device time. Build the start in
+  // the device's zone (Thu Nov 12, 7 PM local) so this holds in any TZ.
+  const LOCAL_MS = new Date(2026, 10, 12, 19, 0).getTime()
+  const LOCAL = new Date(LOCAL_MS).toISOString()
+
   it('says how soon, then the day and time', () => {
-    expect(leaveSubtitle(START, START_MS - 5 * HOUR)).toBe('Starts in 5 hours · Thu 7:00 PM')
-    expect(leaveSubtitle(START, START_MS - 6 * 24 * HOUR)).toBe('In 6 days · Thu 7:00 PM')
-    expect(leaveSubtitle(START, START_MS - 30 * 60_000)).toBe('Starts in 30 minutes · Thu 7:00 PM')
-    expect(leaveSubtitle(START, START_MS + 60_000)).toBe('Already started · Thu 7:00 PM')
+    expect(leaveSubtitle(LOCAL, LOCAL_MS - 5 * HOUR)).toBe('Starts in 5 hours · Thu 7:00 PM')
+    expect(leaveSubtitle(LOCAL, LOCAL_MS - 6 * 24 * HOUR)).toBe('In 6 days · Thu 7:00 PM')
+    expect(leaveSubtitle(LOCAL, LOCAL_MS - 30 * 60_000)).toBe('Starts in 30 minutes · Thu 7:00 PM')
+    expect(leaveSubtitle(LOCAL, LOCAL_MS + 60_000)).toBe('Already started · Thu 7:00 PM')
   })
 })
 
@@ -128,6 +134,11 @@ describe('leaveDmText', () => {
   it('reason only, note only', () => {
     expect(leaveDmText({ ...base, reasonLabel: 'Sick', note: '  ' })).toBe('Left Thursday Indoor Reverse 4s (Thu 7:00 PM): Sick.')
     expect(leaveDmText({ ...base, reasonLabel: null, note: ' Back next week ' })).toBe('Left Thursday Indoor Reverse 4s (Thu 7:00 PM): Back next week')
+  })
+
+  it("writes the game's time in the event zone, not the sender's device zone", () => {
+    // Host-facing: the same text whatever TZ the leaving player's phone is in.
+    expect(leaveDmText({ ...base, reasonLabel: 'Sick', note: '' })).toContain('(Thu 7:00 PM)')
   })
 
   it('nothing to say: no message', () => {

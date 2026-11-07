@@ -45,6 +45,8 @@ export const SCREENS = {
   },
   'event-details': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', sources: EVENT_DETAIL },
   'event-people': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }], sources: [...EVENT_DETAIL, 'components/ProfileAvatar.tsx'] },
+  // Host team builder (#149): Balanced mode, then Balance.
+  'event-people-balanced': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }, { tap: 'team-mode-balanced' }, { tap: 'team-shuffle' }, { wait: 300 }], sources: [...EVENT_DETAIL, 'utils/teamMode.ts'] },
   'event-discussion': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-discussion', text: 'Discussion' }], sources: EVENT_DETAIL },
   'event-cheers': { route: `/event/${E.pastSand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-cheers', text: 'Cheers' }], sources: [...EVENT_DETAIL, 'components/CheerRadarChart.tsx'] },
   // Bottom of a paid event someone else hosts: price, Venmo button, about.
@@ -54,6 +56,10 @@ export const SCREENS = {
   'event-guest': { route: `/event/${E.fridayNight}`, signedIn: false, ready: 'Austin Sports Center', sources: EVENT_DETAIL },
   'host-create': { route: '/host', ready: 'Title', sources: ['app/(app)/host.tsx', 'components/host/**', 'components/DatePickerField*.tsx', 'components/LocationPickerField.tsx', 'components/Input.tsx'] },
   'host-edit': { route: `/host?edit=${E.sundaySand}`, sources: ['app/(app)/host.tsx', 'components/host/**'] },
+  // Player setup after sign-up (#156): the three steps.
+  'welcome-position': { route: '/welcome', ready: 'What do you play?', sources: ['app/(app)/welcome.tsx', 'utils/playerSetup.ts', 'hooks/usePlayerSetupGate.ts'] },
+  'welcome-level': { route: '/welcome', ready: 'What do you play?', actions: [{ tap: 'welcome-next' }, { wait: 300 }], sources: ['app/(app)/welcome.tsx', 'constants/copy.ts'] },
+  'welcome-city': { route: '/welcome', ready: 'What do you play?', actions: [{ tap: 'welcome-next' }, { tap: 'welcome-next' }, { wait: 300 }], sources: ['app/(app)/welcome.tsx', 'components/MajorCityAutocomplete.tsx'] },
   notifications: { route: '/notifications', ready: 'Running 10 minutes late', sources: ['app/(app)/notifications.tsx', 'hooks/useNotifications.ts', 'components/NotificationPopup.tsx'] },
 
   // ── Clubs ───────────────────────────────────────────────────────────────
