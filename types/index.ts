@@ -9,7 +9,7 @@
 
 import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database'
 import type { TabKey } from '../constants/navigation'
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import type { ActivityIndicatorProps } from 'react-native'
 import type { BracketMatchInsert, SetScore, TiebreakerKey } from './tournament'
 
@@ -1320,6 +1320,13 @@ export type RemoveDialogAction = { type: 'open'; target: RemoveTarget } | { type
 
 /** A team drop zone's measured window-y extent (People tab drag-and-drop). */
 export type ZoneLayout = { top: number; bottom: number }
+
+/** components/LazyChunk: the error boundary around a lazily loaded chunk. */
+export type LazyChunkBoundaryProps = { children: ReactNode; onRetry: () => void }
+export type LazyChunkBoundaryState = { failed: boolean }
+
+/** components/profile/LegendRing(.web): the spinning Legend avatar border. */
+export type LegendBorderProps = { children: ReactNode; outerSize: number; ring: number }
 
 // Return types of the screen hooks (type-only imports: no runtime cycle).
 /** Everything the event page reads: one hook, shared by every tab. */

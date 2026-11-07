@@ -56,7 +56,7 @@ describe('EventDetailSkeleton', () => {
 })
 
 describe('wiring', () => {
-  const page = readFileSync(resolve(__dirname, '../app/(app)/event/[id].tsx'), 'utf8')
+  const page = readFileSync(resolve(__dirname, '../components/event/EventDetailScreen.tsx'), 'utf8')
 
   it('the event page shows the skeleton, seeded from the tapped card, while loading', () => {
     expect(page).toMatch(/<EventDetailSkeleton seed=\{event \?\? eventCardSeed\(id\)\}/)
