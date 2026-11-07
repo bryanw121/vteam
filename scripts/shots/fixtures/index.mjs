@@ -328,7 +328,14 @@ export function buildFixtures(now) {
     { id: id('f4000000', 5), user_id: P.jordanr, badge_type: 'spike_cheer', tier: 2, awarded_at: t.iso(-6), display_order: 1, display_tier: null },
     { id: id('f4000000', 6), user_id: P.jordanr, badge_type: 'event_host', tier: 3, awarded_at: t.iso(-60), display_order: 2, display_tier: null },
   ]
-  const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, updated_at: t.iso(-3) }]
+  // Hidden in feed: ACES (hides one outside session, so the feed shows "1 hidden · Show"),
+  // a type no fixture event has, and one event that isn't in the feed.
+  const hidden_feed = [
+    { kind: 'venue', key: 'aces volleyball', label: 'ACES Volleyball' },
+    { kind: 'type', key: 'tag:league', label: 'League' },
+    { kind: 'item', key: 'shots-hidden-event', label: 'Thursday Night Sixes', until: t.iso(5, 19, 0) },
+  ]
+  const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, hidden_feed, updated_at: t.iso(-3) }]
   const chat_silences = [{ user_id: ME, silenced_user_id: P.hannahs, created_at: t.iso(-8) }]
 
   return {

@@ -38,6 +38,7 @@ const MENU_GROUPS: readonly MenuGroup[] = [
     rows: [
       { title: 'Notifications', icon: 'notifications-outline', section: 'notifications' },
       { title: 'Display', icon: 'text-outline', section: 'display' },
+      { title: 'Hidden in feed', icon: 'funnel-outline', section: 'hidden' },
       { title: 'Silenced people', icon: 'eye-off-outline', section: 'silenced' },
     ],
   },

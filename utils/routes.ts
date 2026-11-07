@@ -37,6 +37,7 @@ export type SettingsSection =
   | 'history'
   | 'cheers'
   | 'silenced'
+  | 'hidden'
   | 'notifications'
   | 'display'
   | 'feedback'
