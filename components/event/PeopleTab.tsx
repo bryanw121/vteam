@@ -17,6 +17,7 @@ import { guestRowActions, hasRosterMenu, memberRowActions } from '../../utils/ro
 import { attendeesPaid } from '../../hooks/event/derive'
 import type { EventAttendanceApi, EventData, EventPaymentsApi, EventTeamsApi, TeamDragApi } from '../../types'
 import { Spinner } from '../ui/Spinner'
+import { profilePrefetchProps } from '../../hooks/useUserProfile'
 
 // ─── Draggable cards (People tab only) ───────────────────────────────────────
 
@@ -348,7 +349,7 @@ export function PeopleTab({
       return <View key={profile.id} style={[shared.playerCell, isMobileWeb && { width: '50%' }]}>{card}</View>
     }
     return (
-      <TouchableOpacity key={profile.id} style={[shared.playerCell, isMobileWeb && { width: '50%' }]} onPress={() => onOpenProfile(profile.id)}>
+      <TouchableOpacity key={profile.id} style={[shared.playerCell, isMobileWeb && { width: '50%' }]} onPress={() => onOpenProfile(profile.id)} {...profilePrefetchProps(profile.id)}>
         {card}
       </TouchableOpacity>
     )
@@ -518,7 +519,7 @@ export function PeopleTab({
           <View style={{ gap: theme.spacing.xs }}>
             {requestedProfiles.map(profile => (
               <View key={profile.id} style={[shared.card, { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }]}>
-                <TouchableOpacity style={{ flex: 1, minWidth: 0 }} onPress={() => onOpenProfile(profile.id)}>
+                <TouchableOpacity style={{ flex: 1, minWidth: 0 }} onPress={() => onOpenProfile(profile.id)} {...profilePrefetchProps(profile.id)}>
                   <Text style={shared.body}>{profileDisplayName(profile)}</Text>
                   <Text style={[shared.caption, { marginTop: 2 }]} numberOfLines={2}>
                     {hostRosterSkillAndPositionsLine(profile)}
