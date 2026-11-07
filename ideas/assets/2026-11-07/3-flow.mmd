@@ -1,0 +1,20 @@
+flowchart LR
+  subgraph CI["CI Unit tests job (today: TZ=America/Chicago only)"]
+    U1["npm test<br/>TZ=America/Chicago<br/>+ coverage"]
+    U2["npm run test:tz<br/>UTC · Asia/Tokyo · America/Los_Angeles<br/>(~20 s each, no coverage)"]
+  end
+  subgraph H["__tests__/helpers/clock.ts"]
+    C1["atZone('2026-11-01T01:30', 'America/Chicago')"]
+    C2["travelTo(instant) / advanceTo(next local midnight)"]
+    C3["DST_DAYS: 2026-03-08, 2026-11-01"]
+  end
+  subgraph S["new time tests"]
+    T1["midnight rollover: Events 'Today', week strip, calendar dot"]
+    T2["DST day: feed day headers, reminders lead time, recurrence"]
+    T3["outbound text uses EVENT_TIME_ZONE<br/>(share, leave DM, reminders)"]
+  end
+  subgraph E2["e2e"]
+    G["guest.tz.spec.ts<br/>timezoneId Asia/Tokyo: card time = day header = dot"]
+  end
+  H --> S --> U1 & U2
+  F["Found today: 4 tests fail outside Chicago,<br/>leaveDmText writes the host's DM in the sender's zone,<br/>Events tab 'TODAY' frozen at page load"] -.-> S

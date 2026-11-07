@@ -1,0 +1,20 @@
+flowchart LR
+  subgraph E["entry chunk (every web visit)"]
+    L["app/_layout.tsx<br/>GestureRoot (web: plain View)"]
+    A["ProfileAvatar<br/>LegendRing.web.tsx: CSS spin + glow"]
+    W["WebStackContentTransition<br/>CSS fade-in"]
+    P["components/event/PeopleTab.tsx<br/>roster + lazy Teams board"]
+  end
+  subgraph T["teams-board chunk (host opens Teams)"]
+    TB["TeamsBoard.tsx<br/>GestureHandlerRootView + GestureDetector<br/>DragGhost · useTeamDrag"]
+    RN["react-native-reanimated<br/>react-native-gesture-handler<br/>worklets · hammerjs"]
+  end
+  subgraph B["badges chunk"]
+    BG["settings/badges border picker"]
+  end
+  subgraph C["chat-list chunk"]
+    V["ChatMessageList.web.tsx<br/>react-virtuoso"]
+  end
+  P -- "React.lazy(import())" --> TB --> RN
+  BG --> RN
+  G["__tests__/entryChunk.test.ts / scripts/entry-deps.mjs<br/>fails if the entry source map lists reanimated, gesture-handler or virtuoso"] -.-> E

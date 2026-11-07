@@ -223,5 +223,29 @@
     "status": "approved",
     "summary": "Split app/(app)/host.tsx (1,114 lines, 16 useState, 15 supabase.from calls) into utils/hostForm.ts (tested), useHostForm/useHostContext/useSaveEvent and 7 section components; SECURITY INVOKER save_event RPC writes events + tags + waitlist promotion in one transaction, removing partial-save outcomes and an unchecked client-side promotion.",
     "issue": 188
+  },
+  {
+    "date": "2026-11-07",
+    "n": 1,
+    "title": "Lighter first load on the web: animation and gesture libraries out of the entry chunk",
+    "bucket": "latency",
+    "status": "proposed",
+    "summary": "Entry is 3.65 MB raw / 912 KB gz; reanimated+gesture-handler+worklets+hammerjs are 930 KB raw / ~181 KB gz, used only by 7 files on web. GestureRoot.web plain View, lazy TeamsBoard and badge picker chunks, CSS LegendRing and stack fade, lazy react-virtuoso; scripts/entry-deps.mjs guard. ~-210 KB gz (-23%)."
+  },
+  {
+    "date": "2026-11-07",
+    "n": 2,
+    "title": "One notification per game for cheers (and one per event for edits), with one push",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "Live: 53 cheers_received rows for 15 player-game pairs (max 18), each pushed. notifications.group_key/group_count/last_activity_at + partial unique index; notify_on_kudo_received upserts the unread row per event (UPDATE fires no push webhook); same for event_material_change; client groupNotifications collapses legacy rows; NotificationRow with avatars and cheer chips."
+  },
+  {
+    "date": "2026-11-07",
+    "n": 3,
+    "title": "Time-zone safety net: unit tests in four zones, clock helpers, one event time zone",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "Suite passes only in Chicago (3-4 failures in UTC/LA/Tokyo/London); leaveDmText writes the host DM in the sender's zone (real bug); Events TODAY frozen at module load. npm run test:tz in CI, __tests__/helpers/clock.ts, useToday hook, EVENT_TIME_ZONE replaces 5 copies, Tokyo guest e2e."
   }
 ]

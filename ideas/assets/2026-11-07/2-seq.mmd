@@ -1,0 +1,22 @@
+sequenceDiagram
+  participant App
+  participant PR as PostgREST / RLS
+  participant Trg as cheers trigger notify_on_kudo_received()
+  participant N as notifications (table)
+  participant Hook as Webhook (INSERT only, live)
+  participant Edge as send-notification-push
+  App->>PR: INSERT cheers {event_id, receiver_id, cheer_type} (giver)
+  PR->>Trg: AFTER INSERT (SECURITY DEFINER)
+  Trg->>N: INSERT ... group_key = 'cheers:' + event_id<br/>ON CONFLICT (user_id, group_key) where unread
+  alt no unread row for this game
+    N-->>Hook: new row (INSERT)
+    Hook->>Edge: POST record
+    Edge-->>App: one push "You got cheers from Thursday Open Play"
+  else unread row exists
+    N->>N: DO UPDATE group_count + 1, rebuild title, body, data, last_activity_at = now()
+    Note over N,Hook: UPDATE fires no webhook, so no extra push
+  end
+  App->>PR: GET notifications order=last_activity_at.desc (owner RLS)
+  PR-->>App: one row per game (givers and counts in data)
+  App->>PR: rpc mark_notification_read(id)
+  Note over N: read row stays, the next cheer starts a new group
