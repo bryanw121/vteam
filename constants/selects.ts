@@ -40,6 +40,9 @@ export const ATTENDEE_SELECT =
 /** `cheers` row. */
 export const CHEER_SELECT = 'id, event_id, giver_id, receiver_id, cheer_type, created_at'
 
+/** A user_badges row as profiles and Settings → Badges show it. */
+export const USER_BADGE_SELECT = 'id, user_id, badge_type, tier, awarded_at, display_order, display_tier'
+
 /**
  * `events` columns the event detail screen renders. Includes the coordinates so
  * the cached row also holds every field of the host edit form (EVENT_EDIT_SELECT),

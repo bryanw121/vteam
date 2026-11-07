@@ -1840,3 +1840,25 @@ export type ForecastSummary = {
 
 /** A rounded court position: the forecast cache key. */
 export type ForecastCourt = { lat: number; lng: number }
+
+// ─── Public profile, history, cheers summary (#185) ──────────────────────────
+
+/** hooks/useUserProfile: another player's profile page. */
+export type UserProfileData = {
+  profile: Profile
+  avatarUri: string | null
+  totalCheers: number
+  /** Badges the player chose to show, in their order. */
+  displayBadges: UserBadge[]
+}
+
+/** hooks/useEventHistory: past events attended / hosted, or upcoming hosted. */
+export type EventHistoryKind = 'attended' | 'hosted-past' | 'hosted-upcoming'
+
+/** hooks/useCheersSummary: the viewer's cheers screen. */
+export type CheersSummary = {
+  totalReceived: number
+  totalGiven: number
+  counts: Partial<Record<CheerType, number>>
+}
+
