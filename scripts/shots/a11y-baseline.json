@@ -384,5 +384,13 @@
       "aria-progressbar-name": 2,
       "color-contrast": 11
     }
+  },
+  "event-people-balanced": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 7
+    }
   }
 }

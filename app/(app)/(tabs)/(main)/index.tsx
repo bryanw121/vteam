@@ -35,7 +35,8 @@ import { useRequireSignIn } from '../../../../hooks/useRequireSignIn'
 import { SignInButton } from '../../../../components/SignInButton'
 import { addMonths, weekMonthLabel } from '../../../../utils/monthKeys'
 import { routes, isAppPath, toRoute } from '../../../../utils/routes'
-import { eventLocalDateKey, localDateKey, surfaceOf } from '../../../../utils'
+import { dayLabel, eventLocalDateKey, localDateKey, surfaceOf } from '../../../../utils'
+import { useToday } from '../../../../hooks/useToday'
 import { useAdsEnabled } from '../../../../hooks/useAdsEnabled'
 import { useFeedAds } from '../../../../hooks/useFeedAds'
 import { useFeedForecasts } from '../../../../hooks/useForecast'
@@ -48,12 +49,13 @@ import { FeedItemShell, HiddenCountRow, HideFeedSheet } from '../../../../compon
 import { useHiddenFeed } from '../../../../hooks/useHiddenFeed'
 import { hiddenIndex, hideOptions, isHidden, matchingEntries } from '../../../../utils/hiddenFeed'
 
-const _now = new Date()
-const TODAY = localDateKey(_now)
+// Anchors for the week/month pager indexes only. "Today" itself comes from
+// useToday() so it rolls over at midnight in an app left open (#195).
+const LOAD_DAY = localDateKey(new Date())
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 const REF_WEEK  = getWeekStart(new Date())
-const REF_MONTH = TODAY.substring(0, 7)
+const REF_MONTH = LOAD_DAY.substring(0, 7)
 const WEEK_CENTER  = 52
 const MONTH_CENTER = 24
 
@@ -103,7 +105,8 @@ export default function EventsScreen() {
   const isMobile = Platform.OS !== 'web' || narrowWeb
   const insets = useSafeAreaInsets()
 
-  const [selectedDate, setSelectedDate] = useState<string>(TODAY)
+  const today = useToday()
+  const [selectedDate, setSelectedDate] = useState<string>(today)
   // Filters are remembered per device (utils/feedFilters): restored before the
   // first paint on web, a moment later on native.
   const [chosenFilter, setChosenFilter] = useState<FeedFilter>(() => feedFiltersNow()?.filter ?? DEFAULT_FEED_FILTERS.filter)
@@ -172,9 +175,9 @@ export default function EventsScreen() {
   // One range query: the hook batches months requested in the same tick.
   useEffect(() => {
     if (isMobile) return
-    const current = TODAY.substring(0, 7)
+    const current = today.substring(0, 7)
     loadMonthSpan(current, addMonths(current, 3))
-  }, [isMobile, loadMonthSpan])
+  }, [isMobile, loadMonthSpan, today])
 
   // Force-reload visible months after create/edit (cached data stays on screen meanwhile).
   // Focus/foreground refetch-when-stale and the signed-in-user change live in the hook.
@@ -186,8 +189,8 @@ export default function EventsScreen() {
 
   // The month immediately after the last loaded month — what to fetch on scroll-to-bottom
   const nextScrollMonth = useMemo(
-    () => addMonths(loadedMonths[loadedMonths.length - 1] ?? TODAY.substring(0, 7), 1),
-    [loadedMonths],
+    () => addMonths(loadedMonths[loadedMonths.length - 1] ?? today.substring(0, 7), 1),
+    [loadedMonths, today],
   )
 
   const handleScrollNearBottom = useCallback(() => {
@@ -369,7 +372,16 @@ export default function EventsScreen() {
 
   const goPrevWeek  = useCallback(() => setCurWeekPage(p => p - 1), [])
   const goNextWeek  = useCallback(() => setCurWeekPage(p => p + 1), [])
-  const goToday     = useCallback(() => selectDate(TODAY), [selectDate])
+  const goToday     = useCallback(() => selectDate(today), [selectDate, today])
+
+  // Midnight passed (or the app woke up on a new day): if the player was on
+  // "today", follow it to the new day; a date they picked themselves stays.
+  const prevTodayRef = useRef(today)
+  useEffect(() => {
+    const prev = prevTodayRef.current
+    prevTodayRef.current = today
+    if (prev !== today && selectedDate === prev) selectDate(today)
+  }, [today]) // eslint-disable-line react-hooks/exhaustive-deps
   const goPrevMonth = useCallback(() => setCurMonthPage(p => p - 1), [])
   const goNextMonth = useCallback(() => setCurMonthPage(p => p + 1), [])
 
@@ -537,7 +549,7 @@ export default function EventsScreen() {
               ).map(([month, { events: monthEvents, hidden: monthHidden }]) => {
                 const [y, m] = month.split('-').map(Number)
                 const d = new Date(y, m - 1, 1)
-                const isCurrentMonth = month === TODAY.substring(0, 7)
+                const isCurrentMonth = month === today.substring(0, 7)
                 const label = isCurrentMonth
                   ? d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + ' · This month'
                   : d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
@@ -715,7 +727,7 @@ export default function EventsScreen() {
             style={feedStyles.sectionHeader}
             onLayout={e => { sectionYRef.current[section.date] = e.nativeEvent.layout.y }}
           >
-            <Text style={feedStyles.sectionDate}>{formatDayLabel(section.date)}</Text>
+            <Text style={feedStyles.sectionDate} testID={`feed-day-${section.date}`}>{dayLabel(section.date, today)}</Text>
             {section.data.length > 0 && (
               <Text style={feedStyles.sectionCountText}>{section.data.length} {section.data.length === 1 ? 'event' : 'events'}</Text>
             )}
@@ -955,6 +967,7 @@ const WEEK_DAY_NAME_WIDTH = 30
 
 const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate, markedDates, onSelectDate, onPrevWeek, onNextWeek }: WeekStripContentProps) {
   const [rowWidth, setRowWidth] = useState(0)
+  const today = useToday()
   const { appScale, osScale } = useTextScale()
   const textScale = Math.min(appScale * osScale, TIGHT_TEXT_SCALE)
   const compact = rowWidth > 0 && (rowWidth - 6 * 6) / 7 < WEEK_DAY_NAME_WIDTH * textScale
@@ -967,7 +980,7 @@ const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate
           // previous day for any viewer at a positive UTC offset.
           const dateStr = localDateKey(day)
           const isSelected = dateStr === selectedDate
-          const isToday = dateStr === TODAY
+          const isToday = dateStr === today
           const dots = markedDates[dateStr]?.marked ? (markedDates[dateStr]?.count ?? 1) : 0
           return (
             <TouchableOpacity
@@ -1032,6 +1045,7 @@ type MonthGridContentProps = {
 }
 
 const MonthGridContent = memo(function MonthGridContent({ month, selectedDate, markedDates, onSelectDate, onPrevMonth, onNextMonth }: MonthGridContentProps) {
+  const today = useToday()
   const [year, mon] = month.split('-').map(Number)
   const monthLabel  = new Date(year, mon - 1, 15).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
   const startOffset = new Date(year, mon - 1, 1).getDay()
@@ -1074,7 +1088,7 @@ const MonthGridContent = memo(function MonthGridContent({ month, selectedDate, m
             if (day === null) return <View key={di} style={{ flex: 1, height: 44 }} />
             const dateStr    = `${month}-${String(day).padStart(2, '0')}`
             const isSelected = dateStr === selectedDate
-            const isToday    = dateStr === TODAY
+            const isToday    = dateStr === today
             const hasEvent   = !!markedDates[dateStr]?.marked
             return (
               <TouchableOpacity
@@ -1335,12 +1349,3 @@ const feedStyles = StyleSheet.create({
     marginBottom: 10,
   },
 })
-
-function formatDayLabel(dateString: string): string {
-  if (dateString === TODAY) return 'Today'
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const tomorrowKey = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
-  if (dateString === tomorrowKey) return 'Tomorrow'
-  return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-}

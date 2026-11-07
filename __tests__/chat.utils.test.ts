@@ -149,7 +149,7 @@ describe('nextFirstItemIndex (web virtualized list, #3)', () => {
 describe('web chat list wiring (#3)', () => {
   const { readFileSync } = require('fs') as typeof import('fs')
   const { resolve } = require('path') as typeof import('path')
-  const web = readFileSync(resolve(__dirname, '../components/ChatMessageList.web.tsx'), 'utf8')
+  const web = readFileSync(resolve(__dirname, '../components/ChatMessageListWeb.tsx'), 'utf8')
   const screen = readFileSync(resolve(__dirname, '../app/(app)/chat/[id].tsx'), 'utf8')
 
   it('virtualizes with react-virtuoso, opening at the end and loading older on startReached', () => {

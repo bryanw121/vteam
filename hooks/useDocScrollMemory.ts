@@ -22,13 +22,18 @@ export function useDocScrollMemory(
 ): (e: LayoutChangeEvent) => void {
   const enabled = Platform.OS === 'web' && !!key && active
   const wasShown = useRef(false)
+  // Until this screen's restore has finished, scroll events are not its
+  // reader's: the browser's own history restoration, or our first clamped
+  // scrollTo while the page is still short, would overwrite the remembered
+  // offset with a smaller one (#193 made the remount fast enough to hit it).
+  const restoring = useRef(true)
   const node = () => nodeRef.current as unknown as HTMLElement | null
   const docScrollOn = () => document.body.classList.contains('doc-scroll')
 
   useEffect(() => {
     if (!enabled || !key || typeof window === 'undefined') return
     const onWindowScroll = () => {
-      if (docScrollOn() && isShown(node())) rememberScroll(key, window.scrollY)
+      if (!restoring.current && docScrollOn() && isShown(node())) rememberScroll(key, window.scrollY)
     }
     window.addEventListener('scroll', onWindowScroll, { passive: true })
     return () => window.removeEventListener('scroll', onWindowScroll)
@@ -41,14 +46,16 @@ export function useDocScrollMemory(
     const shown = e.nativeEvent.layout.height > 0
     const cameBack = shown && !wasShown.current
     wasShown.current = shown
+    if (!shown) { restoring.current = true; return }
     if (!cameBack) return
     const y = recallScroll(key)
-    if (y <= 0) return
+    if (y <= 0) { restoring.current = false; return }
     restoreWhenReady({
       y,
       ready: () => docScrollOn() && isShown(node()),
       apply: to => window.scrollTo(0, to),
       current: () => window.scrollY,
+      onDone: () => { restoring.current = false },
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- nodeRef is stable
   }, [enabled, key, onLayout])

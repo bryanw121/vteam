@@ -5,6 +5,7 @@ import type {
   LeaveRosterInfo,
   LeaveViewerInfo,
 } from '../types'
+import { EVENT_TIME_ZONE } from '../constants/time'
 import { parseEventDate } from './eventDate'
 import { formatPrice } from './price'
 
@@ -103,11 +104,15 @@ export function leaveConsequenceText(line: LeaveConsequence): string {
   return line.parts.map(p => p.text).join('')
 }
 
-/** "Thu 7:00 PM", in the device's time zone (the same clock the event page shows). */
-export function leaveShortTime(eventDate: string): string {
+/**
+ * "Thu 7:00 PM". Without `timeZone`, in the device's zone (the same clock the
+ * event page shows the player); text that goes to someone else passes
+ * `EVENT_TIME_ZONE` so the reader sees the game's real local time.
+ */
+export function leaveShortTime(eventDate: string, timeZone?: string): string {
   const d = parseEventDate(eventDate)
-  const day = d.toLocaleDateString('en-US', { weekday: 'short' })
-  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  const day = d.toLocaleDateString('en-US', { weekday: 'short', timeZone })
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone })
   return `${day} ${time}`
 }
 
@@ -144,6 +149,6 @@ export function leaveDmText(args: {
   if (!reason && !note) return null
   const body = [reason ? `${reason}.` : '', note].filter(Boolean).join(' ')
   const title = args.title.trim() || 'the game'
-  return `Left ${title} (${leaveShortTime(args.eventDate)}): ${body}`
+  return `Left ${title} (${leaveShortTime(args.eventDate, EVENT_TIME_ZONE)}): ${body}`
 }
 

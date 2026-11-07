@@ -76,3 +76,4 @@ export {
 export { TOURS, TOUR_TARGETS, tourCompletionId } from './tours'
 export { ANALYTICS_EVENTS } from './analytics'
 export { TEXT_SIZE_OPTIONS, DEFAULT_TEXT_SIZE, MAX_TEXT_SCALE, TIGHT_TEXT_SCALE, COMPACT_TEXT_SCALE } from './textSize'
+export { EVENT_TIME_ZONE } from './time'

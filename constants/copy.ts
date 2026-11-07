@@ -8,6 +8,11 @@ export const APP_NAME = 'VTeam'
 /** Alert body for a failed write when there is nothing more specific to say. */
 export const GENERIC_ERROR_MESSAGE = 'Something went wrong. Please try again.'
 
+/** A list or profile that failed to load (not "not found"): shown with Retry (#185). */
+export const PROFILE_LOAD_ERROR = "Couldn't load this profile. Check your connection and try again."
+export const HISTORY_LOAD_ERROR = "Couldn't load your events. Check your connection and try again."
+export const CHEERS_LOAD_ERROR = "Couldn't load your cheers. Check your connection and try again."
+
 /** Shown when a join raced the last spot and the database saved it as waitlisted. */
 export const EVENT_JUST_FILLED_TITLE = 'Event just filled up'
 export const EVENT_JUST_FILLED_BODY =
@@ -48,3 +53,15 @@ export const LEAVE_REASONS: ReadonlyArray<{ id: LeaveReason; label: string }> = 
 
 /** Longest note the leave sheet sends to the host. */
 export const LEAVE_NOTE_MAX = 280
+
+/** The host's team builder on the People tab (#149). */
+export const TEAM_MODE_COPY = {
+  groupLabel: 'How to split teams',
+  random: 'Random',
+  balanced: 'Balanced',
+  randomButton: 'Randomize',
+  balanceButton: 'Balance',
+  average: (tier: string) => `avg ${tier}`,
+  setters: (n: number) => `${n} setter${n === 1 ? '' : 's'}`,
+} as const
+
