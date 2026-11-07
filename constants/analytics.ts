@@ -24,4 +24,6 @@ export const ANALYTICS_EVENTS = {
   leaveConfirmed: 'leave_confirmed',
   /** Stay in / Esc / back / scrim. */
   leaveCancelled: 'leave_cancelled',
+  /** The Events feed's first rows were in hand (#184). props: { ms (since navigation start), source: snapshot | prefetch | fetch, cold } */
+  feedFirstPaint: 'feed_first_paint',
 } as const
