@@ -577,7 +577,24 @@ export default function EventsScreen() {
         onTouchEnd={unblockPager}
         onTouchCancel={unblockPager}
       >
-        <EventsHeader wide={false} right={headerRight} />
+        <EventsHeader
+          wide={false}
+          right={curWeekPage === WEEK_CENTER ? headerRight : (
+            <View style={weekNavStyles.headerRight}>
+              <TouchableOpacity
+                testID="week-today"
+                onPress={goToday}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Go to this week"
+                style={weekNavStyles.today}
+              >
+                <Text maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={weekNavStyles.todayLabel}>Today</Text>
+              </TouchableOpacity>
+              {headerRight}
+            </View>
+          )}
+        />
 
         {/* Calendar strip */}
         <TourTarget id={TOUR_TARGETS.calendar}>
@@ -588,7 +605,6 @@ export default function EventsScreen() {
             onSelectDate={selectDate}
             onPrevWeek={goPrevWeek}
             onNextWeek={goNextWeek}
-            onToday={goToday}
           />
         </TourTarget>
 
@@ -964,10 +980,9 @@ type WeekPagerProps = {
   onSelectDate: (date: string) => void
   onPrevWeek: () => void
   onNextWeek: () => void
-  onToday: () => void
 }
 
-function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPrevWeek, onNextWeek, onToday }: WeekPagerProps) {
+function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPrevWeek, onNextWeek }: WeekPagerProps) {
   const [width, setWidth] = useState(0)
   const widthRef = useRef(0)
   const translateX = useRef(new Animated.Value(0)).current
@@ -1005,12 +1020,12 @@ function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPre
   }, [curWeekPage])
 
   const monthLabel = weekMonthLabel(weekForIdx(curWeekPage))
-  const onThisWeek = curWeekPage === WEEK_CENTER
 
   return (
     <View>
-      {/* Which month the strip is on, with arrows to step a week at a time. */}
+      {/* ‹ Month › : which month the strip is on, with arrows to step a week at a time. */}
       <View style={weekNavStyles.row}>
+        <IconButton icon="chevron-back" label="Previous week" onPress={() => stepWeek(-1)} testID="week-prev" />
         <Text
           testID="week-month-label"
           accessibilityRole="header"
@@ -1020,19 +1035,6 @@ function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPre
         >
           {monthLabel}
         </Text>
-        {!onThisWeek && (
-          <TouchableOpacity
-            testID="week-today"
-            onPress={onToday}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Go to this week"
-            style={weekNavStyles.today}
-          >
-            <Text maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={weekNavStyles.todayLabel}>Today</Text>
-          </TouchableOpacity>
-        )}
-        <IconButton icon="chevron-back" label="Previous week" onPress={() => stepWeek(-1)} testID="week-prev" />
         <IconButton icon="chevron-forward" label="Next week" onPress={() => stepWeek(1)} testID="week-next" />
       </View>
       <View
@@ -1075,17 +1077,17 @@ const weekNavStyles = StyleSheet.create({
   },
   month: {
     flex: 1,
+    textAlign: 'center',
     fontFamily: theme.fonts.display,
     fontSize: theme.font.size.lg,
     color: theme.colors.text,
   },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   today: {
     paddingHorizontal: theme.spacing.md,
     height: 38,
     borderRadius: theme.radius.full,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
