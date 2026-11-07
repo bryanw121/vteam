@@ -443,7 +443,7 @@ describe('forgetDeletedEvent', () => {
   it('is what the event page runs after a successful delete', () => {
     const { readFileSync } = require('fs')
     const { join } = require('path')
-    const screen: string = readFileSync(join(__dirname, '..', 'app/(app)/event/[id].tsx'), 'utf8')
+    const screen: string = readFileSync(join(__dirname, '..', 'components/event/EventDetailScreen.tsx'), 'utf8')
     const del = screen.slice(screen.indexOf('const deleteEvent = useMutation('))
     const onSuccess = del.slice(del.indexOf('onSuccess'), del.indexOf('onError'))
     expect(onSuccess).toMatch(/forgetDeletedEvent\(id\)/)
