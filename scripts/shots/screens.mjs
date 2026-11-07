@@ -56,6 +56,10 @@ export const SCREENS = {
   'event-guest': { route: `/event/${E.fridayNight}`, signedIn: false, ready: 'Austin Sports Center', sources: EVENT_DETAIL },
   'host-create': { route: '/host', ready: 'Title', sources: ['app/(app)/host.tsx', 'components/host/**', 'components/DatePickerField*.tsx', 'components/LocationPickerField.tsx', 'components/Input.tsx'] },
   'host-edit': { route: `/host?edit=${E.sundaySand}`, sources: ['app/(app)/host.tsx', 'components/host/**'] },
+  // Player setup after sign-up (#156): the three steps.
+  'welcome-position': { route: '/welcome', ready: 'What do you play?', sources: ['app/(app)/welcome.tsx', 'utils/playerSetup.ts', 'hooks/usePlayerSetupGate.ts'] },
+  'welcome-level': { route: '/welcome', ready: 'What do you play?', actions: [{ tap: 'welcome-next' }, { wait: 300 }], sources: ['app/(app)/welcome.tsx', 'constants/copy.ts'] },
+  'welcome-city': { route: '/welcome', ready: 'What do you play?', actions: [{ tap: 'welcome-next' }, { tap: 'welcome-next' }, { wait: 300 }], sources: ['app/(app)/welcome.tsx', 'components/MajorCityAutocomplete.tsx'] },
   notifications: { route: '/notifications', ready: 'Running 10 minutes late', sources: ['app/(app)/notifications.tsx', 'hooks/useNotifications.ts', 'components/NotificationPopup.tsx'] },
 
   // ── Clubs ───────────────────────────────────────────────────────────────
