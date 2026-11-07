@@ -48,3 +48,36 @@ export const LEAVE_REASONS: ReadonlyArray<{ id: LeaveReason; label: string }> = 
 
 /** Longest note the leave sheet sends to the host. */
 export const LEAVE_NOTE_MAX = 280
+
+/**
+ * One line per level, shown under each option in player setup and the profile
+ * editor (#156), so a new player doesn't have to guess what "BB" means.
+ */
+export const SKILL_LEVEL_HINTS: Record<string, string> = {
+  d: 'New to volleyball, or learning the basics',
+  c: 'Can serve and pass; still working on consistency',
+  b: 'Solid basics; comfortable in rec games',
+  bb: 'Consistent passing, setting and hitting in competitive rec',
+  a: 'Strong all-around player in competitive leagues',
+  aa_plus: 'Advanced, college or open-level play',
+}
+
+/** Player setup after sign-up (#156). */
+export const PLAYER_SETUP_COPY = {
+  skip: 'Skip',
+  back: 'Back',
+  next: 'Next',
+  done: 'Done',
+  stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
+  positionTitle: 'What do you play?',
+  positionBody: 'Pick any that fit. Hosts use this to balance teams.',
+  notSure: 'Not sure yet',
+  levelTitle: "What's your level?",
+  levelBody: "Your best guess is fine. You can change it on your profile any time.",
+  cityTitle: 'Where do you play?',
+  cityBody: "We'll show games and open gyms near you.",
+  cityLabel: 'Home city',
+  liveNow: 'Live now',
+  liveNowNote: (city: string) => `${city}: sessions from local venues are in the feed today.`,
+} as const
+

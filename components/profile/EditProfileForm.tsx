@@ -13,6 +13,7 @@ import { VOLLEYBALL_POSITION_OPTIONS, VOLLEYBALL_SKILL_LEVEL_OPTIONS } from './o
 import type { Profile, ProfilePatch, UserBadge, VolleyballPosition, VolleyballSkillLevel } from '../../types'
 import { MajorCityAutocomplete } from '../MajorCityAutocomplete'
 import { useUserSettings } from '../../hooks/useUserSettings'
+import { SKILL_LEVEL_HINTS } from '../../constants/copy'
 
 type Props = {
   profile: Profile
@@ -164,6 +165,9 @@ export function EditProfileForm({ profile, badges, saving, onSave, onSetBorder, 
             )
           })}
         </View>
+        {skillLevel && SKILL_LEVEL_HINTS[skillLevel] ? (
+          <Text style={[shared.caption, shared.mt_xs]} testID="skill-level-hint">{SKILL_LEVEL_HINTS[skillLevel]}</Text>
+        ) : null}
       </View>
 
       <View style={[shared.card, { marginTop: theme.spacing.md }]}>

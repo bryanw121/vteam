@@ -108,6 +108,7 @@ app/                         # Expo Router routes (screens compose hooks + compo
     tournament/[id].tsx, tournament/create.tsx
     host.tsx                 # Create / edit event, templates
     notifications.tsx
+    welcome.tsx              # Player setup after sign-up (#156): position, level, city; opened once by usePlayerSetupGate
 components/
   ui/                        # Design-system primitives (see "UI primitives")
   event/ events/ host/ profile/ tournament/   # Feature components for those screens
