@@ -7,7 +7,7 @@ import { eventLocalDateKey, localDateKey, parseEventDate } from '../utils'
  * `process.env.TZ` inside a test is silently ignored (verified: all zones
  * reported the same hour). So timezone coverage comes from running the whole
  * process under a fixed TZ. `npm test` pins America/Chicago; `npm run
- * test:timezones` sweeps this file across several zones including a positive
+ * test:tz` runs the whole suite (this file included) in several zones including a positive
  * offset. Never assert against a hardcoded zone here — derive from AMBIENT_TZ,
  * or the suite passes vacuously under whichever zone happens to be set.
  */

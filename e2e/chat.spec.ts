@@ -287,6 +287,8 @@ test.describe('Chat', () => {
   test('long conversation: opens at the newest, keeps a bounded DOM, loads older on scroll-up without a jump', async ({ page }) => {
     // The seed DM has hundreds of messages; a page is 40.
     await gotoConversation(page)
+    // The list is its own chunk on web (#193): wait for its rows, then let it settle.
+    await page.locator('[data-testid="chat-message-list"] [data-index]').first().waitFor({ timeout: 20_000 })
     await page.waitForTimeout(1500)
     const opened = await listState(page)
     expect(opened).not.toBeNull()

@@ -8,6 +8,11 @@ export const APP_NAME = 'VTeam'
 /** Alert body for a failed write when there is nothing more specific to say. */
 export const GENERIC_ERROR_MESSAGE = 'Something went wrong. Please try again.'
 
+/** A list or profile that failed to load (not "not found"): shown with Retry (#185). */
+export const PROFILE_LOAD_ERROR = "Couldn't load this profile. Check your connection and try again."
+export const HISTORY_LOAD_ERROR = "Couldn't load your events. Check your connection and try again."
+export const CHEERS_LOAD_ERROR = "Couldn't load your cheers. Check your connection and try again."
+
 /** Shown when a join raced the last spot and the database saved it as waitlisted. */
 export const EVENT_JUST_FILLED_TITLE = 'Event just filled up'
 export const EVENT_JUST_FILLED_BODY =
