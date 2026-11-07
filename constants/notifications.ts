@@ -1,3 +1,4 @@
+import { EVENT_TIME_ZONE } from './time'
 import type { NotificationPrefType, ReminderLeadMinutes } from '../types'
 
 /** User-facing labels for notification preferences (and optional inbox grouping). */
@@ -29,4 +30,4 @@ export const REMINDER_LEAD_OPTIONS: readonly { minutes: ReminderLeadMinutes; lab
 export const DEFAULT_REMINDER_LEAD_MINUTES: ReminderLeadMinutes = 120
 
 /** Reminder times are written in the club's time zone (matches `event_reminder_text` in the database). */
-export const REMINDER_TIME_ZONE = 'America/Chicago'
+export const REMINDER_TIME_ZONE = EVENT_TIME_ZONE
