@@ -33,7 +33,7 @@ import { useSession } from '../../../../contexts/session'
 import { useTextScale } from '../../../../contexts/textScale'
 import { useRequireSignIn } from '../../../../hooks/useRequireSignIn'
 import { SignInButton } from '../../../../components/SignInButton'
-import { addMonths } from '../../../../utils/monthKeys'
+import { addMonths, weekMonthLabel } from '../../../../utils/monthKeys'
 import { routes, isAppPath, toRoute } from '../../../../utils/routes'
 import { eventLocalDateKey, localDateKey, surfaceOf } from '../../../../utils'
 import { useAdsEnabled } from '../../../../hooks/useAdsEnabled'
@@ -305,6 +305,7 @@ export default function EventsScreen() {
 
   const goPrevWeek  = useCallback(() => setCurWeekPage(p => p - 1), [])
   const goNextWeek  = useCallback(() => setCurWeekPage(p => p + 1), [])
+  const goToday     = useCallback(() => selectDate(TODAY), [selectDate])
   const goPrevMonth = useCallback(() => setCurMonthPage(p => p - 1), [])
   const goNextMonth = useCallback(() => setCurMonthPage(p => p + 1), [])
 
@@ -576,7 +577,24 @@ export default function EventsScreen() {
         onTouchEnd={unblockPager}
         onTouchCancel={unblockPager}
       >
-        <EventsHeader wide={false} right={headerRight} />
+        <EventsHeader
+          wide={false}
+          right={curWeekPage === WEEK_CENTER ? headerRight : (
+            <View style={weekNavStyles.headerRight}>
+              <TouchableOpacity
+                testID="week-today"
+                onPress={goToday}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Go to this week"
+                style={weekNavStyles.today}
+              >
+                <Text maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={weekNavStyles.todayLabel}>Today</Text>
+              </TouchableOpacity>
+              {headerRight}
+            </View>
+          )}
+        />
 
         {/* Calendar strip */}
         <TourTarget id={TOUR_TARGETS.calendar}>
@@ -975,42 +993,137 @@ function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPre
 
   const { panResponder, snapToPrev, snapToNext, internalNavRef } = usePager(widthRef, translateX, onPrevRef, onNextRef)
 
+  // The arrows change the week at once (so the label updates and quick taps
+  // all count), then slide the new week in from the side it came from.
+  const slideFromRef = useRef<1 | -1 | null>(null)
+  const stepWeek = useCallback((dir: 1 | -1) => {
+    slideFromRef.current = dir
+    if (dir > 0) onNextRef.current()
+    else onPrevRef.current()
+  }, [])
+
   useLayoutEffect(() => {
     const fromSwipe = internalNavRef.current
     internalNavRef.current = false
+    const slide = slideFromRef.current
+    slideFromRef.current = null
     if (!fromSwipe) translateX.stopAnimation()
-    if (widthRef.current > 0) translateX.setValue(-widthRef.current)
+    const w = widthRef.current
+    if (w <= 0) return
+    if (slide) {
+      // The week just left sits one page to the side: start there, settle on the middle page.
+      translateX.setValue(slide > 0 ? 0 : -2 * w)
+      Animated.spring(translateX, { toValue: -w, useNativeDriver: true, tension: 60, friction: 11 }).start()
+    } else {
+      translateX.setValue(-w)
+    }
   }, [curWeekPage])
 
+  const monthLabel = weekMonthLabel(weekForIdx(curWeekPage))
+
   return (
-    <View
-      style={{ overflow: 'hidden' }}
-      onLayout={e => {
-        const w = e.nativeEvent.layout.width
-        widthRef.current = w
-        if (w !== width) { setWidth(w); translateX.setValue(-w) }
-      }}
-      {...panResponder.panHandlers}
-    >
-      {width > 0 && (
-        <Animated.View style={{ flexDirection: 'row', width: width * 3, transform: [{ translateX }] }}>
-          {([-1, 0, 1] as const).map(offset => (
-            <View key={offset} style={{ width, paddingHorizontal: theme.spacing.lg }}>
-              <WeekStripContent
-                weekDays={getWeekDays(weekForIdx(curWeekPage + offset))}
-                selectedDate={selectedDate}
-                markedDates={markedDates}
-                onSelectDate={onSelectDate}
-                onPrevWeek={snapToPrev}
-                onNextWeek={snapToNext}
-              />
-            </View>
-          ))}
-        </Animated.View>
-      )}
+    <View>
+      {/* Which month the strip is on. */}
+      <Text
+        testID="week-month-label"
+        accessibilityRole="header"
+        accessibilityLiveRegion="polite"
+        numberOfLines={1}
+        style={weekNavStyles.month}
+      >
+        {monthLabel}
+      </Text>
+      {/* ‹ days › : arrows either side of the week step it a week at a time. */}
+      <View style={weekNavStyles.row}>
+        <TouchableOpacity
+          testID="week-prev"
+          onPress={() => stepWeek(-1)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+          accessibilityRole="button"
+          accessibilityLabel="Previous week"
+          style={weekNavStyles.arrow}
+        >
+          <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
+        <View
+          style={{ flex: 1, overflow: 'hidden' }}
+          onLayout={e => {
+            const w = e.nativeEvent.layout.width
+            widthRef.current = w
+            if (w !== width) { setWidth(w); translateX.setValue(-w) }
+          }}
+          {...panResponder.panHandlers}
+        >
+          {width > 0 && (
+            <Animated.View style={{ flexDirection: 'row', width: width * 3, transform: [{ translateX }] }}>
+              {([-1, 0, 1] as const).map(offset => (
+                <View key={offset} style={{ width }}>
+                  <WeekStripContent
+                    weekDays={getWeekDays(weekForIdx(curWeekPage + offset))}
+                    selectedDate={selectedDate}
+                    markedDates={markedDates}
+                    onSelectDate={onSelectDate}
+                    onPrevWeek={snapToPrev}
+                    onNextWeek={snapToNext}
+                  />
+                </View>
+              ))}
+            </Animated.View>
+          )}
+        </View>
+        <TouchableOpacity
+          testID="week-next"
+          onPress={() => stepWeek(1)}
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Next week"
+          style={weekNavStyles.arrow}
+        >
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
+      </View>
     </View>
   )
 }
+
+const weekNavStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  arrow: {
+    width: 32,
+    height: 44,
+    borderRadius: theme.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  month: {
+    textAlign: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xs,
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.size.lg,
+    color: theme.colors.text,
+  },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+  today: {
+    paddingHorizontal: theme.spacing.md,
+    height: 38,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  todayLabel: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
+    color: theme.colors.primary,
+  },
+})
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
