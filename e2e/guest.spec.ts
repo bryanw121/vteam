@@ -12,6 +12,27 @@ test.describe('guest browsing', () => {
     await expect(page.getByTestId('filter-mine')).toHaveCount(0)
   })
 
+  test('week strip names its month, steps with the arrows, and Today comes back', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    // The label is the month of the week's last day (a week running into a new month shows the new one).
+    const labelFor = (weeksAhead: number) => {
+      const d = new Date()
+      d.setDate(d.getDate() - d.getDay() + 6 + weeksAhead * 7)
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    }
+    await page.goto(`${BASE_URL}/`)
+    const label = page.getByTestId('week-month-label').first()
+    await expect(label).toHaveText(labelFor(0), { timeout: 20_000 })
+    await expect(page.getByTestId('week-today')).toHaveCount(0)
+    for (let i = 0; i < 5; i++) await page.getByTestId('week-next').first().click()
+    await expect(label).toHaveText(labelFor(5))
+    await page.getByTestId('week-prev').first().click()
+    await expect(label).toHaveText(labelFor(4))
+    await page.getByTestId('week-today').first().click()
+    await expect(label).toHaveText(labelFor(0))
+    await expect(page.getByTestId('week-today')).toHaveCount(0)
+  })
+
   test('chat and profile ask the guest to sign in', async ({ page }) => {
     await page.goto(`${BASE_URL}/chat`)
     await expect(page.getByTestId('sign-in-prompt').first()).toBeVisible({ timeout: 20_000 })
