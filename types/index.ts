@@ -1304,6 +1304,13 @@ export type TournamentInviteCandidate = Pick<Profile, 'id' | 'username' | 'first
 
 export type TeamSource = { team_number?: number | null; team_pinned?: boolean | null }
 
+/** A player as team balancing sees them (#149). Guests have no level. */
+export type BalancePlayer = { id: string; skillLevel: VolleyballSkillLevel | null; isSetter: boolean }
+/** Team header chips (#149). `avgLevel` is null when too few players have a level. */
+export type TeamSummary = { avgLevel: VolleyballSkillLevel | null; setters: number }
+/** How the host's shuffle button splits players. */
+export type TeamMode = 'random' | 'balanced'
+
 export type RandomizeResult =
   | { ok: true; assignments: Record<string, TeamAssignment> }
   | { ok: false; title: string; message: string }

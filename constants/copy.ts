@@ -53,3 +53,15 @@ export const LEAVE_REASONS: ReadonlyArray<{ id: LeaveReason; label: string }> = 
 
 /** Longest note the leave sheet sends to the host. */
 export const LEAVE_NOTE_MAX = 280
+
+/** The host's team builder on the People tab (#149). */
+export const TEAM_MODE_COPY = {
+  groupLabel: 'How to split teams',
+  random: 'Random',
+  balanced: 'Balanced',
+  randomButton: 'Randomize',
+  balanceButton: 'Balance',
+  average: (tier: string) => `avg ${tier}`,
+  setters: (n: number) => `${n} setter${n === 1 ? '' : 's'}`,
+} as const
+

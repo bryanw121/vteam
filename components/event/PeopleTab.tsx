@@ -8,14 +8,15 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { Button } from '../Button'
 import { ProfileAvatar } from '../ProfileAvatar'
 import { DocScrollView } from '../DocScrollView'
-import { IconButton } from '../ui'
+import { Chip, IconButton } from '../ui'
 import { RosterActionsSheet } from './RosterActionsSheet'
-import { shared, theme, TEAM_COLORS, TEAM_COLOR_NAMES } from '../../constants'
+import { shared, theme, TEAM_COLORS, TEAM_COLOR_NAMES, SKILL_LEVEL_LABELS } from '../../constants'
+import { TEAM_MODE_COPY } from '../../constants/copy'
 import type { EventWithDetails, Profile, AttendanceStatus, EventGuest, RosterAction, RosterActionContext, RosterMenu } from '../../types'
 import { profileDisplayName, profileAvatarSmallUri, hostRosterSkillAndPositionsLine } from '../../utils'
 import { guestRowActions, hasRosterMenu, memberRowActions } from '../../utils/rosterActions'
-import { attendeesPaid } from '../../hooks/event/derive'
-import type { EventAttendanceApi, EventData, EventPaymentsApi, EventTeamsApi, TeamDragApi } from '../../types'
+import { attendeesPaid, rosterHasLevels, teamSummary } from '../../hooks/event/derive'
+import type { BalancePlayer, EventAttendanceApi, EventData, EventPaymentsApi, EventTeamsApi, TeamDragApi } from '../../types'
 import { Spinner } from '../ui/Spinner'
 import { profilePrefetchProps } from '../../hooks/useUserProfile'
 
@@ -298,9 +299,12 @@ export function PeopleTab({
   const paidCount = payments ? attendeesPaid(data.roster.attendees, payments.paidUserIds) : 0
   const { attendees, attendingGuests: guests, adderUsernames, requestedProfiles, waitlistProfiles, waitlistGuests } = data.roster
   const {
-    assignments, numTeams, setNumTeams, hasTeams, savingTeams,
+    assignments, numTeams, setNumTeams, hasTeams, savingTeams, mode: teamMode, setMode: setTeamMode, balancePlayers,
     togglePin: onTogglePin, resetTeams: onResetTeams, randomizeTeams: onRandomizeTeams, saveTeams: onSaveTeams,
   } = teams
+  // Team header chips (#149): average tier when enough players have one, and setters.
+  const balanceById = useMemo(() => new Map(balancePlayers.map(p => [p.id, p])), [balancePlayers])
+  const showAverages = useMemo(() => rosterHasLevels(balancePlayers), [balancePlayers])
   const { hoveredTeamKey, teamZoneRefs, onDragStart, onDragMove, onDragEnd } = drag
   const { processingRequest, approveRequest: onApproveRequest, approveFromWaitlist: onApproveFromWaitlist } = attendance
 
@@ -415,6 +419,17 @@ export function PeopleTab({
         </View>
       </View>
 
+      {eventStatus.isOwner && attendees.length > 0 && (
+        <View
+          role="radiogroup"
+          aria-label={TEAM_MODE_COPY.groupLabel}
+          style={[shared.row, { gap: theme.spacing.sm, marginBottom: theme.spacing.sm }]}
+        >
+          <Chip role="radio" label={TEAM_MODE_COPY.random} active={teamMode === 'random'} onPress={() => setTeamMode('random')} testID="team-mode-random" />
+          <Chip role="radio" label={TEAM_MODE_COPY.balanced} active={teamMode === 'balanced'} onPress={() => setTeamMode('balanced')} testID="team-mode-balanced" />
+        </View>
+      )}
+
       {payments && attendees.length > 0 && (
         <View testID="roster-paid-summary" style={[shared.row, { gap: 6, marginBottom: theme.spacing.sm }]}>
           <Ionicons name="cash-outline" size={14} color={theme.colors.subtext} />
@@ -458,6 +473,22 @@ export function PeopleTab({
                       <View style={shared.teamHeader}>
                         <View style={[shared.teamDot, { backgroundColor: teamColor }]} />
                         <Text style={[shared.teamHeading, { color: teamColor }]}>{TEAM_COLOR_NAMES[(teamNum - 1) % TEAM_COLOR_NAMES.length]} Team</Text>
+                        {(() => {
+                          const summary = teamSummary(
+                            [...teamPlayers, ...teamGuests].map(x => balanceById.get(x.id)).filter((x): x is BalancePlayer => !!x),
+                            showAverages,
+                          )
+                          return (
+                            <View style={[shared.row, { gap: theme.spacing.xs, marginLeft: 'auto' }]} testID={`team-summary-${teamNum}`}>
+                              {summary.avgLevel && (
+                                <Text style={shared.teamSummaryChip}>{TEAM_MODE_COPY.average(SKILL_LEVEL_LABELS[summary.avgLevel])}</Text>
+                              )}
+                              {summary.setters > 0 && (
+                                <Text style={[shared.teamSummaryChip, shared.teamSummaryChipSetter]}>{TEAM_MODE_COPY.setters(summary.setters)}</Text>
+                              )}
+                            </View>
+                          )
+                        })()}
                       </View>
                       {teamPlayers.length === 0 && teamGuests.length === 0
                         ? <Text style={[shared.caption, { paddingHorizontal: theme.spacing.xs, paddingBottom: theme.spacing.xs }]}>No players</Text>
@@ -499,7 +530,7 @@ export function PeopleTab({
               <Button label="Reset" onPress={onResetTeams} variant="secondary" />
             </View>
             <View style={{ flex: 1 }}>
-              <Button label="Randomize" onPress={onRandomizeTeams} variant="secondary" />
+              <Button label={teamMode === 'balanced' ? TEAM_MODE_COPY.balanceButton : TEAM_MODE_COPY.randomButton} onPress={onRandomizeTeams} variant="secondary" testID="team-shuffle" />
             </View>
             <View style={{ flex: 1 }}>
               <Button label="Save" onPress={onSaveTeams} loading={savingTeams} />
