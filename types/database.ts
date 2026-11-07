@@ -2202,6 +2202,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          hidden_feed: Json
           home_city_id: string | null
           reminder_lead_minutes: number
           seen_banners: string[]
@@ -2209,6 +2210,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          hidden_feed?: Json
           home_city_id?: string | null
           reminder_lead_minutes?: number
           seen_banners?: string[]
@@ -2216,6 +2218,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          hidden_feed?: Json
           home_city_id?: string | null
           reminder_lead_minutes?: number
           seen_banners?: string[]
