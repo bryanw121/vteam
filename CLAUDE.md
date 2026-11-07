@@ -101,7 +101,7 @@ app/                         # Expo Router routes (screens compose hooks + compo
       clubs.tsx              # Clubs tab
       chat.tsx               # Chat tab (conversation list)
       settings/              # account, hosted, history, cheers, silenced, hidden, notifications, feedback, badges
-    event/[id].tsx           # Event detail
+    event/[id].tsx           # Event detail (re-exports components/event/EventDetailRoute; web loads the screen lazily)
     club/[id].tsx, club/create.tsx
     chat/[id].tsx            # Conversation
     profile/[id].tsx         # Another user's profile
@@ -188,6 +188,7 @@ Import `Sentry` from `lib/sentry`, never `@sentry/react-native` directly. On web
 
 ### Bundle size (web)
 Import icons per family (`import Ionicons from '@expo/vector-icons/Ionicons'`), never from the `@expo/vector-icons` barrel: that pulls every icon set's glyph map into the main bundle.
+Reanimated, Gesture Handler (+ hammerjs) and react-virtuoso stay out of the web first load (#193): on web they are imported only from code loaded through `lazyChunk` (`components/LazyChunk.tsx`), today the event screen (`components/event/EventDetailRoute.web.tsx`, preloaded when the browser is idle) and the chat message list (`ChatMessageList.web.tsx`). Elsewhere use core `Animated` or CSS keyframes on web (`components/profile/LegendRing.web.tsx`); the app root on web is a plain View (`components/GestureRoot.web.tsx`), so a lazy screen that uses gestures wraps itself in `GestureHandlerRootView`. Only one lazy chunk may import them: Metro moves modules two lazy chunks share into `__common`, which `index.html` loads up front. CI's `scripts/entry-deps.mjs` fails when any of them reaches the first-load scripts (`--report` lists the biggest packages).
 
 ### Gesture layering
 (Applies while `SWIPE_NAVIGATION.tabs` is on; the layering is kept for when it is.) The `Pager` uses `onMoveShouldSetPanResponder` (bubble phase) to claim tab swipes. Inner components (WeekStrip, Calendar wrapper) also use bubble phase — since they're more inner, their handlers fire first and absorb the gesture before it reaches Pager. Do not use capture phase (`onMoveShouldSetPanResponderCapture`) for inner gesture handlers; that breaks the layering.

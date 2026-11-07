@@ -123,7 +123,7 @@ jobs:
       # answered from fixtures, so it needs no secrets and never touches beta.
       - name: Web build (shots mock, for a11y)
         # --clear: the first export warmed the Metro cache with the beta URL inlined.
-        run: npx expo export -p web --clear --output-dir dist-mock
+        run: npx expo export -p web --clear --source-maps --output-dir dist-mock
         env:
           CI: '1'
           EXPO_NO_TELEMETRY: '1'
@@ -131,6 +131,12 @@ jobs:
           EXPO_PUBLIC_SUPABASE_ANON_KEY: shots-mock-anon-key
           EXPO_PUBLIC_SENTRY_DSN: ''
           EXPO_PUBLIC_APP_ENV: development
+      # Reanimated, Gesture Handler and react-virtuoso load as their own chunks on
+      # web; fail if a change pulls them back into the entry every visit downloads (#193).
+      - name: Entry chunk stays light
+        run: |
+          node scripts/entry-deps.mjs --dist dist-mock --report
+          find dist-mock -name '*.map' -delete
       - uses: actions/upload-artifact@v4
         with:
           name: web-dist-mock
