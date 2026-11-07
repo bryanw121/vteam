@@ -100,7 +100,7 @@ app/                         # Expo Router routes (screens compose hooks + compo
         profile/index.tsx    # Profile tab
       clubs.tsx              # Clubs tab
       chat.tsx               # Chat tab (conversation list)
-      settings/              # account, hosted, history, cheers, silenced, notifications, feedback, badges
+      settings/              # account, hosted, history, cheers, silenced, hidden, notifications, feedback, badges
     event/[id].tsx           # Event detail
     club/[id].tsx, club/create.tsx
     chat/[id].tsx            # Conversation
@@ -156,7 +156,7 @@ signatures. Regenerate it after every schema change; never hand-edit it. Key dom
 - **cheers**, **user_badges**, **notifications**, **push_tokens**, **feedback_submissions**
 - **app_events**: insert-only usage metrics (see "Usage metrics"); **app_events_daily**: their per-day totals, kept forever
 
-Also **user_settings** (private per-user settings: home city, seen banners, reminder lead time) and **event_reminder_log** (service-only reminder dedupe).
+Also **user_settings** (private per-user settings: home city, seen banners, reminder lead time, what they hid from the feed) and **event_reminder_log** (service-only reminder dedupe).
 
 Custom RPCs include `get_email_by_username` (username login), `get_my_conversations`,
 `get_event_card_attendee_previews`, `get_feed_span` (the Events feed for a date range in one call; `useMonthEvents` falls back to separate queries if it is missing), `mark_conversation_read`, `mark_notification_read`.
@@ -208,6 +208,9 @@ vteam only reads the table (anon SELECT policy). `useMonthEvents` fetches it wit
 
 ### Location and private settings
 `user_settings` (owner-only RLS) holds per-user settings that don't belong on the public `profiles` row: `home_city_id` (→ `major_cities`, set from the profile editor) and `seen_banners`. Read and write it with `useUserSettings()`; it is cache-scoped to the user (`settings` prefix in `useCacheUserScope`).
+
+### Hiding things from the feed
+A signed-in player can hide feed items from the ⋯ button on a card (`FeedItemShell` in `components/events/FeedHiding.tsx`, laid over the card as a sibling so the card stays one tap target; cards leave room with `menuInset`). The menu (`HideFeedSheet`) offers this item, its venue (outside sessions) or host (vteam events, not your own), and its types (event-type tags and surface). Entries live in `user_settings.hidden_feed` (jsonb array of `{kind, key, label, until?}`, owner-only like the rest of the row), read through `useUserSettings` and changed with `useHiddenFeed` (whole list written, optimistic, Undo restores the previous list). Matching is pure in `utils/hiddenFeed.ts`. The feed screen drops hidden items while building its day sections and shows "N hidden · Show" under each day (each month on desktop) so nothing disappears silently; shown hidden items are dimmed with Unhide. Events the player is going to, waitlisted for or hosting always show, promoted sponsored slots have no menu, and calendar dots skip hidden items. Settings → Hidden in feed (`settings/hidden.tsx`) lists and unhides them. Guests are asked to sign in.
 
 ### One-time banners
 For information someone needs once, the first time they open a screen (e.g. "we're piloting in Austin"): add an entry to `BANNERS` in `constants/banners.ts` and render `<OneTimeBanner banner={BANNERS.x} />` where it should appear. It shows on the first visit and is recorded as seen immediately (on the device, and in `user_settings.seen_banners` when signed in), so it never returns even if not dismissed. To show an updated message to everyone again, change the entry's `id`. Don't use it for anything a person must act on.

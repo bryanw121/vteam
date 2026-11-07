@@ -11,7 +11,11 @@ import { useOutsideSessionLink } from '../hooks/useOutsideSessionLink'
 import { ConfirmDialog } from './ui'
 import { Spinner } from './ui/Spinner'
 
-type Props = { session: ExternalSession }
+type Props = {
+  session: ExternalSession
+  /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
+  menuInset?: boolean
+}
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -68,7 +72,7 @@ function findingLabel(finding: Exclude<SessionLinkDecision, { action: 'open' }>)
  * Before opening, useOutsideSessionLink asks Schelagg whether the venue still
  * lists it (≤1.5s), and asks first if it was cancelled, moved or dropped.
  */
-function ExternalSessionCardInner({ session }: Props) {
+function ExternalSessionCardInner({ session, menuInset = false }: Props) {
   const start = new Date(session.starts_at)
   const surface = session.surface ? { label: SURFACE_LABELS[session.surface], color: SURFACE_ACCENTS[session.surface] } : null
   const accent = surface?.color ?? theme.colors.subtext
@@ -101,7 +105,7 @@ function ExternalSessionCardInner({ session }: Props) {
       </View>
 
       <View style={shared.externalBody}>
-        <Text style={shared.externalKicker} numberOfLines={1}>
+        <Text style={[shared.externalKicker, menuInset && { paddingRight: 36 }]} numberOfLines={1}>
           {[surface?.label, session.session_type].filter(Boolean).join(' · ')}
         </Text>
         <View style={{ marginBottom: 4 }}>

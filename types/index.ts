@@ -434,6 +434,70 @@ export type MajorCity = Tables<'major_cities'>
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
 export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
   home_city: MajorCity | null
+  /** What the player hid from their Events feed (`user_settings.hidden_feed`). Missing reads as nothing hidden. */
+  hidden_feed?: HiddenFeedEntry[]
+}
+
+/**
+ * What a hidden-feed entry covers: one feed item, every outside session at a
+ * venue, every event a host created, or every event of a type (tag or surface).
+ */
+export type HiddenFeedKind = 'item' | 'venue' | 'host' | 'type'
+
+/**
+ * One entry of `user_settings.hidden_feed`. `key` is what matches (event id,
+ * lower-cased venue, host user id, `tag:<name>` / `surface:<surface>`); `label`
+ * is what Settings → Hidden in feed shows; `until` (items only) is the item's
+ * date, after which the entry is dropped.
+ */
+export type HiddenFeedEntry = {
+  kind: HiddenFeedKind
+  key: string
+  label: string
+  until?: string
+}
+
+/** A choice in a feed card's hide menu ("Hide all at Volleyworld"). */
+export type HideFeedOption = {
+  entry: HiddenFeedEntry
+  title: string
+}
+
+/** A feed card with its "⋯" hide menu button, and the "Hidden · Unhide" line when a hidden item is shown. */
+export type FeedItemShellProps = {
+  children?: import('react').ReactNode
+  onMore: () => void
+  /** Accessible name of the ⋯ button, e.g. "More options for Friday Sixes". */
+  moreLabel: string
+  /** Shown while its day's hidden items are revealed. */
+  hidden?: boolean
+  onUnhide?: () => void
+}
+
+/** "2 hidden · Show" under a day (or month) of the feed. */
+export type HiddenCountRowProps = {
+  count: number
+  revealed: boolean
+  onToggle: () => void
+}
+
+/** The hide menu for one feed item. */
+export type HideFeedSheetProps = {
+  visible: boolean
+  /** The item's title, shown above the choices. */
+  itemTitle?: string
+  options: HideFeedOption[]
+  onPick: (option: HideFeedOption) => void
+  onDismiss: () => void
+}
+
+/** Feed hiding as the Events screen sees it (`useHiddenFeed`). */
+export type HiddenFeedControls = {
+  entries: HiddenFeedEntry[]
+  hide: (entry: HiddenFeedEntry) => void
+  unhide: (entry: Pick<HiddenFeedEntry, 'kind' | 'key'>) => void
+  /** Puts back exactly this list (Undo). */
+  restore: (entries: HiddenFeedEntry[]) => void
 }
 
 /** Allowed values of `user_settings.reminder_lead_minutes` (its check constraint): 1 hour, 2 hours, a day. */
