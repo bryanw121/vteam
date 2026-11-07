@@ -22,7 +22,7 @@ const appFiles = [...sources(join(ROOT, 'app')), ...sources(join(ROOT, 'componen
 
 describe('swipe navigation', () => {
   it('is turned off in the native apps', () => {
-    expect(SWIPE_NAVIGATION).toEqual({ tabs: false, back: false })
+    expect(SWIPE_NAVIGATION).toEqual({ tabs: false, back: false, calendar: false })
   })
 
   it('never hard-codes a swipe gesture on', () => {
