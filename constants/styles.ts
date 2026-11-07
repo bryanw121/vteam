@@ -185,6 +185,12 @@ export const shared = StyleSheet.create({
   playerGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   playerCell: { width: Platform.OS === 'web' ? '33.33%' : '50%', padding: 3 },
   teamHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
+  // Team header chips (#149): average tier and setter count.
+  teamSummaryChip: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.timeInk,
+    backgroundColor: colors.primarySoft, borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
+  teamSummaryChipSetter: { color: colors.cool, backgroundColor: colors.card },
   teamDot: { width: 8, height: 8, borderRadius: 4 },
   teamHeading: { fontSize: font.size.sm, fontWeight: font.weight.semibold },
   /** One bordered player/guest row (drag card in People, cheer card in Cheers). */
