@@ -312,6 +312,8 @@ export function buildFixtures(now) {
 
   // ─── Viewer's own stuff ────────────────────────────────────────────────────
   const notifications = [
+    // A grouped cheers row as the server writes it since #194.
+    { id: id('f3000000', 8), user_id: ME, notification_type: 'cheers_received', title: '4 cheers from Halloween Warm-up Scrimmage', body: 'Emma, Marcus and Sofia cheered you · Pass ×2, Block, Serve', data: { event_id: E.pastHosted, deep_link: `/event/${E.pastHosted}`, giver_names: ['Emma', 'Marcus', 'Sofia'], giver_count: 3, cheer_counts: { pass: 2, block: 1, serve: 1 } }, read_at: null, created_at: t.ago(30) },
     { id: id('f3000000', 1), user_id: ME, notification_type: 'kudos_received', title: 'You received a cheer', body: 'Emma cheered your digging at Halloween Warm-up Scrimmage', data: { event_id: E.pastHosted }, read_at: null, created_at: t.ago(60 * 2) },
     { id: id('f3000000', 2), user_id: ME, notification_type: 'event_announcement', title: 'Announcement: Rec Center 6s Night', body: 'Court 3 tonight, enter through the side door.', data: { event_id: E.fridayNight }, read_at: null, created_at: t.ago(60 * 3) },
     { id: id('f3000000', 3), user_id: ME, notification_type: 'event_comment', title: 'New comment on Sand Doubles at Butler', body: 'Marcus: Running 10 minutes late, save me a spot', data: { event_id: E.sundaySand }, read_at: null, created_at: t.ago(45) },

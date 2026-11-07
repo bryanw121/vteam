@@ -25,7 +25,7 @@ import { BANNERS, BREAKPOINTS, COMPACT_TEXT_SCALE, FEED_STALE_NOTICE, SWIPE_NAVI
 import { TourTarget } from '../../../../components/tour/TourTarget'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
-import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, Notification, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
+import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, NotificationItem, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
 import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters, usableFeedFilter } from '../../../../utils/feedFilters'
 import { useTabsShell } from '../../../../contexts/tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -374,10 +374,10 @@ export default function EventsScreen() {
   const goNextMonth = useCallback(() => setCurMonthPage(p => p + 1), [])
 
   const openNotifItem = useCallback(
-    async (item: Notification) => {
+    async (item: NotificationItem) => {
       setNotifOpen(false)
       try {
-        if (!item.read_at) await markRead(item.id)
+        if (!item.read_at) await markRead(item.id, item.groupIds)
       } catch {
         /* ignore */
       }

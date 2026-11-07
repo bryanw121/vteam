@@ -9,7 +9,9 @@ import { useNotifications } from '../../hooks/useNotifications'
 import { shared, theme } from '../../constants'
 import { routes, isAppPath, toRoute } from '../../utils/routes'
 import { formatShortTime } from '../../utils/notificationUtils'
-import type { Notification } from '../../types'
+import type { NotificationItem } from '../../types'
+import { NotificationCheerChips } from '../../components/NotificationCheerChips'
+import { inboxBody } from '../../utils/notificationGroups'
 import { Spinner } from '../../components/ui/Spinner'
 
 export default function NotificationsScreen() {
@@ -23,9 +25,9 @@ export default function NotificationsScreen() {
   )
 
   const openItem = useCallback(
-    async (item: Notification) => {
+    async (item: NotificationItem) => {
       try {
-        if (!item.read_at) await markRead(item.id)
+        if (!item.read_at) await markRead(item.id, item.groupIds)
       } catch {
         /* still navigate */
       }
@@ -134,8 +136,9 @@ export default function NotificationsScreen() {
                     }}
                     numberOfLines={3}
                   >
-                    {item.body}
+                    {inboxBody(item)}
                   </Text>
+                  <NotificationCheerChips data={item.data} />
                   <Text style={[shared.captionStrong, { marginTop: theme.spacing.sm }]}>
                     {formatShortTime(item.created_at)}
                   </Text>

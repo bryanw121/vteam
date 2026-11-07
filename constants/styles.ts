@@ -184,6 +184,12 @@ export const shared = StyleSheet.create({
   // ─── Team / player grid (shared by the event People & Cheers tabs) ───────
   playerGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   playerCell: { width: Platform.OS === 'web' ? '33.33%' : '50%', padding: 3 },
+  // Grouped cheers notifications (#194).
+  notificationChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
+  notificationChip: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.timeInk, backgroundColor: colors.primarySoft,
+    borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
   teamHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
   teamDot: { width: 8, height: 8, borderRadius: 4 },
   teamHeading: { fontSize: font.size.sm, fontWeight: font.weight.semibold },

@@ -3,18 +3,20 @@ import { FlatList, Modal, Pressable, TouchableOpacity, View } from 'react-native
 import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../constants'
-import type { Notification } from '../types'
+import type { NotificationItem } from '../types'
+import { NotificationCheerChips } from './NotificationCheerChips'
+import { inboxBody } from '../utils/notificationGroups'
 import { Spinner } from './ui/Spinner'
 
 type Props = {
   visible: boolean
-  items: Notification[]
+  items: NotificationItem[]
   loading: boolean
   unreadCount: number
   insetTop: number
   windowWidth: number
   onDismiss: () => void
-  onOpenItem: (item: Notification) => void
+  onOpenItem: (item: NotificationItem) => void
   onMarkAllRead: () => void
   onSeeAll: () => void
 }
@@ -125,8 +127,9 @@ export function NotificationPopup({
                 {item.title}
               </Text>
               <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext, marginTop: 2 }} numberOfLines={2}>
-                {item.body}
+                {inboxBody(item)}
               </Text>
+              <NotificationCheerChips data={item.data} />
             </TouchableOpacity>
           )}
         />
