@@ -57,11 +57,11 @@ describe('weekMonthLabel', () => {
   it('names the month when the week is inside one month', () => {
     expect(weekMonthLabel(new Date(2026, 10, 8))).toBe('November 2026')
   })
-  it('names both months when the week straddles two', () => {
-    expect(weekMonthLabel(new Date(2026, 10, 29))).toBe('Nov – Dec 2026')
+  it('a week that runs into a new month takes the new month', () => {
+    expect(weekMonthLabel(new Date(2026, 10, 29))).toBe('December 2026')
   })
-  it('names both years when the week straddles New Year', () => {
-    expect(weekMonthLabel(new Date(2026, 11, 27))).toBe('Dec 2026 – Jan 2027')
+  it('a week that runs into a new year takes the new month and year', () => {
+    expect(weekMonthLabel(new Date(2026, 11, 27))).toBe('January 2027')
   })
   it('a week ending on the last day of the month is one month', () => {
     expect(weekMonthLabel(new Date(2026, 9, 25))).toBe('October 2026')
