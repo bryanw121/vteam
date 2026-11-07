@@ -45,3 +45,17 @@ class LazyChunkBoundary extends Component<LazyChunkBoundaryProps, LazyChunkBound
     return this.props.children
   }
 }
+
+/**
+ * Fetch a lazy chunk once the page has loaded and the browser is idle, so the
+ * first visit to its screen doesn't wait for the download. Web only; a no-op
+ * during the static export (no window).
+ */
+export function preloadWhenIdle(load: () => Promise<unknown>, delayMs = 3000): void {
+  if (typeof window === 'undefined') return
+  const whenIdle = (fn: () => void) =>
+    'requestIdleCallback' in window ? window.requestIdleCallback(fn, { timeout: 5000 }) : setTimeout(fn, 1)
+  const preload = () => setTimeout(() => whenIdle(() => { void load().catch(() => {}) }), delayMs)
+  if (document.readyState === 'complete') preload()
+  else window.addEventListener('load', preload, { once: true })
+}
