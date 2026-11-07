@@ -7,7 +7,7 @@ import { theme, LOCATIONS } from '../../constants'
 import { TimePill } from '../ui'
 import type { EventWithDetails } from '../../types'
 import { formatDuration } from '../../utils'
-import { eventDateMs } from '../../hooks/event'
+import { eventDateMs } from '../../hooks/event/derive'
 
 type Props = { event: EventWithDetails }
 
