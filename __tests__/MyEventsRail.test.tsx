@@ -118,20 +118,25 @@ describe('MyEventsRail', () => {
 })
 
 describe('railTimeLabel', () => {
+  // The rail speaks the device's clock, so build times in the device's zone:
+  // these hold whatever TZ the suite runs in. "Now" is Thu Aug 20, 1 PM local.
+  const local = (d: number, h: number, m = 0) => new Date(2026, 7, d, h, m).toISOString()
+  const LOCAL_NOW = new Date(2026, 7, 20, 13, 0).getTime()
+
   it('says TONIGHT for an event later today', () => {
-    expect(railTimeLabel('2026-08-20T23:00:00', 120, NOW)).toMatch(/^TONIGHT /)
+    expect(railTimeLabel(local(20, 22), 120, LOCAL_NOW)).toBe('TONIGHT 10:00 PM')
   })
 
   it('says TOMORROW for the next day', () => {
-    expect(railTimeLabel('2026-08-21T19:00:00', 120, NOW)).toMatch(/^TOMORROW /)
+    expect(railTimeLabel(local(21, 19), 120, LOCAL_NOW)).toBe('TOMORROW 7:00 PM')
   })
 
   it('shows a weekday and date further out', () => {
-    expect(railTimeLabel('2026-08-29T19:00:00', 120, NOW)).toMatch(/^SAT AUG 29$/)
+    expect(railTimeLabel(local(29, 19), 120, LOCAL_NOW)).toMatch(/^SAT AUG 29$/)
   })
 
   it('shows NOW and the end time once the event has started', () => {
     // Started 30 min ago, runs 120 → ends 90 min from now.
-    expect(railTimeLabel('2026-08-20T17:30:00', 120, NOW)).toMatch(/^NOW · ends /)
+    expect(railTimeLabel(local(20, 12, 30), 120, LOCAL_NOW)).toBe('NOW · ends 2:30 PM')
   })
 })
