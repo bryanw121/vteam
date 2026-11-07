@@ -1,9 +1,11 @@
 import { ScrollViewStyleReset } from 'expo-router/html'
 import { theme } from '../constants/theme'
 import { APP_NAME } from '../constants/copy'
+import { buildFeedPrefetchScript } from '../utils/feedPrefetchScript'
 
 // Read at build time (static export inlines EXPO_PUBLIC_*). Empty in tests.
 const SUPABASE_ORIGIN = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').replace(/\/+$/, '')
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
 /** Family names match theme.font.* (the names expo-font registers on native). */
 const WEB_FONT_FACES = `@font-face { font-family: 'Inter_400Regular'; src: url('/fonts/inter-latin-400-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_500Medium'; src: url('/fonts/inter-latin-500-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_600SemiBold'; src: url('/fonts/inter-latin-600-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_700Bold'; src: url('/fonts/inter-latin-700-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_400Regular'; src: url('/fonts/space-grotesk-latin-400-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_500Medium'; src: url('/fonts/space-grotesk-latin-500-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_600SemiBold'; src: url('/fonts/space-grotesk-latin-600-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_700Bold'; src: url('/fonts/space-grotesk-latin-700-normal.woff2') format('woff2'); font-display: swap; }`
@@ -41,6 +43,15 @@ export default function Root({ children }: { children: React.ReactNode }) {
         */}
         {SUPABASE_ORIGIN ? <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" /> : null}
         {SUPABASE_ORIGIN ? <link rel="dns-prefetch" href={SUPABASE_ORIGIN} /> : null}
+        {/*
+          Start the Events feed request now (#184), before the app bundle has
+          downloaded: on a cold server the wait overlaps the download. Only on
+          `/`; useMonthEvents adopts it if span and viewer match (lib/feedPrefetch.web).
+        */}
+        {SUPABASE_ORIGIN && SUPABASE_ANON_KEY ? (
+          // @ts-ignore
+          <script dangerouslySetInnerHTML={{ __html: buildFeedPrefetchScript(SUPABASE_ORIGIN, SUPABASE_ANON_KEY) }} />
+        ) : null}
         {/*
           Web fonts: small self-hosted latin woff2 files (public/fonts, SIL OFL)
           registered under the same family names the native app loads with

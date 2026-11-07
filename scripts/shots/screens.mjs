@@ -45,6 +45,8 @@ export const SCREENS = {
   },
   'event-details': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', sources: EVENT_DETAIL },
   'event-people': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }], sources: [...EVENT_DETAIL, 'components/ProfileAvatar.tsx'] },
+  // Host team builder (#149): Balanced mode, then Balance.
+  'event-people-balanced': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }, { tap: 'team-mode-balanced' }, { tap: 'team-shuffle' }, { wait: 300 }], sources: [...EVENT_DETAIL, 'utils/teamMode.ts'] },
   'event-discussion': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-discussion', text: 'Discussion' }], sources: EVENT_DETAIL },
   'event-cheers': { route: `/event/${E.pastSand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-cheers', text: 'Cheers' }], sources: [...EVENT_DETAIL, 'components/CheerRadarChart.tsx'] },
   // Bottom of a paid event someone else hosts: price, Venmo button, about.

@@ -405,5 +405,13 @@
     "desktop": {
       "color-contrast": 3
     }
+  },
+  "event-people-balanced": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 7
+    }
   }
 }

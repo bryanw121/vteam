@@ -32,4 +32,6 @@ export const ANALYTICS_EVENTS = {
   playerSetupSkipped: 'player_setup_skipped',
   /** Done on the last step. */
   playerSetupCompleted: 'player_setup_completed',
+  /** The Events feed's first rows were in hand (#184). props: { ms (since navigation start), source: snapshot | prefetch | fetch, cold } */
+  feedFirstPaint: 'feed_first_paint',
 } as const

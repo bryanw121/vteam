@@ -9,7 +9,7 @@
 
 import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database'
 import type { TabKey } from '../constants/navigation'
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import type { ActivityIndicatorProps } from 'react-native'
 import type { BracketMatchInsert, SetScore, TiebreakerKey } from './tournament'
 
@@ -1304,6 +1304,13 @@ export type TournamentInviteCandidate = Pick<Profile, 'id' | 'username' | 'first
 
 export type TeamSource = { team_number?: number | null; team_pinned?: boolean | null }
 
+/** A player as team balancing sees them (#149). Guests have no level. */
+export type BalancePlayer = { id: string; skillLevel: VolleyballSkillLevel | null; isSetter: boolean }
+/** Team header chips (#149). `avgLevel` is null when too few players have a level. */
+export type TeamSummary = { avgLevel: VolleyballSkillLevel | null; setters: number }
+/** How the host's shuffle button splits players. */
+export type TeamMode = 'random' | 'balanced'
+
 export type RandomizeResult =
   | { ok: true; assignments: Record<string, TeamAssignment> }
   | { ok: false; title: string; message: string }
@@ -1320,6 +1327,13 @@ export type RemoveDialogAction = { type: 'open'; target: RemoveTarget } | { type
 
 /** A team drop zone's measured window-y extent (People tab drag-and-drop). */
 export type ZoneLayout = { top: number; bottom: number }
+
+/** components/LazyChunk: the error boundary around a lazily loaded chunk. */
+export type LazyChunkBoundaryProps = { children: ReactNode; onRetry: () => void }
+export type LazyChunkBoundaryState = { failed: boolean }
+
+/** components/profile/LegendRing(.web): the spinning Legend avatar border. */
+export type LegendBorderProps = { children: ReactNode; outerSize: number; ring: number }
 
 // Return types of the screen hooks (type-only imports: no runtime cycle).
 /** Everything the event page reads: one hook, shared by every tab. */
@@ -1833,3 +1847,25 @@ export type ForecastSummary = {
 
 /** A rounded court position: the forecast cache key. */
 export type ForecastCourt = { lat: number; lng: number }
+
+// ─── Public profile, history, cheers summary (#185) ──────────────────────────
+
+/** hooks/useUserProfile: another player's profile page. */
+export type UserProfileData = {
+  profile: Profile
+  avatarUri: string | null
+  totalCheers: number
+  /** Badges the player chose to show, in their order. */
+  displayBadges: UserBadge[]
+}
+
+/** hooks/useEventHistory: past events attended / hosted, or upcoming hosted. */
+export type EventHistoryKind = 'attended' | 'hosted-past' | 'hosted-upcoming'
+
+/** hooks/useCheersSummary: the viewer's cheers screen. */
+export type CheersSummary = {
+  totalReceived: number
+  totalGiven: number
+  counts: Partial<Record<CheerType, number>>
+}
+
