@@ -287,6 +287,14 @@
       "color-contrast": 11
     }
   },
+  "settings-hidden": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
   "settings-silenced": {
     "mobile": {
       "color-contrast": 4
