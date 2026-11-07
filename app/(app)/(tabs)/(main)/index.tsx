@@ -21,7 +21,7 @@ import { NextUpCard } from '../../../../components/events/NextUpCard'
 import { IconButton } from '../../../../components/ui'
 import { myStatusFor, useMyUpcomingEvents } from '../../../../hooks/useMyUpcomingEvents'
 import { NotificationPopup } from '../../../../components/NotificationPopup'
-import { BANNERS, BREAKPOINTS, COMPACT_TEXT_SCALE, FEED_STALE_NOTICE, TIGHT_TEXT_SCALE, TOUR_TARGETS, shared, theme } from '../../../../constants'
+import { BANNERS, BREAKPOINTS, COMPACT_TEXT_SCALE, FEED_STALE_NOTICE, SWIPE_NAVIGATION, TIGHT_TEXT_SCALE, TOUR_TARGETS, shared, theme } from '../../../../constants'
 import { TourTarget } from '../../../../components/tour/TourTarget'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
@@ -1052,7 +1052,7 @@ function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPre
             widthRef.current = w
             if (w !== width) { setWidth(w); translateX.setValue(-w) }
           }}
-          {...panResponder.panHandlers}
+          {...(SWIPE_NAVIGATION.calendar ? panResponder.panHandlers : {})}
         >
           {width > 0 && (
             <Animated.View style={{ flexDirection: 'row', width: width * 3, transform: [{ translateX }] }}>
