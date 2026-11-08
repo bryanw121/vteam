@@ -8,12 +8,15 @@ import type { MatchDoc, RosterPlayer, ScoreEventInput, TeamSide } from '../../ty
  * end up with (the finished scoresheet, the official USA Volleyball form, Copy to
  * paper) before scoring a real one. Built through the same log and engine as a
  * real match, so it is exactly what the app produces: best of three, won 2–0,
- * with a time-out, substitutions, a libero and a sanction. Deterministic.
+ * with time-outs, substitutions, liberos (the Aces' libero serving for their middle, triangled on the form) and a sanction. Deterministic.
  */
 export const EXAMPLE_MATCH_ID = 'example'
 
 const roster = (numbers: number[], names: string[], libero: number): RosterPlayer[] =>
   numbers.map((number, i) => ({ number, name: names[i], captain: i === 0, libero: number === libero }))
+
+/** The Aces' middle, whom their libero serves for (USAV: one serving position per set). */
+const ACES_MIDDLE_SLOT = 5
 
 /** Position V (0-based 4): the next rotation takes it to the front row. */
 const LIBERO_LAST_BACK_ROW = 4
@@ -79,6 +82,13 @@ export function exampleMatch(now = Date.now()): MatchDoc {
           const libero = courtOf(team).find(p => p.libero && (p.position === LIBERO_LAST_BACK_ROW || isFrontRow(p.position)))
           if (libero) add({ type: 'libero_out', team: side, libero: libero.player })
         }
+      }
+      // The Aces' libero serves for their middle (lineup slot VI): in for them each time that slot reaches position I.
+      const now2 = replay(doc.setup, doc.log)
+      if (now2.current != null) {
+        const aces = now2.sets[now2.current].teams.A
+        const server = courtOf(aces).find(p => p.position === 0)
+        if (server && !server.libero && server.slot === ACES_MIDDLE_SLOT && !aces.libero) add({ type: 'libero_in', team: 'A', libero: 15, replaces: server.player })
       }
       add({ type: 'rally', winner: pattern[i % pattern.length] === 0 ? favourite : underdog })
     }

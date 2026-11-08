@@ -296,6 +296,8 @@ export type TeamSetState = {
   liberos: number[]
   /** Lineup slot the libero served in this set, if any. */
   liberoServeSlot: number | null
+  /** Point numbers this team scored on a libero's serve (triangled in the points column, USAV S6.2.2a). */
+  liberoPoints: number[]
   /** Points scored while serving out of rotation and then cancelled. */
   cancelled: number
 }

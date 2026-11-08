@@ -19,7 +19,10 @@ describe('example match', () => {
     const count = (type: string) => doc.log.filter(e => e.type === type).length
     expect(count('timeout')).toBe(3)
     expect(count('sub')).toBe(3)
-    expect(count('libero_in')).toBe(1)
+    expect(count('libero_in')).toBeGreaterThan(1)
+    // The Aces' libero serves for their middle, in that one position.
+    for (const set of state.sets) expect(set.teams.A.liberoServeSlot).toBe(5)
+    expect(state.sets.some(set => set.teams.A.liberoPoints.length > 0)).toBe(true)
     expect(count('sanction')).toBe(1)
     console.log(state.sets.map(s => `${s.teams.A.score}-${s.teams.B.score}`))
   })

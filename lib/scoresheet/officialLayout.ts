@@ -33,6 +33,8 @@ const SUB_ROWS = 8
 const SUB_ROW_TOP = 158.9
 const SUB_ROW_H = 14.4
 const ORDER_ROW = { top: 144.5, bottom: 158.9 }
+/** Centre of the printed Roman numerals (I–VI) above each starting player. */
+const ROMAN_Y = 140
 const SERVICE_ROW_TOPS = [274.1, 294.4, 314.7]
 const SERVICE_ROW_H = 20.3
 const SERVICE_ROUNDS = 6
@@ -114,6 +116,15 @@ function text(c: Ctx, x: number, y: number, value: string | number | null | unde
 }
 const line = (c: Ctx, x1: number, y1: number, x2: number, y2: number, width = 0.9) => c.ops.push({ kind: 'line', page: c.page, x1, y1, x2, y2, width })
 const ellipse = (c: Ctx, cx: number, cy: number, rx: number, ry = rx, width = 0.9) => c.ops.push({ kind: 'ellipse', page: c.page, cx, cy, rx, ry, width })
+/** A triangle around (cx, cy), point up: how the form marks a libero's serve (S6.2). */
+function triangle(c: Ctx, cx: number, cy: number, r: number, spread = 0.95, width = 0.8) {
+  const top = { x: cx, y: cy - r }
+  const left = { x: cx - r * spread, y: cy + r * 0.62 }
+  const right = { x: cx + r * spread, y: cy + r * 0.62 }
+  line(c, top.x, top.y, right.x, right.y, width)
+  line(c, right.x, right.y, left.x, left.y, width)
+  line(c, left.x, left.y, top.x, top.y, width)
+}
 const cross = (c: Ctx, cx: number, cy: number, r: number) => {
   line(c, cx - r, cy - r, cx + r, cy + r)
   line(c, cx - r, cy + r, cx + r, cy - r)
@@ -211,6 +222,8 @@ function setBlock(c: Ctx, doc: MatchDoc, set: SetState, block: number, overflow:
 
     for (let slot = 0; slot < 6; slot++) {
       const x0 = cols[slot]
+      // The first time a libero serves in the set: a triangle around that position's Roman numeral (S6.2.1).
+      if (t.liberoServeSlot === slot) triangle(c, x0 + COL_W / 2, ROMAN_Y + dy, 6.6, 1.5)
       // Starting player.
       text(c, x0 + COL_W / 2, (ORDER_ROW.top + ORDER_ROW.bottom) / 2 + 3.6 + dy, t.lineup[slot], 10, { align: 'center', bold: true })
       // Substitutions into this slot: entering player and the score (this team : opponent).
@@ -262,7 +275,7 @@ function setBlock(c: Ctx, doc: MatchDoc, set: SetState, block: number, overflow:
       overflow.push(`${label}, ${teamName(doc, team)}: extra time-outs at ${t.timeouts.slice(2).map(to => `${to.score[0]}:${to.score[1]}`).join(', ')}.`)
     }
 
-    runningScore(c, t.marks, t.score, set.winner != null, POINT_COLS[side], dy)
+    runningScore(c, t.marks, t.score, set.winner != null, POINT_COLS[side], dy, t.liberoPoints)
     if (t.score > POINTS_ON_FORM) overflow.push(`${label}: ${teamName(doc, team)} scored ${t.score} (the form counts to ${POINTS_ON_FORM}); final ${t.score}–${opp.score}.`)
   }
   // Start and end time (24-hour, as the form asks).
@@ -279,7 +292,7 @@ function setBlock(c: Ctx, doc: MatchDoc, set: SetState, block: number, overflow:
  * rest of that column, and a line through each unused column (S17.4.2-3). A set that starts at
  * 4–4 gets the same T-bar over 1–4 (a line from the top of the column to a line under 4, S2.5).
  */
-function runningScore(c: Ctx, marks: PointMark[], score: number, finished: boolean, colX: number, dy: number) {
+function runningScore(c: Ctx, marks: PointMark[], score: number, finished: boolean, colX: number, dy: number, liberoPoints: number[] = []) {
   const cell = (n: number) => {
     const col = Math.floor((n - 1) / 12)
     const row = (n - 1) % 12
@@ -306,6 +319,8 @@ function runningScore(c: Ctx, marks: PointMark[], score: number, finished: boole
     const { x, y, cx, cy } = cell(n)
     line(c, x + 1.8, y + POINT_ROW_H - 1.8, x + POINT_COL_W - 1.8, y + 1.8)
     if (marks[n - 1] === 'penalty') ellipse(c, cx, cy, 4.6, 4.6)
+    // Scored on a libero's serve: a triangle around the point (S6.2.2a).
+    if (liberoPoints.includes(n)) triangle(c, cx, cy + 0.6, 5.4)
   }
   if (!finished || score >= POINTS_ON_FORM) return
   // T-bar: a line under the last point, then down the rest of its column; full lines through
