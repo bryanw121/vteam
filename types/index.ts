@@ -568,7 +568,7 @@ export type AdFreeRedeemResult = AdFreeStatus & {
 
 // ─── Tours (constants/tours.ts, contexts/tour.tsx) ───────────────────────────
 
-export type TourId = 'intro'
+export type TourId = 'intro' | 'scorekeeper'
 
 /** Where the step's card sits relative to its target. 'auto' picks the side with more room. */
 export type TourPlacement = 'auto' | 'top' | 'bottom'
@@ -590,7 +590,7 @@ export type TourDef = {
 }
 
 /** Where the tour was started from (for analytics and debugging). */
-export type TourSource = 'banner' | 'profile_menu' | 'other'
+export type TourSource = 'banner' | 'profile_menu' | 'first_use' | 'help_button' | 'other'
 
 /** What the tab shell hands the tour so it can move between tabs (registered by the tabs layout). */
 export type TourShell = {

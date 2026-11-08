@@ -1,6 +1,6 @@
 /**
  * Teams and match details remembered on the device, so the next match's setup is a tap: a team
- * comes back with its starting six (in order) and its bench, and the competition / hall / court /
+ * comes back with its starting six (in order) and its bench, and the competition / court /
  * officials carry over to the next match the same day. AsyncStorage (localStorage on web).
  * Best effort: a failed read or write never blocks scoring.
  */
@@ -61,8 +61,8 @@ export async function forgetTeam(name: string): Promise<SavedTeam[]> {
 
 /** Details worth carrying to the next match (not the date, match number or gender of this one). */
 export function carryOver(info: MatchInfo): MatchInfo {
-  const { competition, division, city, hall, court, firstReferee, secondReferee, scorer } = info
-  return Object.fromEntries(Object.entries({ competition, division, city, hall, court, firstReferee, secondReferee, scorer }).filter(([, v]) => v && String(v).trim())) as MatchInfo
+  const { competition, division, city, court, firstReferee, secondReferee, scorer } = info
+  return Object.fromEntries(Object.entries({ competition, division, city, court, firstReferee, secondReferee, scorer }).filter(([, v]) => v && String(v).trim())) as MatchInfo
 }
 
 export async function rememberInfo(info: MatchInfo, now = Date.now()): Promise<void> {

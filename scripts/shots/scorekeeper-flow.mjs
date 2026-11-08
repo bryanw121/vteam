@@ -63,6 +63,20 @@ try {
   await tap(page, 'experiment-scorekeeper')
   await page.getByTestId('new-match').waitFor()
   await shot(page, 'scorekeeper-empty')
+
+  // The built-in example: a finished match to see what you get, kept out of the saved list.
+  await tap(page, 'open-example')
+  await page.getByTestId('example-note').waitFor()
+  await shot(page, 'example-sheet')
+  await shot(page, 'example-sheet-full', true)
+  await tap(page, 'sheet-copy')
+  await page.getByTestId('copy-next').waitFor()
+  await shot(page, 'example-copy')
+  await page.goBack()
+  await page.getByTestId('example-note').waitFor()
+  await page.goBack()
+  await page.getByTestId('new-match').waitFor()
+  check(await text(page, 'No matches yet').isVisible(), 'the example is not listed as a saved match')
   await tap(page, 'new-match')
   await page.getByTestId('team-name-A').waitFor()
   const fill = async (id, value) => {
@@ -110,6 +124,16 @@ try {
   for (const s of ['A', 'A', 'B', 'A', 'B', 'B', 'A']) await point(s)
   await shot(page, 'scoring', true)
   check(await page.getByTestId('score-A').innerText().then(t => t.includes('4')), 'score A is 4 after 7 rallies')
+
+  // The tour (opens by itself the first time; the harness marks tours done, so start it from "?")
+  await tap(page, 'score-help')
+  for (let i = 0; i < 6; i++) {
+    await page.getByTestId('tour-card').waitFor()
+    await shot(page, `tour-step-${i + 1}`)
+    await tap(page, 'tour-next')
+    await page.waitForTimeout(400)
+  }
+  check(!(await page.getByTestId('tour-overlay').isVisible().catch(() => false)), 'the tour closes after its last step')
 
   // Libero in for the back-row player, then a substitution from the court
   await tap(page, 'action-libero')

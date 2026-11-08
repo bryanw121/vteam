@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `fd15753c1616`
+> Inventory fingerprint: `3c175b5ddd37`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -631,6 +631,7 @@ TypeScript `enum` keyword.
 | `Surface` | `indoor`, `sand`, `grass` | [`types/index.ts:193`](../types/index.ts#L193) |
 | `TeamMode` | `random`, `balanced` | [`types/index.ts:1312`](../types/index.ts#L1312) |
 | `TextSizeId` | `small`, `default`, `large`, `xlarge` | [`types/index.ts:1776`](../types/index.ts#L1776) |
+| `TourId` | `intro`, `scorekeeper` | [`types/index.ts:571`](../types/index.ts#L571) |
 | `TournamentBracketType` | `single`, `double` | [`types/index.ts:887`](../types/index.ts#L887) |
 | `TournamentFormat` | `pool_play`, `bracket`, `pool_bracket`, `round_robin` | [`types/index.ts:886`](../types/index.ts#L886) |
 | `TournamentJoinRequestStatus` | `pending`, `approved`, `declined` | [`types/index.ts:969`](../types/index.ts#L969) |
@@ -640,7 +641,7 @@ TypeScript `enum` keyword.
 | `TournamentTeamInvitationStatus` | `pending`, `accepted`, `declined` | [`types/index.ts:966`](../types/index.ts#L966) |
 | `TournamentTeamStatus` | `registered`, `waitlisted`, `free_agent`, `disqualified` | [`types/index.ts:889`](../types/index.ts#L889) |
 | `TourPlacement` | `auto`, `top`, `bottom` | [`types/index.ts:574`](../types/index.ts#L574) |
-| `TourSource` | `banner`, `profile_menu`, `other` | [`types/index.ts:593`](../types/index.ts#L593) |
+| `TourSource` | `banner`, `profile_menu`, `first_use`, `help_button`, `other` | [`types/index.ts:593`](../types/index.ts#L593) |
 | `VolleyballPosition` | `setter`, `libero`, `outside_hitter`, `defensive_specialist`, `opposite_hitter`, `middle_blocker` | [`types/index.ts:31`](../types/index.ts#L31) |
 <!-- END GENERATED: code-inventory -->
 

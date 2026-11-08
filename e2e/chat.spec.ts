@@ -203,7 +203,8 @@ test.describe('Chat', () => {
     await page.getByRole('button', { name: 'New message' }).click()
     await page.waitForTimeout(1000)
     await expect(page.getByRole('textbox')).toBeVisible()
-    await expect(page.getByText('Cancel')).toBeVisible()
+    // Exact: the seed DM's preview can contain "cancel" (another spec's e2e-cancel-edit message).
+    await expect(page.getByText('Cancel', { exact: true })).toBeVisible()
   })
 
   test('compose search returns matching users', async ({ page }) => {
