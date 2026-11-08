@@ -5,6 +5,7 @@ import type {
   EventWithDetails,
   JoinAction,
   JoinActionState,
+  NoShowWindow,
   Profile,
   TeamAssignment,
   RandomizeResult, TeamSource,
@@ -379,4 +380,31 @@ export function paymentVisibility(args: {
 /** How many attending players (not +1 guests) marked "I've paid". */
 export function attendeesPaid(attendees: Pick<Profile, 'id'>[], paidUserIds: ReadonlySet<string>): number {
   return attendees.reduce((n, p) => (paidUserIds.has(p.id) ? n + 1 : n), 0)
+}
+
+// ─── No-show flag (#151) ─────────────────────────────────────────────────────
+
+/** Hosts can flag no-shows until this long after the end; unflagged players are paid then (`award_event_points`). */
+export const NO_SHOW_GRACE_MS = 2 * 3600_000
+
+/**
+ * The host's no-show window: from the start until 2 hours after the end, on an
+ * event that isn't cancelled. Mirrors the check in `set_no_show()`; the
+ * database has the final say.
+ */
+export function noShowWindow(event: Pick<EventWithDetails, 'event_date' | 'duration_minutes' | 'cancelled_at'> | undefined, now: number = Date.now()): NoShowWindow {
+  if (!event) return { open: false, closesAt: 0 }
+  const start = eventDateMs(event.event_date)
+  const closesAt = start + (event.duration_minutes ?? 120) * 60_000 + NO_SHOW_GRACE_MS
+  return { open: !event.cancelled_at && now >= start && now < closesAt, closesAt }
+}
+
+/** Attending players the host flagged. */
+export function noShowUserIds(attendingRows: Pick<EventAttendeeWithProfile, 'user_id' | 'no_show'>[]): Set<string> {
+  return new Set(attendingRows.filter(r => r.no_show).map(r => r.user_id))
+}
+
+/** The viewer's own attending row is flagged (their "Marked as a no-show" card). */
+export function isViewerNoShow(rows: Pick<EventAttendeeWithProfile, 'user_id' | 'status' | 'no_show'>[], userId: string | null): boolean {
+  return !!userId && rows.some(r => r.user_id === userId && r.status === 'attending' && r.no_show === true)
 }

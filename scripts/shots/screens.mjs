@@ -44,6 +44,8 @@ export const SCREENS = {
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/SignInButton.tsx', 'hooks/useMonthEvents.ts', 'utils/feed*.ts'],
   },
   'event-details': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', sources: EVENT_DETAIL },
+  // No-show flag (#151): what a flagged player sees on Details.
+  'event-details-noshow': { route: `/event/${E.pastIndoor}`, ready: 'Marked as a no-show', sources: EVENT_DETAIL },
   'event-people': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }], sources: [...EVENT_DETAIL, 'components/ProfileAvatar.tsx'] },
   // Host team builder (#149): Balanced mode, then Balance.
   'event-people-balanced': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }, { tap: 'team-mode-balanced' }, { tap: 'team-shuffle' }, { wait: 300 }], sources: [...EVENT_DETAIL, 'utils/teamMode.ts'] },

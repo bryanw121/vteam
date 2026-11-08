@@ -15,6 +15,7 @@ import {
   forgetDeletedEvent,
   guestRemoveTarget,
   isEventOver,
+  isViewerNoShow,
   paymentVisibility,
   reportEventError,
   useCohosts,
@@ -347,6 +348,7 @@ export default function EventDetail() {
                   onMessageHost={hostId => { void openDm(hostId) }}
                   onManageCohosts={cohostsApi.open}
                   payments={paymentAccess.canToggle ? payments : null}
+                  noShow={isViewerNoShow(roster.rows, userId)}
                 />
               ) : placeholder}
 

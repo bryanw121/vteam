@@ -6,7 +6,7 @@ import { useRequireSignIn } from '../useRequireSignIn'
 import { ATTENDEE_SELECT, EVENT_JUST_FILLED_BODY, EVENT_JUST_FILLED_TITLE, GENERIC_ERROR_MESSAGE, GUEST_SELECT } from '../../constants'
 import type {
   EventAttendee, EventAttendeeWithProfile, EventGuest, EventWithDetails, NotificationType, Profile, RemoveTarget,
-  SelfAttendanceAction, TablesInsert,
+  SelfAttendanceAction, SetNoShowArgs, TablesInsert,
 } from '../../types'
 import { eventKeys, patchQuery } from './keys'
 import { attendeeRowsWithProfiles } from './derive'
@@ -104,7 +104,8 @@ export function useEventAttendance(data: EventData) {
           .select(ATTENDEE_SELECT)
           .single()
         if (error) throw error
-        return row as EventAttendeeWithProfile
+        // via unknown: ATTENDEE_SELECT reads no_show, which types/database.ts gets only when regenerated after #151 merges.
+        return row as unknown as EventAttendeeWithProfile
       }
 
       switch (action) {
@@ -259,6 +260,39 @@ export function useEventAttendance(data: EventData) {
     return promote.mutate(waitlistUserId)
   }
 
+  // ─── Host / co-host: no-show flag (#151) ───────────────────────────────────
+  // Optimistic: the badge shows at once; a rejected call (window closed, not a
+  // host any more) puts the row back and says why.
+  const noShow = useMutation(
+    async (vars: { userId: string; value: boolean }) => {
+      const args: SetNoShowArgs = { p_event_id: id, p_user_id: vars.userId, p_value: vars.value }
+      // TEMPORARY cast: set_no_show isn't in types/database.ts until it is regenerated from live after merge.
+      const { error } = await supabase.rpc('set_no_show' as never, args as never)
+      if (error) throw error
+      return true
+    },
+    {
+      onMutate: vars => {
+        const markedAt = vars.value ? new Date().toISOString() : null
+        let previous: EventAttendeeWithProfile | undefined
+        patchAttendees(id, rows => rows.map(r => {
+          if (r.user_id !== vars.userId) return r
+          previous = r
+          return { ...r, no_show: vars.value, no_show_marked_at: markedAt, no_show_marked_by: vars.value ? userId : null }
+        }))
+        return () => {
+          const before = previous
+          if (before) patchAttendees(id, rows => rows.map(r => (r.user_id === vars.userId ? before : r)))
+        }
+      },
+      onSuccess: (_r, vars) => eventBreadcrumb(id, userId, vars.value ? 'event:mark_no_show' : 'event:undo_no_show', { targetUserId: vars.userId }),
+      onError: (e, vars) => {
+        reportEventError(id, userId, 'handleSetNoShow', e, { targetUserId: vars.userId, value: vars.value })
+        Alert.alert('Error', e.message || GENERIC_ERROR_MESSAGE)
+      },
+    },
+  )
+
   // ─── Host: remove an attendee or +1 ────────────────────────────────────────
   const remove = useMutation(
     async (target: RemoveTarget) => {
@@ -358,6 +392,10 @@ export function useEventAttendance(data: EventData) {
     denyRequest: async (requestedUserId: string, reason: string) =>
       (await decide.mutate({ userId: requestedUserId, approve: false, reason })) !== undefined,
     approveFromWaitlist,
+
+    /** Host / co-host: flag (or unflag) an attending player as a no-show. Resolves to true once saved. */
+    setNoShow: async (targetUserId: string, value: boolean) => (await noShow.mutate({ userId: targetUserId, value })) === true,
+    settingNoShow: noShow.isPending,
 
     removing: remove.isPending,
     /** Resolves to true once the row is gone. */
