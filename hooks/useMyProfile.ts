@@ -16,8 +16,11 @@ import type { MyProfile, Profile, ProfileBrief, ProfilePatch } from '../types'
 export const PROFILE_BRIEF_SELECT =
   'id, username, first_name, last_name, avatar_url, position, skill_level, created_at, selected_border, selected_card_bg, bio'
 
-/** The viewer's own row: the public columns plus their private notification settings. */
-const MY_PROFILE_SELECT = `${PROFILE_BRIEF_SELECT}, notification_prefs`
+/**
+ * The viewer's private notification switches live in `user_settings`
+ * (owner-only RLS), not on the `profiles` row every visitor can read.
+ */
+const MY_NOTIFICATION_PREFS_SELECT = 'notification_prefs'
 
 /** Cache key of the signed-in user's own profile. */
 export function myProfileKey(userId: string): string {
@@ -81,13 +84,14 @@ export function useMyProfile(opts?: { enabled?: boolean }): MyProfile {
   const query = useQuery<Profile>(
     key,
     async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(MY_PROFILE_SELECT)
-        .eq('id', userId as string)
-        .single()
-      if (error) throw error
-      return normalizeProfileRow(data as Partial<Profile>)
+      const [profileRes, settingsRes] = await Promise.all([
+        supabase.from('profiles').select(PROFILE_BRIEF_SELECT).eq('id', userId as string).single(),
+        supabase.from('user_settings').select(MY_NOTIFICATION_PREFS_SELECT).eq('user_id', userId as string).maybeSingle(),
+      ])
+      if (profileRes.error) throw profileRes.error
+      if (settingsRes.error) throw settingsRes.error
+      const prefs = (settingsRes.data as Pick<Profile, 'notification_prefs'> | null)?.notification_prefs ?? null
+      return normalizeProfileRow({ ...(profileRes.data as Partial<Profile>), notification_prefs: prefs })
     },
     { staleMs: STALE.profile, enabled },
   )
@@ -95,8 +99,17 @@ export function useMyProfile(opts?: { enabled?: boolean }): MyProfile {
   const mutation = useMutation<ProfilePatch, ProfilePatch>(
     async patch => {
       if (!userId) throw new Error('Not logged in')
-      const { error } = await supabase.from('profiles').update(patch).eq('id', userId)
-      if (error) throw error
+      const { notification_prefs, ...publicPatch } = patch
+      if (notification_prefs !== undefined) {
+        const { error } = await supabase
+          .from('user_settings')
+          .upsert({ user_id: userId, notification_prefs, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+        if (error) throw error
+      }
+      if (Object.keys(publicPatch).length > 0) {
+        const { error } = await supabase.from('profiles').update(publicPatch).eq('id', userId)
+        if (error) throw error
+      }
       return patch
     },
     {

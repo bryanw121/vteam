@@ -23,29 +23,52 @@ function daysFromNow(days: number, hour = 19): string {
   return d.toISOString()
 }
 
-/** A Node-side Supabase client signed in as the e2e account (retries network flakes). */
-export function signInE2eClient(): Promise<{ supabase: SupabaseClient; userId: string }> {
-  return withNetworkRetry(signInOnce, { label: 'e2e sign-in' })
+/**
+ * A Node-side Supabase client signed in as the e2e account (retries network flakes).
+ *
+ * Each call gets its own client (specs sign theirs out when done), but the
+ * account signs in once per test process: login-with-username allows 30
+ * attempts per username per 15 minutes (#102), and a CI run has a dozen
+ * callers across its shards. A cached session that no longer works (expired
+ * and its refresh token rotated) falls back to a real sign-in.
+ */
+export async function signInE2eClient(): Promise<{ supabase: SupabaseClient; userId: string }> {
+  if (cachedTokens) {
+    const reused = await clientFromTokens(await cachedTokens).catch(() => null)
+    if (reused) return reused
+  }
+  cachedTokens = withNetworkRetry(fetchTokens, { label: 'e2e sign-in' })
+  cachedTokens.catch(() => { cachedTokens = null })
+  return clientFromTokens(await cachedTokens)
 }
 
-async function signInOnce(): Promise<{ supabase: SupabaseClient; userId: string }> {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  const { username, password } = e2eCredentials()
-  const { data: email, error: rpcError } = await supabase.rpc('get_email_by_username', {
-    p_username: username,
-  })
-  if (rpcError || !email) {
-    throw new Error(`Could not resolve email for ${username}: ${rpcError?.message ?? 'not found'}`)
-  }
+type E2eTokens = { access_token: string; refresh_token: string }
+let cachedTokens: Promise<E2eTokens> | null = null
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email as string,
-    password,
+async function fetchTokens(): Promise<E2eTokens> {
+  const { username, password } = e2eCredentials()
+  // Same server-side username sign-in the app uses: clients cannot resolve a
+  // username to an email (get_email_by_username is service-role only).
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/login-with-username`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
   })
+  const body = await res.json().catch(() => null) as { access_token?: string; refresh_token?: string; error?: string } | null
+  if (!res.ok || !body?.access_token || !body.refresh_token) {
+    throw new Error(`E2E sign-in failed for ${username}: ${res.status} ${body?.error ?? 'no session'}`)
+  }
+  return { access_token: body.access_token, refresh_token: body.refresh_token }
+}
+
+async function clientFromTokens(tokens: E2eTokens): Promise<{ supabase: SupabaseClient; userId: string }> {
+  // persistSession off: each client keeps its session in memory, so one
+  // spec's local sign-out can't touch another's.
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
+  const { data, error } = await supabase.auth.setSession(tokens)
   if (error || !data.user) {
     throw new Error(`E2E sign-in failed: ${error?.message ?? 'no user'}`)
   }
-
   return { supabase, userId: data.user.id }
 }
 

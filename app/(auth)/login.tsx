@@ -7,10 +7,13 @@ import * as Linking from 'expo-linking'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { supabase } from '../../lib/supabase'
 import { signInWithGoogle, signInWithApple, sendEmailOtp, verifyEmailOtp } from '../../lib/socialAuth'
+import { isUnknownEmailOtpError } from '../../utils/authErrors'
+import { signInWithUsername } from '../../lib/usernameAuth'
 import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
 import { GoogleLogo } from '../../components/GoogleLogo'
 import { shared, theme } from '../../constants'
+import { INCORRECT_EMAIL_OR_PASSWORD } from '../../constants/copy'
 import { routes, toRoute } from '../../utils/routes'
 import { takeGuestReturnPath } from '../../utils/authGate'
 import { AgreementLine } from '../../components/legal/AgreementLine'
@@ -106,22 +109,16 @@ export default function Login() {
 
     try {
       const normalized = identifier.toLowerCase().trim()
-      const isEmail = normalized.includes('@')
-      let email = normalized
-
-      if (!isEmail) {
-        const { data: resolvedEmail } = await supabase
-          .rpc('get_email_by_username', { p_username: normalized })
-
-        if (!resolvedEmail) {
-          setErrors({ identifier: 'Username not found' })
-          return
-        }
-        email = resolvedEmail
+      if (!normalized.includes('@')) {
+        // Resolved server-side: the account's email never reaches this device,
+        // and an unknown username reads the same as a wrong password.
+        const message = await signInWithUsername(normalized, password)
+        if (message) setErrors({ password: message })
+        return
       }
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setErrors({ password: 'Incorrect password' })
+      const { error } = await supabase.auth.signInWithPassword({ email: normalized, password })
+      if (error) setErrors({ password: error.status === 429 ? error.message : INCORRECT_EMAIL_OR_PASSWORD })
     } finally {
       setLoading(false)
     }
@@ -154,7 +151,12 @@ export default function Login() {
       setOtpCodeSent(true)
       setTimeout(() => otpCodeRef.current?.focus(), 200)
     } catch (e: any) {
-      setOtpError(e?.message ?? 'Failed to send code')
+      if (isUnknownEmailOtpError(e)) {
+        // Same screen as a sent code: the error would reveal that no account uses this email.
+        setOtpCodeSent(true)
+      } else {
+        setOtpError(e?.status === 429 ? 'Too many codes requested. Please wait a minute and try again.' : 'Could not send a code. Please try again.')
+      }
     } finally {
       setOtpLoading(false)
     }
@@ -257,7 +259,7 @@ export default function Login() {
         ) : otpMode ? (
           <>
             <Text style={shared.authSubtitle}>
-              {otpCodeSent ? `code sent to ${obfuscateEmail(otpEmail)}` : 'sign in with a one-time code'}
+              {otpCodeSent ? `if ${obfuscateEmail(otpEmail)} has an account, a code is on its way` : 'sign in with a one-time code'}
             </Text>
 
             {!otpCodeSent ? (

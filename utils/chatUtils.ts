@@ -403,3 +403,29 @@ export function nextFirstItemIndex(
   const k = ascending.findIndex(m => m.id === prev.firstId)
   return k > 0 ? prev.firstIndex - k : prev.firstIndex
 }
+
+// ─── Chat images (private bucket) ─────────────────────────────────────────────
+
+const LEGACY_PUBLIC_MARKER = '/storage/v1/object/public/chat-images/'
+const SIGNED_MARKER = '/storage/v1/object/sign/chat-images/'
+
+/**
+ * Where a message's `image_url` points, now that `chat-images` is private:
+ *  - `{ kind: 'path', path }` for an object in the bucket: new messages store
+ *    the object path (`<uid>/<file>`), older ones the former public URL;
+ *    either way the app needs a signed URL to show it.
+ *  - `{ kind: 'direct', uri }` for something already displayable: an image
+ *    still uploading (`file:`, `blob:`, `data:`) or any other URL.
+ */
+export function chatImageRef(ref: string | null | undefined): { kind: 'path'; path: string } | { kind: 'direct'; uri: string } | null {
+  if (!ref) return null
+  for (const marker of [LEGACY_PUBLIC_MARKER, SIGNED_MARKER]) {
+    const at = ref.indexOf(marker)
+    if (at !== -1) {
+      const path = decodeURIComponent(ref.slice(at + marker.length).split('?')[0])
+      return path ? { kind: 'path', path } : null
+    }
+  }
+  if (/^[a-z][a-z0-9+.-]*:/i.test(ref)) return { kind: 'direct', uri: ref }
+  return { kind: 'path', path: ref }
+}
