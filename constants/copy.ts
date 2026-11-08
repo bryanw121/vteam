@@ -54,6 +54,9 @@ export const NO_SHOW_PLAYER_TITLE = 'Marked as a no-show'
 export const NO_SHOW_PLAYER_BODY =
   "The host marked you as not attending, so this event earns no points. If that's a mistake, message the host."
 export const NO_SHOW_MESSAGE_HOST = 'Message host'
+
+/** Shown in place of someone who deleted their account (e.g. the other side of a DM). */
+export const DELETED_USER_LABEL = 'Deleted user'
 /** The leave sheet (#171): what leaving costs, said before it happens. Lines come from utils/leaveConsequences.ts. */
 export const LEAVE_COPY = {
   title: 'Leave this game?',

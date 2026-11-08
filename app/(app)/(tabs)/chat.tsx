@@ -19,10 +19,13 @@ import type { ConversationRow, Profile } from '../../../types'
 import { useSession } from '../../../contexts/session'
 import { SignInPrompt } from '../../../components/SignInPrompt'
 import { ScreenState } from '../../../components/ui'
+import { DELETED_USER_LABEL } from '../../../constants/copy'
 import { Spinner } from '../../../components/ui/Spinner'
 
 function conversationTitle(row: ConversationRow): string {
   if (row.type === 'club') return row.club_name ?? 'Club Chat'
+  // A DM whose other member is gone: that person deleted their account.
+  if (!row.other_user_id) return DELETED_USER_LABEL
   return profileDisplayName({
     username: row.other_user_username ?? 'Direct Message',
     first_name: row.other_user_first_name,

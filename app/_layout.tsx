@@ -212,6 +212,7 @@ function RootNavigator() {
           <Stack.Screen name="(app)" options={{ headerShown: false }} />
           <Stack.Screen name="terms" options={{ headerShown: false, title: 'Terms and Conditions' }} />
           <Stack.Screen name="privacy" options={{ headerShown: false, title: 'Privacy Policy' }} />
+          <Stack.Screen name="delete-account" options={{ headerShown: false, title: 'Delete your account' }} />
         </Stack>
       )}
 

@@ -320,6 +320,27 @@ test.describe('tournament trophies (#7)', () => {
   })
 })
 
+/**
+ * #99 part 2 (#106): account deletion RPCs. Skipped until its migration is on
+ * beta. TODO(#106): drop the skip once applied.
+ */
+test.describe('account deletion RPCs (#106)', () => {
+  test('only the signed-in owner can preview; nobody but the service role can delete', async () => {
+    const preview = await q(() => me.rpc('get_account_deletion_preview'), 'deletion preview')
+    test.skip(!!preview.error && /get_account_deletion_preview|PGRST202/.test(`${preview.error.code} ${preview.error.message}`),
+      'TODO(#106): migration 20261028130000_account_deletion not on beta yet')
+    expect(preview.error).toBeNull()
+    expect(preview.data).toMatchObject({ clubs: expect.any(Array), events: expect.any(Array), hash: expect.stringMatching(/^[0-9a-f]{32}$/) })
+
+    const anonPreview = await q(() => anon.rpc('get_account_deletion_preview'), 'anon deletion preview')
+    expect(anonPreview.error).not.toBeNull()
+    for (const client of [anon, me]) {
+      const del = await q(() => client.rpc('delete_account', { p_user: myId, p_plan_hash: '0'.repeat(32) }), 'delete_account')
+      expect(del.error, 'delete_account must not be callable by clients').not.toBeNull()
+    }
+  })
+})
+
 test.describe('points (#4)', () => {
   test('anon reads point balances but no ledger rows', async () => {
     const balances = await q(() => anon.from('point_balances').select('user_id, balance').limit(1), 'anon point_balances')
