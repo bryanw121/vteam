@@ -33,6 +33,7 @@ jest.mock('../lib/supabase', () => {
     const chain: Record<string, unknown> = {}
     chain.eq = () => chain
     chain.single = () => Promise.resolve(take())
+    chain.maybeSingle = () => Promise.resolve(take())
     chain.then = (resolve: (v: Result) => unknown, reject?: (e: unknown) => unknown) => Promise.resolve(take()).then(resolve, reject)
     return chain
   }
@@ -44,7 +45,14 @@ jest.mock('../lib/supabase', () => {
   })
   return {
     supabase: {
-      from: (table: string) => ({ select: makeSelect(table), update: makeUpdate(table) }),
+      from: (table: string) => ({
+        select: makeSelect(table),
+        update: makeUpdate(table),
+        upsert: (row: unknown) => {
+          mockUpdateCalls.push({ table, patch: row, id: (row as { user_id: string }).user_id })
+          return Promise.resolve(mockUpdateResult)
+        },
+      }),
     },
   }
 })
@@ -150,6 +158,22 @@ describe('useMyProfile', () => {
     expect(mockUpdateCalls).toEqual([{ table: 'profiles', patch: { bio: 'hi', selected_border: 'gold' }, id: 'u1' }])
     expect(me.profile?.bio).toBe('hi')
     expect(me.profile?.selected_border).toBe('gold')
+  })
+
+  it('reads and writes notification prefs in user_settings, never on the public profiles row', async () => {
+    mockQueued.profiles = [{ data: ROW, error: null }]
+    mockQueued.user_settings = [{ data: { notification_prefs: { push: { kudos: false }, in_app: {} } }, error: null }]
+    render(<Probe />)
+    await flush()
+    expect(mockSelectCalls.find(c => c.table === 'profiles')?.columns).not.toContain('notification_prefs')
+    expect(me.profile?.notification_prefs).toEqual({ push: { kudos: false }, in_app: {} })
+
+    const prefs = { push: { kudos: true }, in_app: {} }
+    await act(async () => { await me.updateProfile({ notification_prefs: prefs as never, bio: 'x' }) })
+    expect(mockUpdateCalls).toEqual([
+      expect.objectContaining({ table: 'user_settings', patch: expect.objectContaining({ user_id: 'u1', notification_prefs: prefs }) }),
+      { table: 'profiles', patch: { bio: 'x' }, id: 'u1' },
+    ])
   })
 
   it('rolls the cache back and reports false when the write fails', async () => {

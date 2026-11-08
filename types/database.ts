@@ -1,3 +1,5 @@
+// TODO(#102): hand-edited to match migrations 20261028120000_privacy_private_reads.sql and 20261028120200_rate_limit_core.sql until they can be
+// applied on beta (Supabase write approval pending). Regenerate from beta before merging; do not keep this line.
 export type Json =
   | string
   | number
@@ -89,6 +91,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      app_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       app_config: {
         Row: {
@@ -528,6 +545,35 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clubs"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_attendee_denials: {
+        Row: {
+          created_at: string
+          event_id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendee_denials_attendee_fkey"
+            columns: ["event_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "event_attendees"
+            referencedColumns: ["event_id", "user_id"]
           },
         ]
       }
@@ -1435,6 +1481,24 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          hits: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          hits?: number
+          key: string
+          window_start?: string
+        }
+        Update: {
+          hits?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       sponsored_events: {
         Row: {
           created_at: string
@@ -2282,6 +2346,7 @@ export type Database = {
         Row: {
           hidden_feed: Json
           home_city_id: string | null
+          notification_prefs: Json | null
           reminder_lead_minutes: number
           seen_banners: string[]
           updated_at: string
@@ -2290,6 +2355,7 @@ export type Database = {
         Insert: {
           hidden_feed?: Json
           home_city_id?: string | null
+          notification_prefs?: Json | null
           reminder_lead_minutes?: number
           seen_banners?: string[]
           updated_at?: string
@@ -2298,6 +2364,7 @@ export type Database = {
         Update: {
           hidden_feed?: Json
           home_city_id?: string | null
+          notification_prefs?: Json | null
           reminder_lead_minutes?: number
           seen_banners?: string[]
           updated_at?: string
@@ -2403,29 +2470,29 @@ export type Database = {
         Row: {
           added_by: string | null
           event_id: string | null
-          first_name: string | null
           id: string | null
           joined_at: string | null
-          last_name: string | null
           status: string | null
+          team_number: number | null
+          team_pinned: boolean | null
         }
         Insert: {
           added_by?: string | null
           event_id?: string | null
-          first_name?: string | null
           id?: string | null
           joined_at?: string | null
-          last_name?: string | null
           status?: string | null
+          team_number?: number | null
+          team_pinned?: boolean | null
         }
         Update: {
           added_by?: string | null
           event_id?: string | null
-          first_name?: string | null
           id?: string | null
           joined_at?: string | null
-          last_name?: string | null
           status?: string | null
+          team_number?: number | null
+          team_pinned?: boolean | null
         }
         Relationships: [
           {
@@ -2452,6 +2519,11 @@ export type Database = {
       }
       ad_free_offer: { Args: never; Returns: Json }
       award_event_points: { Args: never; Returns: number }
+      can_read_chat_image: { Args: { p_name: string }; Returns: boolean }
+      check_rate_limit: {
+        Args: { p_key: string; p_max: number; p_window_seconds: number }
+        Returns: boolean
+      }
       complete_tournament: {
         Args: { p_podium: Json; p_tournament_id: string }
         Returns: number
@@ -2468,6 +2540,10 @@ export type Database = {
           body: string
           title: string
         }[]
+      }
+      enforce_rate_limit: {
+        Args: { p_key: string; p_max: number; p_window_seconds: number }
+        Returns: undefined
       }
       cancel_friend_request: { Args: { p_user_id: string }; Returns: string }
       find_or_create_dm: { Args: { other_user_id: string }; Returns: string }
@@ -2533,6 +2609,7 @@ export type Database = {
         }[]
       }
       ingest_schelagg_feed: { Args: never; Returns: number }
+      is_app_admin: { Args: never; Returns: boolean }
       is_club_owner: { Args: { p_club_id: string }; Returns: boolean }
       is_conversation_member: { Args: { conv_id: string }; Returns: boolean }
       mark_all_notifications_read: { Args: never; Returns: undefined }

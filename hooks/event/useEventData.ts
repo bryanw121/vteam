@@ -8,8 +8,10 @@ import {
   COMMENT_SELECT,
   EVENT_DETAIL_SELECT,
   GUEST_SELECT,
+  GUEST_PUBLIC_SELECT,
   PROFILE_BRIEF,
 } from '../../constants'
+import { toAnonymousGuest } from '../../utils/guests'
 import type {
   EventCohostWithProfile,
   EventCommentWithAuthor,
@@ -30,7 +32,21 @@ export async function fetchEventDetail(id: string): Promise<EventWithDetails | n
   return (data ?? null) as EventWithDetails | null
 }
 
-export async function fetchEventGuests(id: string): Promise<EventGuest[]> {
+/**
+ * +1 guests. Signed-out visitors can't read guests' names (event_guests RLS is
+ * authenticated-only), so they read the name-free `event_guests_attending`
+ * view instead: headcount and teams still add up, and each +1 shows as "Guest".
+ */
+export async function fetchEventGuests(id: string, signedIn: boolean): Promise<EventGuest[]> {
+  if (!signedIn) {
+    const { data, error } = await supabase
+      .from('event_guests_attending')
+      .select(GUEST_PUBLIC_SELECT)
+      .eq('event_id', id)
+      .order('joined_at', { ascending: true })
+    if (error) throw error
+    return (data ?? []).map(toAnonymousGuest)
+  }
   const { data, error } = await supabase
     .from('event_guests')
     .select(GUEST_SELECT)
@@ -114,7 +130,7 @@ export function useEventData(id: string) {
   const opts = { staleMs: STALE.detail }
 
   const main = useQuery(eventKeys.root(id), () => fetchEventDetail(id), opts)
-  const guests = useQuery(eventKeys.guests(id), () => fetchEventGuests(id), opts)
+  const guests = useQuery(eventKeys.guests(id), () => fetchEventGuests(id, !!userId), opts)
   const cohosts = useQuery(eventKeys.cohosts(id), () => fetchEventCohosts(id), opts)
   const comments = useQuery(eventKeys.comments(id), () => fetchEventComments(id), opts)
   const viewer = useQuery(
