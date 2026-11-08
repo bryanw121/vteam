@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useState } from 'react'
 import { View, ScrollView, TouchableOpacity } from 'react-native'
 import { Text } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
@@ -6,25 +6,27 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { supabase } from '../../../lib/supabase'
 import { shared, theme } from '../../../constants'
 import { BadgeIcon } from '../../../components/BadgeIcon'
 import { ProfileAvatar } from '../../../components/ProfileAvatar'
 import { Toast } from '../../../components/Toast'
 import { BADGE_DEFINITIONS } from '../../../constants/badges'
-import { normalizeProfileRow, PROFILE_BRIEF_SELECT } from '../../../hooks/useMyProfile'
+import { userProfileKey, useUserProfile } from '../../../hooks/useUserProfile'
+import { useFocusRefetch } from '../../../lib/query'
+import { ScreenState } from '../../../components/ui'
+import { PROFILE_LOAD_ERROR } from '../../../constants/copy'
 import { routes } from '../../../utils/routes'
 import { useSilencedUsers } from '../../../hooks/useSilencedUsers'
 import { useOpenDm } from '../../../hooks/useOpenDm'
+import { FriendButton } from '../../../components/profile/FriendButton'
+import { useUserTrophies } from '../../../hooks/useUserTrophies'
+import { TrophyCase } from '../../../components/profile/TrophyCase'
 import { usePointsBalance } from '../../../hooks/usePoints'
 import {
-  resolveProfileAvatarUriWithError,
   volleyballSkillLevelLabel,
   profileFullName,
   confirmDestructive,
 } from '../../../utils'
-import type { Profile, UserBadge } from '../../../types'
-import { Spinner } from '../../../components/ui/Spinner'
 
 const POS_ABBREV: Record<string, string> = {
   setter: 'S',
@@ -42,58 +44,24 @@ export default function UserProfileDetail() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
 
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
-  const [totalCheers, setTotalCheers] = useState(0)
-  const [displayBadges, setDisplayBadges] = useState<UserBadge[]>([])
-  const [loading, setLoading] = useState(true)
+  const profileQuery = useUserProfile(id)
+  // undefined = not loaded yet; null = no such player.
+  const data = profileQuery.data
+  const profile = data?.profile ?? null
+  const avatarUri = data?.avatarUri ?? null
+  const totalCheers = data?.totalCheers ?? 0
+  const displayBadges = data?.displayBadges ?? []
+  const trophies = useUserTrophies(id ?? null)
   const [refreshing, setRefreshing] = useState(false)
   const [toast, setToast] = useState<{ message: string; variant: 'error' | 'success' | 'info' } | null>(null)
   const { silencedUserIds, silenceUser, unsilenceUser } = useSilencedUsers()
   const points = usePointsBalance(id)
-
-  const loadProfile = useCallback(async (opts?: { silent?: boolean }) => {
-    if (!opts?.silent) setLoading(true)
-    try {
-      const [profileRes, cheersRes, badgesRes] = await Promise.all([
-        supabase.from('profiles').select(PROFILE_BRIEF_SELECT).eq('id', id).single(),
-        supabase.from('cheers').select('id', { count: 'exact', head: true }).eq('receiver_id', id),
-        supabase.from('user_badges')
-          .select('id, user_id, badge_type, tier, awarded_at, display_order, display_tier')
-          .eq('user_id', id)
-          .not('display_order', 'is', null)
-          .order('display_order', { ascending: true }),
-      ])
-
-      if (!profileRes.error && profileRes.data) {
-        const p = normalizeProfileRow(profileRes.data as Partial<Profile>)
-        setProfile(p)
-        if (p.avatar_url) {
-          const { uri } = await resolveProfileAvatarUriWithError(p.avatar_url)
-          setAvatarUri(uri)
-        } else {
-          setAvatarUri(null)
-        }
-      } else {
-        setProfile(null)
-        setAvatarUri(null)
-      }
-
-      setTotalCheers(cheersRes.count ?? 0)
-      setDisplayBadges((badgesRes.data ?? []) as UserBadge[])
-    } finally {
-      setLoading(false)
-    }
-  }, [id])
-
-  useEffect(() => {
-    void loadProfile()
-  }, [loadProfile])
+  useFocusRefetch(userProfileKey(id))
 
   async function handleRefresh() {
     setRefreshing(true)
     try {
-      await Promise.all([loadProfile({ silent: true }), points.refetch({ force: true })])
+      await Promise.all([profileQuery.refetch({ force: true }), points.refetch({ force: true })])
     } finally {
       setRefreshing(false)
     }
@@ -159,9 +127,13 @@ export default function UserProfileDetail() {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
-        <View style={shared.centered}><Spinner color={theme.colors.primary} /></View>
-      ) : !profile ? (
+      <ScreenState
+        loading={profileQuery.isLoading}
+        ready={data !== undefined}
+        error={profileQuery.error ? PROFILE_LOAD_ERROR : null}
+        onRetry={() => void profileQuery.refetch({ force: true })}
+      >
+      {!profile ? (
         <ScrollView
           style={shared.screen}
           contentContainerStyle={[shared.centered, { flexGrow: 1, paddingBottom: insets.bottom + 32 }]}
@@ -258,6 +230,11 @@ export default function UserProfileDetail() {
               </Text>
             ) : null}
 
+            {/* Friend: Add friend / Requested / Accept + Decline / Friends (#15) */}
+            <View style={{ width: '100%', marginTop: theme.spacing.sm }} testID="profile-friend-action">
+              <FriendButton userId={id} profile={profile} onMessage={showToast} />
+            </View>
+
             {/* Stats */}
             <View style={{
               flexDirection: 'row', gap: 1, marginTop: 14,
@@ -279,7 +256,7 @@ export default function UserProfileDetail() {
                 <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Points</Text>
               </View>
               <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
-                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>0</Text>
+                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{trophies.data?.length ?? 0}</Text>
                 <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Trophies</Text>
               </View>
             </View>
@@ -302,35 +279,8 @@ export default function UserProfileDetail() {
           </View>
 
           {/* ── Trophy case ── */}
-          <View style={{ marginTop: theme.spacing.lg }}>
-            <Text style={{
-              fontFamily: theme.fonts.display, fontWeight: '700',
-              fontSize: theme.font.size.lg, color: theme.colors.text, marginBottom: theme.spacing.sm,
-            }}>Trophy case</Text>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {([
-                { place: '1', color: theme.colors.medalGold, label: '1st place' },
-                { place: '2', color: theme.colors.medalSilver, label: '2nd place' },
-                { place: '3', color: theme.colors.medalBronze, label: '3rd place' },
-              ] as const).map(t => (
-                <View key={t.place} style={{
-                  flex: 1, backgroundColor: theme.colors.card,
-                  borderRadius: 16, padding: 12,
-                  borderWidth: 1, borderColor: theme.colors.border,
-                  alignItems: 'center',
-                }}>
-                  <View style={{
-                    width: 40, height: 40, borderRadius: 20,
-                    backgroundColor: t.color,
-                    alignItems: 'center', justifyContent: 'center', marginBottom: 6,
-                  }}>
-                    <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lg, color: theme.colors.background }}>{t.place}</Text>
-                  </View>
-                  <Text style={{ fontFamily: theme.fonts.bodyBold, fontSize: theme.font.size.xs, color: theme.colors.text, letterSpacing: 0.2 }}>{t.label}</Text>
-                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext, marginTop: 1 }}>—</Text>
-                </View>
-              ))}
-            </View>
+          <View style={{ marginTop: theme.spacing.sm }}>
+            <TrophyCase trophies={trophies.data ?? []} />
           </View>
 
           {/* ── Profile actions ── */}
@@ -391,6 +341,7 @@ export default function UserProfileDetail() {
 
         </ScrollView>
       )}
+      </ScreenState>
 
       <Toast
         message={toast?.message ?? ''}

@@ -3,13 +3,14 @@ import { invalidate, removeQueries } from '../lib/query'
 import { useSession } from '../contexts/session'
 import { clearScrollMemory } from '../utils/scrollMemory'
 import { resetChatReadState } from './useConversations'
+import { discardSeededSnapshot, setSnapshotOwner, snapshotOwner } from '../lib/querySnapshot'
 
 /**
  * Cache prefixes whose rows depend on who is signed in (RSVP state, unread
  * counts, the viewer's own profile...). 'feed' is not here: `useMonthEvents`
  * resets it on a user change itself. 'tags' is the same for everyone.
  */
-export const USER_SCOPED_PREFIXES = ['event', 'tournament', 'club', 'conversations', 'conversation', 'profile', 'settings'] as const
+export const USER_SCOPED_PREFIXES = ['event', 'tournament', 'club', 'conversations', 'conversation', 'profile', 'settings', 'history', 'cheersSummary', 'friends'] as const
 
 /**
  * Drop user-scoped cache entries whenever the signed-in user changes (sign in,
@@ -26,6 +27,10 @@ export function useCacheUserScope(): void {
     if (loading) return
     const previous = ownerRef.current
     ownerRef.current = userId
+    // Last visit's copy (lib/querySnapshot) is only shown to the viewer it was saved for.
+    const seeded = snapshotOwner()
+    if (seeded !== undefined && seeded !== userId) discardSeededSnapshot()
+    setSnapshotOwner(userId)
     if (previous === undefined || previous === userId) return
     USER_SCOPED_PREFIXES.forEach(p => removeQueries(p))
     USER_SCOPED_PREFIXES.forEach(p => invalidate(p))

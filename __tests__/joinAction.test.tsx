@@ -162,7 +162,7 @@ describe('JoinFooter', () => {
 })
 
 describe('wiring: approval comes from the column, never from price', () => {
-  const eventPage = source('app/(app)/event/[id].tsx')
+  const eventPage = source('components/event/EventDetailScreen.tsx')
   const footer = source('components/event/JoinFooter.tsx')
 
   it('the event page reads requires_approval from the event row', () => {

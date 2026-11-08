@@ -8,6 +8,11 @@ export const APP_NAME = 'VTeam'
 /** Alert body for a failed write when there is nothing more specific to say. */
 export const GENERIC_ERROR_MESSAGE = 'Something went wrong. Please try again.'
 
+/** A list or profile that failed to load (not "not found"): shown with Retry (#185). */
+export const PROFILE_LOAD_ERROR = "Couldn't load this profile. Check your connection and try again."
+export const HISTORY_LOAD_ERROR = "Couldn't load your events. Check your connection and try again."
+export const CHEERS_LOAD_ERROR = "Couldn't load your cheers. Check your connection and try again."
+
 /** Shown when a join raced the last spot and the database saved it as waitlisted. */
 export const EVENT_JUST_FILLED_TITLE = 'Event just filled up'
 export const EVENT_JUST_FILLED_BODY =
@@ -30,6 +35,25 @@ export const APPROVAL_REQUIRED_NOTE = 'The host reviews requests for this event'
 export const INCORRECT_USERNAME_OR_PASSWORD = 'Incorrect username or password'
 /** Email sign-in: the same message for an unknown email and a wrong password. */
 export const INCORRECT_EMAIL_OR_PASSWORD = 'Incorrect email or password'
+
+// ─── No-show flag (#151) ───────────────────────────────────────────────────────
+/** Roster ⋯ menu (hosts and co-hosts, from the start until 2 hours after the end). */
+export const NO_SHOW_MARK_LABEL = 'Mark as no-show'
+export const NO_SHOW_UNDO_LABEL = 'Undo no-show'
+export const NO_SHOW_MARK_SUBTITLE = (until: string) => `No points for this event. You can undo until ${until}.`
+export const NO_SHOW_UNDO_SUBTITLE = (until: string) => `They get points with everyone else at ${until}.`
+/** Badge on a flagged roster card. A non-breaking hyphen: the card's text column is narrow on phones. */
+export const NO_SHOW_BADGE = 'No\u2011show'
+/** One line above the roster for hosts during the window. */
+export const NO_SHOW_HOST_NOTE = (flagged: number, pointsAt: string) =>
+  flagged === 0
+    ? `Game started. Tap ⋯ on anyone who didn't come. Everyone else gets points at ${pointsAt}.`
+    : `${flagged} no-show${flagged === 1 ? '' : 's'}. Everyone else gets points at ${pointsAt}.`
+/** The flagged player's own card on Details. */
+export const NO_SHOW_PLAYER_TITLE = 'Marked as a no-show'
+export const NO_SHOW_PLAYER_BODY =
+  "The host marked you as not attending, so this event earns no points. If that's a mistake, message the host."
+export const NO_SHOW_MESSAGE_HOST = 'Message host'
 /** The leave sheet (#171): what leaving costs, said before it happens. Lines come from utils/leaveConsequences.ts. */
 export const LEAVE_COPY = {
   title: 'Leave this game?',
@@ -52,3 +76,47 @@ export const LEAVE_REASONS: ReadonlyArray<{ id: LeaveReason; label: string }> = 
 
 /** Longest note the leave sheet sends to the host. */
 export const LEAVE_NOTE_MAX = 280
+
+/**
+ * One line per level, shown under each option in player setup and the profile
+ * editor (#156), so a new player doesn't have to guess what "BB" means.
+ */
+export const SKILL_LEVEL_HINTS: Record<string, string> = {
+  d: 'New to volleyball, or learning the basics',
+  c: 'Can serve and pass; still working on consistency',
+  b: 'Solid basics; comfortable in rec games',
+  bb: 'Consistent passing, setting and hitting in competitive rec',
+  a: 'Strong all-around player in competitive leagues',
+  aa_plus: 'Advanced, college or open-level play',
+}
+
+/** Player setup after sign-up (#156). */
+export const PLAYER_SETUP_COPY = {
+  skip: 'Skip',
+  back: 'Back',
+  next: 'Next',
+  done: 'Done',
+  stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
+  positionTitle: 'What do you play?',
+  positionBody: 'Pick any that fit. Hosts use this to balance teams.',
+  notSure: 'Not sure yet',
+  levelTitle: "What's your level?",
+  levelBody: "Your best guess is fine. You can change it on your profile any time.",
+  cityTitle: 'Where do you play?',
+  cityBody: "We'll show games and open gyms near you.",
+  cityLabel: 'Home city',
+  liveNow: 'Live now',
+  liveNowNote: (city: string) => `${city}: sessions from local venues are in the feed today.`,
+} as const
+
+/** The host's team builder on the People tab (#149). */
+export const TEAM_MODE_COPY = {
+  groupLabel: 'How to split teams',
+  random: 'Random',
+  balanced: 'Balanced',
+  randomButton: 'Randomize',
+  balanceButton: 'Balance',
+  average: (tier: string) => `avg ${tier}`,
+  setters: (n: number) => `${n} setter${n === 1 ? '' : 's'}`,
+} as const
+

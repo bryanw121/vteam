@@ -34,6 +34,8 @@ export const shared = StyleSheet.create({
   subheading:   { fontFamily: theme.fonts.displaySemiBold, fontSize: font.size.lg,  color: colors.text },
   body:         { fontFamily: theme.fonts.body,           fontSize: font.size.md,  color: colors.text, lineHeight: font.lineHeight.normal },
   caption:      { fontFamily: theme.fonts.body,           fontSize: font.size.sm,  color: colors.subtext },
+  /** A section heading inside a settings subpage (e.g. Friends: Requests / Friends / Sent). */
+  subpageSectionTitle: { fontFamily: theme.fonts.display, fontSize: font.size.lg, color: colors.text, marginTop: theme.spacing.lg, marginBottom: theme.spacing.sm },
   label:        { fontFamily: theme.fonts.bodyMedium,     fontSize: font.size.sm,  color: colors.subtext, marginBottom: spacing.xs },
   primaryText:  { fontFamily: theme.fonts.bodyMedium,     fontSize: font.size.md,  color: colors.primary },
   errorText:    { fontFamily: theme.fonts.body,           fontSize: font.size.sm,  color: colors.error, marginTop: spacing.xs },
@@ -184,7 +186,40 @@ export const shared = StyleSheet.create({
   // ─── Team / player grid (shared by the event People & Cheers tabs) ───────
   playerGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   playerCell: { width: Platform.OS === 'web' ? '33.33%' : '50%', padding: 3 },
+  // Player setup after sign-up (#156).
+  welcomeBody: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl, gap: spacing.sm },
+  welcomeTitle: { fontFamily: fonts.display, fontSize: font.heading.lg, fontWeight: font.weight.bold, color: colors.text },
+  welcomeLead: { fontSize: font.size.md, color: colors.subtextStrong, marginBottom: spacing.md, lineHeight: font.lineHeight.normal },
+  welcomeOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  welcomeOption: {
+    minHeight: 44, justifyContent: 'center', borderRadius: radius.full, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.card, paddingHorizontal: spacing.md,
+  },
+  welcomeOptionOn: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  welcomeOptionLabel: { fontSize: font.size.md, color: colors.text },
+  welcomeHint: { fontSize: font.size.sm, color: colors.subtextStrong },
+  welcomeOptionLabelOn: { fontWeight: font.weight.semibold, color: colors.timeInk },
+  welcomeLevelRow: {
+    minHeight: 56, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: 2, justifyContent: 'center',
+  },
+  welcomeLiveTag: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.cool, borderWidth: 1, borderColor: colors.cool,
+    borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
+  welcomeSkip: { minHeight: 44, minWidth: 44, alignItems: 'flex-end', justifyContent: 'center' },
+  welcomeSkipText: { fontSize: font.size.md, color: colors.subtextStrong, fontWeight: font.weight.semibold },
+  welcomeFooter: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.md },
+  welcomeDots: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xs },
+  welcomeDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.border },
+  welcomeDotOn: { width: 20, backgroundColor: colors.primary },
   teamHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
+  // Team header chips (#149): average tier and setter count.
+  teamSummaryChip: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.timeInk,
+    backgroundColor: colors.primarySoft, borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
+  teamSummaryChipSetter: { color: colors.cool, backgroundColor: colors.card },
   teamDot: { width: 8, height: 8, borderRadius: 4 },
   teamHeading: { fontSize: font.size.sm, fontWeight: font.weight.semibold },
   /** One bordered player/guest row (drag card in People, cheer card in Cheers). */
@@ -592,6 +627,27 @@ export const shared = StyleSheet.create({
   sheetOptionActive:      { backgroundColor: colors.background },
   sheetOptionText:        { fontSize: font.size.md, fontWeight: font.weight.medium, color: colors.text },
   sheetOptionDestructive: { color: colors.error },
+  /** Consequential but reversible (roster: Mark as no-show). */
+  sheetOptionCaution:     { color: colors.warm },
+  sheetOptionSubtitle:    { fontSize: font.size.sm, color: colors.subtext, marginTop: 2 },
+  /** Roster card of a player the host flagged as a no-show (#151). */
+  playerCardNoShow:       { borderColor: colors.error + '99', backgroundColor: colors.error + '0F' },
+  noShowBadge: {
+    alignSelf: 'flex-start', marginTop: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.full,
+    backgroundColor: colors.error + '1A', borderWidth: 1, borderColor: colors.error + '40',
+  },
+  noShowBadgeText:        { fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.error },
+  /** One-line note above the roster (host, during the no-show window). */
+  rosterNote: {
+    padding: spacing.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.timeBorder,
+    backgroundColor: colors.primarySoft, marginBottom: spacing.sm,
+  },
+  rosterNoteText:         { fontSize: font.size.sm, color: colors.subtextStrong },
+  /** The flagged player's own card on Details. */
+  noShowCard: {
+    borderRadius: radius.lg, borderWidth: 1, borderColor: colors.warm + '66', backgroundColor: colors.warm + '12',
+    padding: spacing.md, marginBottom: spacing.md, gap: spacing.sm,
+  },
   /** Glyph-only corner trigger on a roster card (⋯): the icon stays small, the hit area is 44pt. */
   rowMenuTrigger: {
     minWidth: 44,

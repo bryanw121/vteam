@@ -112,9 +112,9 @@ export function buildFixtures(now) {
   // Attendance: who's in, in join order. `n` attending from ALL (skipping the host), then waitlist.
   const event_attendees = []
   const roster = (key, users, { waitlist = [], teams = false, pending = [] } = {}) => {
-    users.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'attending', joined_at: t.ago(60 * 24 * 3 - i * 37), team_number: teams ? (i % 2) + 1 : null, team_pinned: false, denial_reason: null }))
-    waitlist.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'waitlisted', joined_at: t.ago(60 * 5 - i * 11), team_number: null, team_pinned: false, denial_reason: null }))
-    pending.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'pending', joined_at: t.ago(60 * 2 - i * 7), team_number: null, team_pinned: false, denial_reason: null }))
+    users.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'attending', joined_at: t.ago(60 * 24 * 3 - i * 37), team_number: teams ? (i % 2) + 1 : null, team_pinned: false, denial_reason: null, no_show: false, no_show_marked_at: null, no_show_marked_by: null }))
+    waitlist.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'waitlisted', joined_at: t.ago(60 * 5 - i * 11), team_number: null, team_pinned: false, denial_reason: null, no_show: false, no_show_marked_at: null, no_show_marked_by: null }))
+    pending.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'pending', joined_at: t.ago(60 * 2 - i * 7), team_number: null, team_pinned: false, denial_reason: null, no_show: false, no_show_marked_at: null, no_show_marked_by: null }))
   }
   const others = exclude => ALL.filter(u => !exclude.includes(u))
   roster('sundaySand', [ME, ...others([ME]).slice(0, 10)], { teams: true })
@@ -130,6 +130,8 @@ export function buildFixtures(now) {
   roster('nextWeekIndoor', [P.jordanr])
   roster('pastSand', [ME, P.jordanr, P.priyap, P.marcusw, P.sofiag, P.liamo, P.emmat, P.zoeyl], { teams: true })
   roster('pastIndoor', [P.jordanr, ME, P.aishak, P.danielk, P.noahb, P.hannahs])
+  // No-show flag (#151): Jordan marked Maya as a no-show at the last indoor gym (the event-details-noshow screen).
+  Object.assign(event_attendees.find(a => a.event_id === E.pastIndoor && a.user_id === ME), { no_show: true, no_show_marked_at: t.iso(-5, 21, 30), no_show_marked_by: P.jordanr })
   roster('pastHosted', [ME, P.priyap, P.marcusw, P.emmat, P.ethanp, P.zoeyl])
 
   const event_guests = [
@@ -184,7 +186,7 @@ export function buildFixtures(now) {
     tournament(TU.past, { title: 'Fall Doubles Cup', start_date: t.iso(-13, 9, 0), status: 'completed', schedule_published: true, schedule_generated_at: t.iso(-15), published_at: t.iso(-30), created_at: t.iso(-35), description: 'Our fall doubles championship.' }),
     tournament(TU.open, { title: 'Indoor 6s Shootout', club_id: C.indoor, created_by: P.jordanr, location: 'Austin Sports Center', start_date: t.iso(17, 10, 0), format: 'round_robin', bracket_type: null, max_teams: 6, min_roster_size: 6, max_roster_size: 9, price: 120, venmo_handle: 'jordan-reyes', num_courts: 2, match_duration_minutes: 60, skill_levels: ['b', 'bb'] }),
   ]
-  const tournament_rules = [TU.upcoming, TU.past, TU.open].map(tid => ({ tournament_id: tid, sets_to_win: tid === TU.open ? 2 : 1, winning_score: tid === TU.open ? 25 : 21, deciding_set_score: 15, win_by_margin: 2, point_cap: null, starting_score: 0 }))
+  const tournament_rules = [TU.upcoming, TU.past, TU.open].map(tid => ({ tournament_id: tid, sets_to_win: tid === TU.open ? 2 : 1, winning_score: tid === TU.open ? 25 : 21, deciding_set_score: 15, win_by_margin: 2, point_cap: null, starting_score: 0, tiebreakers: ['head_to_head', 'set_ratio', 'point_diff', 'points_for'], third_place_match: false }))
   const tournament_prizes = [
     { id: id('d2000000', 1), tournament_id: TU.upcoming, place_label: '1st', description: 'Trophy + $160', amount: '$160', display_order: 1, created_at: t.iso(-14) },
     { id: id('d2000000', 2), tournament_id: TU.upcoming, place_label: '2nd', description: 'Trophy + $80', amount: '$80', display_order: 2, created_at: t.iso(-14) },
@@ -328,7 +330,14 @@ export function buildFixtures(now) {
     { id: id('f4000000', 5), user_id: P.jordanr, badge_type: 'spike_cheer', tier: 2, awarded_at: t.iso(-6), display_order: 1, display_tier: null },
     { id: id('f4000000', 6), user_id: P.jordanr, badge_type: 'event_host', tier: 3, awarded_at: t.iso(-60), display_order: 2, display_tier: null },
   ]
-  const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, updated_at: t.iso(-3) }]
+  // Hidden in feed: ACES (hides one outside session, so the feed shows "1 hidden · Show"),
+  // a type no fixture event has, and one event that isn't in the feed.
+  const hidden_feed = [
+    { kind: 'venue', key: 'aces volleyball', label: 'ACES Volleyball' },
+    { kind: 'type', key: 'tag:league', label: 'League' },
+    { kind: 'item', key: 'shots-hidden-event', label: 'Thursday Night Sixes', until: t.iso(5, 19, 0) },
+  ]
+  const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, hidden_feed, updated_at: t.iso(-3) }]
   const chat_silences = [{ user_id: ME, silenced_user_id: P.hannahs, created_at: t.iso(-8) }]
 
   return {

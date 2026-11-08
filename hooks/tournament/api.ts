@@ -1,8 +1,9 @@
 import { supabase } from '../../lib/supabase'
 import { getQueryData, queryKey } from '../../lib/query'
+import { DEFAULT_TIEBREAKERS } from '../../lib/tournamentStandings'
 import { COMMENTS_PAGE, keepLoadedOlder, mergeComments, missingParentIds, pageFromNewestFirst } from '../../utils/commentPages'
 import type {
-  GeneratedSchedule, MyRegistration, PendingInvite, SetScore, TablesInsert, TimedBracketMatch, Tournament, TournamentCommentWithAuthor,
+  GeneratedSchedule, MyRegistration, PendingInvite, Podium, SetScore, UserTrophy, TablesInsert, TimedBracketMatch, Tournament, TournamentCommentWithAuthor,
   TournamentCommentsPage, TournamentCore, TournamentInviteCandidate, TournamentJoinRequestWithRequester, TournamentMatchRow,
   TournamentPoolWithTeams, TournamentPrize, TournamentResultWrites, TournamentRules, TournamentStatus, TournamentTeam,
   TournamentTeamWithRoster, TournamentViewer,
@@ -34,8 +35,10 @@ export const tournamentKeys = {
 export const TOURNAMENT_COLUMNS =
   'id, club_id, created_by, title, description, location, skill_levels, start_date, registration_deadline, status, format, bracket_type, max_teams, min_roster_size, max_roster_size, teams_advance_per_pool, has_refs, price, venmo_handle, schedule_published, match_duration_minutes, break_duration_minutes, num_courts, schedule_generated_at, published_at, cancelled_at, created_at'
 
-export const RULES_COLUMNS =
+const RULES_BASE_COLUMNS =
   'tournament_id, starting_score, winning_score, deciding_set_score, win_by_margin, point_cap, sets_to_win'
+
+export const RULES_COLUMNS = `${RULES_BASE_COLUMNS}, tiebreakers, third_place_match`
 
 export const PRIZE_COLUMNS = 'id, tournament_id, place_label, description, amount, display_order, created_at'
 
@@ -87,17 +90,32 @@ async function mustAffect(call: PromiseLike<Result<{ id: string }[] | null>>, wh
 
 // ─── Reads ────────────────────────────────────────────────────────────────────
 
+/** Postgres "undefined column" / PostgREST "no such function": the database is older than this build. */
+const isMissingSchema = (e: { code?: string } | null) => e?.code === '42703' || e?.code === 'PGRST202' || e?.code === 'PGRST204'
+
+/**
+ * Rules, including the host settings added with trophies (tiebreakers, third-place
+ * match). While a deploy is ahead of that migration the old columns are read and
+ * the settings take their defaults, so the page keeps working.
+ */
+async function fetchRules(id: string): Promise<TournamentRules | null> {
+  const res = await supabase.from('tournament_rules').select(RULES_COLUMNS).eq('tournament_id', id).maybeSingle()
+  if (!res.error) return res.data as TournamentRules | null
+  if (!isMissingSchema(res.error)) throw res.error
+  const old = await ok(supabase.from('tournament_rules').select(RULES_BASE_COLUMNS).eq('tournament_id', id).maybeSingle())
+  return old ? { ...old, tiebreakers: [...DEFAULT_TIEBREAKERS], third_place_match: false } : null
+}
+
 export async function fetchTournamentCore(id: string): Promise<TournamentCore> {
   const [tournament, rules, prizes] = await Promise.all([
     ok(supabase.from('tournaments').select(TOURNAMENT_COLUMNS).eq('id', id).maybeSingle()),
-    ok(supabase.from('tournament_rules').select(RULES_COLUMNS).eq('tournament_id', id).maybeSingle()),
+    fetchRules(id),
     ok(supabase.from('tournament_prizes').select(PRIZE_COLUMNS).eq('tournament_id', id).order('display_order')),
   ])
   return {
     // `status`/`format`/… come back as `string`; the DB CHECK constraints guarantee the unions.
     tournament: tournament as Tournament | null,
-    // A cast, not `satisfies`: the generated row may carry columns this select leaves out (another PR's, on beta).
-    rules: rules as TournamentRules | null,
+    rules,
     prizes: (prizes ?? []) satisfies TournamentPrize[],
   }
 }
@@ -413,7 +431,38 @@ export async function recordResult(args: {
     supabase.from('tournament_matches').update({ [a.column]: a.teamId }).eq('id', a.matchId).select('id'),
     'Moving the winner on',
   )))
-  if (writes.nextStatus) await setTournamentStatus(tournamentId, writes.nextStatus)
+  if (writes.podium?.first) await completeTournament(tournamentId, writes.podium)
+  else if (writes.nextStatus) await setTournamentStatus(tournamentId, writes.nextStatus)
+}
+
+/**
+ * Finish the tournament: status completed and trophies for the podium's rosters,
+ * in one transaction (complete_tournament). Calling it again after a corrected
+ * final rewrites the trophies. Before that RPC exists, only the status is set.
+ */
+export async function completeTournament(tournamentId: string, podium: Podium): Promise<void> {
+  const entries = [
+    ...(podium.first ? [{ team_id: podium.first, place: 1 }] : []),
+    ...(podium.second ? [{ team_id: podium.second, place: 2 }] : []),
+    ...podium.thirds.map(team_id => ({ team_id, place: 3 })),
+  ]
+  const { error } = await supabase.rpc('complete_tournament', { p_tournament_id: tournamentId, p_podium: entries })
+  if (!error) return
+  if (!isMissingSchema(error)) throw error
+  await setTournamentStatus(tournamentId, 'completed')
+}
+
+const TROPHY_COLUMNS = 'id, tournament_id, place, tournament_title, tournament_date, team_name'
+
+/** A player's trophies, newest tournament first. Empty (not an error) before the trophies table exists. */
+export async function fetchUserTrophies(userId: string): Promise<UserTrophy[]> {
+  const { data, error } = await supabase.from('tournament_trophies').select(TROPHY_COLUMNS)
+    .eq('user_id', userId).order('tournament_date', { ascending: false })
+  if (error) {
+    if (error.code === '42P01' || error.code === 'PGRST205') return []
+    throw error
+  }
+  return (data ?? []) as UserTrophy[]
 }
 
 export async function setTournamentStatus(id: string, status: TournamentStatus): Promise<void> {

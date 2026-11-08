@@ -11,6 +11,7 @@ import { SentryErrorBoundary } from '../../components/SentryErrorBoundary'
 import { ChatUnreadProvider, useChatUnread } from '../../hooks/useChatUnread'
 import { useIsNarrowWeb } from '../../hooks/useIsNarrowWeb'
 import { useRequireSignIn } from '../../hooks/useRequireSignIn'
+import { usePlayerSetupGate } from '../../hooks/usePlayerSetupGate'
 import { routes } from '../../utils/routes'
 import { TourProvider } from '../../contexts/tour'
 import { TourTarget } from '../../components/tour/TourTarget'
@@ -57,6 +58,7 @@ function AppLayoutInner() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const chatUnread = useChatUnread()
+  usePlayerSetupGate(pathname)
 
   useEffect(() => {
     if (Platform.OS === 'web') return
@@ -206,6 +208,7 @@ function AppLayoutInner() {
               }}
             >
               <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: 'Back' }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
               <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back, presentation: 'modal', ...(Platform.OS === 'web' ? { animationEnabled: false } : {}) }} />
               <Stack.Screen name="event/[id]" options={{ headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back }} />
               <Stack.Screen name="profile/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
@@ -290,6 +293,7 @@ function AppLayoutInner() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: 'Back' }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
       <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back, presentation: 'modal' }} />
       <Stack.Screen name="event/[id]" options={{ headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back }} />
       <Stack.Screen name="profile/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />

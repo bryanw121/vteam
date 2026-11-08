@@ -72,6 +72,9 @@ function parseEventDate(dateString: string): { day: string; date: number; time: 
   return { day, date, time }
 }
 
+/** Room kept top-right for the feed's ⋯ button (32pt plus a gap). */
+const MENU_INSET = 36
+
 // ─── Event Card ───────────────────────────────────────────────────────────────
 
 
@@ -82,6 +85,7 @@ function EventCardInner({
   onRsvp,
   rsvpPending = false,
   forecast,
+  menuInset = false,
 }: {
   event: EventWithDetails
   from?: string
@@ -91,6 +95,8 @@ function EventCardInner({
   rsvpPending?: boolean
   /** Weather chip for an outdoor event (#165); the feed works it out (`useFeedForecasts`). */
   forecast?: ForecastSummary | null
+  /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
+  menuInset?: boolean
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -151,7 +157,7 @@ function EventCardInner({
       )}
       <View>
         {/* Top chips: time + day + type + skill */}
-        <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+        <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10, paddingRight: menuInset ? MENU_INSET : 0 }}>
           <TimePill label={time} testID="event-card-time" />
           {forecast && <ForecastChip summary={forecast} />}
           <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, backgroundColor: theme.colors.accent }}>
@@ -314,7 +320,7 @@ export const HeroEventCard = EventCard
 
 // ─── Row Event Card (desktop secondary cards) ─────────────────────────────────
 
-function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, rsvpPending = false, forecast }: {
+function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, rsvpPending = false, forecast, menuInset = false }: {
   event: EventWithDetails
   from?: string
   currentUserId?: string | null
@@ -323,6 +329,8 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
   rsvpPending?: boolean
   /** See EventCard. */
   forecast?: ForecastSummary | null
+  /** See EventCard. */
+  menuInset?: boolean
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -400,7 +408,7 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
 
       {/* Content */}
       <View style={{ flex: 1, minWidth: 0 }}>
-        <View style={{ marginBottom: 6, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+        <View style={{ marginBottom: 6, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, paddingRight: menuInset ? MENU_INSET : 0 }}>
           <TimePill label={time} testID="event-card-time" />
           {forecast && <ForecastChip summary={forecast} />}
         </View>

@@ -1,5 +1,5 @@
-import { Platform } from 'react-native'
 import { prefetchQuery } from '../../lib/query'
+import { intentPrefetchProps } from '../../lib/prefetchIntent'
 import { STALE } from '../../constants/cache'
 import { eventKeys } from './keys'
 import { getSessionUser } from '../../lib/sessionUser'
@@ -21,65 +21,10 @@ export function prefetchEventDetail(id: string): void {
   void prefetchQuery(eventKeys.comments(id), () => fetchEventComments(id), opts)
 }
 
-const HOVER_DELAY_MS = 150
-let hoverTimer: ReturnType<typeof setTimeout> | null = null
+/** Re-exported for tests and callers that used it from here. */
+export { PRESS_INTENT_MS } from '../../lib/prefetchIntent'
 
-function cancelHover(): void {
-  if (hoverTimer) clearTimeout(hoverTimer)
-  hoverTimer = null
-}
-
-/**
- * How long a press must stay down before it counts as intent to open the card.
- * A finger that lands on a card to scroll the feed also presses in; the
- * scroll (or press-out) cancels the pending prefetch. Prefetching right at
- * press-in made every such scroll fetch four rows for a page nobody opened.
- */
-export const PRESS_INTENT_MS = 80
-let pressTimer: ReturnType<typeof setTimeout> | null = null
-
-function cancelPress(): void {
-  if (pressTimer) clearTimeout(pressTimer)
-  pressTimer = null
-  if (Platform.OS === 'web' && typeof document !== 'undefined') {
-    document.removeEventListener('scroll', cancelPress, true)
-  }
-}
-
-/**
- * Props to spread on a feed card's touchable. `onMouseEnter`/`onMouseLeave`
- * are forwarded to the DOM by react-native-web; native gets the press pair only.
- */
+/** Props to spread on a feed card's touchable (see lib/prefetchIntent). */
 export function eventPrefetchProps(id: string): object {
-  const onPressIn = () => {
-    cancelHover()
-    cancelPress()
-    pressTimer = setTimeout(() => {
-      cancelPress()
-      prefetchEventDetail(id)
-    }, PRESS_INTENT_MS)
-    // react-native-web keeps a press alive while a slow drag scrolls the page,
-    // so any scroll (the page or an inner scroll view; capture sees both) ends
-    // the intent too. Native ScrollViews end the press themselves (press-out).
-    if (Platform.OS === 'web' && typeof document !== 'undefined') {
-      document.addEventListener('scroll', cancelPress, { capture: true, passive: true })
-    }
-  }
-  // Release, or the scroll view / page taking the touch over. A tap shorter
-  // than PRESS_INTENT_MS loses the head start; the page then loads as it did
-  // before prefetching (on desktop the hover has usually warmed it already).
-  const onPressOut = cancelPress
-  if (Platform.OS !== 'web') return { onPressIn, onPressOut }
-  return {
-    onPressIn,
-    onPressOut,
-    onMouseEnter: () => {
-      cancelHover()
-      hoverTimer = setTimeout(() => {
-        hoverTimer = null
-        prefetchEventDetail(id)
-      }, HOVER_DELAY_MS)
-    },
-    onMouseLeave: cancelHover,
-  }
+  return intentPrefetchProps(() => prefetchEventDetail(id))
 }

@@ -12,6 +12,7 @@ import { ProfileMenu } from '../../../../../components/profile/ProfileMenu'
 import { useTour } from '../../../../../contexts/tour'
 import { EditProfileForm } from '../../../../../components/profile/EditProfileForm'
 import { RecentCheersPlaceholder, TrophyCase } from '../../../../../components/profile/TrophyCase'
+import { useUserTrophies } from '../../../../../hooks/useUserTrophies'
 import { useAvatarUploader } from '../../../../../components/profile/useAvatarUploader'
 import { PROFILE_TAB_INDEX, shared, theme } from '../../../../../constants'
 import { useSession } from '../../../../../contexts/session'
@@ -24,6 +25,9 @@ import {
   useMyProfile,
 } from '../../../../../hooks/useMyProfile'
 import { useFocusRefetch } from '../../../../../lib/query'
+import { useFriends } from '../../../../../hooks/useFriends'
+import { useSilencedUsers } from '../../../../../hooks/useSilencedUsers'
+import { visibleIncoming } from '../../../../../utils/friends'
 import { pointsBalanceKey, usePointsBalance } from '../../../../../hooks/usePoints'
 import { routes } from '../../../../../utils/routes'
 import type { Profile, ProfilePatch, ToastState, UserBadge } from '../../../../../types'
@@ -45,6 +49,9 @@ type Props = {
 function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, updateProfile, setDisplaySlot, checkBadges, refreshing, onRefresh }: Props) {
   const router = useRouter()
   const tour = useTour()
+  const { data: friends } = useFriends()
+  const { silencedUserIds } = useSilencedUsers()
+  const trophies = useUserTrophies(profile.id)
   const { setTabBarHidden, tabBarHeight, docScrollActive } = useTabsShell()
   const lastScrollY = useRef(0)
   const [section, setSection] = useState<'menu' | 'edit'>('menu')
@@ -111,19 +118,21 @@ function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, upda
           mode={section}
           totalCheers={totalCheers}
           totalPoints={totalPoints}
+          trophyCount={trophies.data?.length ?? 0}
           displayedBadges={displayedBadges}
           onEdit={() => setSection('edit')}
         />
 
         {section === 'menu' ? (
           <>
-            <TrophyCase />
+            <TrophyCase trophies={trophies.data ?? []} own />
             <RecentCheersPlaceholder />
             <ProfileMenu
               onOpen={s => router.push(routes.settings(s))}
               onTakeTour={() => tour.start('intro', 'profile_menu')}
               onOpenTerms={() => router.push(routes.terms())}
               onOpenPrivacy={() => router.push(routes.privacy())}
+              friendRequestCount={visibleIncoming(friends.incoming, silencedUserIds).length}
             />
           </>
         ) : (

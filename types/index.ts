@@ -9,9 +9,9 @@
 
 import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database'
 import type { TabKey } from '../constants/navigation'
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import type { ActivityIndicatorProps } from 'react-native'
-import type { BracketMatchInsert, SetScore } from './tournament'
+import type { BracketMatchInsert, SetScore, TiebreakerKey } from './tournament'
 
 /** The client's database type. Kept as an alias so callers don't care how it's assembled. */
 export type AppDatabase = Database
@@ -63,7 +63,7 @@ type ProfileRow = Override<Tables<'profiles'>, {
 }>
 
 /** Allowed values of `profiles.selected_border`. */
-export type ProfileBorder = 'bronze' | 'gold' | 'gradient'
+export type ProfileBorder = 'bronze' | 'gold' | 'gradient' | 'storm' | 'aether'
 
 /**
  * `profiles` table
@@ -93,6 +93,8 @@ export const NOTIFICATION_PREF_TYPES = [
   'join_request',
   'request_approved',
   'request_denied',
+  'friend_request',
+  'friend_accepted',
   'event_reminder',
   'late_dropout',
 ] as const
@@ -127,8 +129,10 @@ export type NotificationData = {
   cheer_id?: string
   deep_link?: string
   badge_type?: string
-  /** late_dropout: the player who left. */
+  /** late_dropout: the player who left; friend_request / friend_accepted: the other person. */
   user_id?: string
+  /** friend_request / friend_accepted: the request. */
+  request_id?: string
 }
 
 /** The `data` of a push as the app receives it (send-notification-push / send-chat-push). */
@@ -226,7 +230,37 @@ type EventAttendeeRow = Override<Tables<'event_attendees'>, {
  * `team_number` is 1-based (null = unassigned); `team_pinned` is true when the
  * host placed the player manually (skipped by randomize).
  */
-export type EventAttendee = Omit<EventAttendeeRow, 'denial_reason'> & Partial<Pick<EventAttendeeRow, 'denial_reason'>>
+export type EventAttendee = Omit<EventAttendeeRow, 'denial_reason' | keyof NoShowColumns>
+  & Partial<Pick<EventAttendeeRow, 'denial_reason'>>
+  & Partial<NoShowColumns>
+
+/**
+ * No-show flag (#151): `event_attendees.no_show`, `no_show_marked_at`,
+ * `no_show_marked_by`, written only by the `set_no_show` RPC.
+ *
+ * TEMPORARY: written out here because `types/database.ts` is generated from
+ * live, which gets migration 20261104190000_event_no_show only when the PR
+ * merges. After regenerating, these come from `EventAttendeeRow`; this type
+ * can then become `Pick<EventAttendeeRow, 'no_show' | ...>` (the `Omit` above
+ * keeps `EventAttendee` the same shape either way). Optional on
+ * `EventAttendee` because optimistic and older cached rows don't carry them.
+ */
+export type NoShowColumns = {
+  no_show: boolean
+  no_show_marked_at: string | null
+  no_show_marked_by: string | null
+}
+
+/** `set_no_show(p_event_id, p_user_id, p_value)` arguments (TEMPORARY, see `NoShowColumns`). */
+export type SetNoShowArgs = { p_event_id: string; p_user_id: string; p_value: boolean }
+
+/** The host's no-show window on an event (`noShowWindow` in hooks/event/derive.ts). */
+export type NoShowWindow = {
+  /** Now is between the start and 2 hours after the end, and the event isn't cancelled. */
+  open: boolean
+  /** When the window closes and the unflagged players are paid (ms since epoch). */
+  closesAt: number
+}
 
 /** `event_attendees` row with embedded `profiles` from the event detail query (`profiles!…user_id…`). */
 export type EventAttendeeWithProfile = EventAttendee & {
@@ -368,6 +402,14 @@ export type FeedSnapshot = {
   months: Record<string, EventWithDetails[]>
 }
 
+/** Last visit's per-viewer reads kept on the device (lib/querySnapshot): cache key → data. */
+export type QuerySnapshot = {
+  v: 1
+  savedAt: number
+  owner: string | null
+  entries: Record<string, unknown>
+}
+
 /** Row of `external_sessions`: a session another Austin venue or group runs, pulled hourly from the Schelagg feed (ingest_schelagg_feed). */
 export type ExternalSession = Pick<
   Override<Tables<'external_sessions'>, { surface: 'indoor' | 'sand' | 'grass' | null }>,
@@ -429,6 +471,70 @@ export type MajorCity = Tables<'major_cities'>
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
 export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
   home_city: MajorCity | null
+  /** What the player hid from their Events feed (`user_settings.hidden_feed`). Missing reads as nothing hidden. */
+  hidden_feed?: HiddenFeedEntry[]
+}
+
+/**
+ * What a hidden-feed entry covers: one feed item, every outside session at a
+ * venue, every event a host created, or every event of a type (tag or surface).
+ */
+export type HiddenFeedKind = 'item' | 'venue' | 'host' | 'type'
+
+/**
+ * One entry of `user_settings.hidden_feed`. `key` is what matches (event id,
+ * lower-cased venue, host user id, `tag:<name>` / `surface:<surface>`); `label`
+ * is what Settings → Hidden in feed shows; `until` (items only) is the item's
+ * date, after which the entry is dropped.
+ */
+export type HiddenFeedEntry = {
+  kind: HiddenFeedKind
+  key: string
+  label: string
+  until?: string
+}
+
+/** A choice in a feed card's hide menu ("Hide all at Volleyworld"). */
+export type HideFeedOption = {
+  entry: HiddenFeedEntry
+  title: string
+}
+
+/** A feed card with its "⋯" hide menu button, and the "Hidden · Unhide" line when a hidden item is shown. */
+export type FeedItemShellProps = {
+  children?: import('react').ReactNode
+  onMore: () => void
+  /** Accessible name of the ⋯ button, e.g. "More options for Friday Sixes". */
+  moreLabel: string
+  /** Shown while its day's hidden items are revealed. */
+  hidden?: boolean
+  onUnhide?: () => void
+}
+
+/** "2 hidden · Show" under a day (or month) of the feed. */
+export type HiddenCountRowProps = {
+  count: number
+  revealed: boolean
+  onToggle: () => void
+}
+
+/** The hide menu for one feed item. */
+export type HideFeedSheetProps = {
+  visible: boolean
+  /** The item's title, shown above the choices. */
+  itemTitle?: string
+  options: HideFeedOption[]
+  onPick: (option: HideFeedOption) => void
+  onDismiss: () => void
+}
+
+/** Feed hiding as the Events screen sees it (`useHiddenFeed`). */
+export type HiddenFeedControls = {
+  entries: HiddenFeedEntry[]
+  hide: (entry: HiddenFeedEntry) => void
+  unhide: (entry: Pick<HiddenFeedEntry, 'kind' | 'key'>) => void
+  /** Puts back exactly this list (Undo). */
+  restore: (entries: HiddenFeedEntry[]) => void
 }
 
 /** What the login-with-username edge function returns on success (passed to `supabase.auth.setSession`). */
@@ -508,7 +614,7 @@ export type AdFreeRedeemResult = AdFreeStatus & {
 
 // ─── Tours (constants/tours.ts, contexts/tour.tsx) ───────────────────────────
 
-export type TourId = 'intro'
+export type TourId = 'intro' | 'scorekeeper' | 'scorekeeperExample'
 
 /** Where the step's card sits relative to its target. 'auto' picks the side with more room. */
 export type TourPlacement = 'auto' | 'top' | 'bottom'
@@ -530,7 +636,7 @@ export type TourDef = {
 }
 
 /** Where the tour was started from (for analytics and debugging). */
-export type TourSource = 'banner' | 'profile_menu' | 'other'
+export type TourSource = 'banner' | 'profile_menu' | 'first_use' | 'help_button' | 'other'
 
 /** What the tab shell hands the tour so it can move between tabs (registered by the tabs layout). */
 export type TourShell = {
@@ -793,6 +899,66 @@ export type ChatMessageListProps = {
   onUserDrag: () => void
 }
 
+// ─── Friends (#15) ────────────────────────────────────────────────────────────
+
+/** One of my friendships (my own row: `is_best_friend` is my private flag) with the friend's profile. */
+export type Friend = Pick<Tables<'friendships'>, 'friend_id' | 'is_best_friend' | 'created_at'> & {
+  profile: ProfileBrief | null
+}
+
+/** A pending request, sent or received, with the other person's profile. */
+export type FriendRequest = Pick<Tables<'friend_requests'>, 'id' | 'requester_id' | 'addressee_id' | 'created_at'> & {
+  /** The person on the other side (the requester for incoming, the addressee for outgoing). */
+  other: ProfileBrief | null
+}
+
+export type FriendsData = {
+  friends: Friend[]
+  incoming: FriendRequest[]
+  outgoing: FriendRequest[]
+}
+
+/** My relationship to another player. */
+export type FriendStatus = 'none' | 'requested' | 'incoming' | 'friends'
+
+/** components/profile/FriendButton. */
+export type FriendButtonProps = {
+  userId: string
+  /** Shown optimistically in my list while a new request is pending. */
+  profile?: ProfileBrief | null
+  /** Short feedback after an action ("Request sent", an error). */
+  onMessage?: (message: string, variant: 'success' | 'error' | 'info') => void
+}
+
+/** components/profile/FriendManageSheet: options for an existing friend. */
+export type FriendManageSheetProps = {
+  visible: boolean
+  name: string
+  isBestFriend: boolean
+  bestFriendCount: number
+  onToggleBest: (best: boolean) => void
+  onRemove: () => void
+  onDismiss: () => void
+  onClosed?: () => void
+}
+
+/** components/profile/FriendRow: one person in the Friends screen. */
+export type FriendRowProps = {
+  profile: ProfileBrief | null
+  /** Small line under the name ("Wants to be friends", "Request sent"). */
+  caption?: string
+  onPress?: () => void
+  /** Right-hand controls (Cancel, best-friend star). */
+  children?: import('react').ReactNode
+  /** Controls under the name, full width (Accept / Decline), so a narrow phone keeps the name readable. */
+  footer?: import('react').ReactNode
+  last?: boolean
+  testID?: string
+}
+
+/** A friend attending an event (get_friends_going), best friends first. */
+export type FriendGoing = Database['public']['Functions']['get_friends_going']['Returns'][number]
+
 // ─── Badge Types ──────────────────────────────────────────────────────────────
 
 export type CardBgType = 'ember' | 'frost' | 'aurora'
@@ -836,7 +1002,8 @@ export type Tournament = Override<Tables<'tournaments'>, {
   bracket_type: TournamentBracketType | null
 }>
 
-export type TournamentRules = Tables<'tournament_rules'>
+/** `tiebreakers` holds only TiebreakerKey values (CHECK constraint). */
+export type TournamentRules = Override<Tables<'tournament_rules'>, { tiebreakers: TiebreakerKey[] }>
 
 export type TournamentTeam = Override<Tables<'tournament_teams'>, { status: TournamentTeamStatus }>
 
@@ -882,6 +1049,10 @@ export type TournamentDraft = {
   winByMargin: number
   pointCap: number | null
   setsToWin: number
+  /** Standings tiebreakers after wins, in order. */
+  tiebreakers: TiebreakerKey[]
+  /** Single elimination: play off third place (otherwise both semifinal losers share it). */
+  thirdPlaceMatch: boolean
 }
 
 // ─── Tournament Discussion ────────────────────────────────────────────────────
@@ -1239,6 +1410,13 @@ export type TournamentInviteCandidate = Pick<Profile, 'id' | 'username' | 'first
 
 export type TeamSource = { team_number?: number | null; team_pinned?: boolean | null }
 
+/** A player as team balancing sees them (#149). Guests have no level. */
+export type BalancePlayer = { id: string; skillLevel: VolleyballSkillLevel | null; isSetter: boolean }
+/** Team header chips (#149). `avgLevel` is null when too few players have a level. */
+export type TeamSummary = { avgLevel: VolleyballSkillLevel | null; setters: number }
+/** How the host's shuffle button splits players. */
+export type TeamMode = 'random' | 'balanced'
+
 export type RandomizeResult =
   | { ok: true; assignments: Record<string, TeamAssignment> }
   | { ok: false; title: string; message: string }
@@ -1255,6 +1433,13 @@ export type RemoveDialogAction = { type: 'open'; target: RemoveTarget } | { type
 
 /** A team drop zone's measured window-y extent (People tab drag-and-drop). */
 export type ZoneLayout = { top: number; bottom: number }
+
+/** components/LazyChunk: the error boundary around a lazily loaded chunk. */
+export type LazyChunkBoundaryProps = { children: ReactNode; onRetry: () => void }
+export type LazyChunkBoundaryState = { failed: boolean }
+
+/** components/profile/LegendRing(.web): the spinning Legend avatar border. */
+export type LegendBorderProps = { children: ReactNode; outerSize: number; ring: number }
 
 // Return types of the screen hooks (type-only imports: no runtime cycle).
 /** Everything the event page reads: one hook, shared by every tab. */
@@ -1333,10 +1518,22 @@ export type RemoveTarget =
 
 /** One entry in a People-tab row's ⋯ menu (Message / View profile / Remove). */
 export type RosterAction = {
-  key: 'message' | 'message-adder' | 'profile' | 'remove'
+  key: 'message' | 'message-adder' | 'profile' | 'no-show' | 'remove'
   label: string
+  /** A second, smaller line under the label ("No points for this event. You can undo until 9:00 PM."). */
+  subtitle?: string
   destructive?: boolean
+  /** Warm accent for a consequential but reversible action (Mark as no-show). */
+  caution?: boolean
   onPress: () => void
+}
+
+/** Host / co-host no-show control for one roster row (#151). */
+export type NoShowRowAction = {
+  flagged: boolean
+  /** "9:00 PM": when the window closes. */
+  until: string
+  onToggle: () => void
 }
 
 /** The open ⋯ menu on the People tab: whose row, and what it offers. */
@@ -1768,3 +1965,25 @@ export type ForecastSummary = {
 
 /** A rounded court position: the forecast cache key. */
 export type ForecastCourt = { lat: number; lng: number }
+
+// ─── Public profile, history, cheers summary (#185) ──────────────────────────
+
+/** hooks/useUserProfile: another player's profile page. */
+export type UserProfileData = {
+  profile: Profile
+  avatarUri: string | null
+  totalCheers: number
+  /** Badges the player chose to show, in their order. */
+  displayBadges: UserBadge[]
+}
+
+/** hooks/useEventHistory: past events attended / hosted, or upcoming hosted. */
+export type EventHistoryKind = 'attended' | 'hosted-past' | 'hosted-upcoming'
+
+/** hooks/useCheersSummary: the viewer's cheers screen. */
+export type CheersSummary = {
+  totalReceived: number
+  totalGiven: number
+  counts: Partial<Record<CheerType, number>>
+}
+

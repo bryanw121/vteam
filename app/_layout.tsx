@@ -17,7 +17,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient'
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router'
 import Head from 'expo-router/head'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { GestureRoot } from '../components/GestureRoot'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider, useSession } from '../contexts/session'
 import { TextScaleProvider } from '../contexts/textScale'
@@ -31,8 +31,11 @@ import { registerPushToken, subscribeToPushTaps } from '../utils/pushNotificatio
 import { useMinVersion } from '../hooks/useMinVersion'
 import { useCacheUserScope } from '../hooks/useCacheUserScope'
 import { UpdateRequiredScreen } from '../components/UpdateRequiredScreen'
+import { startQuerySnapshot } from '../lib/querySnapshot'
 
 initSentry()
+// Last visit's profile / settings / chat list into the cache before the first render (web).
+startQuerySnapshot()
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const AVATARS_BUCKET = 'avatars'
@@ -184,7 +187,7 @@ function RootNavigator() {
   return (
     <SentryErrorBoundary>
     <SafeAreaProvider>
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureRoot style={{ flex: 1 }}>
       {/*
         Browser tab title. Outside the hydration gate on purpose: the static
         export renders it into every page's <title> (Expo Router's head manager
@@ -223,7 +226,7 @@ function RootNavigator() {
           <AppSplash opacity={splashOpacity} />
         </View>
       )}
-    </GestureHandlerRootView>
+    </GestureRoot>
     </SafeAreaProvider>
     </SentryErrorBoundary>
   )

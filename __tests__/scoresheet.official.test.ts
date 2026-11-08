@@ -129,4 +129,21 @@ describe('official USAV scoresheet', () => {
     expect(officialFileName(m.doc)).toBe('Aces-vs-Blockers-2026-11-02-usav-scoresheet.pdf')
     if (process.env.OFFICIAL_PDF_OUT) writeFileSync(process.env.OFFICIAL_PDF_OUT, bytes)
   })
+
+  it('triangles the Roman numeral and the points when a libero serves (S6.2)', () => {
+    const m = matchOf(MATCH_FORMATS.oneSet)
+    m.add(start('A'))
+    // Team A's server is #1 in position I: the libero replaces them and serves three points, then loses the rally.
+    m.add({ type: 'libero_in', team: 'A', libero: 20, replaces: 1 }, { type: 'rally', winner: 'A' }, { type: 'rally', winner: 'A' }, { type: 'rally', winner: 'A' }, { type: 'rally', winner: 'B' })
+    const state = replay(m.doc.setup, m.doc.log)
+    const a = state.sets[0].teams.A
+    expect(a.liberoServeSlot).toBe(0)
+    expect(a.liberoPoints).toEqual([1, 2, 3])
+    expect(state.sets[0].teams.B.liberoPoints).toEqual([])
+    const ops = officialLayout(m.doc, state, { measure }).ops
+    // A triangle is three lines meeting at an apex: the Roman numeral I plus points 1–3.
+    const rising = (spread: number) => ops.filter(o => o.kind === 'line' && o.width === 0.8 && o.x2 > o.x1 && o.y2 > o.y1 && Math.abs((o.x2 - o.x1) / (o.y2 - o.y1) - spread / 1.62) < 0.01)
+    expect(rising(1.5)).toHaveLength(1) // Roman numeral I
+    expect(rising(0.95)).toHaveLength(3) // points 1–3
+  })
 })
