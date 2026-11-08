@@ -3,6 +3,8 @@
  * Created in beforeAll / removed in afterAll so the shared DB doesn't need
  * permanent pilot-visible seed events.
  */
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { e2eCredentials, E2E_TITLE_PREFIX, STALE_FIXTURE_HOURS, SUPABASE_ANON_KEY, SUPABASE_URL } from './env'
 import { withNetworkRetry } from './retry'
@@ -26,13 +28,21 @@ function daysFromNow(days: number, hour = 19): string {
 /**
  * A Node-side Supabase client signed in as the e2e account (retries network flakes).
  *
- * Each call gets its own client (specs sign theirs out when done), but the
- * account signs in once per test process: login-with-username allows 30
- * attempts per username per 15 minutes (#102), and a CI run has a dozen
- * callers across its shards. A cached session that no longer works (expired
- * and its refresh token rotated) falls back to a real sign-in.
+ * login-with-username allows 30 attempts per username per 15 minutes (#102),
+ * and several PRs' CI runs share the account, so this signs in as rarely as it
+ * can. Each call still gets its own client (specs sign theirs out when done):
+ *  1. The browser session auth.setup.ts saved for this shard, while its access
+ *     token has a few minutes left. Only the access token is relied on: the
+ *     client never refreshes it, because refreshing the browser's refresh token
+ *     here could revoke the session the browser specs are using.
+ *  2. Else a session this process signed in for itself (one sign-in per process).
  */
 export async function signInE2eClient(): Promise<{ supabase: SupabaseClient; userId: string }> {
+  const saved = readSavedBrowserSession()
+  if (saved) {
+    const reused = await clientFromTokens(saved).catch(() => null)
+    if (reused) return reused
+  }
   if (cachedTokens) {
     const reused = await clientFromTokens(await cachedTokens).catch(() => null)
     if (reused) return reused
@@ -44,6 +54,31 @@ export async function signInE2eClient(): Promise<{ supabase: SupabaseClient; use
 
 type E2eTokens = { access_token: string; refresh_token: string }
 let cachedTokens: Promise<E2eTokens> | null = null
+
+/** auth.setup.ts writes the signed-in browser storage here (playwright.config.ts reads the same path). */
+const SAVED_BROWSER_SESSION = path.join(process.cwd(), 'playwright/.auth/user.json')
+/** Reuse the saved access token only while it has at least this long left. */
+const SAVED_SESSION_MIN_LIFE_S = 5 * 60
+
+/** The access token auth.setup.ts saved, while it is still good for a while; else null. */
+function readSavedBrowserSession(): E2eTokens | null {
+  try {
+    const state = JSON.parse(readFileSync(SAVED_BROWSER_SESSION, 'utf8')) as {
+      origins?: { localStorage?: { name: string; value: string }[] }[]
+    }
+    for (const origin of state.origins ?? []) {
+      for (const entry of origin.localStorage ?? []) {
+        if (!/^sb-.*-auth-token$/.test(entry.name)) continue
+        const s = JSON.parse(entry.value) as { access_token?: string; refresh_token?: string; expires_at?: number }
+        const left = (s.expires_at ?? 0) - Date.now() / 1000
+        if (s.access_token && s.refresh_token && left > SAVED_SESSION_MIN_LIFE_S) {
+          return { access_token: s.access_token, refresh_token: s.refresh_token }
+        }
+      }
+    }
+  } catch { /* no saved session (guest project, or setup did not run) */ }
+  return null
+}
 
 async function fetchTokens(): Promise<E2eTokens> {
   const { username, password } = e2eCredentials()
