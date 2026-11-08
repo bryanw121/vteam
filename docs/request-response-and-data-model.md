@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `3c175b5ddd37`
+> Inventory fingerprint: `d6ff94176cb3`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -631,7 +631,7 @@ TypeScript `enum` keyword.
 | `Surface` | `indoor`, `sand`, `grass` | [`types/index.ts:193`](../types/index.ts#L193) |
 | `TeamMode` | `random`, `balanced` | [`types/index.ts:1312`](../types/index.ts#L1312) |
 | `TextSizeId` | `small`, `default`, `large`, `xlarge` | [`types/index.ts:1776`](../types/index.ts#L1776) |
-| `TourId` | `intro`, `scorekeeper` | [`types/index.ts:571`](../types/index.ts#L571) |
+| `TourId` | `intro`, `scorekeeper`, `scorekeeperExample` | [`types/index.ts:571`](../types/index.ts#L571) |
 | `TournamentBracketType` | `single`, `double` | [`types/index.ts:887`](../types/index.ts#L887) |
 | `TournamentFormat` | `pool_play`, `bracket`, `pool_bracket`, `round_robin` | [`types/index.ts:886`](../types/index.ts#L886) |
 | `TournamentJoinRequestStatus` | `pending`, `approved`, `declined` | [`types/index.ts:969`](../types/index.ts#L969) |

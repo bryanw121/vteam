@@ -568,7 +568,7 @@ export type AdFreeRedeemResult = AdFreeStatus & {
 
 // ─── Tours (constants/tours.ts, contexts/tour.tsx) ───────────────────────────
 
-export type TourId = 'intro' | 'scorekeeper'
+export type TourId = 'intro' | 'scorekeeper' | 'scorekeeperExample'
 
 /** Where the step's card sits relative to its target. 'auto' picks the side with more room. */
 export type TourPlacement = 'auto' | 'top' | 'bottom'

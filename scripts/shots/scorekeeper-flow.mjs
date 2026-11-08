@@ -67,8 +67,19 @@ try {
   // The built-in example: a finished match to see what you get, kept out of the saved list.
   await tap(page, 'open-example')
   await page.getByTestId('example-note').waitFor()
+  // The example walks itself through: four steps, ending on "Start your own match".
+  for (let i = 0; i < 4; i++) {
+    await page.getByTestId('tour-card').waitFor()
+    await shot(page, `example-tour-${i + 1}`)
+    await tap(page, 'tour-next')
+    await page.waitForTimeout(400)
+  }
+  check(!(await page.getByTestId('tour-overlay').isVisible().catch(() => false)), 'the example tour closes after its last step')
+  await page.evaluate(() => window.scrollTo(0, 0))
   await shot(page, 'example-sheet')
-  await shot(page, 'example-sheet-full', true)
+  await tap(page, 'sheet-enlarge')
+  await shot(page, 'example-sheet-enlarged')
+  await tap(page, 'sheet-enlarge')
   await tap(page, 'sheet-copy')
   await page.getByTestId('copy-next').waitFor()
   await shot(page, 'example-copy')
@@ -223,11 +234,10 @@ try {
   await page.getByTestId('open-sheet').waitFor()
   await shot(page, 'match-over')
   await tap(page, 'open-sheet')
-  await page.getByTestId('sheet-print').waitFor()
+  await page.getByTestId('sheet-form').waitFor()
   await page.waitForTimeout(1500)
   await shot(page, 'scoresheet', true)
-  const frame = page.frameLocator('iframe').first()
-  check(await frame.getByText('Official Scoresheet').isVisible().catch(() => false), 'scoresheet renders')
+  check(await page.getByTestId('sheet-form').isVisible().catch(() => false), 'scoresheet renders')
   // The real USA Volleyball form, filled in, as a download.
   const [download] = await Promise.all([page.waitForEvent('download', { timeout: 20_000 }), tap(page, 'sheet-official')])
   const pdfPath = join(out, 'official-usav-scoresheet.pdf')
