@@ -57,14 +57,18 @@ export const LEAVE_NOTE_MAX = 280
 /**
  * One line per level, shown under each option in player setup and the profile
  * editor (#156), so a new player doesn't have to guess what "BB" means.
+ * Consistency separates the middle levels, and pass accuracy gives players
+ * something to check themselves against, as in the published club/league
+ * definitions (Boomtown, Philly, Rockland, Xoso, Cambridge). NAGVA publishes
+ * no per-level wording.
  */
 export const SKILL_LEVEL_HINTS: Record<string, string> = {
-  d: 'New to volleyball, or learning the basics',
-  c: 'Can serve and pass; still working on consistency',
-  b: 'Solid basics; comfortable in rec games',
-  bb: 'Consistent passing, setting and hitting in competitive rec',
-  a: 'Strong all-around player in competitive leagues',
-  aa_plus: 'Advanced, college or open-level play',
+  d: 'New to volleyball; just getting the ball back over the net',
+  c: "Learning to pass, set and hit, but it doesn't always come off",
+  b: 'Past beginner; knows the skills and is building consistency',
+  bb: 'Can do every skill, but not every time; about 7 in 10 passes on target',
+  a: 'Consistent in every skill; about 9 in 10 passes on target; varsity or club level',
+  aa_plus: 'Fast, high-level play; college or open-level tournaments',
 }
 
 /** Player setup after sign-up (#156). */
