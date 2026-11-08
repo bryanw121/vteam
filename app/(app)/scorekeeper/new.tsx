@@ -231,7 +231,7 @@ export default function NewScoreMatchScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: insets.bottom + theme.spacing.xxl }} keyboardShouldPersistTaps="handled">
           <ScreenContainer>
-            <ScreenHeader safeTop kicker="Scorekeeper" title="New match" onBack={() => router.back()} />
+            <ScreenHeader safeTop kicker="Scorekeeper" title="New match" onBack={() => (router.canGoBack() ? router.back() : router.replace(routes.scorekeeper()))} />
             <Text style={[shared.body, { color: theme.colors.subtextStrong, marginBottom: theme.spacing.md }]}>
               Tap a spot to put a player on the court. Position I serves first. Then add subs and liberos on each bench.
             </Text>
