@@ -5,22 +5,26 @@ import { DEFAULT_FEED_REGION, STALE } from '../constants'
 import { useSession } from '../contexts/session'
 import { notifyError } from '../utils/notify'
 import { DEFAULT_REMINDER_LEAD_MINUTES } from '../constants/notifications'
+import { parseHiddenFeed } from '../utils/hiddenFeed'
 import type { MajorCity, ReminderLeadMinutes, UserSettings } from '../types'
 
 /**
  * The signed-in user's private settings (`user_settings`, owner-only RLS):
  * home city (which region's outside sessions the feed shows), the one-time
- * banners already seen, and how long before an event reminders arrive.
+ * banners already seen, how long before an event reminders arrive, and what
+ * they hid from the Events feed (`useHiddenFeed`).
  * Guests have none; a missing row reads as defaults.
  */
-const SETTINGS_SELECT = 'user_id, home_city_id, seen_banners, reminder_lead_minutes, home_city:major_cities(id, display_name, city_name, admin_region, country_code)'
+const SETTINGS_SELECT = 'user_id, home_city_id, seen_banners, reminder_lead_minutes, hidden_feed, home_city:major_cities(id, display_name, city_name, admin_region, country_code)'
 
 export const userSettingsKey = (userId: string) => queryKey('settings', userId)
 
 async function fetchSettings(userId: string): Promise<UserSettings | null> {
   const { data, error } = await supabase.from('user_settings').select(SETTINGS_SELECT).eq('user_id', userId).maybeSingle()
   if (error) throw error
-  return (data as unknown as UserSettings | null) ?? null
+  if (!data) return null
+  const row = data as unknown as UserSettings & { hidden_feed: unknown }
+  return { ...row, hidden_feed: parseHiddenFeed(row.hidden_feed) }
 }
 
 export function useUserSettings() {
@@ -51,6 +55,7 @@ export function useUserSettings() {
           reminder_lead_minutes: prev?.reminder_lead_minutes ?? DEFAULT_REMINDER_LEAD_MINUTES,
           home_city_id: city?.id ?? null,
           home_city: city ?? null,
+          hidden_feed: prev?.hidden_feed ?? [],
         }))
         return () => setQueryData(key, before ?? null)
       },
@@ -80,6 +85,7 @@ export function useUserSettings() {
           home_city_id: prev?.home_city_id ?? null,
           home_city: prev?.home_city ?? null,
           reminder_lead_minutes: minutes,
+          hidden_feed: prev?.hidden_feed ?? [],
         }))
         return () => setQueryData(key, before ?? null)
       },

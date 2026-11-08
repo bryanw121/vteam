@@ -5,13 +5,15 @@ import { ScreenHeader } from '../ui'
 import type { EventsHeaderProps } from '../../types'
 
 /**
- * "OCTOBER 2026 / Events." header. Mobile is exactly `ScreenHeader`; the
+ * "OCTOBER 2026 / Events." header. Mobile is exactly `ScreenHeader` (no
+ * month kicker: the week strip shows the month); the
  * desktop (sidebar) layout uses a larger title inside the padded scroll area,
  * which ScreenHeader has no size for.
  */
 export function EventsHeader({ wide, right }: EventsHeaderProps) {
+  // Mobile has no kicker: the week strip right below names the month it shows.
+  if (!wide) return <ScreenHeader title="Events" titleDot right={right} />
   const kicker = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-  if (!wide) return <ScreenHeader kicker={kicker} title="Events" titleDot right={right} />
   return (
     <View style={styles.row}>
       <View>

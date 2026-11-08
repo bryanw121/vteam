@@ -3,11 +3,12 @@ import { Platform } from 'react-native'
 import { supabase } from '../lib/supabase'
 import { getQueryData, invalidate, queryKey, setQueryData, useQuery } from '../lib/query'
 import { STALE } from '../constants/cache'
+import { USER_BADGE_SELECT } from '../constants/selects'
 import { useSession } from '../contexts/session'
 import { collectBadgeStats, checkAndAwardBadges } from '../utils/badges'
 import type { UserBadge, Profile } from '../types'
 
-const BADGE_SELECT = 'id, user_id, badge_type, tier, awarded_at, display_order, display_tier'
+const BADGE_SELECT = USER_BADGE_SELECT
 
 // Awarding scans the user's attendance/cheer history, so it runs far less often
 // than the badge list is read. Explicit profile edits bypass this (see checkBadges).

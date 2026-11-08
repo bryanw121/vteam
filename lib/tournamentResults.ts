@@ -100,10 +100,13 @@ export function resultWrites(args: {
     for (const a of advances) if (a.matchId === m.id) row = { ...row, [a.column]: a.teamId }
     return row
   })
+  const decided = tournament.status !== 'cancelled' && isTournamentDecided(after, tournament)
   let nextStatus: TournamentStatus | null = null
-  if (tournament.status !== 'completed' && tournament.status !== 'cancelled' && isTournamentDecided(after, tournament)) nextStatus = 'completed'
-  else if (tournament.status === 'published' || tournament.status === 'draft') nextStatus = 'in_progress'
-  const podium = nextStatus === 'completed' ? tournamentPodium(after, tournament, args.teamIds ?? [], args.tiebreakers) : null
+  if (decided && tournament.status !== 'completed') nextStatus = 'completed'
+  else if (!decided && (tournament.status === 'published' || tournament.status === 'draft')) nextStatus = 'in_progress'
+  // Whenever the result stands decided (also when a final is corrected after
+  // completion) the podium goes along, so trophies are (re)written to match.
+  const podium = decided ? tournamentPodium(after, tournament, args.teamIds ?? [], args.tiebreakers) : null
   return { advances, nextStatus, podium, blocked: null }
 }
 

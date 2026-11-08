@@ -222,6 +222,25 @@ test.describe('signed in as the e2e account', () => {
   })
 })
 
+test.describe('tournament trophies (#7)', () => {
+  test('anyone can read trophies; nobody can write them directly', async () => {
+    const read = await q(() => anon.from('tournament_trophies').select('id, place, tournament_title').limit(1), 'anon trophies')
+    expect(read.error).toBeNull()
+    const forged = await q(() => me.from('tournament_trophies').insert({
+      tournament_id: crypto.randomUUID(), user_id: myId, place: 1,
+      tournament_title: '[e2e rls] must fail', tournament_date: new Date().toISOString(), team_name: 'x',
+    }), 'forge a trophy')
+    expect(forged.error?.code).toBe(RLS_DENIED)
+  })
+
+  test('complete_tournament: only the organizer, never for a tournament you do not run', async () => {
+    const guest = await q(() => anon.rpc('complete_tournament', { p_tournament_id: crypto.randomUUID(), p_podium: [] }), 'anon complete')
+    expect(guest.error).not.toBeNull()
+    const notMine = await q(() => me.rpc('complete_tournament', { p_tournament_id: crypto.randomUUID(), p_podium: [] }), 'complete someone else')
+    expect(notMine.error?.code).toBe(RLS_DENIED)
+  })
+})
+
 test.describe('points (#4)', () => {
   test('anon reads point balances but no ledger rows', async () => {
     const balances = await q(() => anon.from('point_balances').select('user_id, balance').limit(1), 'anon point_balances')

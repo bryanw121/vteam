@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Alert } from 'react-native'
 import { supabase } from '../../lib/supabase'
 import { useMutation } from '../../lib/query'
-import type { EventGuest, EventWithDetails, TeamAssignment } from '../../types'
+import type { BalancePlayer, EventGuest, EventWithDetails, TeamAssignment, TeamMode } from '../../types'
 import { eventKeys, patchQuery } from './keys'
-import { attendeeRowsWithProfiles, deriveAssignments, mergeAssignments, randomizeAssignments } from './derive'
+import { attendeeRowsWithProfiles, balanceAssignments, deriveAssignments, mergeAssignments, randomizeAssignments } from './derive'
+import { loadTeamMode, saveTeamMode, teamModeNow } from '../../utils/teamMode'
 import { reportEventError } from './telemetry'
 import type { EventData } from '../../types'
 
@@ -22,6 +23,13 @@ export function useEventTeams(data: EventData, isHostOrCohost: boolean) {
   const saved = useMemo(() => deriveAssignments(attendingRows, attendingGuests), [attendingRows, attendingGuests])
   const [assignments, setAssignments] = useState<Record<string, TeamAssignment>>(saved.assignments)
   const [numTeams, setNumTeams] = useState(2)
+  const [mode, setModeState] = useState<TeamMode>(() => teamModeNow() ?? 'random')
+  useEffect(() => {
+    let alive = true
+    void loadTeamMode().then(m => { if (alive) setModeState(m) })
+    return () => { alive = false }
+  }, [])
+  const setMode = (m: TeamMode) => { setModeState(m); saveTeamMode(m) }
   const baseRef = useRef(saved.assignments)
 
   useEffect(() => {
@@ -54,8 +62,17 @@ export function useEventTeams(data: EventData, isHostOrCohost: boolean) {
     })
   }
 
+  /** Who balancing sees: attendees with their level and setter flag; guests have neither. */
+  const balancePlayers = useMemo<BalancePlayer[]>(() => [
+    ...attendees.map(p => ({ id: p.id, skillLevel: p.skill_level ?? null, isSetter: (p.position ?? []).includes('setter') })),
+    ...attendingGuests.map(g => ({ id: g.id, skillLevel: null, isSetter: false })),
+  ], [attendees, attendingGuests])
+
+  /** The host's shuffle button: Randomize or Balance, by `mode`. */
   function randomizeTeams() {
-    const result = randomizeAssignments(playerIds, assignments, numTeams)
+    const result = mode === 'balanced'
+      ? balanceAssignments(balancePlayers, assignments, numTeams)
+      : randomizeAssignments(playerIds, assignments, numTeams)
     if (!result.ok) {
       Alert.alert(result.title, result.message)
       return
@@ -121,6 +138,9 @@ export function useEventTeams(data: EventData, isHostOrCohost: boolean) {
     moveToTeam,
     resetTeams,
     randomizeTeams,
+    mode,
+    setMode,
+    balancePlayers,
     saveTeams: () => { void save.mutate(assignments) },
     savingTeams: save.isPending,
   }
