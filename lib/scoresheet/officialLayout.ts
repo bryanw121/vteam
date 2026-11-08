@@ -135,7 +135,6 @@ function header(c: Ctx, doc: MatchDoc, state: MatchState) {
   const { info } = doc.setup
   text(c, 288, 29.5, info.competition, INK_SIZE, { maxWidth: 306 })
   text(c, 243, 44, info.city, INK_SIZE, { maxWidth: 352 })
-  text(c, 224, 58.5, info.hall, INK_SIZE, { maxWidth: 174 })
   const box = info.gender ? { men: 266.65, women: 318.45, coed: 368.85 }[info.gender] : null
   if (box != null) cross(c, box, 68.25, 3.4)
   text(c, 440, 72.5, info.matchNo, INK_SIZE, { maxWidth: 154 })

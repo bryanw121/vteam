@@ -77,6 +77,7 @@ export type MatchInfo = {
   matchNo?: string
   division?: string
   city?: string
+  /** No longer asked for or printed; old saved matches may still carry it. */
   hall?: string
   court?: string
   /** ISO date (yyyy-mm-dd) */
@@ -205,6 +206,8 @@ export type MatchDoc = MatchHistory & {
   seq?: number
   /** "Copy to paper" steps the scorer has ticked off (CopyStep ids). */
   copied?: string[]
+  /** The built-in example match (lib/scoresheet/exampleMatch): kept out of the saved-matches list. */
+  example?: boolean
 }
 
 /** A row in the saved-matches list. */

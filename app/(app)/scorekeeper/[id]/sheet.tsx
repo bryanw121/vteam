@@ -32,11 +32,20 @@ export default function ScoresheetScreen() {
             <ScreenContainer>
               <ScreenHeader
                 safeTop
-                kicker={state.over ? 'Final' : 'In progress'}
+                kicker={doc.example ? 'Example' : state.over ? 'Final' : 'In progress'}
                 title="Scoresheet"
                 onBack={() => (router.canGoBack() ? router.back() : router.replace(routes.scorekeeperMatch(doc.id)))}
               />
               <Text style={[shared.body, { color: theme.colors.subtextStrong, marginBottom: theme.spacing.md }]}>{matchTitle(doc)}</Text>
+              {doc.example && (
+                <View style={[shared.card, { gap: theme.spacing.xs, marginBottom: theme.spacing.md, borderColor: theme.colors.primary }]} testID="example-note">
+                  <Text style={shared.subheading}>This is an example</Text>
+                  <Text style={[shared.body, { color: theme.colors.subtextStrong }]}>
+                    A made-up match, scored in the app, so you can see what you get: try Copy to paper, or download the official USA Volleyball form.
+                  </Text>
+                  <Button label="Start your own match" icon="add" variant="secondary" onPress={() => router.replace(routes.scorekeeperNew())} style={{ marginTop: theme.spacing.xs }} />
+                </View>
+              )}
               <Button
                 label={doc.copied?.length ? 'Copy to paper (continue)' : 'Copy to paper (guided)'}
                 icon="create-outline"
@@ -51,7 +60,8 @@ export default function ScoresheetScreen() {
                 info={doc.setup.info}
                 onChange={patch => {
                   updateInfo(patch)
-                  void rememberInfo({ ...doc.setup.info, ...patch })
+                  // The example's made-up details shouldn't fill in someone's next real match.
+                  if (!doc.example) void rememberInfo({ ...doc.setup.info, ...patch })
                 }}
               />
               <Button

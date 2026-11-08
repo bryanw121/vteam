@@ -208,7 +208,7 @@ export function scoresheetHtml(doc: MatchDoc, state: MatchState, generatedAt: nu
 <div class="top"><div><h1>Official Scoresheet</h1><div>${esc(teamName(doc, 'A'))} <b>vs</b> ${esc(teamName(doc, 'B'))}</div></div>
 <div>Rules: ${esc({ usav: 'USA Volleyball', international: 'International', casual: 'Recreational' }[rules.preset])} · ${rules.subsPerSet ?? 'unlimited'} subs · ${rules.timeoutsPerSet} time-outs per set</div></div>
 <div class="info">
-${field('Competition', info.competition)}${field('Match no.', info.matchNo)}${field('Division / category', info.division)}${field('City, state', info.city)}${field('Hall', info.hall)}
+${field('Competition', info.competition)}${field('Match no.', info.matchNo)}${field('Division / category', info.division)}${field('City, state', info.city)}
 ${field('Court', info.court)}${field('Date', info.date)}${field('Time', time(state.sets[0]?.startedAt ?? null))}${field('Gender', gender)}${field('Scorer', info.scorer)}
 </div>
 ${state.sets.map(s => setBlock(doc, s)).join('') || '<p>No sets played yet.</p>'}

@@ -73,7 +73,6 @@ function header(doc: MatchDoc, state: MatchState): CopyStep {
       { kind: 'rows', rows: [
         { label: 'Competition', value: or(info.competition) },
         { label: 'City, state', value: or(info.city) },
-        { label: 'Hall', value: or(info.hall) },
         { label: 'Division (tick)', value: gender },
         { label: 'Match no.', value: or(info.matchNo) },
         { label: 'Level', value: or(info.division) },
