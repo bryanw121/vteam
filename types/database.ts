@@ -1016,6 +1016,84 @@ export type Database = {
           },
         ]
       }
+      friend_requests: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friend_requests_addressee_id_fkey"
+            columns: ["addressee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friend_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friendships: {
+        Row: {
+          created_at: string
+          friend_id: string
+          is_best_friend: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_id: string
+          is_best_friend?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          friend_id?: string
+          is_best_friend?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friendships_friend_id_fkey"
+            columns: ["friend_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friendships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       major_cities: {
         Row: {
           admin_region: string | null
@@ -2391,6 +2469,7 @@ export type Database = {
           title: string
         }[]
       }
+      cancel_friend_request: { Args: { p_user_id: string }; Returns: string }
       find_or_create_dm: { Args: { other_user_id: string }; Returns: string }
       get_ad_free_status: { Args: never; Returns: Json }
       get_chat_unread_count: { Args: never; Returns: number }
@@ -2413,6 +2492,17 @@ export type Database = {
           p_start: string
         }
         Returns: Json
+      }
+      get_friends_going: {
+        Args: { p_event_ids: string[] }
+        Returns: {
+          avatar_url: string
+          event_id: string
+          first_name: string
+          is_best_friend: boolean
+          user_id: string
+          username: string
+        }[]
       }
       get_my_conversations: {
         Args: never
@@ -2463,15 +2553,25 @@ export type Database = {
         Returns: boolean
       }
       redeem_ad_free: { Args: never; Returns: Json }
+      remove_friend: { Args: { p_user_id: string }; Returns: string }
       replace_tournament_schedule: {
         Args: { p_matches: Json; p_pools?: Json; p_tournament_id: string }
         Returns: number
+      }
+      respond_friend_request: {
+        Args: { p_accept: boolean; p_request_id: string }
+        Returns: string
       }
       rollup_app_events: { Args: { p_days?: number }; Returns: number }
       schema_fingerprint: { Args: never; Returns: Json }
       schema_pending_changes: { Args: never; Returns: Json }
       send_event_reminders: { Args: never; Returns: number }
+      send_friend_request: { Args: { p_user_id: string }; Returns: string }
       send_kudos_reminders: { Args: never; Returns: undefined }
+      set_best_friend: {
+        Args: { p_best: boolean; p_user_id: string }
+        Returns: boolean
+      }
       tournament_registration_check: {
         Args: {
           p_player: string

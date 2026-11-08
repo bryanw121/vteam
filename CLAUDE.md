@@ -100,7 +100,7 @@ app/                         # Expo Router routes (screens compose hooks + compo
         profile/index.tsx    # Profile tab
       clubs.tsx              # Clubs tab
       chat.tsx               # Chat tab (conversation list)
-      settings/              # account, hosted, history, cheers, silenced, hidden, notifications, feedback, badges
+      settings/              # account, friends, hosted, history, cheers, silenced, hidden, notifications, feedback, badges
     event/[id].tsx           # Event detail (re-exports components/event/EventDetailRoute; web loads the screen lazily)
     club/[id].tsx, club/create.tsx
     chat/[id].tsx            # Conversation
@@ -155,6 +155,7 @@ signatures. Regenerate it after every schema change; never hand-edit it. Key dom
 - **conversations** / **conversation_members** / **messages** / **message_reactions** / **chat_silences**
 - **tournaments** and its children (`tournament_teams`, `_team_members`, `_matches`, `_pools`, `_rules`, `_prizes`, invitations, join requests, comments)
 - **cheers**, **user_badges**, **notifications**, **push_tokens**, **feedback_submissions**
+- **friend_requests** / **friendships** (see "Friends")
 - **app_events**: insert-only usage metrics (see "Usage metrics"); **app_events_daily**: their per-day totals, kept forever
 
 Also **user_settings** (private per-user settings: home city, seen banners, reminder lead time, what they hid from the feed) and **event_reminder_log** (service-only reminder dedupe).
@@ -249,6 +250,9 @@ The policy text lives in `constants/legal.ts` (Markdown subset, rendered by `com
 
 ### Text size
 Every font size is a token in `theme.font` (`size`, `heading`, `emoji`, `watermark`; nothing below 11px), and every `Text` / `TextInput` is imported from `components/ui/Text`, never from `react-native` (`__tests__/textSizeFloor.test.ts` enforces both). That wrapper multiplies the style's own `fontSize` and `lineHeight` by the text size setting (Settings → Display: Small 0.9×, Default, Large 1.15×, Extra large 1.3×; `TextScaleProvider` in `contexts/textScale.tsx`, stored on the device) and the OS/browser text size: on native React Native applies Dynamic Type itself and the wrapper caps it through `maxFontSizeMultiplier`; on web, where react-native-web emits fixed px, it reads the root font size. `maxFontSizeMultiplier` on the wrapper caps the combined scale (default `MAX_TEXT_SCALE`, 2×); pass `TIGHT_TEXT_SCALE` (1.3×) for fixed-size UI (tab bar labels, unread pips) and `COMPACT_TEXT_SCALE` (1.15×) for rows of equal cells on a 320px phone (week strip dates, event tabs). Non-`Text` sizes (SVG labels) use `useScaledFontSize(token)`. Check new layouts at Extra large.
+
+### Friends
+Mutual friendships (#15). `friend_requests` holds requests (only the two people see a *pending* one; a decline is never shown to the sender) and `friendships` holds one row per direction, so each person reads only their own rows and `is_best_friend` (at most 10) stays private to its owner. Guests get no access. Clients never write these tables: every change goes through the SECURITY DEFINER RPCs `send_friend_request` (30 a day, 3 a week to the same person, refused if they silenced you; asking back accepts), `respond_friend_request`, `cancel_friend_request`, `remove_friend`, `set_best_friend`. They notify with `friend_request` / `friend_accepted`. Read and act with `useFriends()` / `useFriendActions()` (`hooks/useFriends`, cache prefix `friends`, user-scoped); `utils/friends` derives status, sorting and copy. UI: `FriendButton` on other players' profiles, Settings → Friends (`routes.settings('friends')`).
 
 ### Badge artwork
 `constants/badgeArtwork.ts` maps every badge tier to a bundled PNG under `assets/badges/`. `BadgeIcon` uses the earned tier, or dimmed tier 1 for a locked preview; remote definition URLs and gradient icons remain fallbacks for future catalog entries. Keep the artwork map complete when adding tiers. Vex keeps its original image bytes. Artwork does not change award thresholds or saved display tiers. Run `node scripts/shots/badge-artwork-flow.mjs --dist dist-mock` against the mock web export to verify all 36 files, tier selection, labels and served image bytes at desktop/mobile sizes; CI runs this before axe.

@@ -18,6 +18,7 @@ import { PROFILE_LOAD_ERROR } from '../../../constants/copy'
 import { routes } from '../../../utils/routes'
 import { useSilencedUsers } from '../../../hooks/useSilencedUsers'
 import { useOpenDm } from '../../../hooks/useOpenDm'
+import { FriendButton } from '../../../components/profile/FriendButton'
 import { useUserTrophies } from '../../../hooks/useUserTrophies'
 import { TrophyCase } from '../../../components/profile/TrophyCase'
 import { usePointsBalance } from '../../../hooks/usePoints'
@@ -228,6 +229,11 @@ export default function UserProfileDetail() {
                 {profile.bio}
               </Text>
             ) : null}
+
+            {/* Friend: Add friend / Requested / Accept + Decline / Friends (#15) */}
+            <View style={{ width: '100%', marginTop: theme.spacing.sm }} testID="profile-friend-action">
+              <FriendButton userId={id} profile={profile} onMessage={showToast} />
+            </View>
 
             {/* Stats */}
             <View style={{

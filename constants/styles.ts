@@ -34,6 +34,8 @@ export const shared = StyleSheet.create({
   subheading:   { fontFamily: theme.fonts.displaySemiBold, fontSize: font.size.lg,  color: colors.text },
   body:         { fontFamily: theme.fonts.body,           fontSize: font.size.md,  color: colors.text, lineHeight: font.lineHeight.normal },
   caption:      { fontFamily: theme.fonts.body,           fontSize: font.size.sm,  color: colors.subtext },
+  /** A section heading inside a settings subpage (e.g. Friends: Requests / Friends / Sent). */
+  subpageSectionTitle: { fontFamily: theme.fonts.display, fontSize: font.size.lg, color: colors.text, marginTop: theme.spacing.lg, marginBottom: theme.spacing.sm },
   label:        { fontFamily: theme.fonts.bodyMedium,     fontSize: font.size.sm,  color: colors.subtext, marginBottom: spacing.xs },
   primaryText:  { fontFamily: theme.fonts.bodyMedium,     fontSize: font.size.md,  color: colors.primary },
   errorText:    { fontFamily: theme.fonts.body,           fontSize: font.size.sm,  color: colors.error, marginTop: spacing.xs },

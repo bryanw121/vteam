@@ -58,6 +58,8 @@ export const RLS_MATRIX: Record<TableName, RlsExpectation> = {
   events: { anonSelect: 'all', anonInsert: 'none', owner: { column: 'created_by', ownRowsOnly: false, noInsertAsOther: true }, why: 'guest browsing' },
   external_sessions: { anonSelect: 'all', anonInsert: 'none', why: 'venue sessions in the guest feed (Schelagg ingest writes)' },
   feedback_submissions: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true } },
+  friend_requests: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'requester_id', ownRowsOnly: true, noInsertAsOther: true }, why: 'only the two people on a pending request see it; written only by the friend RPCs' },
+  friendships: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true }, why: 'one row per direction, each person reads only their own; written only by the friend RPCs' },
   major_cities: { anonSelect: 'all', anonInsert: 'none', why: 'reference list' },
   message_reactions: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: false, noInsertAsOther: true } },
   messages: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'sender_id', ownRowsOnly: false, noInsertAsOther: true } },
