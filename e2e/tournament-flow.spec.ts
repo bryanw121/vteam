@@ -154,11 +154,9 @@ test.describe('Tournament flow', () => {
     await expect(page.getByText(TOURNAMENT_TITLE, { exact: true }).first()).toBeVisible({ timeout: 15_000 })
   })
 
-  // TODO(#7): change test.skip to test once the trophies migration
-  // (20261028205312_tournament_trophies, this PR) is applied to beta. Our team
-  // (seed 1 by registration order, team A in the final) won 2-0, so the e2e
-  // account holds a gold trophy for this tournament.
-  test.skip('trophies land on the winners\' profiles', async ({ page }) => {
+  // Our team (seed 1 by registration order, team A in the final) won 2-0, so
+  // the e2e account holds a gold trophy for this tournament.
+  test('trophies land on the winners\' profiles', async ({ page }) => {
     test.skip(!tournamentUrl, 'needs the finished tournament')
     const caseBlock = page.getByTestId('trophy-case').filter({ visible: true }).first()
     await gotoReady(page, `${BASE_URL}/profile`, caseBlock)

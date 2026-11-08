@@ -36,7 +36,8 @@ export const SCREENS = {
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'app/(app)/(tabs)/(main)/_layout.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx',
       'components/MyEventsRail.tsx', 'components/Pager.tsx', 'hooks/useMonthEvents.ts', 'hooks/useMyUpcomingEvents.ts', 'hooks/useTags.ts', 'utils/feed*.ts', 'utils/eventCardPreviews.ts',
       'utils/monthKeys.ts', 'utils/calendar*.ts', 'constants/events.ts', 'components/RefreshControl*.tsx', 'lib/pullGesture.ts',
-      'components/event/ForecastChip.tsx', 'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs'],
+      'components/event/ForecastChip.tsx', 'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs',
+      'hooks/useHiddenFeed.ts', 'utils/hiddenFeed.ts', 'hooks/useUserSettings.ts'],
   },
   'events-feed-guest': {
     route: '/', signedIn: false, ready: 'Lunchtime Pepper',
@@ -46,6 +47,8 @@ export const SCREENS = {
   // No-show flag (#151): what a flagged player sees on Details.
   'event-details-noshow': { route: `/event/${E.pastIndoor}`, ready: 'Marked as a no-show', sources: EVENT_DETAIL },
   'event-people': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }], sources: [...EVENT_DETAIL, 'components/ProfileAvatar.tsx'] },
+  // Host team builder (#149): Balanced mode, then Balance.
+  'event-people-balanced': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }, { tap: 'team-mode-balanced' }, { tap: 'team-shuffle' }, { wait: 300 }], sources: [...EVENT_DETAIL, 'utils/teamMode.ts'] },
   'event-discussion': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-discussion', text: 'Discussion' }], sources: EVENT_DETAIL },
   'event-cheers': { route: `/event/${E.pastSand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-cheers', text: 'Cheers' }], sources: [...EVENT_DETAIL, 'components/CheerRadarChart.tsx'] },
   // Bottom of a paid event someone else hosts: price, Venmo button, about.
@@ -55,6 +58,10 @@ export const SCREENS = {
   'event-guest': { route: `/event/${E.fridayNight}`, signedIn: false, ready: 'Austin Sports Center', sources: EVENT_DETAIL },
   'host-create': { route: '/host', ready: 'Title', sources: ['app/(app)/host.tsx', 'components/host/**', 'components/DatePickerField*.tsx', 'components/LocationPickerField.tsx', 'components/Input.tsx'] },
   'host-edit': { route: `/host?edit=${E.sundaySand}`, sources: ['app/(app)/host.tsx', 'components/host/**'] },
+  // Player setup after sign-up (#156): the three steps.
+  'welcome-position': { route: '/welcome', ready: 'What do you play?', sources: ['app/(app)/welcome.tsx', 'utils/playerSetup.ts', 'hooks/usePlayerSetupGate.ts'] },
+  'welcome-level': { route: '/welcome', ready: 'What do you play?', actions: [{ tap: 'welcome-next' }, { wait: 300 }], sources: ['app/(app)/welcome.tsx', 'constants/copy.ts'] },
+  'welcome-city': { route: '/welcome', ready: 'What do you play?', actions: [{ tap: 'welcome-next' }, { tap: 'welcome-next' }, { wait: 300 }], sources: ['app/(app)/welcome.tsx', 'components/MajorCityAutocomplete.tsx'] },
   notifications: { route: '/notifications', ready: 'Running 10 minutes late', sources: ['app/(app)/notifications.tsx', 'hooks/useNotifications.ts', 'components/NotificationPopup.tsx'] },
 
   // ── Clubs ───────────────────────────────────────────────────────────────
@@ -97,6 +104,7 @@ export const SCREENS = {
   'settings-cheers': { route: '/settings/cheers', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/cheers.tsx', 'components/CheerRadarChart.tsx'] },
   'settings-badges': { route: '/settings/badges', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**', 'hooks/useBadges.ts'] },
   'settings-feedback': { route: '/settings/feedback', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/feedback.tsx'] },
+  'settings-hidden': { route: '/settings/hidden', ready: 'ACES Volleyball', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hidden.tsx', 'hooks/useHiddenFeed.ts', 'utils/hiddenFeed.ts', 'hooks/useUserSettings.ts'] },
   'settings-silenced': { route: '/settings/silenced', ready: 'Hannah', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/silenced.tsx', 'hooks/useSilencedUsers.ts'] },
 
   // ── Tournaments ─────────────────────────────────────────────────────────

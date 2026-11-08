@@ -37,6 +37,7 @@ export type SettingsSection =
   | 'history'
   | 'cheers'
   | 'silenced'
+  | 'hidden'
   | 'notifications'
   | 'display'
   | 'feedback'
@@ -95,6 +96,9 @@ export const routes = {
   privacy: () => href('/privacy'),
 
   notifications: () => href('/notifications'),
+
+  /** Player setup after sign-up (#156); `next` is where to go after Done or Skip (an in-app path). */
+  welcome: (next?: string) => href(next ? `/welcome?next=${encodeURIComponent(next)}` : '/welcome'),
 
   /** Experimental scorekeeper (Settings → Experimental features). Matches live on the device. */
   scorekeeper: () => href('/scorekeeper'),

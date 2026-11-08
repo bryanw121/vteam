@@ -349,7 +349,7 @@ function renderPeople(opts: {
         waitlistGuests: [],
       },
     } as never,
-    teams: { assignments: {}, numTeams: 2, setNumTeams: jest.fn(), hasTeams: false, savingTeams: false, togglePin: jest.fn(), resetTeams: jest.fn(), randomizeTeams: jest.fn(), saveTeams: jest.fn() } as never,
+    teams: { assignments: {}, numTeams: 2, setNumTeams: jest.fn(), hasTeams: false, savingTeams: false, togglePin: jest.fn(), resetTeams: jest.fn(), randomizeTeams: jest.fn(), mode: 'random', setMode: jest.fn(), balancePlayers: [], saveTeams: jest.fn() } as never,
     drag: { hoveredTeamKey: null, teamZoneRefs: { current: {} }, onDragStart: jest.fn(), onDragMove: jest.fn(), onDragEnd: jest.fn() } as never,
     attendance: { processingRequest: null, approveRequest: jest.fn(), approveFromWaitlist: jest.fn(), setNoShow } as never,
     isHostOrCohost: opts.isHostOrCohost,

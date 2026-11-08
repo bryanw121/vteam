@@ -66,3 +66,14 @@ export function shouldRefreshEventsOnFocus(
 ): boolean {
   return blurredAtMs != null && nowMs - blurredAtMs >= minBlurMs
 }
+
+/**
+ * Month label for the week that starts on `weekStart` (local midnight):
+ * "November 2026". A week that runs into a new month is labelled with the new
+ * month (Nov 29 – Dec 5 → "December 2026").
+ */
+export function weekMonthLabel(weekStart: Date): string {
+  const end = new Date(weekStart)
+  end.setDate(weekStart.getDate() + 6)
+  return end.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+}

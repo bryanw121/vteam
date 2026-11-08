@@ -32,6 +32,7 @@ export const theme = {
     warning:      '#FFA040',
     success:      '#00D26A',
     white:        '#FFFFFF',
+    sheetInk:     '#0D2480',   // pen ink on the official scoresheet (officialPdf.ts INK)
     black:        '#000000',
     /** Label/icon colour on `primary`, `error` and other saturated fills. */
     onPrimary:    '#FFFFFF',

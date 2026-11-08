@@ -9,11 +9,11 @@ import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFPage } 
 import type { MatchDoc, MatchState, SheetOp } from '../../types/scoresheet'
 import { SHEET_HEIGHT, SHEET_WIDTH, officialLayout } from './officialLayout'
 import { USAV_TWO_SET_TEMPLATE } from './usavTemplate'
+import { fitText } from './fitText'
 
 /** Pen ink on the printed form: dark blue, so filled-in entries stand out from the form itself. */
 const INK = rgb(0.05, 0.14, 0.5)
 const PAPER = rgb(1, 1, 1)
-const MIN_TEXT_SIZE = 4.5
 
 type Fonts = { regular: PDFFont; bold: PDFFont }
 
@@ -34,15 +34,7 @@ function painter(page: PDFPage, rotated: boolean, fonts: Fonts) {
     switch (op.kind) {
       case 'text': {
         const font = op.bold ? fonts.bold : fonts.regular
-        let text = printable(font, op.text)
-        let size = op.size
-        if (op.maxWidth) {
-          while (size > MIN_TEXT_SIZE && font.widthOfTextAtSize(text, size) > op.maxWidth) size -= 0.25
-          if (font.widthOfTextAtSize(text, size) > op.maxWidth) {
-            while (text.length > 1 && font.widthOfTextAtSize(`${text}…`, size) > op.maxWidth) text = text.slice(0, -1)
-            text = `${text.trimEnd()}…`
-          }
-        }
+        const { text, size } = fitText(printable(font, op.text), op.size, op.maxWidth, (t, sz) => font.widthOfTextAtSize(t, sz))
         const width = font.widthOfTextAtSize(text, size)
         const x = op.align === 'center' ? op.x - width / 2 : op.align === 'right' ? op.x - width : op.x
         page.drawText(text, { ...at(x, op.y), size, font, color: INK, ...(rotated ? { rotate: degrees(90) } : {}) })

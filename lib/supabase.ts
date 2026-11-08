@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type Session } from '@supabase/supabase-js'
 import type { AppDatabase } from '../types'
 import { AppState, Platform } from 'react-native'
 import 'react-native-url-polyfill/auto'
@@ -14,6 +14,29 @@ const isSSR = typeof window === 'undefined'
 const storage = isSSR
   ? { getItem: () => null, setItem: () => {}, removeItem: () => {} }
   : AsyncStorage
+
+/** Where supabase-js keeps the session (its default: `sb-<project ref>-auth-token`). */
+const AUTH_STORAGE_KEY = `sb-${(() => { try { return new URL(supabaseUrl).hostname.split('.')[0] } catch { return '' } })()}-auth-token`
+
+/**
+ * The session saved on this device, read straight from storage (web only: synchronous).
+ * `getSession()` waits for a token refresh when the saved access token has expired,
+ * which on a cold server can take seconds; the saved session already says who is
+ * signed in, so the UI can draw for them meanwhile. A display hint only: requests
+ * still go through supabase-js, which waits for the refreshed token.
+ */
+export function readStoredSession(): Session | null {
+  if (Platform.OS !== 'web' || isSSR) return null
+  try {
+    const raw = window.localStorage.getItem(AUTH_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<Session> | null
+    if (!parsed?.user?.id || typeof parsed.refresh_token !== 'string' || !parsed.refresh_token) return null
+    return parsed as Session
+  } catch {
+    return null
+  }
+}
 
 export const supabase = createClient<AppDatabase>(supabaseUrl, supabaseAnonKey, {
   auth: {

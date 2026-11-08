@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { readStoredSession, supabase } from '../lib/supabase'
 import type { SessionState } from '../types'
 
 const SessionContext = createContext<SessionState>({
@@ -24,6 +24,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let active = true
+    // Web: draw for the saved viewer at once. getSession() can wait seconds on a
+    // token refresh; it replaces this (or signs out) when it resolves. Read after
+    // mount, so the static HTML and the first client render still match.
+    const stored = readStoredSession()
+    if (stored) {
+      setSession(stored)
+      setLoading(false)
+    }
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return
       setSession(data.session)
