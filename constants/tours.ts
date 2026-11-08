@@ -18,6 +18,10 @@ export const TOUR_TARGETS = {
   scoreActions: 'score-actions',
   scoreCourt: 'score-court',
   scoreMore: 'score-more',
+  sheetForm: 'sheet-form',
+  sheetCopy: 'sheet-copy',
+  sheetPdf: 'sheet-pdf',
+  sheetStart: 'sheet-start',
 } as const
 
 export const TOURS = {
@@ -93,6 +97,32 @@ export const TOURS = {
         target: TOUR_TARGETS.scoreMore,
         title: 'Fix things and finish',
         body: 'Fix a past rally, match the scoreboard or add a remark. The scoresheet is here too.',
+      },
+    ],
+  },
+  /** The example match's scoresheet (app/(app)/scorekeeper/[id]/sheet); opens every time someone opens the example. */
+  scorekeeperExample: {
+    id: 'scorekeeperExample',
+    steps: [
+      {
+        target: TOUR_TARGETS.sheetForm,
+        title: 'This is what you get',
+        body: 'The official USA Volleyball scoresheet, filled in for you. You only tapped who won each rally.',
+      },
+      {
+        target: TOUR_TARGETS.sheetCopy,
+        title: 'Copy it onto paper',
+        body: 'After the match, this shows one part of the form at a time and what to write in it.',
+      },
+      {
+        target: TOUR_TARGETS.sheetPdf,
+        title: 'Or print it',
+        body: 'Download the filled-in form to print, or to send to the tournament desk.',
+      },
+      {
+        target: TOUR_TARGETS.sheetStart,
+        title: 'Try it yourself',
+        body: 'Enter both lineups, then tap who wins each rally. A short tour shows you the buttons.',
       },
     ],
   },

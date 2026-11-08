@@ -1,7 +1,6 @@
 import { replay } from '../lib/scoresheet/engine'
 import { record } from '../lib/scoresheet/history'
 import { MATCH_FORMATS, makeRules } from '../lib/scoresheet/rules'
-import { scoresheetHtml } from '../lib/scoresheet/sheetHtml'
 import { matchSummary, scoreLine, shareText } from '../lib/scoresheet/summary'
 import type { MatchDoc, ScoreEventInput } from '../types/scoresheet'
 
@@ -29,15 +28,5 @@ describe('scoresheet output', () => {
     // Pool play: set 2 hasn't started, so the match is still live.
     expect(matchSummary(doc, state).status).toBe('live')
     expect(shareText(doc, state)).toContain('Set 1: Aces 25')
-  })
-
-  it('renders an escaped, complete sheet', () => {
-    const state = replay(doc.setup, doc.log)
-    const html = scoresheetHtml(doc, state, 0)
-    expect(html).toContain('Fall &lt;Classic&gt;')
-    expect(html).not.toContain('<Classic>')
-    expect(html).toContain('Set 1')
-    expect(html).toContain('Sanctions')
-    expect(html.match(/class="pt hit/g)?.length).toBeGreaterThanOrEqual(25)
   })
 })

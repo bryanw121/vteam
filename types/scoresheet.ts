@@ -408,13 +408,17 @@ export type CopyStep = {
 }
 
 export type CopySectionProps = { section: CopySection }
-export type SheetMapProps = { regions: SheetRegion[]; sheet: number }
+export type OfficialSheetViewProps = {
+  layout: OfficialSheetLayout
+  /** Page of the layout (0 = the first copy of the form). */
+  page?: number
+  /** Zoom to these areas (with some room around them); the whole sheet when omitted. */
+  focus?: SheetRegion[]
+  /** Areas to tint, e.g. the part of the form a Copy to paper step is about. */
+  highlight?: SheetRegion[]
+  accessibilityLabel?: string
+  testID?: string
+}
 export type MatchDetailsCardProps = { info: MatchInfo; onChange: (patch: Partial<MatchInfo>) => void }
 export type SavedTeamsPickerProps = { teams: SavedTeam[]; target: TeamSide | null; targetLabel: string; onPick: (team: SavedTeam) => void }
 
-export type ScoresheetPreviewProps = {
-  html: string
-  title: string
-  /** Native summary shown under the export button (web shows the sheet itself). */
-  children?: import('react').ReactNode
-}
