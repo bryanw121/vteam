@@ -1,6 +1,6 @@
 import { FRIEND_COPY } from '../constants/friends'
 import { profileDisplayName } from './index'
-import type { Friend, FriendGoing, FriendRequest, FriendsData, FriendStatus } from '../types'
+import type { EventAttendeeWithProfile, Friend, FriendGoing, FriendRequest, FriendsData, FriendStatus } from '../types'
 
 /** My relationship to `userId`, from my friends and pending requests. */
 export function friendStatusOf(data: FriendsData | undefined, userId: string): FriendStatus {
@@ -61,4 +61,29 @@ export function friendErrorMessage(error: { code?: string; message?: string } | 
   if (code === '23514' || /best friend limit/.test(message)) return FRIEND_COPY.bestFriendLimit
   if (code === 'P0002') return FRIEND_COPY.gone
   return null
+}
+
+/**
+ * Friends going, from an event's loaded attendee rows (event detail already
+ * has every attendee, so no RPC): attending only, best friends first, then
+ * in RSVP order.
+ */
+export function friendsGoingFromAttendees(
+  eventId: string,
+  attendees: readonly EventAttendeeWithProfile[],
+  friends: readonly Friend[],
+): FriendGoing[] {
+  if (friends.length === 0) return []
+  const best = new Map(friends.map(f => [f.friend_id, f.is_best_friend]))
+  return attendees
+    .filter(a => a.status === 'attending' && best.has(a.user_id))
+    .sort((a, b) => Number(best.get(b.user_id)) - Number(best.get(a.user_id)) || (a.joined_at ?? '').localeCompare(b.joined_at ?? ''))
+    .map(a => ({
+      event_id: eventId,
+      user_id: a.user_id,
+      username: a.profiles?.username ?? '',
+      first_name: a.profiles?.first_name ?? '',
+      avatar_url: a.profiles?.avatar_url ?? '',
+      is_best_friend: best.get(a.user_id) === true,
+    }))
 }

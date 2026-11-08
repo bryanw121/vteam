@@ -944,6 +944,14 @@ export type FriendRowProps = {
   testID?: string
 }
 
+/** components/FriendsGoingLine: "Ana and 2 friends going". */
+export type FriendsGoingLineProps = {
+  going: readonly FriendGoing[] | undefined
+  /** 'onDark' for the gradient feed card, 'onCard' for light surfaces. */
+  tone?: 'onDark' | 'onCard'
+  testID?: string
+}
+
 /** A friend attending an event (get_friends_going), best friends first. */
 export type FriendGoing = Database['public']['Functions']['get_friends_going']['Returns'][number]
 
