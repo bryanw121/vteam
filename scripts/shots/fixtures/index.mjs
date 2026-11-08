@@ -184,7 +184,7 @@ export function buildFixtures(now) {
     tournament(TU.past, { title: 'Fall Doubles Cup', start_date: t.iso(-13, 9, 0), status: 'completed', schedule_published: true, schedule_generated_at: t.iso(-15), published_at: t.iso(-30), created_at: t.iso(-35), description: 'Our fall doubles championship.' }),
     tournament(TU.open, { title: 'Indoor 6s Shootout', club_id: C.indoor, created_by: P.jordanr, location: 'Austin Sports Center', start_date: t.iso(17, 10, 0), format: 'round_robin', bracket_type: null, max_teams: 6, min_roster_size: 6, max_roster_size: 9, price: 120, venmo_handle: 'jordan-reyes', num_courts: 2, match_duration_minutes: 60, skill_levels: ['b', 'bb'] }),
   ]
-  const tournament_rules = [TU.upcoming, TU.past, TU.open].map(tid => ({ tournament_id: tid, sets_to_win: tid === TU.open ? 2 : 1, winning_score: tid === TU.open ? 25 : 21, deciding_set_score: 15, win_by_margin: 2, point_cap: null, starting_score: 0 }))
+  const tournament_rules = [TU.upcoming, TU.past, TU.open].map(tid => ({ tournament_id: tid, sets_to_win: tid === TU.open ? 2 : 1, winning_score: tid === TU.open ? 25 : 21, deciding_set_score: 15, win_by_margin: 2, point_cap: null, starting_score: 0, tiebreakers: ['head_to_head', 'set_ratio', 'point_diff', 'points_for'], third_place_match: false }))
   const tournament_prizes = [
     { id: id('d2000000', 1), tournament_id: TU.upcoming, place_label: '1st', description: 'Trophy + $160', amount: '$160', display_order: 1, created_at: t.iso(-14) },
     { id: id('d2000000', 2), tournament_id: TU.upcoming, place_label: '2nd', description: 'Trophy + $80', amount: '$80', display_order: 2, created_at: t.iso(-14) },
@@ -328,7 +328,14 @@ export function buildFixtures(now) {
     { id: id('f4000000', 5), user_id: P.jordanr, badge_type: 'spike_cheer', tier: 2, awarded_at: t.iso(-6), display_order: 1, display_tier: null },
     { id: id('f4000000', 6), user_id: P.jordanr, badge_type: 'event_host', tier: 3, awarded_at: t.iso(-60), display_order: 2, display_tier: null },
   ]
-  const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, updated_at: t.iso(-3) }]
+  // Hidden in feed: ACES (hides one outside session, so the feed shows "1 hidden · Show"),
+  // a type no fixture event has, and one event that isn't in the feed.
+  const hidden_feed = [
+    { kind: 'venue', key: 'aces volleyball', label: 'ACES Volleyball' },
+    { kind: 'type', key: 'tag:league', label: 'League' },
+    { kind: 'item', key: 'shots-hidden-event', label: 'Thursday Night Sixes', until: t.iso(5, 19, 0) },
+  ]
+  const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, hidden_feed, updated_at: t.iso(-3) }]
   const chat_silences = [{ user_id: ME, silenced_user_id: P.hannahs, created_at: t.iso(-8) }]
 
   return {

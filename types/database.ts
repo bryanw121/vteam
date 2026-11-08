@@ -1,5 +1,3 @@
-// TODO regenerate from beta: friend_requests, friendships and the friend RPCs were added by hand (#15, draft until the migration is applied on beta).
-// TODO regenerate from beta: hand-edited for 20261028205312_tournament_trophies (tournament_trophies, tournament_rules.tiebreakers / third_place_match, complete_tournament).
 export type Json =
   | string
   | number
@@ -2282,6 +2280,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          hidden_feed: Json
           home_city_id: string | null
           reminder_lead_minutes: number
           seen_banners: string[]
@@ -2289,6 +2288,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          hidden_feed?: Json
           home_city_id?: string | null
           reminder_lead_minutes?: number
           seen_banners?: string[]
@@ -2296,6 +2296,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          hidden_feed?: Json
           home_city_id?: string | null
           reminder_lead_minutes?: number
           seen_banners?: string[]
@@ -2570,6 +2571,13 @@ export type Database = {
       set_best_friend: {
         Args: { p_best: boolean; p_user_id: string }
         Returns: boolean
+      }
+      tournament_registration_check: {
+        Args: {
+          p_player: string
+          p_tournament: Database["public"]["Tables"]["tournaments"]["Row"]
+        }
+        Returns: undefined
       }
     }
     Enums: {

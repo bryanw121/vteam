@@ -9,7 +9,7 @@
 
 import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database'
 import type { TabKey } from '../constants/navigation'
-import type { ReactElement } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import type { ActivityIndicatorProps } from 'react-native'
 import type { BracketMatchInsert, SetScore, TiebreakerKey } from './tournament'
 
@@ -369,6 +369,14 @@ export type FeedSnapshot = {
   months: Record<string, EventWithDetails[]>
 }
 
+/** Last visit's per-viewer reads kept on the device (lib/querySnapshot): cache key → data. */
+export type QuerySnapshot = {
+  v: 1
+  savedAt: number
+  owner: string | null
+  entries: Record<string, unknown>
+}
+
 /** Row of `external_sessions`: a session another Austin venue or group runs, pulled hourly from the Schelagg feed (ingest_schelagg_feed). */
 export type ExternalSession = Pick<
   Override<Tables<'external_sessions'>, { surface: 'indoor' | 'sand' | 'grass' | null }>,
@@ -430,6 +438,70 @@ export type MajorCity = Tables<'major_cities'>
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
 export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
   home_city: MajorCity | null
+  /** What the player hid from their Events feed (`user_settings.hidden_feed`). Missing reads as nothing hidden. */
+  hidden_feed?: HiddenFeedEntry[]
+}
+
+/**
+ * What a hidden-feed entry covers: one feed item, every outside session at a
+ * venue, every event a host created, or every event of a type (tag or surface).
+ */
+export type HiddenFeedKind = 'item' | 'venue' | 'host' | 'type'
+
+/**
+ * One entry of `user_settings.hidden_feed`. `key` is what matches (event id,
+ * lower-cased venue, host user id, `tag:<name>` / `surface:<surface>`); `label`
+ * is what Settings → Hidden in feed shows; `until` (items only) is the item's
+ * date, after which the entry is dropped.
+ */
+export type HiddenFeedEntry = {
+  kind: HiddenFeedKind
+  key: string
+  label: string
+  until?: string
+}
+
+/** A choice in a feed card's hide menu ("Hide all at Volleyworld"). */
+export type HideFeedOption = {
+  entry: HiddenFeedEntry
+  title: string
+}
+
+/** A feed card with its "⋯" hide menu button, and the "Hidden · Unhide" line when a hidden item is shown. */
+export type FeedItemShellProps = {
+  children?: import('react').ReactNode
+  onMore: () => void
+  /** Accessible name of the ⋯ button, e.g. "More options for Friday Sixes". */
+  moreLabel: string
+  /** Shown while its day's hidden items are revealed. */
+  hidden?: boolean
+  onUnhide?: () => void
+}
+
+/** "2 hidden · Show" under a day (or month) of the feed. */
+export type HiddenCountRowProps = {
+  count: number
+  revealed: boolean
+  onToggle: () => void
+}
+
+/** The hide menu for one feed item. */
+export type HideFeedSheetProps = {
+  visible: boolean
+  /** The item's title, shown above the choices. */
+  itemTitle?: string
+  options: HideFeedOption[]
+  onPick: (option: HideFeedOption) => void
+  onDismiss: () => void
+}
+
+/** Feed hiding as the Events screen sees it (`useHiddenFeed`). */
+export type HiddenFeedControls = {
+  entries: HiddenFeedEntry[]
+  hide: (entry: HiddenFeedEntry) => void
+  unhide: (entry: Pick<HiddenFeedEntry, 'kind' | 'key'>) => void
+  /** Puts back exactly this list (Undo). */
+  restore: (entries: HiddenFeedEntry[]) => void
 }
 
 /** Allowed values of `user_settings.reminder_lead_minutes` (its check constraint): 1 hour, 2 hours, a day. */
@@ -500,7 +572,7 @@ export type AdFreeRedeemResult = AdFreeStatus & {
 
 // ─── Tours (constants/tours.ts, contexts/tour.tsx) ───────────────────────────
 
-export type TourId = 'intro'
+export type TourId = 'intro' | 'scorekeeper' | 'scorekeeperExample'
 
 /** Where the step's card sits relative to its target. 'auto' picks the side with more room. */
 export type TourPlacement = 'auto' | 'top' | 'bottom'
@@ -522,7 +594,7 @@ export type TourDef = {
 }
 
 /** Where the tour was started from (for analytics and debugging). */
-export type TourSource = 'banner' | 'profile_menu' | 'other'
+export type TourSource = 'banner' | 'profile_menu' | 'first_use' | 'help_button' | 'other'
 
 /** What the tab shell hands the tour so it can move between tabs (registered by the tabs layout). */
 export type TourShell = {
@@ -1296,6 +1368,13 @@ export type TournamentInviteCandidate = Pick<Profile, 'id' | 'username' | 'first
 
 export type TeamSource = { team_number?: number | null; team_pinned?: boolean | null }
 
+/** A player as team balancing sees them (#149). Guests have no level. */
+export type BalancePlayer = { id: string; skillLevel: VolleyballSkillLevel | null; isSetter: boolean }
+/** Team header chips (#149). `avgLevel` is null when too few players have a level. */
+export type TeamSummary = { avgLevel: VolleyballSkillLevel | null; setters: number }
+/** How the host's shuffle button splits players. */
+export type TeamMode = 'random' | 'balanced'
+
 export type RandomizeResult =
   | { ok: true; assignments: Record<string, TeamAssignment> }
   | { ok: false; title: string; message: string }
@@ -1312,6 +1391,13 @@ export type RemoveDialogAction = { type: 'open'; target: RemoveTarget } | { type
 
 /** A team drop zone's measured window-y extent (People tab drag-and-drop). */
 export type ZoneLayout = { top: number; bottom: number }
+
+/** components/LazyChunk: the error boundary around a lazily loaded chunk. */
+export type LazyChunkBoundaryProps = { children: ReactNode; onRetry: () => void }
+export type LazyChunkBoundaryState = { failed: boolean }
+
+/** components/profile/LegendRing(.web): the spinning Legend avatar border. */
+export type LegendBorderProps = { children: ReactNode; outerSize: number; ring: number }
 
 // Return types of the screen hooks (type-only imports: no runtime cycle).
 /** Everything the event page reads: one hook, shared by every tab. */
@@ -1825,3 +1911,25 @@ export type ForecastSummary = {
 
 /** A rounded court position: the forecast cache key. */
 export type ForecastCourt = { lat: number; lng: number }
+
+// ─── Public profile, history, cheers summary (#185) ──────────────────────────
+
+/** hooks/useUserProfile: another player's profile page. */
+export type UserProfileData = {
+  profile: Profile
+  avatarUri: string | null
+  totalCheers: number
+  /** Badges the player chose to show, in their order. */
+  displayBadges: UserBadge[]
+}
+
+/** hooks/useEventHistory: past events attended / hosted, or upcoming hosted. */
+export type EventHistoryKind = 'attended' | 'hosted-past' | 'hosted-upcoming'
+
+/** hooks/useCheersSummary: the viewer's cheers screen. */
+export type CheersSummary = {
+  totalReceived: number
+  totalGiven: number
+  counts: Partial<Record<CheerType, number>>
+}
+

@@ -61,6 +61,11 @@ jobs:
           path: coverage/
           retention-days: 14
       - run: node --test scripts/*.test.mjs scripts/shots/*.test.mjs
+      # The suite again in three other zones (#195): date code that only works
+      # in Chicago, or tests that assume it, fail here. ~20 s per zone, no coverage.
+      - name: Unit tests in other time zones
+        if: always()
+        run: npm run test:tz
 
   # The Deno edge functions' real request handlers (supabase/functions/*/handler.ts),
   # run against a fake Supabase client and a stubbed fetch: no network for the
@@ -123,7 +128,7 @@ jobs:
       # answered from fixtures, so it needs no secrets and never touches beta.
       - name: Web build (shots mock, for a11y)
         # --clear: the first export warmed the Metro cache with the beta URL inlined.
-        run: npx expo export -p web --clear --output-dir dist-mock
+        run: npx expo export -p web --clear --source-maps --output-dir dist-mock
         env:
           CI: '1'
           EXPO_NO_TELEMETRY: '1'
@@ -131,6 +136,12 @@ jobs:
           EXPO_PUBLIC_SUPABASE_ANON_KEY: shots-mock-anon-key
           EXPO_PUBLIC_SENTRY_DSN: ''
           EXPO_PUBLIC_APP_ENV: development
+      # Reanimated, Gesture Handler and react-virtuoso load as their own chunks on
+      # web; fail if a change pulls them back into the entry every visit downloads (#193).
+      - name: Entry chunk stays light
+        run: |
+          node scripts/entry-deps.mjs --dist dist-mock --report
+          find dist-mock -name '*.map' -delete
       - uses: actions/upload-artifact@v4
         with:
           name: web-dist-mock
@@ -220,9 +231,9 @@ jobs:
           # Row level security + RPC integration tests (no browser). In the
           # matrix, so they share the one-suite-at-a-time group with the others.
           - shard: api
-            specs: e2e/rls.spec.ts
+            specs: e2e/rls.spec.ts e2e/rls.matrix.spec.ts
           - shard: other
-            specs: e2e/guest.spec.ts e2e/legal.guest.spec.ts e2e/tour.guest.spec.ts e2e/pull-to-refresh.guest.spec.ts e2e/metrics.guest.spec.ts e2e/profile.spec.ts e2e/reminders.spec.ts e2e/book.guest.spec.ts e2e/book.spec.ts e2e/textSize.spec.ts e2e/surfaces.spec.ts e2e/scrollRestore.spec.ts
+            specs: e2e/guest.spec.ts e2e/legal.guest.spec.ts e2e/tour.guest.spec.ts e2e/pull-to-refresh.guest.spec.ts e2e/metrics.guest.spec.ts e2e/profile.spec.ts e2e/reminders.spec.ts e2e/book.guest.spec.ts e2e/book.spec.ts e2e/textSize.spec.ts e2e/surfaces.spec.ts e2e/scrollRestore.spec.ts e2e/timezone.guest.spec.ts
     # Credentials of the dedicated e2e account (repository secrets). Required:
     # e2e/env.ts fails fast with a clear message when they are missing, which is
     # also what happens on PRs from forks (secrets are not exposed to them).

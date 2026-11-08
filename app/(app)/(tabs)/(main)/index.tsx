@@ -21,11 +21,11 @@ import { NextUpCard } from '../../../../components/events/NextUpCard'
 import { IconButton } from '../../../../components/ui'
 import { myStatusFor, useMyUpcomingEvents } from '../../../../hooks/useMyUpcomingEvents'
 import { NotificationPopup } from '../../../../components/NotificationPopup'
-import { BANNERS, BREAKPOINTS, COMPACT_TEXT_SCALE, FEED_STALE_NOTICE, TIGHT_TEXT_SCALE, TOUR_TARGETS, shared, theme } from '../../../../constants'
+import { BANNERS, BREAKPOINTS, COMPACT_TEXT_SCALE, FEED_STALE_NOTICE, SWIPE_NAVIGATION, TIGHT_TEXT_SCALE, TOUR_TARGETS, shared, theme } from '../../../../constants'
 import { TourTarget } from '../../../../components/tour/TourTarget'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
-import type { EventWithDetails, FeedFilter, FeedFilterChip, Notification, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
+import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, Notification, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
 import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters, usableFeedFilter } from '../../../../utils/feedFilters'
 import { useTabsShell } from '../../../../contexts/tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -33,9 +33,10 @@ import { useSession } from '../../../../contexts/session'
 import { useTextScale } from '../../../../contexts/textScale'
 import { useRequireSignIn } from '../../../../hooks/useRequireSignIn'
 import { SignInButton } from '../../../../components/SignInButton'
-import { addMonths } from '../../../../utils/monthKeys'
+import { addMonths, weekMonthLabel } from '../../../../utils/monthKeys'
 import { routes, isAppPath, toRoute } from '../../../../utils/routes'
-import { eventLocalDateKey, localDateKey, surfaceOf } from '../../../../utils'
+import { dayLabel, eventLocalDateKey, localDateKey, surfaceOf } from '../../../../utils'
+import { useToday } from '../../../../hooks/useToday'
 import { useAdsEnabled } from '../../../../hooks/useAdsEnabled'
 import { useFeedAds } from '../../../../hooks/useFeedAds'
 import { useFeedForecasts } from '../../../../hooks/useForecast'
@@ -43,13 +44,18 @@ import { planFeedAds } from '../../../../utils/feedAds'
 import { FeedBanner } from '../../../../components/ads/FeedBanner'
 import { SponsoredLabel } from '../../../../components/ads/SponsoredLabel'
 import { Spinner } from '../../../../components/ui/Spinner'
+import { Toast } from '../../../../components/Toast'
+import { FeedItemShell, HiddenCountRow, HideFeedSheet } from '../../../../components/events/FeedHiding'
+import { useHiddenFeed } from '../../../../hooks/useHiddenFeed'
+import { hiddenIndex, hideOptions, isHidden, matchingEntries } from '../../../../utils/hiddenFeed'
 
-const _now = new Date()
-const TODAY = localDateKey(_now)
+// Anchors for the week/month pager indexes only. "Today" itself comes from
+// useToday() so it rolls over at midnight in an app left open (#195).
+const LOAD_DAY = localDateKey(new Date())
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 const REF_WEEK  = getWeekStart(new Date())
-const REF_MONTH = TODAY.substring(0, 7)
+const REF_MONTH = LOAD_DAY.substring(0, 7)
 const WEEK_CENTER  = 52
 const MONTH_CENTER = 24
 
@@ -79,7 +85,8 @@ const FILTER_CHIPS: FeedFilterChip[] = [
   { id: 'not_full',   label: 'Not Full'   },
 ]
 
-type DateSection = { date: string; data: EventWithDetails[] }
+/** One day of the feed. `hiddenCount` counts that day's hidden items; `revealed` = they're shown (dimmed) in `data`. */
+type DateSection = { date: string; data: EventWithDetails[]; hiddenCount: number; revealed: boolean }
 export default function EventsScreen() {
   const router = useRouter()
   const { events, loading, error, loadMonth, loadMonthSpan, refresh, loadedMonths, reachedEnd } = useMonthEvents()
@@ -98,12 +105,20 @@ export default function EventsScreen() {
   const isMobile = Platform.OS !== 'web' || narrowWeb
   const insets = useSafeAreaInsets()
 
-  const [selectedDate, setSelectedDate] = useState<string>(TODAY)
+  const today = useToday()
+  const [selectedDate, setSelectedDate] = useState<string>(today)
   // Filters are remembered per device (utils/feedFilters): restored before the
   // first paint on web, a moment later on native.
   const [chosenFilter, setChosenFilter] = useState<FeedFilter>(() => feedFiltersNow()?.filter ?? DEFAULT_FEED_FILTERS.filter)
   const [surfaceFilter, setSurfaceFilter] = useState<SurfaceFilterValue>(() => feedFiltersNow()?.surface ?? DEFAULT_FEED_FILTERS.surface)
   const feedRegion = useFeedRegion()
+  // What this player hid from the feed (Settings → Hidden in feed). Days (mobile)
+  // or months (desktop) in `revealedKeys` show their hidden items, dimmed.
+  const hiddenFeed = useHiddenFeed()
+  const hiddenIdx = useMemo(() => hiddenIndex(hiddenFeed.entries), [hiddenFeed.entries])
+  const [revealedKeys, setRevealedKeys] = useState<ReadonlySet<string>>(() => new Set())
+  const [hideTarget, setHideTarget] = useState<EventWithDetails | null>(null)
+  const [hideToast, setHideToast] = useState<{ message: string; undo: HiddenFeedEntry[] } | null>(null)
   const [notifOpen, setNotifOpen] = useState(false)
   const [curWeekPage, setCurWeekPage] = useState(WEEK_CENTER)
   const [curMonthPage, setCurMonthPage] = useState(MONTH_CENTER)
@@ -160,9 +175,9 @@ export default function EventsScreen() {
   // One range query: the hook batches months requested in the same tick.
   useEffect(() => {
     if (isMobile) return
-    const current = TODAY.substring(0, 7)
+    const current = today.substring(0, 7)
     loadMonthSpan(current, addMonths(current, 3))
-  }, [isMobile, loadMonthSpan])
+  }, [isMobile, loadMonthSpan, today])
 
   // Force-reload visible months after create/edit (cached data stays on screen meanwhile).
   // Focus/foreground refetch-when-stale and the signed-in-user change live in the hook.
@@ -174,8 +189,8 @@ export default function EventsScreen() {
 
   // The month immediately after the last loaded month — what to fetch on scroll-to-bottom
   const nextScrollMonth = useMemo(
-    () => addMonths(loadedMonths[loadedMonths.length - 1] ?? TODAY.substring(0, 7), 1),
-    [loadedMonths],
+    () => addMonths(loadedMonths[loadedMonths.length - 1] ?? today.substring(0, 7), 1),
+    [loadedMonths, today],
   )
 
   const handleScrollNearBottom = useCallback(() => {
@@ -220,7 +235,15 @@ export default function EventsScreen() {
     return () => window.removeEventListener('scroll', onWindowScroll)
   }, [docScrollActive, handleScrollNearBottom])
 
-  const sections: DateSection[] = useMemo(() => {
+  // Hidden for this player: matched by an entry, and not one of their own
+  // (going, waitlisted, hosting: those always show).
+  const isHiddenForMe = useCallback(
+    (event: EventWithDetails) =>
+      isHidden(event, hiddenIdx) && !(currentUserId && myStatusFor(event, currentUserId) !== null),
+    [hiddenIdx, currentUserId],
+  )
+
+  const { sections, hiddenItemIds } = useMemo(() => {
     const filtered = events.filter(event => {
       // Outside sessions (Schelagg) only for the viewer's region: home city, else the pilot default.
       if (event._external && event._external.region !== feedRegion) return false
@@ -241,19 +264,59 @@ export default function EventsScreen() {
       }
       return true
     })
-    const grouped: Record<string, EventWithDetails[]> = {}
+    const grouped: Record<string, DateSection> = {}
+    const hiddenIds = new Set<string>()
     for (const event of [...filtered].sort((a, b) => a.event_date.localeCompare(b.event_date))) {
       // Local date, so the section header matches the time shown on the event
       // card — and matches the calendar dot, which uses the same helper.
       const date = eventLocalDateKey(event.event_date)
-      if (!grouped[date]) grouped[date] = []
-      grouped[date].push(event)
+      const section = grouped[date] ??= {
+        date, data: [], hiddenCount: 0, revealed: revealedKeys.has(date) || revealedKeys.has(date.substring(0, 7)),
+      }
+      if (isHiddenForMe(event)) {
+        section.hiddenCount += 1
+        hiddenIds.add(event.id)
+        if (!section.revealed) continue
+      }
+      section.data.push(event)
     }
-    for (const date of Object.keys(grouped)) {
-      grouped[date].sort((a, b) => a.event_date.localeCompare(b.event_date))
-    }
-    return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([date, data]) => ({ date, data }))
-  }, [events, activeFilter, surfaceFilter, currentUserId, feedRegion])
+    const list = Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date))
+    return { sections: list, hiddenItemIds: hiddenIds }
+  }, [events, activeFilter, surfaceFilter, currentUserId, feedRegion, isHiddenForMe, revealedKeys])
+
+  const toggleReveal = useCallback((key: string) => {
+    setRevealedKeys(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }, [])
+
+  const openHideMenu = useCallback((event: EventWithDetails) => {
+    if (!currentUserId) { requireSignIn(); return }
+    setHideTarget(event)
+  }, [currentUserId, requireSignIn])
+
+  const pickHideOption = useCallback((option: HideFeedOption) => {
+    const before = hiddenFeed.entries
+    setHideTarget(null)
+    hiddenFeed.hide(option.entry)
+    setHideToast({ message: `Hidden: ${option.entry.label}`, undo: before })
+  }, [hiddenFeed])
+
+  const unhideItem = useCallback((event: EventWithDetails) => {
+    const before = hiddenFeed.entries
+    const matches = matchingEntries(event, before)
+    if (matches.length === 0) return
+    hiddenFeed.restore(before.filter(e => !matches.includes(e)))
+    setHideToast({ message: `Showing again: ${matches.map(m => m.label).join(', ')}`, undo: before })
+  }, [hiddenFeed])
+
+  const hideOptionsFor = useMemo(
+    () => (hideTarget ? hideOptions(hideTarget, currentUserId) : []),
+    [hideTarget, currentUserId],
+  )
 
   // "You're going" rail. Derived from events already in memory — no extra query
   // on the happy path, and it re-derives whenever the feed does, so an RSVP made
@@ -270,7 +333,11 @@ export default function EventsScreen() {
     />
   )
 
-  const markedDates = useMemo(() => buildMarkedDates(events, selectedDate), [events, selectedDate])
+  // Calendar dots leave out what this player hid.
+  const markedDates = useMemo(
+    () => buildMarkedDates(hiddenIdx.size ? events.filter(e => !isHiddenForMe(e)) : events, selectedDate),
+    [events, selectedDate, hiddenIdx, isHiddenForMe],
+  )
 
   const selectDate = useCallback((dateStr: string) => {
     setSelectedDate(dateStr)
@@ -305,6 +372,16 @@ export default function EventsScreen() {
 
   const goPrevWeek  = useCallback(() => setCurWeekPage(p => p - 1), [])
   const goNextWeek  = useCallback(() => setCurWeekPage(p => p + 1), [])
+  const goToday     = useCallback(() => selectDate(today), [selectDate, today])
+
+  // Midnight passed (or the app woke up on a new day): if the player was on
+  // "today", follow it to the new day; a date they picked themselves stays.
+  const prevTodayRef = useRef(today)
+  useEffect(() => {
+    const prev = prevTodayRef.current
+    prevTodayRef.current = today
+    if (prev !== today && selectedDate === prev) selectDate(today)
+  }, [today]) // eslint-disable-line react-hooks/exhaustive-deps
   const goPrevMonth = useCallback(() => setCurMonthPage(p => p - 1), [])
   const goNextMonth = useCallback(() => setCurMonthPage(p => p + 1), [])
 
@@ -459,18 +536,20 @@ export default function EventsScreen() {
           {/* Tagged so e2e can scope feed assertions: the rail deliberately
               ignores the active filter, so a page-wide text count would see it. */}
           <View testID="events-feed">
-          {allEvents.length === 0 ? feedEmpty : (
+          {sections.length === 0 ? feedEmpty : (
             <>
               {Object.entries(
-                sections.reduce<Record<string, EventWithDetails[]>>((acc, section) => {
+                sections.reduce<Record<string, { events: EventWithDetails[]; hidden: number }>>((acc, section) => {
                   const month = section.date.substring(0, 7)
-                  ;(acc[month] ??= []).push(...section.data)
+                  const entry = acc[month] ??= { events: [], hidden: 0 }
+                  entry.events.push(...section.data)
+                  entry.hidden += section.hiddenCount
                   return acc
                 }, {})
-              ).map(([month, monthEvents]) => {
+              ).map(([month, { events: monthEvents, hidden: monthHidden }]) => {
                 const [y, m] = month.split('-').map(Number)
                 const d = new Date(y, m - 1, 1)
-                const isCurrentMonth = month === TODAY.substring(0, 7)
+                const isCurrentMonth = month === today.substring(0, 7)
                 const label = isCurrentMonth
                   ? d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + ' · This month'
                   : d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
@@ -481,20 +560,34 @@ export default function EventsScreen() {
                     </Text>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                       {monthEvents.map(item => {
-                        const renderRowCard = (event: EventWithDetails) => (
+                        const renderRowCard = (event: EventWithDetails, menuInset = false) => (
                           <RowEventCard
                             event={event}
                             currentUserId={currentUserId}
                             onRsvp={event._isTournament ? undefined : handleRsvp}
                             rsvpPending={isRsvpPending(event.id)}
                             forecast={forecasts.get(event.id)}
+                            menuInset={menuInset}
                           />
                         )
+                        const withMenu = !(currentUserId && myStatusFor(item, currentUserId) !== null)
+                        const card = item._external
+                          ? <ExternalSessionCard session={item._external} menuInset={withMenu} />
+                          : renderRowCard(item, withMenu)
                         return (
                           <React.Fragment key={item.id}>
                             <View style={{ width: 'calc(50% - 5px)' as any }}>
                               {sponsoredIds.has(item.id) && <SponsoredLabel />}
-                              {item._external ? <ExternalSessionCard session={item._external} /> : renderRowCard(item)}
+                              {withMenu ? (
+                                <FeedItemShell
+                                  onMore={() => openHideMenu(item)}
+                                  moreLabel={`Hide options for ${item.title}`}
+                                  hidden={hiddenItemIds.has(item.id)}
+                                  onUnhide={() => unhideItem(item)}
+                                >
+                                  {card}
+                                </FeedItemShell>
+                              ) : card}
                             </View>
                             {adPlan.get(item.id)?.map(ad => ad.kind === 'banner' ? (
                               <View key={`ad-${ad.banner.id}`} style={{ width: '100%' }}>
@@ -510,6 +603,7 @@ export default function EventsScreen() {
                         )
                       })}
                     </View>
+                    <HiddenCountRow count={monthHidden} revealed={revealedKeys.has(month)} onToggle={() => toggleReveal(month)} />
                   </View>
                 )
               })}
@@ -563,6 +657,21 @@ export default function EventsScreen() {
         </View>
 
         {notificationPopup}
+        <HideFeedSheet
+          visible={!!hideTarget}
+          itemTitle={hideTarget?.title}
+          options={hideOptionsFor}
+          onPick={pickHideOption}
+          onDismiss={() => setHideTarget(null)}
+        />
+        <Toast
+          message={hideToast?.message ?? ''}
+          variant="info"
+          visible={!!hideToast}
+          onHide={() => setHideToast(null)}
+          duration={5000}
+          action={hideToast ? { label: 'Undo', onPress: () => hiddenFeed.restore(hideToast.undo) } : undefined}
+        />
       </View>
     )
   }
@@ -576,7 +685,24 @@ export default function EventsScreen() {
         onTouchEnd={unblockPager}
         onTouchCancel={unblockPager}
       >
-        <EventsHeader wide={false} right={headerRight} />
+        <EventsHeader
+          wide={false}
+          right={curWeekPage === WEEK_CENTER ? headerRight : (
+            <View style={weekNavStyles.headerRight}>
+              <TouchableOpacity
+                testID="week-today"
+                onPress={goToday}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Go to this week"
+                style={weekNavStyles.today}
+              >
+                <Text maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={weekNavStyles.todayLabel}>Today</Text>
+              </TouchableOpacity>
+              {headerRight}
+            </View>
+          )}
+        />
 
         {/* Calendar strip */}
         <TourTarget id={TOUR_TARGETS.calendar}>
@@ -601,27 +727,52 @@ export default function EventsScreen() {
             style={feedStyles.sectionHeader}
             onLayout={e => { sectionYRef.current[section.date] = e.nativeEvent.layout.y }}
           >
-            <Text style={feedStyles.sectionDate}>{formatDayLabel(section.date)}</Text>
-            <Text style={feedStyles.sectionCountText}>{section.data.length} {section.data.length === 1 ? 'event' : 'events'}</Text>
-          </View>
-        )
-
-        const renderCard = (item: EventWithDetails) => (
-          <View style={{ paddingHorizontal: theme.spacing.lg }}>
-            {sponsoredIds.has(item.id) && <SponsoredLabel />}
-            {item._external ? (
-              <ExternalSessionCard session={item._external} />
-            ) : (
-              <EventCard
-                event={item}
-                currentUserId={currentUserId}
-                onRsvp={item._isTournament ? undefined : handleRsvp}
-                rsvpPending={isRsvpPending(item.id)}
-                forecast={forecasts.get(item.id)}
-              />
+            <Text style={feedStyles.sectionDate} testID={`feed-day-${section.date}`}>{dayLabel(section.date, today)}</Text>
+            {section.data.length > 0 && (
+              <Text style={feedStyles.sectionCountText}>{section.data.length} {section.data.length === 1 ? 'event' : 'events'}</Text>
             )}
           </View>
         )
+
+        const renderSectionFooter = (section: DateSection) => (
+          section.hiddenCount > 0 ? (
+            <View style={{ paddingHorizontal: theme.spacing.lg }}>
+              <HiddenCountRow count={section.hiddenCount} revealed={section.revealed} onToggle={() => toggleReveal(section.date)} />
+            </View>
+          ) : null
+        )
+
+        // `menu`: the ⋯ hide button, for feed items that aren't the player's own (and not promoted slots).
+        const renderCard = (item: EventWithDetails, menu = true) => {
+          const withMenu = menu && !(currentUserId && myStatusFor(item, currentUserId) !== null)
+          const card = item._external ? (
+            <ExternalSessionCard session={item._external} menuInset={withMenu} />
+          ) : (
+            <EventCard
+              event={item}
+              currentUserId={currentUserId}
+              onRsvp={item._isTournament ? undefined : handleRsvp}
+              rsvpPending={isRsvpPending(item.id)}
+              forecast={forecasts.get(item.id)}
+              menuInset={withMenu}
+            />
+          )
+          return (
+            <View style={{ paddingHorizontal: theme.spacing.lg }}>
+              {sponsoredIds.has(item.id) && <SponsoredLabel />}
+              {withMenu ? (
+                <FeedItemShell
+                  onMore={() => openHideMenu(item)}
+                  moreLabel={`Hide options for ${item.title}`}
+                  hidden={hiddenItemIds.has(item.id)}
+                  onUnhide={() => unhideItem(item)}
+                >
+                  {card}
+                </FeedItemShell>
+              ) : card}
+            </View>
+          )
+        }
 
         // The card, then any ads planned after it (planFeedAds).
         const renderEvent = (item: EventWithDetails) => {
@@ -635,7 +786,7 @@ export default function EventsScreen() {
                   <FeedBanner banner={ad.banner} />
                 </View>
               ) : (
-                <React.Fragment key={`sponsored-${ad.event.id}`}>{renderCard(ad.event)}</React.Fragment>
+                <React.Fragment key={`sponsored-${ad.event.id}`}>{renderCard(ad.event, false)}</React.Fragment>
               ))}
             </>
           )
@@ -656,6 +807,7 @@ export default function EventsScreen() {
                   {section.data.map(item => (
                     <React.Fragment key={item.id}>{renderEvent(item)}</React.Fragment>
                   ))}
+                  {renderSectionFooter(section)}
                 </View>
               ))}
               {loading && sections.length > 0 && (
@@ -696,8 +848,9 @@ export default function EventsScreen() {
               <View style={{ paddingHorizontal: theme.spacing.lg }}>{railNode}</View>
             }
             renderItem={({ item }) => renderEvent(item)}
-            extraData={forecasts}
+            extraData={[forecasts, hiddenItemIds]}
             renderSectionHeader={({ section }) => renderSectionHeader(section)}
+            renderSectionFooter={({ section }) => renderSectionFooter(section)}
             stickySectionHeadersEnabled={false}
             initialNumToRender={6}
             maxToRenderPerBatch={8}
@@ -726,6 +879,21 @@ export default function EventsScreen() {
       })()}
 
       {notificationPopup}
+      <HideFeedSheet
+        visible={!!hideTarget}
+        itemTitle={hideTarget?.title}
+        options={hideOptionsFor}
+        onPick={pickHideOption}
+        onDismiss={() => setHideTarget(null)}
+      />
+      <Toast
+        message={hideToast?.message ?? ''}
+        variant="info"
+        visible={!!hideToast}
+        onHide={() => setHideToast(null)}
+        duration={5000}
+        action={hideToast ? { label: 'Undo', onPress: () => hiddenFeed.restore(hideToast.undo) } : undefined}
+      />
     </View>
   )
 }
@@ -799,6 +967,7 @@ const WEEK_DAY_NAME_WIDTH = 30
 
 const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate, markedDates, onSelectDate, onPrevWeek, onNextWeek }: WeekStripContentProps) {
   const [rowWidth, setRowWidth] = useState(0)
+  const today = useToday()
   const { appScale, osScale } = useTextScale()
   const textScale = Math.min(appScale * osScale, TIGHT_TEXT_SCALE)
   const compact = rowWidth > 0 && (rowWidth - 6 * 6) / 7 < WEEK_DAY_NAME_WIDTH * textScale
@@ -811,7 +980,7 @@ const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate
           // previous day for any viewer at a positive UTC offset.
           const dateStr = localDateKey(day)
           const isSelected = dateStr === selectedDate
-          const isToday = dateStr === TODAY
+          const isToday = dateStr === today
           const dots = markedDates[dateStr]?.marked ? (markedDates[dateStr]?.count ?? 1) : 0
           return (
             <TouchableOpacity
@@ -876,6 +1045,7 @@ type MonthGridContentProps = {
 }
 
 const MonthGridContent = memo(function MonthGridContent({ month, selectedDate, markedDates, onSelectDate, onPrevMonth, onNextMonth }: MonthGridContentProps) {
+  const today = useToday()
   const [year, mon] = month.split('-').map(Number)
   const monthLabel  = new Date(year, mon - 1, 15).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
   const startOffset = new Date(year, mon - 1, 1).getDay()
@@ -918,7 +1088,7 @@ const MonthGridContent = memo(function MonthGridContent({ month, selectedDate, m
             if (day === null) return <View key={di} style={{ flex: 1, height: 44 }} />
             const dateStr    = `${month}-${String(day).padStart(2, '0')}`
             const isSelected = dateStr === selectedDate
-            const isToday    = dateStr === TODAY
+            const isToday    = dateStr === today
             const hasEvent   = !!markedDates[dateStr]?.marked
             return (
               <TouchableOpacity
@@ -975,42 +1145,137 @@ function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPre
 
   const { panResponder, snapToPrev, snapToNext, internalNavRef } = usePager(widthRef, translateX, onPrevRef, onNextRef)
 
+  // The arrows change the week at once (so the label updates and quick taps
+  // all count), then slide the new week in from the side it came from.
+  const slideFromRef = useRef<1 | -1 | null>(null)
+  const stepWeek = useCallback((dir: 1 | -1) => {
+    slideFromRef.current = dir
+    if (dir > 0) onNextRef.current()
+    else onPrevRef.current()
+  }, [])
+
   useLayoutEffect(() => {
     const fromSwipe = internalNavRef.current
     internalNavRef.current = false
+    const slide = slideFromRef.current
+    slideFromRef.current = null
     if (!fromSwipe) translateX.stopAnimation()
-    if (widthRef.current > 0) translateX.setValue(-widthRef.current)
+    const w = widthRef.current
+    if (w <= 0) return
+    if (slide) {
+      // The week just left sits one page to the side: start there, settle on the middle page.
+      translateX.setValue(slide > 0 ? 0 : -2 * w)
+      Animated.spring(translateX, { toValue: -w, useNativeDriver: true, tension: 60, friction: 11 }).start()
+    } else {
+      translateX.setValue(-w)
+    }
   }, [curWeekPage])
 
+  const monthLabel = weekMonthLabel(weekForIdx(curWeekPage))
+
   return (
-    <View
-      style={{ overflow: 'hidden' }}
-      onLayout={e => {
-        const w = e.nativeEvent.layout.width
-        widthRef.current = w
-        if (w !== width) { setWidth(w); translateX.setValue(-w) }
-      }}
-      {...panResponder.panHandlers}
-    >
-      {width > 0 && (
-        <Animated.View style={{ flexDirection: 'row', width: width * 3, transform: [{ translateX }] }}>
-          {([-1, 0, 1] as const).map(offset => (
-            <View key={offset} style={{ width, paddingHorizontal: theme.spacing.lg }}>
-              <WeekStripContent
-                weekDays={getWeekDays(weekForIdx(curWeekPage + offset))}
-                selectedDate={selectedDate}
-                markedDates={markedDates}
-                onSelectDate={onSelectDate}
-                onPrevWeek={snapToPrev}
-                onNextWeek={snapToNext}
-              />
-            </View>
-          ))}
-        </Animated.View>
-      )}
+    <View>
+      {/* Which month the strip is on. */}
+      <Text
+        testID="week-month-label"
+        accessibilityRole="header"
+        accessibilityLiveRegion="polite"
+        numberOfLines={1}
+        style={weekNavStyles.month}
+      >
+        {monthLabel}
+      </Text>
+      {/* ‹ days › : arrows either side of the week step it a week at a time. */}
+      <View style={weekNavStyles.row}>
+        <TouchableOpacity
+          testID="week-prev"
+          onPress={() => stepWeek(-1)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 4 }}
+          accessibilityRole="button"
+          accessibilityLabel="Previous week"
+          style={weekNavStyles.arrow}
+        >
+          <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
+        <View
+          style={{ flex: 1, overflow: 'hidden' }}
+          onLayout={e => {
+            const w = e.nativeEvent.layout.width
+            widthRef.current = w
+            if (w !== width) { setWidth(w); translateX.setValue(-w) }
+          }}
+          {...(SWIPE_NAVIGATION.calendar ? panResponder.panHandlers : {})}
+        >
+          {width > 0 && (
+            <Animated.View style={{ flexDirection: 'row', width: width * 3, transform: [{ translateX }] }}>
+              {([-1, 0, 1] as const).map(offset => (
+                <View key={offset} style={{ width }}>
+                  <WeekStripContent
+                    weekDays={getWeekDays(weekForIdx(curWeekPage + offset))}
+                    selectedDate={selectedDate}
+                    markedDates={markedDates}
+                    onSelectDate={onSelectDate}
+                    onPrevWeek={snapToPrev}
+                    onNextWeek={snapToNext}
+                  />
+                </View>
+              ))}
+            </Animated.View>
+          )}
+        </View>
+        <TouchableOpacity
+          testID="week-next"
+          onPress={() => stepWeek(1)}
+          hitSlop={{ top: 8, bottom: 8, left: 4, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Next week"
+          style={weekNavStyles.arrow}
+        >
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
+      </View>
     </View>
   )
 }
+
+const weekNavStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  arrow: {
+    width: 32,
+    height: 44,
+    borderRadius: theme.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  month: {
+    textAlign: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xs,
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.size.lg,
+    color: theme.colors.text,
+  },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+  today: {
+    paddingHorizontal: theme.spacing.md,
+    height: 38,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  todayLabel: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.sm,
+    fontWeight: theme.font.weight.bold,
+    color: theme.colors.primary,
+  },
+})
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -1084,12 +1349,3 @@ const feedStyles = StyleSheet.create({
     marginBottom: 10,
   },
 })
-
-function formatDayLabel(dateString: string): string {
-  if (dateString === TODAY) return 'Today'
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const tomorrowKey = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
-  if (dateString === tomorrowKey) return 'Tomorrow'
-  return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-}

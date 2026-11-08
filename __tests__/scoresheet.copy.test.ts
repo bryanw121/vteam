@@ -69,6 +69,7 @@ describe('copy to paper', () => {
   it('describes points for unfinished and zero scores', () => {
     expect(pointsInstruction(0, 0, true)).toBe('Then a line down through every column')
     expect(pointsInstruction(7, 0, false, [3])).toBe('Slash 1–7, circle 3 (penalty point)')
+    expect(pointsInstruction(5, 0, false, [], [2, 3])).toBe("Slash 1–5, draw a triangle around 2, 3 (scored on the libero's serve)")
     expect(pointsInstruction(4, 4, false)).toBe('T-bar over 1–4: a line down from the top and a line under 4')
   })
 })

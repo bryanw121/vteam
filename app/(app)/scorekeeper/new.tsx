@@ -342,7 +342,6 @@ export default function NewScoreMatchScreen() {
                   <Input label="Division / category" value={info.division ?? ''} onChangeText={setInfoField('division')} maxLength={40} />
                   <Input label="Match no." value={info.matchNo ?? ''} onChangeText={setInfoField('matchNo')} maxLength={20} />
                   <Input label="City, state" value={info.city ?? ''} onChangeText={setInfoField('city')} maxLength={60} />
-                  <Input label="Hall" value={info.hall ?? ''} onChangeText={setInfoField('hall')} maxLength={60} />
                   <Input label="Court" value={info.court ?? ''} onChangeText={setInfoField('court')} maxLength={20} />
                   <Input label="Date" value={info.date ?? ''} onChangeText={setInfoField('date')} placeholder="2026-11-01" maxLength={10} />
                   <View role="radiogroup" style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
