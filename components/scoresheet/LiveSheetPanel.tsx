@@ -14,6 +14,8 @@ import type { LiveSheetPanelProps, LiveSheetZoom, OfficialSheetLayout, SheetRegi
 
 /** Open or closed, remembered on the device. */
 const OPEN_KEY = 'vteam.scorekeeper.liveSheet'
+/** The saved choice once read, so later mounts (every set start) know it at once. */
+let savedOpen: boolean | null = null
 const ZOOMS: { id: LiveSheetZoom; label: string }[] = [
   { id: 'follow', label: 'Follow' },
   { id: 'set', label: 'Set' },
@@ -33,16 +35,20 @@ const ZOOMS: { id: LiveSheetZoom; label: string }[] = [
 export function LiveSheetPanel({ doc, state, setIndex, onOpenSheet }: LiveSheetPanelProps) {
   const { width } = useWindowDimensions()
   const wide = width >= BREAKPOINTS.sidebar
-  const [open, setOpen] = useState(true)
+  // null until the device says: then only the header shows, so a closed panel never lays out or flashes open.
+  const [open, setOpen] = useState<boolean | null>(savedOpen)
   const [zoom, setZoom] = useState<LiveSheetZoom>(wide ? 'set' : 'follow')
 
   useEffect(() => {
     let cancelled = false
-    AsyncStorage.getItem(OPEN_KEY).then(v => { if (!cancelled && v === 'closed') setOpen(false) }).catch(() => {})
+    if (savedOpen != null) return
+    const settle = (v: boolean) => { savedOpen = v; if (!cancelled) setOpen(v) }
+    AsyncStorage.getItem(OPEN_KEY).then(v => settle(v !== 'closed')).catch(() => settle(true))
     return () => { cancelled = true }
   }, [])
   const toggle = () => {
     const next = !open
+    savedOpen = next
     setOpen(next)
     void AsyncStorage.setItem(OPEN_KEY, next ? 'open' : 'closed').catch(() => {})
   }
@@ -54,40 +60,51 @@ export function LiveSheetPanel({ doc, state, setIndex, onOpenSheet }: LiveSheetP
   const area = setArea(setIndex)
 
   // What changed since the last sheet drawn: the previous layout is kept once each sheet is on screen.
+  // Sanctions and remarks are written on the first sheet; in sets 3+ the set is on a later one, so
+  // a change found only there is shown there.
   const prev = useRef<OfficialSheetLayout | null>(null)
-  const diff = useMemo(() => diffMarks(prev.current, layout, area.page, helveticaMeasure), [layout, area.page])
+  const { diff, page } = useMemo(() => {
+    const here = diffMarks(prev.current, layout, area.page, helveticaMeasure)
+    if (here.added.length || here.removed.length || area.page === 0) return { diff: here, page: area.page }
+    const first = diffMarks(prev.current, layout, 0, helveticaMeasure)
+    return first.added.length || first.removed.length ? { diff: first, page: 0 } : { diff: here, page: area.page }
+  }, [layout, area.page])
   useEffect(() => { prev.current = layout }, [layout])
 
   // Follow: the latest change, else stay where the view was (a redraw with nothing new).
-  const lastFollow = useRef<SheetRegion[] | null>(null)
+  const lastFollow = useRef<{ page: number; regions: SheetRegion[] } | null>(null)
   const follow = useMemo(() => {
+    if (!layout) { lastFollow.current = null; return null } // reopened: start from the set, not an old spot
     const f = followFocus(diff)
-    if (f) lastFollow.current = f
-    return f ?? lastFollow.current
-  }, [diff])
-  const focus = zoom === 'form' ? undefined : zoom === 'set' || !follow ? [area.region] : follow
+    if (f) lastFollow.current = { page, regions: f }
+    return lastFollow.current
+  }, [diff, layout, page])
+  // Follow shows the page of the latest change; Set and Whole form show the set's own sheet.
+  const shownPage = zoom === 'follow' && follow ? follow.page : area.page
+  const focus = zoom === 'form' ? undefined : zoom === 'set' || !follow ? [area.region] : follow.regions
+  const onShown = shownPage === page
 
   const erasedOnly = !diff.added.length && diff.removed.length > 0
   const t = state.sets[setIndex]?.teams
   return (
     <View style={styles.card} testID="live-sheet">
-      <Pressable onPress={toggle} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={`Live scoresheet, ${open ? 'shown' : 'hidden'}`} style={styles.head} testID="live-sheet-toggle">
+      <Pressable onPress={toggle} accessibilityRole="button" accessibilityState={{ expanded: !!open }} accessibilityLabel={`Live scoresheet, ${open ? 'shown' : 'hidden'}`} style={styles.head} testID="live-sheet-toggle">
         <Ionicons name="document-text-outline" size={18} color={theme.colors.text} />
         <Text style={[shared.body, styles.title]}>Live scoresheet</Text>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={theme.colors.subtext} />
+        {open != null && <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={theme.colors.subtext} />}
       </Pressable>
       {open && (
         <View style={{ gap: theme.spacing.sm }}>
           <View style={styles.zooms} accessibilityRole="radiogroup" accessibilityLabel="Show">
-            {ZOOMS.map(z => <Chip key={z.id} label={z.label} role="radio" variant="tint" active={zoom === z.id} onPress={() => setZoom(z.id)} testID={`live-zoom-${z.id}`} />)}
+            {ZOOMS.map(z => <Chip key={z.id} label={z.label} role="radio" variant="tint" size="touch" active={zoom === z.id} onPress={() => setZoom(z.id)} testID={`live-zoom-${z.id}`} />)}
           </View>
           {layout ? (
             <OfficialSheetView
               layout={layout}
-              page={area.page}
+              page={shownPage}
               focus={focus}
-              highlight={diff.added}
-              erased={diff.removed}
+              highlight={onShown ? diff.added : undefined}
+              erased={onShown ? diff.removed : undefined}
               accessibilityLabel={`Live scoresheet, set ${setIndex + 1}${t ? `, ${t.A.score} to ${t.B.score}` : ''}`}
               testID="live-sheet-form"
             />
