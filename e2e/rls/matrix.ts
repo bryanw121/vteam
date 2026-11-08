@@ -18,6 +18,8 @@
  * - `signedInSelect: 'none'`: service-only tables a signed-in user can't read either.
  * - `insertRejectedBy: 'trigger'`: a BEFORE INSERT trigger rejects the empty
  *   probe row (P0002) before RLS sees it; still a rejection, noted as such.
+ * - `anonColumns`: for a table with column-level grants, the columns a guest may
+ *   read; the guest read probe selects these instead of `*` (which is refused).
  * - `why`: one line for anything not 'none'.
  */
 import type { Database } from '../../types/database'
@@ -30,6 +32,7 @@ export type RlsExpectation = {
   owner?: { column: string; ownRowsOnly: boolean; noInsertAsOther: boolean }
   signedInSelect?: 'none'
   insertRejectedBy?: 'trigger'
+  anonColumns?: string
   why?: string
 }
 
@@ -41,7 +44,7 @@ export const RLS_MATRIX: Record<TableName, RlsExpectation> = {
   app_events: { anonSelect: 'none', anonInsert: 'allowed', signedInSelect: 'none', why: 'usage metrics are insert-only for everyone (user_id null or own)' },
   app_events_daily: { anonSelect: 'none', anonInsert: 'none', signedInSelect: 'none', why: 'service-only (server jobs)' },
   chat_silences: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true } },
-  cheers: { anonSelect: 'all', anonInsert: 'none', owner: { column: 'giver_id', ownRowsOnly: false, noInsertAsOther: true }, why: 'cheers counts show on public profiles' },
+  cheers: { anonSelect: 'all', anonInsert: 'none', anonColumns: 'id, event_id, receiver_id, cheer_type, created_at', owner: { column: 'giver_id', ownRowsOnly: false, noInsertAsOther: true }, why: 'cheers counts show on public profiles; guests can\'t see giver_id (#102)' },
   club_members: { anonSelect: 'all', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: false, noInsertAsOther: true }, why: 'club pages list members to guests' },
   club_post_comments: { anonSelect: 'none', anonInsert: 'none' },
   club_post_likes: { anonSelect: 'none', anonInsert: 'none' },
