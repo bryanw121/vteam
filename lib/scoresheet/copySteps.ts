@@ -9,10 +9,9 @@ import type { CopySection, CopyStep, MatchDoc, MatchState, SetState, SheetRegion
 import { POSITION_LABELS, other } from './engine'
 import { SANCTION_CODES } from './describe'
 import { teamName } from './summary'
-import { serviceBoxes } from './officialLayout'
+import { SET_DY, serviceBoxes } from './officialLayout'
 
 /** Set 2's block is this far below set 1's on the form. */
-const SET_DY = 244.5
 const R = (x: number, y: number, w: number, h: number): SheetRegion => ({ x, y, w, h })
 const LEFT = { x: 27.8, w: 243.7 }
 const RIGHT = { x: 354.9, w: 243.6 }
