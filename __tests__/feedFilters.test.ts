@@ -61,7 +61,17 @@ describe('usableFeedFilter', () => {
   it('shows a remembered Mine only with an account', () => {
     expect(usableFeedFilter('mine', false)).toBe('all')
     expect(usableFeedFilter('mine', true)).toBe('mine')
-    expect(usableFeedFilter('not_full', false)).toBe('not_full')
+    expect(usableFeedFilter('tournament', false)).toBe('tournament')
+  })
+
+  it('shows a remembered Mine only while the viewer has an event of their own', () => {
+    expect(usableFeedFilter('mine', true, false)).toBe('all')
+    expect(usableFeedFilter('mine', true, true)).toBe('mine')
+    expect(usableFeedFilter('open_play', true, false)).toBe('open_play')
+  })
+
+  it('drops the removed Not Full filter to All', () => {
+    expect(parseFeedFilters(JSON.stringify({ filter: 'not_full', surface: 'indoor' }))).toEqual({ filter: 'all', surface: 'indoor' })
   })
 })
 
@@ -72,8 +82,8 @@ describe('web (localStorage)', () => {
   })
 
   it('restores synchronously and round-trips a save', () => {
-    window.localStorage.setItem(KEY, JSON.stringify({ filter: 'not_full', surface: 'indoor' }))
-    expect(feedFiltersNow()).toEqual({ filter: 'not_full', surface: 'indoor' })
+    window.localStorage.setItem(KEY, JSON.stringify({ filter: 'open_play', surface: 'indoor' }))
+    expect(feedFiltersNow()).toEqual({ filter: 'open_play', surface: 'indoor' })
     saveFeedFilters({ filter: 'tournament', surface: 'any' })
     expect(JSON.parse(window.localStorage.getItem(KEY)!)).toEqual({ filter: 'tournament', surface: 'any' })
     __resetFeedFilters()

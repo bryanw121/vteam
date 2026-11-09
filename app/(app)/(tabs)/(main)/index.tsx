@@ -77,13 +77,13 @@ function idxForMonth(month: string): number {
 
 // "Mine" leads the row but is deliberately NOT the default filter — opening the
 // Events tab on an empty screen is the worst possible first run for a new member,
-// and it hides the rest of the club from everyone else.
+// and it hides the rest of the club from everyone else. It only appears once the
+// viewer has an upcoming event of their own (see visibleChips).
 const FILTER_CHIPS: FeedFilterChip[] = [
   { id: 'mine',       label: 'Mine'       },
   { id: 'all',        label: 'All'        },
   { id: 'open_play',  label: 'Open Play'  },
   { id: 'tournament', label: 'Tournament' },
-  { id: 'not_full',   label: 'Not Full'   },
 ]
 
 /** One day of the feed. `hiddenCount` counts that day's hidden items; `revealed` = they're shown (dimmed) in `data`. */
@@ -126,8 +126,15 @@ export default function EventsScreen() {
   const [eventsPullRefreshing, setEventsPullRefreshing] = useState(false)
   const { userId: currentUserId, isGuest } = useSession()
   const requireSignIn = useRequireSignIn()
-  // A remembered "Mine" waits for an account: guests (and the moment before the session restores) see All.
-  const activeFilter = usableFeedFilter(chosenFilter, !!currentUserId)
+  // "You're going" rail and the Mine chip. Derived from events already in memory — no extra query
+  // on the happy path, and it re-derives whenever the feed does, so an RSVP made
+  // from a feed card lands in the rail without a manual refresh.
+  const myUpcoming = useMyUpcomingEvents(events, currentUserId)
+  // Mine is offered only to a signed-in viewer with an upcoming event of their own. Until the
+  // feed has loaded we can't tell, so a remembered Mine is kept rather than flickering to All.
+  const hasOwnEvents = (loading && events.length === 0) || myUpcoming.length > 0
+  // A remembered "Mine" waits for an account (guests, and the moment before the session restores) and for own events.
+  const activeFilter = usableFeedFilter(chosenFilter, !!currentUserId, hasOwnEvents)
 
   const filtersTouchedRef = useRef(false)
   useEffect(() => {
@@ -254,15 +261,6 @@ export default function EventsScreen() {
       const tags = event.event_tags?.map(et => et.tags.name.toLowerCase()) ?? []
       if (activeFilter === 'open_play')  return tags.some(t => t.includes('open play') || t.includes('open-play'))
       if (activeFilter === 'tournament') return tags.some(t => t.includes('tournament'))
-      if (activeFilter === 'not_full') {
-        // Capacity at other venues is unknown, so they can't be called "not full".
-        if (event._external) return false
-        if (!event.max_attendees) return true
-        const count = event.event_attendees_attending?.[0]
-          ? Number(event.event_attendees_attending[0].count)
-          : 0
-        return count < event.max_attendees
-      }
       return true
     })
     const grouped: Record<string, DateSection> = {}
@@ -318,11 +316,6 @@ export default function EventsScreen() {
     () => (hideTarget ? hideOptions(hideTarget, currentUserId) : []),
     [hideTarget, currentUserId],
   )
-
-  // "You're going" rail. Derived from events already in memory — no extra query
-  // on the happy path, and it re-derives whenever the feed does, so an RSVP made
-  // from a feed card lands in the rail without a manual refresh.
-  const myUpcoming = useMyUpcomingEvents(events, currentUserId)
 
   // "Ana and 2 friends going" on cards (#15): one RPC for the loaded RSVP-able events.
   const friendEventIds = useMemo(() => events.filter(e => !e._external && !e._isTournament).map(e => e.id), [events])
@@ -417,10 +410,11 @@ export default function EventsScreen() {
     })
   }, [refetchNotifs])
 
-  // "Mine" means nothing without an account.
+  // "Mine" means nothing without an account, or before the viewer has an event of their own.
+  const showMine = !!currentUserId && (myUpcoming.length > 0 || activeFilter === 'mine')
   const visibleChips = useMemo(
-    () => (currentUserId ? FILTER_CHIPS : FILTER_CHIPS.filter(c => c.id !== 'mine')),
-    [currentUserId],
+    () => (showMine ? FILTER_CHIPS : FILTER_CHIPS.filter(c => c.id !== 'mine')),
+    [showMine],
   )
 
   // Flatten all events from sections for desktop grid layout

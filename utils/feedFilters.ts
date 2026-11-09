@@ -14,8 +14,8 @@ const STORAGE_KEY = 'vteam.feedFilters'
 
 export const DEFAULT_FEED_FILTERS: StoredFeedFilters = { filter: 'all', surface: 'any' }
 
-/** Chip ids the feed understands today. A stored id not in here (e.g. the removed 'austin') is dropped. */
-const FEED_FILTERS: readonly FeedFilter[] = ['mine', 'all', 'open_play', 'tournament', 'not_full']
+/** Chip ids the feed understands today. A stored id not in here (e.g. the removed 'austin' or 'not_full') is dropped. */
+const FEED_FILTERS: readonly FeedFilter[] = ['mine', 'all', 'open_play', 'tournament']
 const SURFACE_FILTERS: readonly SurfaceFilter[] = ['any', ...SURFACE_OPTIONS.map(o => o.id)]
 
 let cached: StoredFeedFilters | null = null
@@ -37,9 +37,13 @@ export function parseFeedFilters(raw: string | null | undefined): StoredFeedFilt
   }
 }
 
-/** The chip to show: 'mine' means nothing without an account, so a guest gets 'all'. */
-export function usableFeedFilter(filter: FeedFilter, signedIn: boolean): FeedFilter {
-  return filter === 'mine' && !signedIn ? 'all' : filter
+/**
+ * The chip to show: 'mine' means nothing without an account or without an
+ * upcoming event of one's own, so those viewers get 'all' (the choice stays
+ * saved, and Mine comes back once they have an event).
+ */
+export function usableFeedFilter(filter: FeedFilter, signedIn: boolean, hasOwnEvents = true): FeedFilter {
+  return filter === 'mine' && (!signedIn || !hasOwnEvents) ? 'all' : filter
 }
 
 function webStorage(): Storage | null {

@@ -763,7 +763,7 @@ export type MyUpcomingEvent = {
 // ─── Events Feed Types ────────────────────────────────────────────────────────
 
 /** Events-tab filter chip ids. */
-export type FeedFilter = 'mine' | 'all' | 'open_play' | 'tournament' | 'not_full'
+export type FeedFilter = 'mine' | 'all' | 'open_play' | 'tournament'
 
 export type FeedFilterChip = { id: FeedFilter; label: string }
 
