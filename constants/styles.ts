@@ -328,6 +328,45 @@ export const shared = StyleSheet.create({
     lineHeight: 30,
     letterSpacing: -1.2,
   },
+  /** A tournament's date block: month, every day it's on, and their weekdays. */
+  programDateBlock: {
+    width: 68,
+    flexShrink: 0,
+    alignSelf: 'flex-start',
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    backgroundColor: theme.colors.time,
+    borderWidth: 1,
+    borderColor: theme.colors.timeBorder,
+  },
+  programDateMonth: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: font.size.xs,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: theme.colors.timeInk,
+  },
+  programDateDays: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.heading.sm,
+    lineHeight: 26,
+    letterSpacing: -0.6,
+    color: theme.colors.timeInk,
+  },
+  programDateWeekdays: {
+    fontFamily: theme.fonts.body,
+    fontSize: font.size.xs,
+    color: theme.colors.timeInk,
+  },
+  /** "In 5 days · Sat, Nov 14 – Sun, Nov 15": the line that says when, on list cards. */
+  programWhen: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: font.size.sm,
+    color: theme.colors.text,
+  },
   externalBody: {
     flex: 1,
     minWidth: 0,
