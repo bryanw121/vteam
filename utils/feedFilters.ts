@@ -14,8 +14,8 @@ const STORAGE_KEY = 'vteam.feedFilters'
 
 export const DEFAULT_FEED_FILTERS: StoredFeedFilters = { filter: 'all', surface: 'any' }
 
-/** Chip ids the feed understands today. A stored id not in here (e.g. the removed 'austin') is dropped. */
-const FEED_FILTERS: readonly FeedFilter[] = ['mine', 'all', 'open_play', 'tournament', 'not_full']
+/** Chip ids the feed understands today. A stored id not in here (e.g. the removed 'austin', 'mine' or 'not_full') is dropped. */
+const FEED_FILTERS: readonly FeedFilter[] = ['all', 'open_play', 'tournament']
 const SURFACE_FILTERS: readonly SurfaceFilter[] = ['any', ...SURFACE_OPTIONS.map(o => o.id)]
 
 let cached: StoredFeedFilters | null = null
@@ -35,11 +35,6 @@ export function parseFeedFilters(raw: string | null | undefined): StoredFeedFilt
     filter: FEED_FILTERS.includes(v.filter as FeedFilter) ? (v.filter as FeedFilter) : DEFAULT_FEED_FILTERS.filter,
     surface: SURFACE_FILTERS.includes(v.surface as SurfaceFilter) ? (v.surface as SurfaceFilter) : DEFAULT_FEED_FILTERS.surface,
   }
-}
-
-/** The chip to show: 'mine' means nothing without an account, so a guest gets 'all'. */
-export function usableFeedFilter(filter: FeedFilter, signedIn: boolean): FeedFilter {
-  return filter === 'mine' && !signedIn ? 'all' : filter
 }
 
 function webStorage(): Storage | null {

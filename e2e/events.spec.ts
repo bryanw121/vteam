@@ -238,26 +238,6 @@ test.describe('Events', () => {
     await page.waitForURL(/\/event\//, { timeout: 20000 })
   })
 
-  test('the Mine chip carries a count and filters without losing the hosted fixtures', async ({ page }) => {
-    await expect(page.getByText(OPEN_PLAY_EVENT).first()).toBeVisible({ timeout: 20000 })
-
-    // The chip shows how many commitments there are — at least the two fixtures.
-    const mineChip = page.getByTestId('filter-mine').first()
-    await expect(mineChip).toHaveText(/^Mine \d+$/)
-
-    // Both fixtures are hosted by this account, so Mine keeps them in the feed
-    // itself — asserting against the rail would be vacuous, since the rail
-    // shows commitments regardless of filter.
-    const feed = page.getByTestId('events-feed')
-    await mineChip.click()
-    await expect(feed.getByText(OPEN_PLAY_EVENT).first()).toBeVisible({ timeout: 15000 })
-    await expect(feed.getByText(TOURNAMENT_EVENT).first()).toBeVisible()
-
-    // All restores the unfiltered feed.
-    await page.getByTestId('filter-all').first().click()
-    await expect(feed.getByText(OPEN_PLAY_EVENT).first()).toBeVisible({ timeout: 15000 })
-  })
-
   // #44: exercise the controlled input, Supabase write/read, and formatted
   // detail output together. The fixture is restored to free before the test
   // finishes, and afterAll still deletes it if an assertion interrupts us.

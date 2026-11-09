@@ -24,6 +24,8 @@ export const STALE = {
   courts: 60_000,
   /** NWS hourly forecast per court (useForecast). The proxy's CDN copy is fresh for 30 min too. */
   forecast: 30 * 60_000,
+  /** Outside leagues and tournaments (useExternalPrograms): Schelagg refreshes them twice a day. */
+  programs: 30 * 60_000,
   /** Curated reference lists that change only by migration (major_cities). */
   reference: 60 * 60_000,
 } as const

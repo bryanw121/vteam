@@ -4,6 +4,7 @@ export const theme = {
     primary:      '#7C4DFF',   // slightly brighter violet — pops on dark bg
     primaryDark:  '#5A2BFF',
     primarySoft:  '#2A1F6B',   // dark violet tint for soft chip bgs
+    primaryText:  '#A68BFF',   // violet for text and small icons on background/card (>= 4.5:1; primary itself is 3.9:1)
     // Accent — electric sky blue
     accent:       '#3DC9F5',
     accentInk:    '#002A36',

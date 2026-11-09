@@ -12,13 +12,16 @@
  *
  * POST { username, password } -> 200 { access_token, refresh_token, expires_in, expires_at, token_type }
  *                              -> 401 { error: 'Incorrect username or password' }
- *                              -> 429 { error } from this function's own limiter, which counts
- *                                 every attempt before the lookup (existing username or not)
+ *                              -> 429 { error } from this function's own limiter: too many attempts
+ *                                 from this IP, or too many failed attempts for this username
+ *                                 (existing or not)
  *
  * The app then calls supabase.auth.setSession({ access_token, refresh_token }).
  *
- * Rate limits (public.check_rate_limit): LOGIN_LIMITS.perUsername attempts per
- * username and LOGIN_LIMITS.perIp per IP every 15 minutes.
+ * Rate limits (public.check_rate_limit, 15-minute windows): LOGIN_LIMITS.perIp
+ * attempts per IP, and LOGIN_LIMITS.perUsername FAILED attempts per username
+ * (checked before every attempt, counted only on failure, so signing in
+ * successfully never uses it up).
  *
  * IP forwarding: every sign-in reaches Supabase Auth from this function, so
  * without forwarding Auth's per-IP limit would count all users as one IP (one
@@ -37,7 +40,7 @@
  * not waited out).
  */
 
-import type { Deps } from '../_shared/deps.ts'
+import type { DbClient, Deps } from '../_shared/deps.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import {
   clientIp, GENERIC_LOGIN_ERROR, LOGIN_LIMITS, parseLoginBody, passwordGrantOutcome,
@@ -54,6 +57,23 @@ export type LoginHandlerOptions = {
 }
 
 const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+/**
+ * True while `key` has used up its failed attempts in the current window.
+ * Reads the counter without adding to it (rate_limits has no client access;
+ * this runs with the service role). A failed read never locks anyone out.
+ */
+async function usernameLockedOut(service: DbClient, key: string, now: number): Promise<boolean> {
+  const { data, error } = await service.from('rate_limits').select('hits, window_start').eq('key', key).maybeSingle()
+  if (error) {
+    console.error('[login-with-username] failed-attempt read failed:', error.message)
+    return false
+  }
+  const row = data as { hits?: number; window_start?: string } | null
+  if (!row?.window_start || typeof row.hits !== 'number') return false
+  const windowOpen = now - Date.parse(row.window_start) < LOGIN_LIMITS.windowSeconds * 1000
+  return windowOpen && row.hits >= LOGIN_LIMITS.perUsername
+}
 
 export function createHandler(deps: Deps, opts: LoginHandlerOptions = {}) {
   const sleep = opts.sleep ?? realSleep
@@ -114,16 +134,27 @@ export function createHandler(deps: Deps, opts: LoginHandlerOptions = {}) {
       const service = deps.getClient()
       const ip = clientIp(req.headers.get('x-forwarded-for'))
 
-      // Counted for every attempt, before we know whether the username exists,
-      // so this 429 says nothing about which accounts exist.
-      const keys: [string, number][] = [[`login_user:${input.username}`, LOGIN_LIMITS.perUsername]]
-      if (ip) keys.push([`login_ip:${ip}`, LOGIN_LIMITS.perIp])
-      for (const [key, max] of keys) {
+      // Per IP: every attempt counts, before we know whether the username exists.
+      if (ip) {
         const { data: allowed, error: limitError } = await service
-          .rpc('check_rate_limit', { p_key: key, p_max: max, p_window_seconds: LOGIN_LIMITS.windowSeconds })
+          .rpc('check_rate_limit', { p_key: `login_ip:${ip}`, p_max: LOGIN_LIMITS.perIp, p_window_seconds: LOGIN_LIMITS.windowSeconds })
         // A broken limiter must not lock everyone out: log and carry on.
         if (limitError) console.error('[login-with-username] rate limit check failed:', limitError.message)
         else if (allowed === false) return finish({ error: TOO_MANY_ATTEMPTS }, 429)
+      }
+
+      // Per username: only failed attempts count (a lockout against guessing,
+      // not a cap on signing in), but the limit is checked before every
+      // attempt, so a correct password after the limit is refused too. An
+      // unknown username and a wrong password count alike, so the 429 says
+      // nothing about which accounts exist.
+      const userKey = `login_user:${input.username}`
+      if (await usernameLockedOut(service, userKey, deps.now())) return finish({ error: TOO_MANY_ATTEMPTS }, 429)
+      const fail = async () => {
+        const { error: countError } = await service
+          .rpc('check_rate_limit', { p_key: userKey, p_max: LOGIN_LIMITS.perUsername, p_window_seconds: LOGIN_LIMITS.windowSeconds })
+        if (countError) console.error('[login-with-username] failed-attempt count failed:', countError.message)
+        return finish({ error: GENERIC_LOGIN_ERROR }, 401)
       }
 
       const { data: email, error: lookupError } = await service
@@ -132,10 +163,10 @@ export function createHandler(deps: Deps, opts: LoginHandlerOptions = {}) {
         console.error('[login-with-username] lookup failed:', lookupError.message)
         return finish({ error: LOGIN_UNAVAILABLE }, 500)
       }
-      if (typeof email !== 'string' || !email) return finish({ error: GENERIC_LOGIN_ERROR }, 401)
+      if (typeof email !== 'string' || !email) return fail()
 
       const outcome = await passwordGrant(email, input.password, ip)
-      if (outcome.kind !== 'session') return finish({ error: GENERIC_LOGIN_ERROR }, 401)
+      if (outcome.kind !== 'session') return fail()
       return finish(outcome.session, 200)
     } catch (e) {
       console.error('[login-with-username] failed:', (e as Error)?.message)

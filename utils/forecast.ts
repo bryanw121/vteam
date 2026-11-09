@@ -32,6 +32,7 @@ type ForecastEvent = {
   latitude?: number | null
   longitude?: number | null
   _external?: unknown
+  _program?: unknown
   _isTournament?: boolean
 }
 
@@ -43,7 +44,8 @@ type ForecastEvent = {
  * feed rows don't carry them.
  */
 export function forecastWindow(event: ForecastEvent, now: number): ForecastWindow {
-  if (event._external || event._isTournament) return null
+  // Only vteam's own events: outside sessions and outside tournaments (`program:` ids) have no row in `events`.
+  if (event._external || event._program || event._isTournament) return null
   if (!event.surface || !(FORECAST_SURFACES as readonly string[]).includes(event.surface)) return null
   if (event.cancelled_at) return null
   const start = parseEventDate(event.event_date).getTime()
