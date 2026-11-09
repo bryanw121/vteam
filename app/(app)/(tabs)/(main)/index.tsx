@@ -31,7 +31,7 @@ import { TourTarget } from '../../../../components/tour/TourTarget'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
 import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, Notification, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
-import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters, usableFeedFilter } from '../../../../utils/feedFilters'
+import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters } from '../../../../utils/feedFilters'
 import { useTabsShell } from '../../../../contexts/tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSession } from '../../../../contexts/session'
@@ -79,15 +79,12 @@ function idxForMonth(month: string): number {
   return MONTH_CENTER + (y - ry) * 12 + (m - rm)
 }
 
-// "Mine" leads the row but is deliberately NOT the default filter — opening the
-// Events tab on an empty screen is the worst possible first run for a new member,
-// and it hides the rest of the club from everyone else.
+// No "Mine" chip: the games a player is going to or hosting are already in the
+// "You're going" rail above the feed.
 const FILTER_CHIPS: FeedFilterChip[] = [
-  { id: 'mine',       label: 'Mine'       },
   { id: 'all',        label: 'All'        },
   { id: 'open_play',  label: 'Open Play'  },
   { id: 'tournament', label: 'Tournament' },
-  { id: 'not_full',   label: 'Not Full'   },
 ]
 
 /** One day of the feed. `hiddenCount` counts that day's hidden items; `revealed` = they're shown (dimmed) in `data`. */
@@ -130,8 +127,11 @@ export default function EventsScreen() {
   const [eventsPullRefreshing, setEventsPullRefreshing] = useState(false)
   const { userId: currentUserId, isGuest } = useSession()
   const requireSignIn = useRequireSignIn()
-  // A remembered "Mine" waits for an account: guests (and the moment before the session restores) see All.
-  const activeFilter = usableFeedFilter(chosenFilter, !!currentUserId)
+  // "You're going" rail. Derived from events already in memory — no extra query
+  // on the happy path, and it re-derives whenever the feed does, so an RSVP made
+  // from a feed card lands in the rail without a manual refresh.
+  const myUpcoming = useMyUpcomingEvents(events, currentUserId)
+  const activeFilter = chosenFilter
 
   const filtersTouchedRef = useRef(false)
   useEffect(() => {
@@ -264,19 +264,9 @@ export default function EventsScreen() {
       if (event._external && event._external.region !== feedRegion) return false
       if (surfaceFilter !== 'any' && surfaceOf(event) !== surfaceFilter) return false
       if (activeFilter === 'all') return true
-      if (activeFilter === 'mine') return !!currentUserId && myStatusFor(event, currentUserId) !== null
       const tags = event.event_tags?.map(et => et.tags.name.toLowerCase()) ?? []
       if (activeFilter === 'open_play')  return tags.some(t => t.includes('open play') || t.includes('open-play'))
       if (activeFilter === 'tournament') return tags.some(t => t.includes('tournament'))
-      if (activeFilter === 'not_full') {
-        // Capacity at other venues is unknown, so they can't be called "not full".
-        if (event._external || event._program) return false
-        if (!event.max_attendees) return true
-        const count = event.event_attendees_attending?.[0]
-          ? Number(event.event_attendees_attending[0].count)
-          : 0
-        return count < event.max_attendees
-      }
       return true
     })
     const grouped: Record<string, DateSection> = {}
@@ -333,11 +323,6 @@ export default function EventsScreen() {
     [hideTarget, currentUserId],
   )
 
-  // "You're going" rail. Derived from events already in memory — no extra query
-  // on the happy path, and it re-derives whenever the feed does, so an RSVP made
-  // from a feed card lands in the rail without a manual refresh.
-  const myUpcoming = useMyUpcomingEvents(events, currentUserId)
-
   // "Ana and 2 friends going" on cards (#15): one RPC for the loaded RSVP-able events.
   const friendEventIds = useMemo(() => events.filter(e => !e._external && !e._isTournament).map(e => e.id), [events])
   const friendsGoing = useFriendsGoing(friendEventIds)
@@ -346,9 +331,6 @@ export default function EventsScreen() {
     <MyEventsRail
       items={myUpcoming}
       onPressEvent={eventId => router.push(routes.event(eventId))}
-      // "See all" switches the feed to Mine rather than growing the rail — one
-      // place to look for the long list, and the rail stays above the fold.
-      onSeeAll={() => selectFilter('mine')}
     />
   )
 
@@ -431,12 +413,6 @@ export default function EventsScreen() {
     })
   }, [refetchNotifs])
 
-  // "Mine" means nothing without an account.
-  const visibleChips = useMemo(
-    () => (currentUserId ? FILTER_CHIPS : FILTER_CHIPS.filter(c => c.id !== 'mine')),
-    [currentUserId],
-  )
-
   // Flatten all events from sections for desktop grid layout
   const allEvents = useMemo(() => sections.flatMap(s => s.data), [sections])
   // "Next up" links to an event page, so it skips sessions at other venues.
@@ -479,10 +455,9 @@ export default function EventsScreen() {
       <OneTimeBanner banner={BANNERS.austinPilot} style={isMobile ? shared.feedStaleNoticeMobile : undefined} />
       <TourTarget id={TOUR_TARGETS.feedFilters}>
         <FilterChips
-          chips={visibleChips}
+          chips={FILTER_CHIPS}
           active={activeFilter}
           onSelect={selectFilter}
-          mineCount={myUpcoming.length}
           wide={!isMobile}
         />
         <SurfaceFilter active={surfaceFilter} onSelect={selectSurface} wide={!isMobile} />
