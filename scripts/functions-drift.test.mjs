@@ -79,7 +79,7 @@ test('parseVerifyJwt reads every [functions.*] section and ignores comments', ()
   )
 })
 
-test('the real config.toml declares verify_jwt for the six functions', () => {
+test('the real config.toml declares verify_jwt for the seven functions', () => {
   const v = parseVerifyJwt(readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8'))
   assert.deepEqual(v, {
     'send-chat-push': false,
@@ -89,5 +89,7 @@ test('the real config.toml declares verify_jwt for the six functions', () => {
     'send-feedback-email': true,
     // Callers are signed out (#102).
     'login-with-username': false,
+    // Signed-in callers only (#106).
+    'delete-account': true,
   })
 })
