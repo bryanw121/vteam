@@ -455,6 +455,7 @@ export const shared = StyleSheet.create({
   buttonLabelSm:      { fontSize: font.size.smd },
 
   // ── Chip (feed filter chips) ──────────────────────────────
+  chipTouch: { minHeight: 44, justifyContent: 'center' },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 7,

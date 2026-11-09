@@ -408,6 +408,23 @@ export type CopyStep = {
 }
 
 export type CopySectionProps = { section: CopySection }
+/** What changed on the form between two layouts (lib/scoresheet/liveSheet.ts): areas to show the user. */
+export type SheetMarkDiff = { added: SheetRegion[]; removed: SheetRegion[] }
+
+/** The part of the form a set is written in: which copy of the form, and where on it. */
+export type SetArea = { page: number; region: SheetRegion }
+
+/** How the live scoresheet frames the form: the latest change (phones), the current set, or the whole form. */
+export type LiveSheetZoom = 'follow' | 'set' | 'form'
+
+export type LiveSheetPanelProps = {
+  doc: MatchDoc
+  state: MatchState
+  /** Index of the set being played (its block on the form). */
+  setIndex: number
+  onOpenSheet: () => void
+}
+
 export type OfficialSheetViewProps = {
   layout: OfficialSheetLayout
   /** Page of the layout (0 = the first copy of the form). */
@@ -416,6 +433,8 @@ export type OfficialSheetViewProps = {
   focus?: SheetRegion[]
   /** Areas to tint, e.g. the part of the form a Copy to paper step is about. */
   highlight?: SheetRegion[]
+  /** Areas where marks were just erased (an undo): outlined, not tinted. */
+  erased?: SheetRegion[]
   accessibilityLabel?: string
   testID?: string
 }
