@@ -1,6 +1,7 @@
 import React, { memo, useState } from 'react'
 import { TouchableOpacity, View } from 'react-native'
 import { Text } from './ui/Text'
+import { FriendsGoingLine } from './FriendsGoingLine'
 import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter, usePathname } from 'expo-router'
@@ -11,7 +12,7 @@ import { routes } from '../utils/routes'
 import { rememberEventCard } from '../hooks/event/seed'
 import { eventPrefetchProps } from '../hooks/event/prefetch'
 import { profileAvatarSmallUri, profileDisplayName, surfaceOf } from '../utils'
-import type { EventCardRsvpHandler, EventWithDetails, ForecastSummary, Tag } from '../types'
+import type { EventCardRsvpHandler, EventWithDetails, ForecastSummary, FriendGoing, Tag } from '../types'
 import { Spinner } from './ui/Spinner'
 
 // ─── Attendance helpers ───────────────────────────────────────────────────────
@@ -84,6 +85,7 @@ function EventCardInner({
   currentUserId,
   onRsvp,
   rsvpPending = false,
+  friendsGoing,
   forecast,
   menuInset = false,
 }: {
@@ -93,6 +95,8 @@ function EventCardInner({
   onRsvp?: EventCardRsvpHandler
   /** The parent's RSVP write for this event is in flight (survives a remount, unlike the local spinner). */
   rsvpPending?: boolean
+  /** My friends going (useFriendsGoing), best friends first (#15). */
+  friendsGoing?: FriendGoing[]
   /** Weather chip for an outdoor event (#165); the feed works it out (`useFeedForecasts`). */
   forecast?: ForecastSummary | null
   /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
@@ -205,6 +209,8 @@ function EventCardInner({
             </Text>
           </View>
         )}
+
+        <FriendsGoingLine going={friendsGoing} tone="onDark" />
 
         {/* Attendee row + capacity */}
         <View style={{
@@ -320,7 +326,7 @@ export const HeroEventCard = EventCard
 
 // ─── Row Event Card (desktop secondary cards) ─────────────────────────────────
 
-function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, rsvpPending = false, forecast, menuInset = false }: {
+function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, rsvpPending = false, friendsGoing, forecast, menuInset = false }: {
   event: EventWithDetails
   from?: string
   currentUserId?: string | null
@@ -328,6 +334,7 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
   /** See EventCard. */
   rsvpPending?: boolean
   /** See EventCard. */
+  friendsGoing?: FriendGoing[]
   forecast?: ForecastSummary | null
   /** See EventCard. */
   menuInset?: boolean
@@ -448,6 +455,8 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
             </Text>
           </View>
         )}
+
+        <FriendsGoingLine going={friendsGoing} />
 
         {/* Attendees + capacity bar + RSVP */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>

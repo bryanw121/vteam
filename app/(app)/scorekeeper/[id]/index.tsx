@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -17,6 +17,7 @@ import { WrongServerSheet } from '../../../../components/scoresheet/WrongServerS
 import { FixSheet } from '../../../../components/scoresheet/FixSheet'
 import { TextSheet } from '../../../../components/scoresheet/TextSheet'
 import { TimelineSheet } from '../../../../components/scoresheet/TimelineSheet'
+import { LiveSheetPanel } from '../../../../components/scoresheet/LiveSheetPanel'
 import { TimeoutTimer } from '../../../../components/scoresheet/TimeoutTimer'
 import { MatchClock } from '../../../../components/scoresheet/MatchClock'
 import { TEAM_COLORS } from '../../../../components/scoresheet/teamColors'
@@ -28,6 +29,13 @@ import { POSITION_LABELS, courtOf, serverOf } from '../../../../lib/scoresheet/e
 import { teamName } from '../../../../lib/scoresheet/summary'
 import { shared, theme } from '../../../../constants'
 import { routes } from '../../../../utils/routes'
+import { TourTarget } from '../../../../components/tour/TourTarget'
+import { useTour, useTourTarget } from '../../../../contexts/tour'
+import { TOUR_TARGETS, tourCompletionId } from '../../../../constants/tours'
+import { loadSeenBanners, markBannerSeenOnDevice } from '../../../../utils/seenBanners'
+
+/** Recorded on the device when the tour opens by itself, so it only does that once (finishing records tour-scorekeeper-done). */
+const SCOREKEEPER_TOUR_OFFERED = 'tour-scorekeeper-offered'
 import type { IoniconName, TeamSide } from '../../../../types'
 
 type SheetKind = 'sub' | 'libero' | 'timeout' | 'sanction' | 'wrong' | 'fix' | 'note' | 'end_set' | 'timeline' | 'more'
@@ -48,6 +56,26 @@ export default function ScoreMatchScreen() {
   const lastPointAt = useRef(0)
 
   const set = m.state && m.state.current != null ? m.state.sets[m.state.current] : null
+  const tour = useTour()
+  const cardsRef = useTourTarget(TOUR_TARGETS.scoreCards)
+  const serverRef = useTourTarget(TOUR_TARGETS.scoreServer)
+  const pointsRef = useTourTarget(TOUR_TARGETS.scorePoints)
+  const actionsRef = useTourTarget(TOUR_TARGETS.scoreActions)
+  const courtRef = useTourTarget(TOUR_TARGETS.scoreCourt)
+  // The first time someone has a set to score, walk them through the screen (once per device; "?" replays it).
+  const setInPlay = !!set
+  useEffect(() => {
+    if (!setInPlay) return
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    void loadSeenBanners().then(seen => {
+      if (cancelled || seen.has(SCOREKEEPER_TOUR_OFFERED) || seen.has(tourCompletionId('scorekeeper'))) return
+      markBannerSeenOnDevice(SCOREKEEPER_TOUR_OFFERED)
+      timer = setTimeout(() => tour.start('scorekeeper', 'first_use'), 600)
+    })
+    return () => { cancelled = true; if (timer) clearTimeout(timer) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per screen, when a set is first in play
+  }, [setInPlay])
   const lastSet = m.state?.sets.at(-1) ?? null
   const close = useCallback(() => setSheet(null), [])
 
@@ -83,7 +111,10 @@ export default function ScoreMatchScreen() {
           </Text>
         )}
       </View>
-      <IconButton icon="ellipsis-horizontal" size={44} label="More actions" onPress={() => openSheet('more')} testID="score-more" />
+      {set && <IconButton icon="help-circle-outline" size={44} label="How scoring works" onPress={() => tour.start('scorekeeper', 'help_button')} testID="score-help" />}
+      <TourTarget id={TOUR_TARGETS.scoreMore}>
+        <IconButton icon="ellipsis-horizontal" size={44} label="More actions" onPress={() => openSheet('more')} testID="score-more" />
+      </TourTarget>
     </View>
   )
 
@@ -126,7 +157,7 @@ export default function ScoreMatchScreen() {
 
               {set && (
                 <>
-                  <View style={styles.scores}>
+                  <View ref={cardsRef} collapsable={false} style={styles.scores}>
                     {(['A', 'B'] as const).map(side => {
                       const t = set.teams[side]
                       const serving = set.serving === side
@@ -147,7 +178,7 @@ export default function ScoreMatchScreen() {
                     })}
                   </View>
 
-                  <Pressable onPress={() => openSheet('wrong')} accessibilityRole="button" accessibilityLabel="Who should be serving; tap to record an out-of-rotation fault" style={styles.serverRow} testID="server-row">
+                  <Pressable ref={serverRef} onPress={() => openSheet('wrong')} accessibilityRole="button" accessibilityLabel="Who should be serving; tap to record an out-of-rotation fault" style={styles.serverRow} testID="server-row">
                     <Ionicons name="tennisball-outline" size={18} color={TEAM_COLORS[set.serving].fill} />
                     <Text style={[shared.body, { flex: 1 }]}>
                       Serving: <Text style={{ fontFamily: theme.fonts.bodySemiBold }}>{playerLabel(m.doc.setup, set.serving, serverOf(set.teams[set.serving]))}</Text> · {teamName(m.doc, set.serving)}
@@ -162,7 +193,7 @@ export default function ScoreMatchScreen() {
                     </View>
                   )}
 
-                  <View style={styles.pointRow}>
+                  <View ref={pointsRef} collapsable={false} style={styles.pointRow}>
                     {(['A', 'B'] as const).map(side => (
                       <Pressable
                         key={side}
@@ -178,7 +209,7 @@ export default function ScoreMatchScreen() {
                     ))}
                   </View>
 
-                  <View style={styles.actions}>
+                  <View ref={actionsRef} collapsable={false} style={styles.actions}>
                     <Action icon="arrow-undo" label="Undo" onPress={m.undo} disabled={!m.doc.undo.length} testID="action-undo" />
                     <Action icon="arrow-redo" label="Redo" onPress={m.redo} disabled={!m.doc.redo.length} testID="action-redo" />
                     <Action icon="swap-vertical" label="Sub" onPress={() => { setSubOut(undefined); openSheet('sub') }} testID="action-sub" />
@@ -194,7 +225,7 @@ export default function ScoreMatchScreen() {
                     </Text>
                   )}
 
-                  <View style={styles.courts}>
+                  <View ref={courtRef} collapsable={false} style={styles.courts}>
                     <Text style={[shared.caption, { textAlign: 'center' }]}>Tap a player to sub them, or the libero to swap back.</Text>
                     <CourtLayout
                       renderLabel={side => (
@@ -224,6 +255,8 @@ export default function ScoreMatchScreen() {
                       }}
                     />
                   </View>
+
+                  <LiveSheetPanel doc={m.doc} state={m.state} setIndex={set.index} onOpenSheet={() => router.push(routes.scorekeeperSheet(m.doc!.id))} />
                 </>
               )}
 

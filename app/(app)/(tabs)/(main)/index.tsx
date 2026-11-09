@@ -8,6 +8,7 @@ import { useFeedRsvp, useMonthEvents } from '../../../../hooks/useMonthEvents'
 import { useDocScrollMemory } from '../../../../hooks/useDocScrollMemory'
 import { useNotifications } from '../../../../hooks/useNotifications'
 import { useIsNarrowWeb } from '../../../../hooks/useIsNarrowWeb'
+import { useFriendsGoing } from '../../../../hooks/useFriendsGoing'
 import { EventCard, RowEventCard } from '../../../../components/EventCard'
 import type { EventCardRsvpHandler } from '../../../../types'
 import { MyEventsRail } from '../../../../components/MyEventsRail'
@@ -323,6 +324,10 @@ export default function EventsScreen() {
   // from a feed card lands in the rail without a manual refresh.
   const myUpcoming = useMyUpcomingEvents(events, currentUserId)
 
+  // "Ana and 2 friends going" on cards (#15): one RPC for the loaded RSVP-able events.
+  const friendEventIds = useMemo(() => events.filter(e => !e._external && !e._isTournament).map(e => e.id), [events])
+  const friendsGoing = useFriendsGoing(friendEventIds)
+
   const railNode = (
     <MyEventsRail
       items={myUpcoming}
@@ -568,6 +573,7 @@ export default function EventsScreen() {
                             rsvpPending={isRsvpPending(event.id)}
                             forecast={forecasts.get(event.id)}
                             menuInset={menuInset}
+                            friendsGoing={friendsGoing.get(event.id)}
                           />
                         )
                         const withMenu = !(currentUserId && myStatusFor(item, currentUserId) !== null)
@@ -753,6 +759,7 @@ export default function EventsScreen() {
               currentUserId={currentUserId}
               onRsvp={item._isTournament ? undefined : handleRsvp}
               rsvpPending={isRsvpPending(item.id)}
+              friendsGoing={friendsGoing.get(item.id)}
               forecast={forecasts.get(item.id)}
               menuInset={withMenu}
             />

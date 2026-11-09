@@ -3,6 +3,7 @@ import { replay, warningsFor } from '../lib/scoresheet/engine'
 import { deleteEvent, editEvent, insertBefore, newId, record, redo as redoDoc, undo as undoDoc } from '../lib/scoresheet/history'
 import { loadMatch, saveMatch } from '../lib/scoresheet/storage'
 import { matchSummary } from '../lib/scoresheet/summary'
+import { exampleMatch } from '../lib/scoresheet/exampleMatch'
 import { Sentry } from '../lib/sentry'
 import type { MatchDoc, MatchInfo, MatchState, ScoreEventInput, Warning } from '../types'
 
@@ -111,6 +112,13 @@ export function useScoreMatch(id: string | undefined): ScoreMatchApi {
 }
 
 /** Creates and saves a new match, optionally starting set 1 (undoable); resolves with its id. */
+/** Saves a fresh copy of the built-in example match (lib/scoresheet/exampleMatch) and returns its id. */
+export async function openExampleMatch(): Promise<string> {
+  const doc = exampleMatch()
+  await saveMatch(doc, matchSummary(doc, replay(doc.setup, doc.log)))
+  return doc.id
+}
+
 export async function createMatch(setup: MatchDoc['setup'], firstSet?: ScoreEventInput): Promise<string> {
   const now = Date.now()
   const id = newId()

@@ -63,6 +63,31 @@ try {
   await tap(page, 'experiment-scorekeeper')
   await page.getByTestId('new-match').waitFor()
   await shot(page, 'scorekeeper-empty')
+
+  // The built-in example: a finished match to see what you get, kept out of the saved list.
+  await tap(page, 'open-example')
+  await page.getByTestId('example-note').waitFor()
+  // The example walks itself through: four steps, ending on "Start your own match".
+  for (let i = 0; i < 4; i++) {
+    await page.getByTestId('tour-card').waitFor()
+    await shot(page, `example-tour-${i + 1}`)
+    await tap(page, 'tour-next')
+    await page.waitForTimeout(400)
+  }
+  check(!(await page.getByTestId('tour-overlay').isVisible().catch(() => false)), 'the example tour closes after its last step')
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await shot(page, 'example-sheet')
+  await tap(page, 'sheet-enlarge')
+  await shot(page, 'example-sheet-enlarged')
+  await tap(page, 'sheet-enlarge')
+  await tap(page, 'sheet-copy')
+  await page.getByTestId('copy-next').waitFor()
+  await shot(page, 'example-copy')
+  await page.goBack()
+  await page.getByTestId('example-note').waitFor()
+  await page.goBack()
+  await page.getByTestId('new-match').waitFor()
+  check(await text(page, 'No matches yet').isVisible(), 'the example is not listed as a saved match')
   await tap(page, 'new-match')
   await page.getByTestId('team-name-A').waitFor()
   const fill = async (id, value) => {
@@ -111,6 +136,16 @@ try {
   await shot(page, 'scoring', true)
   check(await page.getByTestId('score-A').innerText().then(t => t.includes('4')), 'score A is 4 after 7 rallies')
 
+  // The tour (opens by itself the first time; the harness marks tours done, so start it from "?")
+  await tap(page, 'score-help')
+  for (let i = 0; i < 6; i++) {
+    await page.getByTestId('tour-card').waitFor()
+    await shot(page, `tour-step-${i + 1}`)
+    await tap(page, 'tour-next')
+    await page.waitForTimeout(400)
+  }
+  check(!(await page.getByTestId('tour-overlay').isVisible().catch(() => false)), 'the tour closes after its last step')
+
   // Libero in for the back-row player, then a substitution from the court
   await tap(page, 'action-libero')
   await page.getByTestId('libero-in').waitFor()
@@ -153,6 +188,30 @@ try {
   await shot(page, 'resume-card')
   await page.getByTestId('experimental-resume').locator('[data-testid^="match-row-"]').first().click()
   await page.getByTestId('point-A').waitFor()
+
+  // 5b. Live scoresheet under the court: a point is tinted where it's written (phones follow the
+  // pen); undo outlines what it erased; redo writes it back.
+  const liveForm = page.getByTestId('live-sheet-form')
+  const tinted = () => liveForm.locator('rect[fill-opacity="0.14"]').count()
+  const dashed = () => liveForm.locator('rect[stroke-dasharray]').count()
+  await page.getByTestId('point-A').click()
+  await liveForm.scrollIntoViewIfNeeded()
+  await page.waitForTimeout(500)
+  check(await tinted() > 0, 'live sheet tints the point just written')
+  await shot(page, 'live-sheet-point')
+  await tap(page, 'live-zoom-form')
+  await liveForm.scrollIntoViewIfNeeded()
+  await shot(page, 'live-sheet-whole-form')
+  await tap(page, 'live-zoom-follow')
+  await tap(page, 'action-undo')
+  await liveForm.scrollIntoViewIfNeeded()
+  await page.waitForTimeout(500)
+  check(await dashed() > 0 && await tinted() === 0, 'undo outlines what it erased on the live sheet, and tints nothing')
+  check((await page.getByTestId('live-sheet-note').innerText()).startsWith('Undone'), 'the note says what the outline means')
+  await shot(page, 'live-sheet-undo')
+  await tap(page, 'action-redo')
+  await page.waitForTimeout(500)
+  check(await tinted() > 0 && await dashed() === 0, 'redo writes the marks back')
 
   // 6. Mistakes: undo / redo, flip a past rally in the timeline, wrong server, fix sheet
   await tap(page, 'action-undo')
@@ -199,11 +258,10 @@ try {
   await page.getByTestId('open-sheet').waitFor()
   await shot(page, 'match-over')
   await tap(page, 'open-sheet')
-  await page.getByTestId('sheet-print').waitFor()
+  await page.getByTestId('sheet-form').waitFor()
   await page.waitForTimeout(1500)
   await shot(page, 'scoresheet', true)
-  const frame = page.frameLocator('iframe').first()
-  check(await frame.getByText('Official Scoresheet').isVisible().catch(() => false), 'scoresheet renders')
+  check(await page.getByTestId('sheet-form').isVisible().catch(() => false), 'scoresheet renders')
   // The real USA Volleyball form, filled in, as a download.
   const [download] = await Promise.all([page.waitForEvent('download', { timeout: 20_000 }), tap(page, 'sheet-official')])
   const pdfPath = join(out, 'official-usav-scoresheet.pdf')

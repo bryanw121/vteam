@@ -30,15 +30,22 @@ export type DbCall = {
 
 export type ScriptedResult = Partial<DbResult> | ((call: DbCall) => Partial<DbResult>)
 
+/** One `rpc(fn, args)` call, as the handler made it. */
+export type RpcCall = { fn: string; args?: Record<string, unknown> }
+
 export type FakeSupabaseOptions = {
   /** Keyed `<table>.<op>`, e.g. 'push_tokens.select'. Unscripted: no rows, no error. */
   results?: Record<string, ScriptedResult>
+  /** Keyed by function name, e.g. 'check_rate_limit'. Unscripted: data null, no error. */
+  rpc?: Record<string, Partial<DbResult> | ((call: RpcCall) => Partial<DbResult>)>
   /** What auth.getUser(jwt) returns: a user, or null for an invalid token. */
   user?: AuthUser | null | ((jwt: string) => AuthUser | null)
 }
 
 export type FakeSupabase = DbClient & {
   calls: DbCall[]
+  /** rpc() calls, in order. */
+  rpcCalls: RpcCall[]
   /** Calls to one table, optionally one operation. */
   callsTo(table: string, op?: Op): DbCall[]
   /** Tokens auth.getUser was asked about. */
@@ -47,6 +54,7 @@ export type FakeSupabase = DbClient & {
 
 export function fakeSupabase(opts: FakeSupabaseOptions = {}): FakeSupabase {
   const calls: DbCall[] = []
+  const rpcCalls: RpcCall[] = []
   const jwts: string[] = []
 
   const resolve = (call: DbCall): DbResult => {
@@ -98,7 +106,15 @@ export function fakeSupabase(opts: FakeSupabaseOptions = {}): FakeSupabase {
 
   return {
     calls,
+    rpcCalls,
     jwts,
+    rpc(fn, args) {
+      const call = { fn, args }
+      rpcCalls.push(call)
+      const scripted = opts.rpc?.[fn]
+      const r = typeof scripted === 'function' ? scripted(call) : scripted ?? {}
+      return Promise.resolve({ data: r.data ?? null, error: r.error ?? null, count: r.count ?? null })
+    },
     callsTo: (table, op) => calls.filter((c) => c.table === table && (!op || c.op === op)),
     from(table) {
       const call: DbCall = { table, op: 'select', filters: [], single: false }

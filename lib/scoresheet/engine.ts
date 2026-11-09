@@ -46,6 +46,7 @@ function emptyTeam(lineup: Lineup, liberos: number[]): TeamSetState {
     libero: null,
     liberos: [...liberos],
     liberoServeSlot: null,
+    liberoPoints: [],
     cancelled: 0,
   }
 }
@@ -172,7 +173,10 @@ function award(ctx: Ctx, set: SetState, team: TeamSide, mark: PointMark, ev: Sco
     t.score += 1
     t.marks.push(mark)
     const open = t.turns[slotAtPosition(0, t.rotation)].at(-1)
-    if (open && open.endScore == null) open.points += 1
+    if (open && open.endScore == null) {
+      open.points += 1
+      if (t.liberos.includes(open.server)) t.liberoPoints.push(t.score)
+    }
   } else {
     // Side-out: the serving team's turn ends at its score, the receiving team rotates and serves.
     closeTurn(set, set.serving)

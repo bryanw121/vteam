@@ -1,5 +1,5 @@
 export { theme } from './theme'
-export { AVATARS_BUCKET, CLUB_AVATARS_BUCKET, CHAT_IMAGES_BUCKET, AVATAR_MAX_FILE_BYTES, AVATAR_SIGNED_URL_TTL_SEC } from './storage'
+export { AVATARS_BUCKET, CLUB_AVATARS_BUCKET, CHAT_IMAGES_BUCKET, CHAT_IMAGE_SIGNED_URL_TTL_SEC, AVATAR_MAX_FILE_BYTES, AVATAR_SIGNED_URL_TTL_SEC } from './storage'
 export { shared } from './styles'
 export { BREAKPOINTS } from './layout'
 export { STALE } from './cache'
@@ -8,6 +8,7 @@ export {
   PROFILE_ROSTER,
   COMMENT_SELECT,
   GUEST_SELECT,
+  GUEST_PUBLIC_SELECT,
   COHOST_SELECT,
   ATTENDEE_SELECT,
   CHEER_SELECT,
@@ -75,5 +76,6 @@ export {
 } from './schelagg'
 export { TOURS, TOUR_TARGETS, tourCompletionId } from './tours'
 export { ANALYTICS_EVENTS } from './analytics'
+export { BEST_FRIEND_LIMIT, FRIEND_REQUESTS_PER_DAY, FRIEND_COPY } from './friends'
 export { TEXT_SIZE_OPTIONS, DEFAULT_TEXT_SIZE, MAX_TEXT_SCALE, TIGHT_TEXT_SCALE, COMPACT_TEXT_SCALE } from './textSize'
 export { EVENT_TIME_ZONE } from './time'

@@ -93,6 +93,8 @@ export const NOTIFICATION_PREF_TYPES = [
   'join_request',
   'request_approved',
   'request_denied',
+  'friend_request',
+  'friend_accepted',
   'event_reminder',
   'late_dropout',
 ] as const
@@ -114,7 +116,7 @@ export type NotificationType = (typeof NOTIFICATION_TYPES)[number]
 /** A notification type with a Settings toggle. */
 export type NotificationPrefType = (typeof NOTIFICATION_PREF_TYPES)[number]
 
-/** Stored in `profiles.notification_prefs` jsonb. */
+/** Stored in `user_settings.notification_prefs` jsonb (owner-only; `profiles.notification_prefs` is legacy and always the default). */
 export type NotificationPrefs = {
   in_app: Partial<Record<NotificationType, boolean>>
   push: Partial<Record<NotificationType, boolean>>
@@ -127,8 +129,10 @@ export type NotificationData = {
   cheer_id?: string
   deep_link?: string
   badge_type?: string
-  /** late_dropout: the player who left. */
+  /** late_dropout: the player who left; friend_request / friend_accepted: the other person. */
   user_id?: string
+  /** friend_request / friend_accepted: the request. */
+  request_id?: string
 }
 
 /** The `data` of a push as the app receives it (send-notification-push / send-chat-push). */
@@ -226,7 +230,37 @@ type EventAttendeeRow = Override<Tables<'event_attendees'>, {
  * `team_number` is 1-based (null = unassigned); `team_pinned` is true when the
  * host placed the player manually (skipped by randomize).
  */
-export type EventAttendee = Omit<EventAttendeeRow, 'denial_reason'> & Partial<Pick<EventAttendeeRow, 'denial_reason'>>
+export type EventAttendee = Omit<EventAttendeeRow, 'denial_reason' | keyof NoShowColumns>
+  & Partial<Pick<EventAttendeeRow, 'denial_reason'>>
+  & Partial<NoShowColumns>
+
+/**
+ * No-show flag (#151): `event_attendees.no_show`, `no_show_marked_at`,
+ * `no_show_marked_by`, written only by the `set_no_show` RPC.
+ *
+ * TEMPORARY: written out here because `types/database.ts` is generated from
+ * live, which gets migration 20261104190000_event_no_show only when the PR
+ * merges. After regenerating, these come from `EventAttendeeRow`; this type
+ * can then become `Pick<EventAttendeeRow, 'no_show' | ...>` (the `Omit` above
+ * keeps `EventAttendee` the same shape either way). Optional on
+ * `EventAttendee` because optimistic and older cached rows don't carry them.
+ */
+export type NoShowColumns = {
+  no_show: boolean
+  no_show_marked_at: string | null
+  no_show_marked_by: string | null
+}
+
+/** `set_no_show(p_event_id, p_user_id, p_value)` arguments (TEMPORARY, see `NoShowColumns`). */
+export type SetNoShowArgs = { p_event_id: string; p_user_id: string; p_value: boolean }
+
+/** The host's no-show window on an event (`noShowWindow` in hooks/event/derive.ts). */
+export type NoShowWindow = {
+  /** Now is between the start and 2 hours after the end, and the event isn't cancelled. */
+  open: boolean
+  /** When the window closes and the unflagged players are paid (ms since epoch). */
+  closesAt: number
+}
 
 /** `event_attendees` row with embedded `profiles` from the event detail query (`profiles!…user_id…`). */
 export type EventAttendeeWithProfile = EventAttendee & {
@@ -291,6 +325,9 @@ export type EventGuest = Override<Tables<'event_guests'>, {
   /** Embedded from `profiles!event_guests_added_by_fkey` when the query requests it. */
   adder?: Pick<Profile, 'id' | 'username'> | null
 }
+
+/** A row of the name-free `event_guests_attending` view (what signed-out visitors read). */
+export type EventGuestPublicRow = Database['public']['Views']['event_guests_attending']['Row']
 
 /**
  * `event_cohosts` table
@@ -500,6 +537,15 @@ export type HiddenFeedControls = {
   restore: (entries: HiddenFeedEntry[]) => void
 }
 
+/** What the login-with-username edge function returns on success (passed to `supabase.auth.setSession`). */
+export type UsernameLoginSession = {
+  access_token: string
+  refresh_token: string
+  expires_in: number
+  expires_at?: number
+  token_type: string
+}
+
 /** Allowed values of `user_settings.reminder_lead_minutes` (its check constraint): 1 hour, 2 hours, a day. */
 export type ReminderLeadMinutes = 60 | 120 | 1440
 
@@ -568,7 +614,7 @@ export type AdFreeRedeemResult = AdFreeStatus & {
 
 // ─── Tours (constants/tours.ts, contexts/tour.tsx) ───────────────────────────
 
-export type TourId = 'intro'
+export type TourId = 'intro' | 'scorekeeper' | 'scorekeeperExample'
 
 /** Where the step's card sits relative to its target. 'auto' picks the side with more room. */
 export type TourPlacement = 'auto' | 'top' | 'bottom'
@@ -590,7 +636,7 @@ export type TourDef = {
 }
 
 /** Where the tour was started from (for analytics and debugging). */
-export type TourSource = 'banner' | 'profile_menu' | 'other'
+export type TourSource = 'banner' | 'profile_menu' | 'first_use' | 'help_button' | 'other'
 
 /** What the tab shell hands the tour so it can move between tabs (registered by the tabs layout). */
 export type TourShell = {
@@ -853,6 +899,74 @@ export type ChatMessageListProps = {
   onUserDrag: () => void
 }
 
+// ─── Friends (#15) ────────────────────────────────────────────────────────────
+
+/** One of my friendships (my own row: `is_best_friend` is my private flag) with the friend's profile. */
+export type Friend = Pick<Tables<'friendships'>, 'friend_id' | 'is_best_friend' | 'created_at'> & {
+  profile: ProfileBrief | null
+}
+
+/** A pending request, sent or received, with the other person's profile. */
+export type FriendRequest = Pick<Tables<'friend_requests'>, 'id' | 'requester_id' | 'addressee_id' | 'created_at'> & {
+  /** The person on the other side (the requester for incoming, the addressee for outgoing). */
+  other: ProfileBrief | null
+}
+
+export type FriendsData = {
+  friends: Friend[]
+  incoming: FriendRequest[]
+  outgoing: FriendRequest[]
+}
+
+/** My relationship to another player. */
+export type FriendStatus = 'none' | 'requested' | 'incoming' | 'friends'
+
+/** components/profile/FriendButton. */
+export type FriendButtonProps = {
+  userId: string
+  /** Shown optimistically in my list while a new request is pending. */
+  profile?: ProfileBrief | null
+  /** Short feedback after an action ("Request sent", an error). */
+  onMessage?: (message: string, variant: 'success' | 'error' | 'info') => void
+}
+
+/** components/profile/FriendManageSheet: options for an existing friend. */
+export type FriendManageSheetProps = {
+  visible: boolean
+  name: string
+  isBestFriend: boolean
+  bestFriendCount: number
+  onToggleBest: (best: boolean) => void
+  onRemove: () => void
+  onDismiss: () => void
+  onClosed?: () => void
+}
+
+/** components/profile/FriendRow: one person in the Friends screen. */
+export type FriendRowProps = {
+  profile: ProfileBrief | null
+  /** Small line under the name ("Wants to be friends", "Request sent"). */
+  caption?: string
+  onPress?: () => void
+  /** Right-hand controls (Cancel, best-friend star). */
+  children?: import('react').ReactNode
+  /** Controls under the name, full width (Accept / Decline), so a narrow phone keeps the name readable. */
+  footer?: import('react').ReactNode
+  last?: boolean
+  testID?: string
+}
+
+/** components/FriendsGoingLine: "Ana and 2 friends going". */
+export type FriendsGoingLineProps = {
+  going: readonly FriendGoing[] | undefined
+  /** 'onDark' for the gradient feed card, 'onCard' for light surfaces. */
+  tone?: 'onDark' | 'onCard'
+  testID?: string
+}
+
+/** A friend attending an event (get_friends_going), best friends first. */
+export type FriendGoing = Database['public']['Functions']['get_friends_going']['Returns'][number]
+
 // ─── Badge Types ──────────────────────────────────────────────────────────────
 
 export type CardBgType = 'ember' | 'frost' | 'aurora'
@@ -1072,6 +1186,8 @@ export type ChipProps = {
   variant?: ChipVariant
   /** 'radio' for one choice out of a set (inside a `role="radiogroup"`): exposes `aria-checked`, which web and native both read. Default 'button' (a filter). */
   role?: 'button' | 'radio'
+  /** 'touch': at least 44pt tall, for chips tapped mid-task (the live scoresheet's zoom). */
+  size?: 'default' | 'touch'
   testID?: string
 }
 
@@ -1412,10 +1528,22 @@ export type RemoveTarget =
 
 /** One entry in a People-tab row's ⋯ menu (Message / View profile / Remove). */
 export type RosterAction = {
-  key: 'message' | 'message-adder' | 'profile' | 'remove'
+  key: 'message' | 'message-adder' | 'profile' | 'no-show' | 'remove'
   label: string
+  /** A second, smaller line under the label ("No points for this event. You can undo until 9:00 PM."). */
+  subtitle?: string
   destructive?: boolean
+  /** Warm accent for a consequential but reversible action (Mark as no-show). */
+  caution?: boolean
   onPress: () => void
+}
+
+/** Host / co-host no-show control for one roster row (#151). */
+export type NoShowRowAction = {
+  flagged: boolean
+  /** "9:00 PM": when the window closes. */
+  until: string
+  onToggle: () => void
 }
 
 /** The open ⋯ menu on the People tab: whose row, and what it offers. */

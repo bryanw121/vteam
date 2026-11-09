@@ -28,6 +28,12 @@ jest.mock('../lib/supabase', () => {
   const methods = ['select', 'eq', 'neq', 'insert', 'update', 'delete', 'order', 'in', 'or', 'limit', 'single', 'maybeSingle']
   return {
     supabase: {
+      // RPCs are recorded as table `rpc:<name>` with one `rpc` op holding the args.
+      rpc: (fn: string, args: unknown) => {
+        const call = { table: `rpc:${fn}`, ops: [['rpc', [args]]] as [string, unknown[]][] }
+        mockCalls.push(call)
+        return Promise.resolve().then(() => mockRespond(call))
+      },
       from: (table: string) => {
         const call = { table, ops: [] as [string, unknown[]][] }
         mockCalls.push(call)
@@ -176,7 +182,8 @@ describe('useEventData', () => {
     mockUserId = null
     render(<Harness />)
     await settle()
-    expect(mockCalls.map(c => c.table).sort()).toEqual(['event_cohosts', 'event_comments', 'event_guests', 'events'])
+    // Signed-out visitors read +1s from the name-free view, never event_guests.
+    expect(mockCalls.map(c => c.table).sort()).toEqual(['event_cohosts', 'event_comments', 'event_guests_attending', 'events'])
   })
 
   it('an edit elsewhere (invalidate of the event root) refetches every piece in place, without a spinner', async () => {
@@ -202,6 +209,45 @@ describe('useEventData', () => {
 })
 
 // ─── useEventAttendance ──────────────────────────────────────────────────────
+
+describe('useEventAttendance — no-show flag (#151)', () => {
+  const amyRow = { ...attendeeRow('attending', { ...ME_PROFILE, id: 'amy', username: 'amy' }), user_id: 'amy', no_show: false }
+
+  it('flags at once through set_no_show, and keeps it when the call succeeds', async () => {
+    const rpc = deferred<Res>()
+    mockRespond = router({
+      'events:select': () => ({ data: eventRow([amyRow]), error: null }),
+      'rpc:set_no_show:select': () => rpc.promise,
+    })
+    render(<Harness />)
+    await settle()
+
+    let saved: boolean | undefined
+    act(() => { void api.attendance.setNoShow('amy', true).then(v => { saved = v }) })
+    expect(api.data.roster.attendingRows[0]).toMatchObject({ user_id: 'amy', no_show: true, no_show_marked_by: 'me' })
+    expect(callsTo('rpc:set_no_show')[0].ops[0][1]).toEqual([{ p_event_id: 'e1', p_user_id: 'amy', p_value: true }])
+
+    rpc.resolve({ data: null, error: null })
+    await settle()
+    expect(saved).toBe(true)
+    expect(api.data.roster.attendingRows[0].no_show).toBe(true)
+  })
+
+  it('puts the row back and says why when the database refuses', async () => {
+    mockRespond = router({
+      'events:select': () => ({ data: eventRow([amyRow]), error: null }),
+      'rpc:set_no_show:select': () => ({ data: null, error: { message: 'No-shows can be marked from the start of the event until 2 hours after it ends' } }),
+    })
+    render(<Harness />)
+    await settle()
+
+    let saved: boolean | undefined
+    await act(async () => { saved = await api.attendance.setNoShow('amy', true) })
+    expect(saved).toBe(false)
+    expect(api.data.roster.attendingRows[0].no_show).toBe(false)
+    expect(alertSpy).toHaveBeenCalledWith('Error', expect.stringContaining('2 hours after it ends'))
+  })
+})
 
 describe('useEventAttendance — join', () => {
   it('flips to attending immediately, then swaps in the server row (works before the viewer profile loads — audit #10)', async () => {

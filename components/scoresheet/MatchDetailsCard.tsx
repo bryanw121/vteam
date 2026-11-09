@@ -11,7 +11,6 @@ const FIELDS: { key: keyof MatchInfo; label: string; max: number }[] = [
   { key: 'competition', label: 'Competition', max: 80 },
   { key: 'court', label: 'Court', max: 20 },
   { key: 'matchNo', label: 'Match no.', max: 20 },
-  { key: 'hall', label: 'Hall', max: 60 },
   { key: 'city', label: 'City, state', max: 60 },
   { key: 'division', label: 'Level / division', max: 40 },
   { key: 'firstReferee', label: '1st referee', max: 60 },
@@ -46,7 +45,7 @@ export function MatchDetailsCard({ info, onChange }: MatchDetailsCardProps) {
               <Chip key={g} label={{ men: 'Men', women: 'Women', coed: 'CoEd' }[g]} role="radio" variant="tint" active={info.gender === g} onPress={() => onChange({ gender: info.gender === g ? undefined : g })} />
             ))}
           </View>
-          <Text style={shared.caption}>Saved as you type. The competition, hall, court and officials carry over to your next match today.</Text>
+          <Text style={shared.caption}>Saved as you type. The competition, court and officials carry over to your next match today.</Text>
         </View>
       )}
     </View>
