@@ -264,15 +264,18 @@
     "n": 2,
     "title": "Startup config from the CDN: three small reads stop waiting on a cold database",
     "bucket": "latency",
-    "status": "proposed",
-    "summary": "app_config, ad_banners and sponsored_events served together from an edge-cached /api/startup with a Supabase fallback; these reads are p50 about 1 s today and guests drop from 4 requests to 1."
+    "status": "approved",
+    "summary": "app_config, ad_banners and sponsored_events served together from an edge-cached /api/startup with a Supabase fallback; these reads are p50 about 1 s today and guests drop from 4 requests to 1.",
+    "issue": 216,
+    "note": "Bryan at review: keep it only if it actually improves latency. Issue carries a keep-or-revert A/B gate (cdn vs direct per page load)."
   },
   {
     "date": "2026-11-08",
     "n": 3,
     "title": "Events screen in pieces: the app's largest file becomes six tested parts",
     "bucket": "refactor",
-    "status": "proposed",
-    "summary": "Split the 1,358-line Events tab into calendar components, pure section logic, a hiding hook and two layouts over four PRs, with no visual change."
+    "status": "approved",
+    "summary": "Split the 1,358-line Events tab into calendar components, pure section logic, a hiding hook and two layouts over four PRs, with no visual change.",
+    "issue": 217
   }
 ]
