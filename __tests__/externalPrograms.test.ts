@@ -1,6 +1,6 @@
 import type { ExternalProgram } from '../types'
 import {
-  daysUntil, isCurrent, programDeadline, programDivisions, programKicker, programPrice,
+  daysUntil, isCurrent, programDateBadge, programRelative, programDeadline, programDivisions, programKicker, programPrice,
   programsForRegion, programUrgency, programWhen, weekdayDay,
 } from '../utils/externalPrograms'
 import { normalizeProgramTournaments } from '../utils/feedItems'
@@ -96,5 +96,27 @@ describe('hosts', () => {
     expect(byHost(rows, 'ACES').map((p: { id: string }) => p.id)).toEqual(['a', 'c'])
     expect(byHost(rows, null)).toHaveLength(4)
     expect(byHost(rows, 'Gone')).toHaveLength(4) // a host no longer listed shows everything
+  })
+})
+
+describe('tournament dates', () => {
+  it('spans every day the tournament is on', () => {
+    expect(programDateBadge({ starts_on: '2026-11-14', ends_on: '2026-11-15' })).toEqual({ month: 'Nov', days: '14–15', weekdays: 'Sat–Sun' })
+    expect(programDateBadge({ starts_on: '2026-11-14', ends_on: '2026-11-14' })).toEqual({ month: 'Nov', days: '14', weekdays: 'Sat' })
+    expect(programDateBadge({ starts_on: '2026-11-14', ends_on: null })).toEqual({ month: 'Nov', days: '14', weekdays: 'Sat' })
+    expect(programDateBadge({ starts_on: '2026-11-30', ends_on: '2026-12-01' })).toEqual({ month: 'Nov–Dec', days: '30–1', weekdays: 'Mon–Tue' })
+    expect(programDateBadge({ starts_on: '2026-06-01', ends_on: '2026-06-20' })?.weekdays).toBe('')
+    expect(programDateBadge({ starts_on: null, ends_on: null })).toBeNull()
+  })
+
+  it('says how soon it is', () => {
+    const t = '2026-11-09'
+    expect(programRelative({ starts_on: '2026-11-09', ends_on: null }, t)).toBe('Today')
+    expect(programRelative({ starts_on: '2026-11-10', ends_on: null }, t)).toBe('Tomorrow')
+    expect(programRelative({ starts_on: '2026-11-14', ends_on: '2026-11-15' }, t)).toBe('In 5 days')
+    expect(programRelative({ starts_on: '2026-12-07', ends_on: null }, t)).toBe('In 4 weeks')
+    expect(programRelative({ starts_on: '2027-03-01', ends_on: null }, t)).toBe('In 4 months')
+    expect(programRelative({ starts_on: '2026-11-08', ends_on: '2026-11-09' }, t)).toBe('Happening now')
+    expect(programRelative({ starts_on: '2026-11-01', ends_on: '2026-11-02' }, t)).toBeNull()
   })
 })

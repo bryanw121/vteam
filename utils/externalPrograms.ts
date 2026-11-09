@@ -32,6 +32,37 @@ export function daysUntil(day: string, today: string): number {
   return Math.round((Date.UTC(b.y, b.m - 1, b.d) - Date.UTC(a.y, a.m - 1, a.d)) / 86_400_000)
 }
 
+/**
+ * What a tournament's date block shows: month(s), day(s) and weekday(s), spanning every day it's on.
+ * Nov 14–15 → { month: 'Nov', days: '14–15', weekdays: 'Sat–Sun' }; Nov 30–Dec 1 → { month: 'Nov–Dec', days: '30–1', ... }.
+ */
+export function programDateBadge(p: Pick<ExternalProgram, 'starts_on' | 'ends_on'>): { month: string; days: string; weekdays: string } | null {
+  if (!p.starts_on) return null
+  const a = parts(p.starts_on)
+  const wd = (day: string) => weekdayDay(day).split(',')[0]
+  const end = p.ends_on && p.ends_on > p.starts_on ? p.ends_on : null
+  if (!end) return { month: MONTHS[a.m - 1], days: String(a.d), weekdays: wd(p.starts_on) }
+  const b = parts(end)
+  const sameMonth = a.y === b.y && a.m === b.m
+  return {
+    month: sameMonth ? MONTHS[a.m - 1] : `${MONTHS[a.m - 1]}–${MONTHS[b.m - 1]}`,
+    days: `${a.d}–${b.d}`,
+    weekdays: daysUntil(end, p.starts_on) < 7 ? `${wd(p.starts_on)}–${wd(end)}` : '',
+  }
+}
+
+/** How soon a tournament is: "Happening now", "Today", "Tomorrow", "In 5 days", "In 3 weeks", "In 2 months"; null if past. */
+export function programRelative(p: Pick<ExternalProgram, 'starts_on' | 'ends_on'>, today: string): string | null {
+  if (!p.starts_on) return null
+  const n = daysUntil(p.starts_on, today)
+  if (n < 0) return p.ends_on && p.ends_on >= today ? 'Happening now' : null
+  if (n === 0) return 'Today'
+  if (n === 1) return 'Tomorrow'
+  if (n < 14) return `In ${n} days`
+  if (n < 60) return `In ${Math.round(n / 7)} weeks`
+  return `In ${Math.round(n / 30)} months`
+}
+
 const byDeadline = (a: ExternalProgram, b: ExternalProgram) =>
   (a.registration_deadline ?? '9999').localeCompare(b.registration_deadline ?? '9999')
   || (a.starts_on ?? '9999').localeCompare(b.starts_on ?? '9999')

@@ -10,7 +10,7 @@ import { useRequireSignIn } from '../../hooks/useRequireSignIn'
 import { useTournamentList } from '../../hooks/useTournamentList'
 import { RefreshControl } from '../../components/RefreshControl'
 import { TourneyStatusBadge } from '../../components/tournament/TournamentBits'
-import { Chip, EmptyState, IconButton, ScreenContainer, ScreenHeader, ScreenState } from '../../components/ui'
+import { Chip, EmptyState, IconButton, ScreenContainer, ScreenHeader, Spinner } from '../../components/ui'
 import { routes } from '../../utils/routes'
 import { splitTournaments } from '../../utils/tournamentList'
 import { ProgramSection } from '../../components/programs/ProgramSection'
@@ -85,6 +85,30 @@ export default function TournamentsScreen() {
       <Text style={[shared.caption, { marginTop: theme.spacing.md }]}>{PROGRAMS_SOURCE_NOTE}</Text>
     </View>
   ) : null
+  const outsideLoading = tab === 'upcoming' && programs.isLoading && !programs.data
+    ? <Spinner label="Loading tournaments" style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+    : null
+  const clubLoading = list.isLoading && !list.data
+  const clubHeader = clubLoading ? (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, paddingVertical: theme.spacing.sm }} testID="tournaments-club-loading">
+      <Spinner label="Loading club tournaments" size="small" color={theme.colors.subtext} />
+      <Text style={shared.caption}>Checking your clubs…</Text>
+    </View>
+  ) : list.error && !list.data ? (
+    <TouchableOpacity onPress={() => { void list.refetch({ force: true }) }} accessibilityRole="button" style={{ paddingVertical: theme.spacing.sm, minHeight: 44, justifyContent: 'center' }}>
+      <Text style={shared.caption}>Couldn't load your clubs' tournaments. Tap to retry.</Text>
+    </TouchableOpacity>
+  ) : outsideNode && items.length ? (
+    <Text accessibilityRole="header" style={shared.programSectionTitle}>On vteam · {items.length}</Text>
+  ) : null
+  // Empty only once both lists have answered and neither has anything.
+  const clubEmpty = !clubLoading && !list.error && !outsideNode && !outsideLoading ? (
+    <EmptyState
+      icon="trophy-outline"
+      title={tab === 'upcoming' ? 'No upcoming tournaments' : 'No past tournaments'}
+      body={tab === 'upcoming' ? 'Tournaments your clubs publish show up here.' : 'Finished tournaments and their podiums live here.'}
+    />
+  ) : null
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(routes.app()))
 
   async function refresh() {
@@ -113,7 +137,7 @@ export default function TournamentsScreen() {
               actionLabel="Sign in"
               onAction={() => { requireSignIn() }}
             />
-            {outsideNode}
+            {outsideNode ?? outsideLoading}
           </ScrollView>
         ) : (
           <>
@@ -121,26 +145,18 @@ export default function TournamentsScreen() {
               <Chip label="Upcoming" badge={split.upcoming.length || undefined} active={tab === 'upcoming'} onPress={() => setTab('upcoming')} testID="tournaments-upcoming" />
               <Chip label="Past" badge={split.past.length || undefined} active={tab === 'past'} onPress={() => setTab('past')} testID="tournaments-past" />
             </View>
-            <ScreenState
-              loading={list.isLoading}
-              ready={!!list.data}
-              error={list.error && !list.data ? "Couldn't load tournaments." : null}
-              onRetry={() => { void list.refetch({ force: true }) }}
-              empty={items.length === 0 && !outsideCount}
-              emptyIcon="trophy-outline"
-              emptyTitle={tab === 'upcoming' ? 'No upcoming tournaments' : 'No past tournaments'}
-              emptyBody={tab === 'upcoming' ? 'Tournaments your clubs publish show up here.' : 'Finished tournaments and their podiums live here.'}
-            >
-              <FlatList
-                data={items}
-                keyExtractor={t => t.id}
-                renderItem={({ item }) => <TournamentRow item={item} onPress={() => router.push(routes.tournament(item.id))} />}
-                ListHeaderComponent={outsideNode && items.length ? <Text accessibilityRole="header" style={shared.programSectionTitle}>On vteam · {items.length}</Text> : null}
-                ListFooterComponent={outsideNode}
-                contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xl }}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void refresh() }} tintColor={theme.colors.primary} />}
-              />
-            </ScreenState>
+            {/* Club tournaments and outside ones load separately: outside tournaments never wait on the club list. */}
+            <FlatList
+              data={items}
+              keyExtractor={t => t.id}
+              renderItem={({ item }) => <TournamentRow item={item} onPress={() => router.push(routes.tournament(item.id))} />}
+              ListHeaderComponent={clubHeader}
+              ListEmptyComponent={clubEmpty}
+              ListFooterComponent={outsideNode ?? outsideLoading}
+              contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xl }}
+              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void refresh() }} tintColor={theme.colors.primary} />}
+              testID="tournaments-list"
+            />
           </>
         )}
       </ScreenContainer>
