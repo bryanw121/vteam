@@ -18,6 +18,10 @@ import { FilterChips } from '../../../../components/events/FilterChips'
 import { SurfaceFilter } from '../../../../components/events/SurfaceFilter'
 import { FeedEmpty } from '../../../../components/events/FeedEmpty'
 import { AllTournamentsLink } from '../../../../components/events/AllTournamentsLink'
+import { LeaguesLink } from '../../../../components/events/LeaguesLink'
+import { ExternalProgramCard } from '../../../../components/ExternalProgramCard'
+import { useExternalPrograms } from '../../../../hooks/useExternalPrograms'
+import { normalizeProgramTournaments } from '../../../../utils/feedItems'
 import { NextUpCard } from '../../../../components/events/NextUpCard'
 import { IconButton } from '../../../../components/ui'
 import { myStatusFor, useMyUpcomingEvents } from '../../../../hooks/useMyUpcomingEvents'
@@ -238,6 +242,16 @@ export default function EventsScreen() {
 
   // Hidden for this player: matched by an entry, and not one of their own
   // (going, waitlisted, hosting: those always show).
+  // Outside tournaments (Schelagg's programs feed) join the feed on their first day, within the
+  // months already loaded so they don't run ahead of infinite scroll. Leagues get their own screen.
+  const programs = useExternalPrograms()
+  const lastLoadedMonth = loadedMonths[loadedMonths.length - 1] ?? null
+  const feedEvents = useMemo(() => {
+    const items = normalizeProgramTournaments(programs.data?.tournaments ?? [])
+      .filter(e => !!lastLoadedMonth && eventLocalDateKey(e.event_date).substring(0, 7) <= lastLoadedMonth)
+    return items.length ? [...events, ...items] : events
+  }, [events, programs.data, lastLoadedMonth])
+
   const isHiddenForMe = useCallback(
     (event: EventWithDetails) =>
       isHidden(event, hiddenIdx) && !(currentUserId && myStatusFor(event, currentUserId) !== null),
@@ -245,7 +259,7 @@ export default function EventsScreen() {
   )
 
   const { sections, hiddenItemIds } = useMemo(() => {
-    const filtered = events.filter(event => {
+    const filtered = feedEvents.filter(event => {
       // Outside sessions (Schelagg) only for the viewer's region: home city, else the pilot default.
       if (event._external && event._external.region !== feedRegion) return false
       if (surfaceFilter !== 'any' && surfaceOf(event) !== surfaceFilter) return false
@@ -256,7 +270,7 @@ export default function EventsScreen() {
       if (activeFilter === 'tournament') return tags.some(t => t.includes('tournament'))
       if (activeFilter === 'not_full') {
         // Capacity at other venues is unknown, so they can't be called "not full".
-        if (event._external) return false
+        if (event._external || event._program) return false
         if (!event.max_attendees) return true
         const count = event.event_attendees_attending?.[0]
           ? Number(event.event_attendees_attending[0].count)
@@ -283,7 +297,7 @@ export default function EventsScreen() {
     }
     const list = Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date))
     return { sections: list, hiddenItemIds: hiddenIds }
-  }, [events, activeFilter, surfaceFilter, currentUserId, feedRegion, isHiddenForMe, revealedKeys])
+  }, [feedEvents, activeFilter, surfaceFilter, currentUserId, feedRegion, isHiddenForMe, revealedKeys])
 
   const toggleReveal = useCallback((key: string) => {
     setRevealedKeys(prev => {
@@ -340,8 +354,8 @@ export default function EventsScreen() {
 
   // Calendar dots leave out what this player hid.
   const markedDates = useMemo(
-    () => buildMarkedDates(hiddenIdx.size ? events.filter(e => !isHiddenForMe(e)) : events, selectedDate),
-    [events, selectedDate, hiddenIdx, isHiddenForMe],
+    () => buildMarkedDates(hiddenIdx.size ? feedEvents.filter(e => !isHiddenForMe(e)) : feedEvents, selectedDate),
+    [feedEvents, selectedDate, hiddenIdx, isHiddenForMe],
   )
 
   const selectDate = useCallback((dateStr: string) => {
@@ -474,6 +488,9 @@ export default function EventsScreen() {
         <SurfaceFilter active={surfaceFilter} onSelect={selectSurface} wide={!isMobile} />
       </TourTarget>
       {activeFilter === 'tournament' && <AllTournamentsLink onPress={() => router.push(routes.tournaments())} />}
+      {(activeFilter === 'all' || activeFilter === 'tournament') && !!programs.data?.leagues.length && (
+        <LeaguesLink count={programs.data.leagues.length} onPress={() => router.push(routes.leagues())} />
+      )}
       {staleNotice}
     </>
   )
@@ -579,7 +596,9 @@ export default function EventsScreen() {
                         const withMenu = !(currentUserId && myStatusFor(item, currentUserId) !== null)
                         const card = item._external
                           ? <ExternalSessionCard session={item._external} menuInset={withMenu} />
-                          : renderRowCard(item, withMenu)
+                          : item._program
+                            ? <ExternalProgramCard program={item._program} menuInset={withMenu} />
+                            : renderRowCard(item, withMenu)
                         return (
                           <React.Fragment key={item.id}>
                             <View style={{ width: 'calc(50% - 5px)' as any }}>
@@ -753,6 +772,8 @@ export default function EventsScreen() {
           const withMenu = menu && !(currentUserId && myStatusFor(item, currentUserId) !== null)
           const card = item._external ? (
             <ExternalSessionCard session={item._external} menuInset={withMenu} />
+          ) : item._program ? (
+            <ExternalProgramCard program={item._program} menuInset={withMenu} />
           ) : (
             <EventCard
               event={item}

@@ -120,3 +120,6 @@ export const TEAM_MODE_COPY = {
   setters: (n: number) => `${n} setter${n === 1 ? '' : 's'}`,
 } as const
 
+
+/** Under outside leagues and tournaments (Leagues, Tournaments). */
+export const PROGRAMS_SOURCE_NOTE = "From each organizer's sign-up page, checked twice a day by Schelagg. Prices, caps and deadlines change: confirm on their page before you pay. Sign-up happens on their site, not in vteam."

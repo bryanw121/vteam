@@ -20,6 +20,8 @@ function keysFor(event: EventWithDetails): { kind: HiddenFeedKind; key: string }
   const keys: { kind: HiddenFeedKind; key: string }[] = [{ kind: 'item', key: event.id }]
   if (event._external) {
     keys.push({ kind: 'venue', key: venueKey(event._external.venue) })
+  } else if (event._program) {
+    keys.push({ kind: 'venue', key: venueKey(event._program.org) })
   } else if (event.created_by) {
     keys.push({ kind: 'host', key: event.created_by })
   }
@@ -64,12 +66,15 @@ export function hideOptions(event: EventWithDetails, currentUserId: string | nul
   const options: HideFeedOption[] = []
   const external = event._external
   options.push({
-    title: external ? 'Hide this session' : event._isTournament ? 'Hide this tournament' : 'Hide this event',
+    title: external ? 'Hide this session' : event._isTournament || event._program ? 'Hide this tournament' : 'Hide this event',
     entry: { kind: 'item', key: event.id, label: event.title, until: event.event_date },
   })
   if (external) {
     const venue = external.venue.trim()
     options.push({ title: `Hide everything at ${venue}`, entry: { kind: 'venue', key: venueKey(venue), label: venue } })
+  } else if (event._program) {
+    const org = event._program.org.trim()
+    options.push({ title: `Hide everything from ${org}`, entry: { kind: 'venue', key: venueKey(org), label: org } })
   } else if (event.created_by && event.created_by !== currentUserId) {
     const name = event.profiles ? profileDisplayName(event.profiles) : ''
     const label = name || 'This host'
