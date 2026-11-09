@@ -31,7 +31,7 @@ import { TourTarget } from '../../../../components/tour/TourTarget'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
 import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, Notification, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
-import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters, usableFeedFilter } from '../../../../utils/feedFilters'
+import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters } from '../../../../utils/feedFilters'
 import { useTabsShell } from '../../../../contexts/tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSession } from '../../../../contexts/session'
@@ -79,13 +79,9 @@ function idxForMonth(month: string): number {
   return MONTH_CENTER + (y - ry) * 12 + (m - rm)
 }
 
-// "Mine" leads the row but is deliberately NOT the default filter — opening the
-// Events tab on an empty screen is the worst possible first run for a new member,
-// and it hides the rest of the club from everyone else. It only appears once the
-// viewer hosts an upcoming event (see visibleChips): games they're going to are
-// already in the "You're going" rail.
+// No "Mine" chip: the games a player is going to or hosting are already in the
+// "You're going" rail above the feed.
 const FILTER_CHIPS: FeedFilterChip[] = [
-  { id: 'mine',       label: 'Mine'       },
   { id: 'all',        label: 'All'        },
   { id: 'open_play',  label: 'Open Play'  },
   { id: 'tournament', label: 'Tournament' },
@@ -131,17 +127,11 @@ export default function EventsScreen() {
   const [eventsPullRefreshing, setEventsPullRefreshing] = useState(false)
   const { userId: currentUserId, isGuest } = useSession()
   const requireSignIn = useRequireSignIn()
-  // "You're going" rail and the Mine chip. Derived from events already in memory — no extra query
+  // "You're going" rail. Derived from events already in memory — no extra query
   // on the happy path, and it re-derives whenever the feed does, so an RSVP made
   // from a feed card lands in the rail without a manual refresh.
   const myUpcoming = useMyUpcomingEvents(events, currentUserId)
-  // Mine = the events you host. Games you're going to are already in the rail above the feed,
-  // so Mine is offered only to a viewer hosting an upcoming event. Until the feed has loaded we
-  // can't tell, so a remembered Mine is kept rather than flickering to All.
-  const myHosting = useMemo(() => myUpcoming.filter(m => m.status === 'hosting'), [myUpcoming])
-  const hasOwnEvents = (loading && events.length === 0) || myHosting.length > 0
-  // A remembered "Mine" waits for an account (guests, and the moment before the session restores) and for a hosted event.
-  const activeFilter = usableFeedFilter(chosenFilter, !!currentUserId, hasOwnEvents)
+  const activeFilter = chosenFilter
 
   const filtersTouchedRef = useRef(false)
   useEffect(() => {
@@ -274,7 +264,6 @@ export default function EventsScreen() {
       if (event._external && event._external.region !== feedRegion) return false
       if (surfaceFilter !== 'any' && surfaceOf(event) !== surfaceFilter) return false
       if (activeFilter === 'all') return true
-      if (activeFilter === 'mine') return !!currentUserId && !event._external && !event._program && event.created_by === currentUserId
       const tags = event.event_tags?.map(et => et.tags.name.toLowerCase()) ?? []
       if (activeFilter === 'open_play')  return tags.some(t => t.includes('open play') || t.includes('open-play'))
       if (activeFilter === 'tournament') return tags.some(t => t.includes('tournament'))
@@ -424,13 +413,6 @@ export default function EventsScreen() {
     })
   }, [refetchNotifs])
 
-  // "Mine" means nothing without an account, or until the viewer hosts an upcoming event.
-  const showMine = !!currentUserId && (myHosting.length > 0 || activeFilter === 'mine')
-  const visibleChips = useMemo(
-    () => (showMine ? FILTER_CHIPS : FILTER_CHIPS.filter(c => c.id !== 'mine')),
-    [showMine],
-  )
-
   // Flatten all events from sections for desktop grid layout
   const allEvents = useMemo(() => sections.flatMap(s => s.data), [sections])
   // "Next up" links to an event page, so it skips sessions at other venues.
@@ -473,10 +455,9 @@ export default function EventsScreen() {
       <OneTimeBanner banner={BANNERS.austinPilot} style={isMobile ? shared.feedStaleNoticeMobile : undefined} />
       <TourTarget id={TOUR_TARGETS.feedFilters}>
         <FilterChips
-          chips={visibleChips}
+          chips={FILTER_CHIPS}
           active={activeFilter}
           onSelect={selectFilter}
-          mineCount={myHosting.length}
           wide={!isMobile}
         />
         <SurfaceFilter active={surfaceFilter} onSelect={selectSurface} wide={!isMobile} />

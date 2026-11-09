@@ -818,7 +818,7 @@ export type MyUpcomingEvent = {
 // ─── Events Feed Types ────────────────────────────────────────────────────────
 
 /** Events-tab filter chip ids. */
-export type FeedFilter = 'mine' | 'all' | 'open_play' | 'tournament'
+export type FeedFilter = 'all' | 'open_play' | 'tournament'
 
 export type FeedFilterChip = { id: FeedFilter; label: string }
 
@@ -850,8 +850,6 @@ export type FilterChipsProps = {
   chips: FeedFilterChip[]
   active: FeedFilter
   onSelect: (id: FeedFilter) => void
-  /** Count shown on the Mine chip; hidden when 0. */
-  mineCount: number
   /** Desktop wraps the row; mobile scrolls it horizontally. */
   wide: boolean
 }

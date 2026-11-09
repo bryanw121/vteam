@@ -6,7 +6,6 @@ import {
   loadFeedFilters,
   parseFeedFilters,
   saveFeedFilters,
-  usableFeedFilter,
 } from '../utils/feedFilters'
 
 const mockStore: Record<string, string> = {}
@@ -42,7 +41,7 @@ afterAll(() => { Platform.OS = realOS })
 describe('parseFeedFilters', () => {
   it('reads a valid saved pair', () => {
     expect(parseFeedFilters(JSON.stringify({ filter: 'tournament', surface: 'sand' }))).toEqual({ filter: 'tournament', surface: 'sand' })
-    expect(parseFeedFilters(JSON.stringify({ filter: 'mine', surface: 'any' }))).toEqual({ filter: 'mine', surface: 'any' })
+    expect(parseFeedFilters(JSON.stringify({ filter: 'open_play', surface: 'any' }))).toEqual({ filter: 'open_play', surface: 'any' })
   })
 
   it('drops values that no longer exist, field by field', () => {
@@ -57,20 +56,9 @@ describe('parseFeedFilters', () => {
   })
 })
 
-describe('usableFeedFilter', () => {
-  it('shows a remembered Mine only with an account', () => {
-    expect(usableFeedFilter('mine', false)).toBe('all')
-    expect(usableFeedFilter('mine', true)).toBe('mine')
-    expect(usableFeedFilter('tournament', false)).toBe('tournament')
-  })
-
-  it('shows a remembered Mine only while the viewer has an event of their own', () => {
-    expect(usableFeedFilter('mine', true, false)).toBe('all')
-    expect(usableFeedFilter('mine', true, true)).toBe('mine')
-    expect(usableFeedFilter('open_play', true, false)).toBe('open_play')
-  })
-
-  it('drops the removed Not Full filter to All', () => {
+describe('removed chips', () => {
+  it('drops a saved Mine or Not Full to All', () => {
+    expect(parseFeedFilters(JSON.stringify({ filter: 'mine', surface: 'sand' }))).toEqual({ filter: 'all', surface: 'sand' })
     expect(parseFeedFilters(JSON.stringify({ filter: 'not_full', surface: 'indoor' }))).toEqual({ filter: 'all', surface: 'indoor' })
   })
 })
@@ -94,7 +82,7 @@ describe('web (localStorage)', () => {
     fakeLocalStorage.getItem.mockImplementationOnce(() => { throw new Error('blocked') })
     fakeLocalStorage.setItem.mockImplementationOnce(() => { throw new Error('quota') })
     expect(feedFiltersNow()).toEqual(DEFAULT_FEED_FILTERS)
-    expect(() => saveFeedFilters({ filter: 'mine', surface: 'sand' })).not.toThrow()
+    expect(() => saveFeedFilters({ filter: 'all', surface: 'sand' })).not.toThrow()
   })
 })
 
