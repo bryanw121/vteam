@@ -31,7 +31,7 @@ export function remainingDelayMs(startedAt: number, now: number, jitterMs: numbe
   return Math.max(0, MIN_RESPONSE_MS + jitterMs - (now - startedAt))
 }
 
-/** Sign-in attempts allowed per window (#11). Generous: CI signs the e2e account in often. */
+/** Per 15-minute window (#11): attempts per IP, and FAILED attempts per username (successful sign-ins never count). */
 export const LOGIN_LIMITS = {
   windowSeconds: 15 * 60,
   perIp: 100,

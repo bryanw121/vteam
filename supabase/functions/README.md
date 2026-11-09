@@ -151,8 +151,12 @@ works for a first test if that account uses the destination address.
 
 Resolves a username to an email server-side and signs in through Supabase Auth's
 password grant, returning only a session or a generic "Incorrect username or
-password". It limits attempts itself (`public.check_rate_limit`: 30 per username
-and 100 per IP every 15 minutes).
+password". It limits attempts itself (`public.check_rate_limit`, 15-minute windows): 100
+attempts per IP, and 30 failed attempts per username. The username counter is
+read before every attempt (so a correct password is refused too once it is
+used up) but only incremented on a failure (unknown username or wrong password
+alike), so successful sign-ins, such as CI signing the e2e account in, never
+use it up.
 
 **IP forwarding (needed in production).** Every username sign-in reaches Supabase
 Auth from this function, so Auth's own per-IP limit would otherwise treat all
