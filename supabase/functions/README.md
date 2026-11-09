@@ -8,6 +8,7 @@
 | `places-proxy` | the app, via `supabase.functions.invoke('places-proxy')` | user JWT checked by the gateway | `true` |
 | `send-feedback-email` | the app, after inserting `feedback_submissions` (`lib/feedback.ts`) | user JWT checked by the gateway; the function emails only a fresh row the caller owns | `true` |
 | `login-with-username` | the signed-out app, via `supabase.functions.invoke('login-with-username')` | none (it is a sign-in); rate limited per username and IP | `false` |
+| `delete-account` | the app (Settings → Account → Delete account, `hooks/useAccountDeletion.ts`) | user JWT checked by the gateway and again with `auth.getUser`; recent sign-in required | `true` |
 
 `verify_jwt` is declared in [`../config.toml`](../config.toml) and applied on deploy.
 Shared code lives in `_shared/` (`supabase.ts`: service-role client and `defaultDeps`;
@@ -185,6 +186,7 @@ supabase functions deploy check-push-receipts
 supabase functions deploy places-proxy
 supabase functions deploy send-feedback-email
 supabase functions deploy login-with-username
+supabase functions deploy delete-account
 # or all at once:
 supabase functions deploy
 ```

@@ -224,7 +224,7 @@ export type Database = {
           cheer_type: string
           created_at: string
           event_id: string
-          giver_id: string
+          giver_id: string | null
           id: string
           receiver_id: string
         }
@@ -232,7 +232,7 @@ export type Database = {
           cheer_type: string
           created_at?: string
           event_id: string
-          giver_id: string
+          giver_id?: string | null
           id?: string
           receiver_id: string
         }
@@ -240,7 +240,7 @@ export type Database = {
           cheer_type?: string
           created_at?: string
           event_id?: string
-          giver_id?: string
+          giver_id?: string | null
           id?: string
           receiver_id?: string
         }
@@ -2647,6 +2647,8 @@ export type Database = {
         Args: { p_invite_id: string }
         Returns: string
       }
+      account_deletion_plan: { Args: { p_user: string }; Returns: Json }
+      account_is_being_deleted: { Args: { p_user: string }; Returns: boolean }
       ad_free_offer: { Args: never; Returns: Json }
       award_event_points: { Args: never; Returns: number }
       can_read_chat_image: { Args: { p_name: string }; Returns: boolean }
@@ -2655,11 +2657,19 @@ export type Database = {
         Args: { p_key: string; p_max: number; p_window_seconds: number }
         Returns: boolean
       }
+      club_successor: {
+        Args: { p_club: string; p_user: string }
+        Returns: string
+      }
       complete_tournament: {
         Args: { p_podium: Json; p_tournament_id: string }
         Returns: number
       }
       current_user_is_admin: { Args: never; Returns: boolean }
+      delete_account: {
+        Args: { p_plan_hash: string; p_user: string }
+        Returns: Json
+      }
       enforce_rate_limit: {
         Args: { p_key: string; p_max: number; p_window_seconds: number }
         Returns: undefined
@@ -2685,6 +2695,7 @@ export type Database = {
         Args: { p_a: string; p_b: string }
         Returns: undefined
       }
+      get_account_deletion_preview: { Args: never; Returns: Json }
       get_ad_free_status: { Args: never; Returns: Json }
       get_chat_unread_count: { Args: never; Returns: number }
       get_email_by_username: { Args: { p_username: string }; Returns: string }

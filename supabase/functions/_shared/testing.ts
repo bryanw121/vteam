@@ -11,7 +11,7 @@
  * resolves the scripted result for that table and operation.
  */
 
-import type { AuthUser, DbClient, DbError, DbQuery, DbResult, Deps } from './deps.ts'
+import type { AuthUser, DbBucket, DbClient, DbError, DbQuery, DbResult, Deps } from './deps.ts'
 
 export type Op = 'select' | 'insert' | 'delete'
 
@@ -40,6 +40,10 @@ export type FakeSupabaseOptions = {
   rpc?: Record<string, Partial<DbResult> | ((call: RpcCall) => Partial<DbResult>)>
   /** What auth.getUser(jwt) returns: a user, or null for an invalid token. */
   user?: AuthUser | null | ((jwt: string) => AuthUser | null)
+  /** Storage objects, keyed by bucket: full object paths ('<folder>/<file>'). remove() deletes them. */
+  storage?: Record<string, string[]>
+  /** Make every storage remove() fail with this error. */
+  storageRemoveError?: DbError
 }
 
 export type FakeSupabase = DbClient & {
@@ -50,12 +54,34 @@ export type FakeSupabase = DbClient & {
   callsTo(table: string, op?: Op): DbCall[]
   /** Tokens auth.getUser was asked about. */
   jwts: string[]
+  /** Objects still in each bucket, and every removed object as `<bucket>:<path>`. */
+  objects: Record<string, string[]>
+  removed: string[]
 }
 
 export function fakeSupabase(opts: FakeSupabaseOptions = {}): FakeSupabase {
   const calls: DbCall[] = []
   const rpcCalls: RpcCall[] = []
   const jwts: string[] = []
+  const objects: Record<string, string[]> = Object.fromEntries(
+    Object.entries(opts.storage ?? {}).map(([bucket, paths]) => [bucket, [...paths]]),
+  )
+  const removed: string[] = []
+
+  const bucket = (name: string): DbBucket => ({
+    list(prefix, options) {
+      const inFolder = (objects[name] ?? [])
+        .filter((p) => p.startsWith(`${prefix}/`))
+        .map((p) => ({ name: p.slice(prefix.length + 1) }))
+      return Promise.resolve({ data: inFolder.slice(0, options?.limit ?? 100), error: null })
+    },
+    remove(paths) {
+      if (opts.storageRemoveError) return Promise.resolve({ data: null, error: opts.storageRemoveError })
+      for (const p of paths) removed.push(`${name}:${p}`)
+      objects[name] = (objects[name] ?? []).filter((p) => !paths.includes(p))
+      return Promise.resolve({ data: paths, error: null })
+    },
+  })
 
   const resolve = (call: DbCall): DbResult => {
     const scripted = opts.results?.[`${call.table}.${call.op}`]
@@ -108,6 +134,9 @@ export function fakeSupabase(opts: FakeSupabaseOptions = {}): FakeSupabase {
     calls,
     rpcCalls,
     jwts,
+    objects,
+    removed,
+    storage: { from: bucket },
     rpc(fn, args) {
       const call = { fn, args }
       rpcCalls.push(call)

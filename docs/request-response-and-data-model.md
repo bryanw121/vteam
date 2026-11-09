@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `c3fc1b2a2c9d`
+> Inventory fingerprint: `b465641ffacb`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -481,7 +481,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `messages` | [`hooks/useMessages.ts:85`](../hooks/useMessages.ts#L85)<br>[`hooks/useOpenDm.ts:45`](../hooks/useOpenDm.ts#L45) |
 | `notifications` | [`hooks/event/useCohosts.ts:73`](../hooks/event/useCohosts.ts#L73)<br>[`hooks/event/useEventAttendance.ts:77`](../hooks/event/useEventAttendance.ts#L77)<br>[`hooks/useNotifications.ts:34`](../hooks/useNotifications.ts#L34)<br>[`utils/badges.ts:217`](../utils/badges.ts#L217) |
 | `point_balances` | [`hooks/usePoints.ts:24`](../hooks/usePoints.ts#L24) |
-| `profiles` | [`app/_layout.tsx:49`](../app/_layout.tsx#L49)<br>[`app/(app)/(tabs)/chat.tsx:52`](../app/%28app%29/%28tabs%29/chat.tsx#L52)<br>[`app/(auth)/register.tsx:66`](../app/%28auth%29/register.tsx#L66)<br>[`hooks/event/useCohosts.ts:37`](../hooks/event/useCohosts.ts#L37)<br>[`hooks/event/useEventData.ts:109`](../hooks/event/useEventData.ts#L109)<br>[`hooks/tournament/api.ts:192`](../hooks/tournament/api.ts#L192)<br>+6 more files |
+| `profiles` | [`app/_layout.tsx:49`](../app/_layout.tsx#L49)<br>[`app/(app)/(tabs)/chat.tsx:55`](../app/%28app%29/%28tabs%29/chat.tsx#L55)<br>[`app/(auth)/register.tsx:66`](../app/%28auth%29/register.tsx#L66)<br>[`hooks/event/useCohosts.ts:37`](../hooks/event/useCohosts.ts#L37)<br>[`hooks/event/useEventData.ts:109`](../hooks/event/useEventData.ts#L109)<br>[`hooks/tournament/api.ts:192`](../hooks/tournament/api.ts#L192)<br>+6 more files |
 | `push_receipts` | [`supabase/functions/check-push-receipts/handler.ts:42`](../supabase/functions/check-push-receipts/handler.ts#L42)<br>[`supabase/functions/send-chat-push/handler.ts:206`](../supabase/functions/send-chat-push/handler.ts#L206)<br>[`supabase/functions/send-notification-push/handler.ts:150`](../supabase/functions/send-notification-push/handler.ts#L150) |
 | `push_tokens` | [`supabase/functions/check-push-receipts/handler.ts:87`](../supabase/functions/check-push-receipts/handler.ts#L87)<br>[`supabase/functions/send-chat-push/handler.ts:151`](../supabase/functions/send-chat-push/handler.ts#L151)<br>[`supabase/functions/send-notification-push/handler.ts:104`](../supabase/functions/send-notification-push/handler.ts#L104)<br>[`utils/pushNotifications.ts:111`](../utils/pushNotifications.ts#L111) |
 | `rate_limits` | [`supabase/functions/login-with-username/handler.ts:67`](../supabase/functions/login-with-username/handler.ts#L67) |
@@ -513,7 +513,9 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `cancel_friend_request` | [`hooks/useFriends.ts:71`](../hooks/useFriends.ts#L71) | [`supabase/migrations/20261028203837_friends.sql:256`](../supabase/migrations/20261028203837_friends.sql#L256) |
 | `check_rate_limit` | [`supabase/functions/login-with-username/handler.ts:140`](../supabase/functions/login-with-username/handler.ts#L140) | [`supabase/migrations/20261028120200_rate_limit_core.sql:19`](../supabase/migrations/20261028120200_rate_limit_core.sql#L19) |
 | `complete_tournament` | [`hooks/tournament/api.ts:449`](../hooks/tournament/api.ts#L449) | [`supabase/migrations/20261028205312_tournament_trophies.sql:67`](../supabase/migrations/20261028205312_tournament_trophies.sql#L67) |
+| `delete_account` | [`supabase/functions/delete-account/handler.ts:84`](../supabase/functions/delete-account/handler.ts#L84) | [`supabase/migrations/20261028130000_account_deletion.sql:190`](../supabase/migrations/20261028130000_account_deletion.sql#L190) |
 | `find_or_create_dm` | [`hooks/useOpenDm.ts:70`](../hooks/useOpenDm.ts#L70) | Not checked in |
+| `get_account_deletion_preview` | [`hooks/useAccountDeletion.ts:18`](../hooks/useAccountDeletion.ts#L18) | [`supabase/migrations/20261028130000_account_deletion.sql:166`](../supabase/migrations/20261028130000_account_deletion.sql#L166) |
 | `get_ad_free_status` | [`hooks/useAdFree.ts:25`](../hooks/useAdFree.ts#L25) | [`supabase/migrations/20261028170200_ad_free_redeem.sql:48`](../supabase/migrations/20261028170200_ad_free_redeem.sql#L48) |
 | `get_email_by_username` | [`supabase/functions/login-with-username/handler.ts:161`](../supabase/functions/login-with-username/handler.ts#L161) | Not checked in |
 | `get_event_card_attendee_previews` | [`utils/eventCardPreviews.ts:35`](../utils/eventCardPreviews.ts#L35) | [`supabase/migrations/20260811030000_event_card_attendee_previews_rpc.sql:2`](../supabase/migrations/20260811030000_event_card_attendee_previews_rpc.sql#L2) |
@@ -539,7 +541,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Surface | Name | Call sites |
 |---|---|---|
 | Auth | `exchangeCodeForSession` | [`lib/socialAuth.ts:24`](../lib/socialAuth.ts#L24) |
-| Auth | `getSession` | [`app/_layout.tsx:45`](../app/_layout.tsx#L45)<br>[`app/(app)/(tabs)/settings/account.tsx:19`](../app/%28app%29/%28tabs%29/settings/account.tsx#L19)<br>[`app/(auth)/reset-password.tsx:33`](../app/%28auth%29/reset-password.tsx#L33)<br>[`components/ClubPostCard.tsx:243`](../components/ClubPostCard.tsx#L243)<br>[`contexts/session.tsx:35`](../contexts/session.tsx#L35)<br>[`lib/sessionUser.ts:10`](../lib/sessionUser.ts#L10) |
+| Auth | `getSession` | [`app/_layout.tsx:45`](../app/_layout.tsx#L45)<br>[`app/(app)/(tabs)/settings/account.tsx:22`](../app/%28app%29/%28tabs%29/settings/account.tsx#L22)<br>[`app/(auth)/reset-password.tsx:33`](../app/%28auth%29/reset-password.tsx#L33)<br>[`components/ClubPostCard.tsx:243`](../components/ClubPostCard.tsx#L243)<br>[`contexts/session.tsx:35`](../contexts/session.tsx#L35)<br>[`lib/sessionUser.ts:10`](../lib/sessionUser.ts#L10) |
 | Auth | `getUser` | [`contexts/session.tsx:15`](../contexts/session.tsx#L15)<br>[`lib/sessionUser.ts:6`](../lib/sessionUser.ts#L6) |
 | Auth | `onAuthStateChange` | [`app/(auth)/reset-password.tsx:28`](../app/%28auth%29/reset-password.tsx#L28)<br>[`contexts/session.tsx:40`](../contexts/session.tsx#L40) |
 | Auth | `resetPasswordForEmail` | [`app/(auth)/login.tsx:95`](../app/%28auth%29/login.tsx#L95) |
@@ -547,8 +549,8 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Auth | `signInWithIdToken` | [`lib/socialAuth.ts:78`](../lib/socialAuth.ts#L78) |
 | Auth | `signInWithOAuth` | [`lib/socialAuth.ts:38`](../lib/socialAuth.ts#L38) |
 | Auth | `signInWithOtp` | [`lib/socialAuth.ts:89`](../lib/socialAuth.ts#L89) |
-| Auth | `signInWithPassword` | [`app/(auth)/login.tsx:120`](../app/%28auth%29/login.tsx#L120) |
-| Auth | `signOut` | [`app/(app)/(tabs)/settings/account.tsx:27`](../app/%28app%29/%28tabs%29/settings/account.tsx#L27) |
+| Auth | `signInWithPassword` | [`app/(auth)/login.tsx:120`](../app/%28auth%29/login.tsx#L120)<br>[`hooks/useAccountDeletion.ts:70`](../hooks/useAccountDeletion.ts#L70) |
+| Auth | `signOut` | [`app/(app)/(tabs)/settings/account.tsx:30`](../app/%28app%29/%28tabs%29/settings/account.tsx#L30)<br>[`hooks/useAccountDeletion.ts:63`](../hooks/useAccountDeletion.ts#L63) |
 | Auth | `signUp` | [`app/(auth)/register.tsx:76`](../app/%28auth%29/register.tsx#L76) |
 | Auth | `startAutoRefresh` | [`lib/supabase.ts:59`](../lib/supabase.ts#L59) |
 | Auth | `stopAutoRefresh` | [`lib/supabase.ts:60`](../lib/supabase.ts#L60) |
@@ -601,9 +603,10 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Schelagg court availability and session checks (lib/schelagg, utils/courts) | [`HHMM`](../types/index.ts#L1796), [`HHMMRange`](../types/index.ts#L1799), [`MinuteRange`](../types/index.ts#L1802), [`CourtsCourt`](../types/index.ts#L1804), [`CourtsFacility`](../types/index.ts#L1810), [`CourtsVenue`](../types/index.ts#L1819), [`CourtsError`](../types/index.ts#L1836), [`CourtsResponse`](../types/index.ts#L1839), [`CourtsData`](../types/index.ts#L1849), [`AustinNow`](../types/index.ts#L1852), [`CourtLane`](../types/index.ts#L1854), [`FacilityDay`](../types/index.ts#L1863), [`DayOption`](../types/index.ts#L1882), [`SessionCheckStatus`](../types/index.ts#L1884), [`SessionCheckResult`](../types/index.ts#L1887), [`SessionLinkDecision`](../types/index.ts#L1908), [`SessionLinkNotice`](../types/index.ts#L1923), [`CreateMenuSectionKey`](../types/index.ts#L1927) |
 | Usage metrics (lib/analytics.ts) | [`AnalyticsEventName`](../types/index.ts#L1931), [`AnalyticsProps`](../types/index.ts#L1934) |
 | Legal pages (/terms, /privacy) | [`LegalSpan`](../types/index.ts#L1939), [`LegalBlock`](../types/index.ts#L1942), [`VenmoLinks`](../types/index.ts#L1950) |
-| Text size (#43) | [`TextSizeId`](../types/index.ts#L1960), [`TextSizeOption`](../types/index.ts#L1962), [`TextScaleContextValue`](../types/index.ts#L1969), [`WebScrollableRef`](../types/index.ts#L1980) |
-| Weather on outdoor games (#165) | [`ForecastHour`](../types/index.ts#L1985), [`Forecast`](../types/index.ts#L2002), [`ForecastWindow`](../types/index.ts#L2009), [`ForecastCell`](../types/index.ts#L2012), [`ForecastTone`](../types/index.ts#L2015), [`ForecastSummary`](../types/index.ts#L2018), [`ForecastCourt`](../types/index.ts#L2033) |
-| Public profile, history, cheers summary (#185) | [`UserProfileData`](../types/index.ts#L2038), [`EventHistoryKind`](../types/index.ts#L2047), [`CheersSummary`](../types/index.ts#L2050) |
+| Text size (#43) | [`TextSizeId`](../types/index.ts#L1960), [`TextSizeOption`](../types/index.ts#L1962), [`TextScaleContextValue`](../types/index.ts#L1969) |
+| Account deletion (#99) | [`AccountDeletionSuccessor`](../types/index.ts#L1982), [`AccountDeletionPlan`](../types/index.ts#L1988), [`AccountDeletionBlock`](../types/index.ts#L2004), [`WebScrollableRef`](../types/index.ts#L2006) |
+| Weather on outdoor games (#165) | [`ForecastHour`](../types/index.ts#L2011), [`Forecast`](../types/index.ts#L2028), [`ForecastWindow`](../types/index.ts#L2035), [`ForecastCell`](../types/index.ts#L2038), [`ForecastTone`](../types/index.ts#L2041), [`ForecastSummary`](../types/index.ts#L2044), [`ForecastCourt`](../types/index.ts#L2059) |
+| Public profile, history, cheers summary (#185) | [`UserProfileData`](../types/index.ts#L2064), [`EventHistoryKind`](../types/index.ts#L2073), [`CheersSummary`](../types/index.ts#L2076) |
 
 ### Constrained string values
 
@@ -612,6 +615,7 @@ TypeScript `enum` keyword.
 
 | Type or field | Values | Source |
 |---|---|---|
+| `AccountDeletionBlock` | `reauth_required`, `plan_changed` | [`types/index.ts:2004`](../types/index.ts#L2004) |
 | `BadgeStat` | `events_attended_past`, `events_hosted_past`, `cheers_received_total`, `cheers_given_events`, `spike_cheers`, `serve_cheers`, `block_cheers`, `set_cheers`, `dig_pass_cheers`, `communication_cheers`, `beta_active`, `tournament_hosted`, `profile_complete`, `vex_member` | [`constants/badges.ts:43`](../constants/badges.ts#L43) |
 | `BadgeType` | `event_attendee`, `event_host`, `cheers_received`, `cheers_given`, `spike_cheer`, `serve_cheer`, `block_cheer`, `set_cheer`, `dig_pass_cheer`, `communication_cheer`, `beta_tester`, `tournament_director`, `profile_complete`, `vex_spirit` | [`types/index.ts:1030`](../types/index.ts#L1030) |
 | `CardBgType` | `ember`, `frost`, `aurora` | [`types/index.ts:1028`](../types/index.ts#L1028) |
@@ -622,14 +626,14 @@ TypeScript `enum` keyword.
 | `ConversationType` | `dm`, `club` | [`types/index.ts:877`](../types/index.ts#L877) |
 | `CreateMenuSectionKey` | `vteam`, `venue` | [`types/index.ts:1927`](../types/index.ts#L1927) |
 | `EventCardRsvpHandler` | `join`, `leave` | [`types/index.ts:1699`](../types/index.ts#L1699) |
-| `EventHistoryKind` | `attended`, `hosted-past`, `hosted-upcoming` | [`types/index.ts:2047`](../types/index.ts#L2047) |
+| `EventHistoryKind` | `attended`, `hosted-past`, `hosted-upcoming` | [`types/index.ts:2073`](../types/index.ts#L2073) |
 | `EventPreviewState` | `upcoming`, `cancelled`, `ended`, `missing` | [`types/index.ts:183`](../types/index.ts#L183) |
 | `FeedbackKind` | `feature`, `bug` | [`types/index.ts:352`](../types/index.ts#L352) |
 | `FeedbackPriority` | `low`, `medium`, `high` | [`types/index.ts:353`](../types/index.ts#L353) |
 | `FeedFilter` | `all`, `open_play`, `tournament` | [`types/index.ts:824`](../types/index.ts#L824) |
 | `FeedRsvpAction` | `join`, `leave` | [`types/index.ts:838`](../types/index.ts#L838) |
-| `ForecastTone` | `neutral`, `rain`, `heat` | [`types/index.ts:2015`](../types/index.ts#L2015) |
-| `ForecastWindow` | `show`, `later` | [`types/index.ts:2009`](../types/index.ts#L2009) |
+| `ForecastTone` | `neutral`, `rain`, `heat` | [`types/index.ts:2041`](../types/index.ts#L2041) |
+| `ForecastWindow` | `show`, `later` | [`types/index.ts:2035`](../types/index.ts#L2035) |
 | `FriendsGoingLineProps.tone` | `onDark`, `onCard` | [`types/index.ts:1019`](../types/index.ts#L1019) |
 | `FriendStatus` | `none`, `requested`, `incoming`, `friends` | [`types/index.ts:978`](../types/index.ts#L978) |
 | `HiddenFeedKind` | `item`, `venue`, `host`, `type` | [`types/index.ts:540`](../types/index.ts#L540) |
