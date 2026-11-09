@@ -75,7 +75,7 @@ describe('outside leagues and tournaments', () => {
     expect(rest).toHaveLength(0)
     expect(item.id).toBe('program:cup')
     expect(eventLocalDateKey(item.event_date)).toBe('2026-12-05')
-    expect(item.event_tags.map(t => t.tags.name)).toEqual(['Tournament'])
+    expect((item.event_tags ?? []).map(t => t.tags.name)).toEqual(['Tournament'])
     expect(surfaceOf(item)).toBe('sand')
     expect(item._program?.id).toBe('cup')
     // Hide menu: the tournament, or everything from its organizer.
