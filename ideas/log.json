@@ -277,5 +277,29 @@
     "status": "approved",
     "summary": "Split the 1,358-line Events tab into calendar components, pure section logic, a hiding hook and two layouts over four PRs, with no visual change.",
     "issue": 217
+  },
+  {
+    "date": "2026-11-09",
+    "n": 1,
+    "title": "Account basics that work: a password reset that lands where it should, and changing your username",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "Recovery links always reach the form (web, native via https, expired state) and Settings → Account gains username change with a 30-day cooldown and held names."
+  },
+  {
+    "date": "2026-11-09",
+    "n": 2,
+    "title": "Profile opens with 16 requests, not 25: stop loading a tab nobody is looking at",
+    "bucket": "latency",
+    "status": "proposed",
+    "summary": "Stop mounting Events on /profile at phone width and remove four duplicate reads; 4.4 s to 2.8 s at a 1 s server, 10-connection pool."
+  },
+  {
+    "date": "2026-11-09",
+    "n": 3,
+    "title": "Startup guard: CI fails when the first screens get slower or send more requests",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "Run the cold-open flow in CI with paint and request budgets, name new reads and duplicates, fix the script's 1.5 s measuring floor."
   }
 ]
