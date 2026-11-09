@@ -246,11 +246,17 @@ export default function EventsScreen() {
   // months already loaded so they don't run ahead of infinite scroll. Leagues get their own screen.
   const programs = useExternalPrograms()
   const lastLoadedMonth = loadedMonths[loadedMonths.length - 1] ?? null
+  // Under the Tournament filter the list isn't about a day: every upcoming outside tournament shows,
+  // however far out, including the ones elsewhere in the state (people travel for those).
+  const tournamentsOnly = activeFilter === 'tournament'
   const feedEvents = useMemo(() => {
-    const items = normalizeProgramTournaments(programs.data?.tournaments ?? [])
-      .filter(e => !!lastLoadedMonth && eventLocalDateKey(e.event_date).substring(0, 7) <= lastLoadedMonth)
+    const rows = tournamentsOnly
+      ? [...(programs.data?.tournaments ?? []), ...(programs.data?.elsewhere ?? [])]
+      : programs.data?.tournaments ?? []
+    const items = normalizeProgramTournaments(rows)
+      .filter(e => tournamentsOnly || (!!lastLoadedMonth && eventLocalDateKey(e.event_date).substring(0, 7) <= lastLoadedMonth))
     return items.length ? [...events, ...items] : events
-  }, [events, programs.data, lastLoadedMonth])
+  }, [events, programs.data, lastLoadedMonth, tournamentsOnly])
 
   const isHiddenForMe = useCallback(
     (event: EventWithDetails) =>
@@ -629,9 +635,9 @@ export default function EventsScreen() {
             showsVerticalScrollIndicator={false}
             refreshControl={refreshControl}
           >
-            {/* Mini calendar */}
-            <Text style={feedStyles.railLabel}>This week</Text>
-            <TourTarget id={TOUR_TARGETS.calendar} style={{ backgroundColor: theme.colors.background, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 20, overflow: 'hidden' }}>
+            {/* Mini calendar (not under the Tournament filter: that list isn't about a day) */}
+            {!tournamentsOnly && <Text style={feedStyles.railLabel}>This week</Text>}
+            {!tournamentsOnly && <TourTarget id={TOUR_TARGETS.calendar} style={{ backgroundColor: theme.colors.background, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 20, overflow: 'hidden' }}>
               <MonthGridContent
                 month={monthForIdx(curMonthPage)}
                 selectedDate={selectedDate}
@@ -640,7 +646,7 @@ export default function EventsScreen() {
                 onPrevMonth={goPrevMonth}
                 onNextMonth={goNextMonth}
               />
-            </TourTarget>
+            </TourTarget>}
 
             {/* Your next event */}
             {nextClubEvent && (
@@ -704,8 +710,8 @@ export default function EventsScreen() {
           )}
         />
 
-        {/* Calendar strip */}
-        <TourTarget id={TOUR_TARGETS.calendar}>
+        {/* Calendar strip (not under the Tournament filter: that list isn't about a day) */}
+        {!tournamentsOnly && <TourTarget id={TOUR_TARGETS.calendar}>
           <WeekPager
             curWeekPage={curWeekPage}
             selectedDate={selectedDate}
@@ -714,7 +720,7 @@ export default function EventsScreen() {
             onPrevWeek={goPrevWeek}
             onNextWeek={goNextWeek}
           />
-        </TourTarget>
+        </TourTarget>}
 
         {filterChips}
       </View>

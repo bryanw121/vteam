@@ -54,7 +54,8 @@ function ExternalProgramCardInner({ program: p, compact = false, menuInset = fal
         ) : null}
         <Text style={shared.externalTitle} numberOfLines={2}>{p.title}</Text>
         {where ? <Text style={shared.externalMeta} numberOfLines={1}>{where}</Text> : null}
-        {(compact || p.kind === 'league') && when ? <Text style={shared.externalMeta} numberOfLines={1}>{when}</Text> : null}
+        {/* The days it's on, always: a tournament list isn't tied to the selected day. */}
+        {when ? <Text style={shared.externalMeta} numberOfLines={1} testID="external-program-when">{when}</Text> : null}
         {price ? <Text style={shared.externalMeta} numberOfLines={1}>{price}</Text> : null}
         {urgency || deadline ? (
           <Text style={urgency ? shared.externalFinding : shared.externalMeta} numberOfLines={1} testID="external-program-deadline">
