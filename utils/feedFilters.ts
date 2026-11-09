@@ -38,9 +38,9 @@ export function parseFeedFilters(raw: string | null | undefined): StoredFeedFilt
 }
 
 /**
- * The chip to show: 'mine' means nothing without an account or without an
- * upcoming event of one's own, so those viewers get 'all' (the choice stays
- * saved, and Mine comes back once they have an event).
+ * The chip to show: 'mine' (events you host) means nothing without an account
+ * or while you host no upcoming event, so those viewers get 'all' (the choice
+ * stays saved, and Mine comes back once they host again).
  */
 export function usableFeedFilter(filter: FeedFilter, signedIn: boolean, hasOwnEvents = true): FeedFilter {
   return filter === 'mine' && (!signedIn || !hasOwnEvents) ? 'all' : filter

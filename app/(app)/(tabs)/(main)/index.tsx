@@ -78,7 +78,8 @@ function idxForMonth(month: string): number {
 // "Mine" leads the row but is deliberately NOT the default filter — opening the
 // Events tab on an empty screen is the worst possible first run for a new member,
 // and it hides the rest of the club from everyone else. It only appears once the
-// viewer has an upcoming event of their own (see visibleChips).
+// viewer hosts an upcoming event (see visibleChips): games they're going to are
+// already in the "You're going" rail.
 const FILTER_CHIPS: FeedFilterChip[] = [
   { id: 'mine',       label: 'Mine'       },
   { id: 'all',        label: 'All'        },
@@ -130,10 +131,12 @@ export default function EventsScreen() {
   // on the happy path, and it re-derives whenever the feed does, so an RSVP made
   // from a feed card lands in the rail without a manual refresh.
   const myUpcoming = useMyUpcomingEvents(events, currentUserId)
-  // Mine is offered only to a signed-in viewer with an upcoming event of their own. Until the
-  // feed has loaded we can't tell, so a remembered Mine is kept rather than flickering to All.
-  const hasOwnEvents = (loading && events.length === 0) || myUpcoming.length > 0
-  // A remembered "Mine" waits for an account (guests, and the moment before the session restores) and for own events.
+  // Mine = the events you host. Games you're going to are already in the rail above the feed,
+  // so Mine is offered only to a viewer hosting an upcoming event. Until the feed has loaded we
+  // can't tell, so a remembered Mine is kept rather than flickering to All.
+  const myHosting = useMemo(() => myUpcoming.filter(m => m.status === 'hosting'), [myUpcoming])
+  const hasOwnEvents = (loading && events.length === 0) || myHosting.length > 0
+  // A remembered "Mine" waits for an account (guests, and the moment before the session restores) and for a hosted event.
   const activeFilter = usableFeedFilter(chosenFilter, !!currentUserId, hasOwnEvents)
 
   const filtersTouchedRef = useRef(false)
@@ -257,7 +260,7 @@ export default function EventsScreen() {
       if (event._external && event._external.region !== feedRegion) return false
       if (surfaceFilter !== 'any' && surfaceOf(event) !== surfaceFilter) return false
       if (activeFilter === 'all') return true
-      if (activeFilter === 'mine') return !!currentUserId && myStatusFor(event, currentUserId) !== null
+      if (activeFilter === 'mine') return !!currentUserId && !event._external && event.created_by === currentUserId
       const tags = event.event_tags?.map(et => et.tags.name.toLowerCase()) ?? []
       if (activeFilter === 'open_play')  return tags.some(t => t.includes('open play') || t.includes('open-play'))
       if (activeFilter === 'tournament') return tags.some(t => t.includes('tournament'))
@@ -325,9 +328,6 @@ export default function EventsScreen() {
     <MyEventsRail
       items={myUpcoming}
       onPressEvent={eventId => router.push(routes.event(eventId))}
-      // "See all" switches the feed to Mine rather than growing the rail — one
-      // place to look for the long list, and the rail stays above the fold.
-      onSeeAll={() => selectFilter('mine')}
     />
   )
 
@@ -410,8 +410,8 @@ export default function EventsScreen() {
     })
   }, [refetchNotifs])
 
-  // "Mine" means nothing without an account, or before the viewer has an event of their own.
-  const showMine = !!currentUserId && (myUpcoming.length > 0 || activeFilter === 'mine')
+  // "Mine" means nothing without an account, or until the viewer hosts an upcoming event.
+  const showMine = !!currentUserId && (myHosting.length > 0 || activeFilter === 'mine')
   const visibleChips = useMemo(
     () => (showMine ? FILTER_CHIPS : FILTER_CHIPS.filter(c => c.id !== 'mine')),
     [showMine],
@@ -462,7 +462,7 @@ export default function EventsScreen() {
           chips={visibleChips}
           active={activeFilter}
           onSelect={selectFilter}
-          mineCount={myUpcoming.length}
+          mineCount={myHosting.length}
           wide={!isMobile}
         />
         <SurfaceFilter active={surfaceFilter} onSelect={selectSurface} wide={!isMobile} />
