@@ -45,8 +45,8 @@ export function isCurrent(p: ExternalProgram, today: string): boolean {
 }
 
 /**
- * The region's outside tournaments and leagues, and NAGVA tournaments elsewhere in its state (people
- * travel for those). The state is read from the region's own rows, so no region-to-state table is kept.
+ * The region's outside tournaments and leagues, and tournaments elsewhere in its state (NAGVA, the
+ * Texas Asian Olympics: people travel for those). The state is read from the region's own rows, so no region-to-state table is kept.
  */
 export function programsForRegion(rows: readonly ExternalProgram[], region: string, today: string): ProgramsForRegion {
   const current = rows.filter(p => isCurrent(p, today))
@@ -55,8 +55,8 @@ export function programsForRegion(rows: readonly ExternalProgram[], region: stri
   return {
     tournaments: here.filter(p => p.kind === 'tournament').sort(byStart),
     leagues: here.filter(p => p.kind === 'league').sort(byDeadline),
-    nagvaElsewhere: state
-      ? current.filter(p => p.series === 'nagva' && p.kind === 'tournament' && p.region !== region && p.state === state).sort(byStart)
+    elsewhere: state
+      ? current.filter(p => p.kind === 'tournament' && p.region !== region && p.state === state).sort(byStart)
       : [],
   }
 }

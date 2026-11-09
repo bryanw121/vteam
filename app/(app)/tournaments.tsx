@@ -73,7 +73,7 @@ export default function TournamentsScreen() {
   const programs = useExternalPrograms()
   const region = useFeedRegion()
   const outside = tab === 'upcoming' ? programs.data : null
-  const outsideAll = useMemo(() => [...(outside?.tournaments ?? []), ...(outside?.nagvaElsewhere ?? [])], [outside])
+  const outsideAll = useMemo(() => [...(outside?.tournaments ?? []), ...(outside?.elsewhere ?? [])], [outside])
   const outsideCount = outsideAll.length
   const [host, setHost] = useState<string | null>(null)
   const city = region.charAt(0).toUpperCase() + region.slice(1)
@@ -81,7 +81,7 @@ export default function TournamentsScreen() {
     <View style={{ marginTop: theme.spacing.sm }}>
       <ProgramHostChips programs={outsideAll} host={host} onSelect={setHost} />
       <ProgramSection title={`Around ${city}`} programs={byHost(outside!.tournaments, host)} testID="tournaments-around" />
-      <ProgramSection title="Elsewhere in the state" programs={byHost(outside!.nagvaElsewhere, host)} testID="tournaments-nagva" />
+      <ProgramSection title="Elsewhere in the state" programs={byHost(outside!.elsewhere, host)} testID="tournaments-elsewhere" />
       <Text style={[shared.caption, { marginTop: theme.spacing.md }]}>{PROGRAMS_SOURCE_NOTE}</Text>
     </View>
   ) : null

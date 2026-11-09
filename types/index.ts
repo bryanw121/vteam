@@ -468,8 +468,8 @@ export type ProgramsForRegion = {
   tournaments: ExternalProgram[]
   /** Leagues in the region open (or opening) for sign-up, soonest deadline first. */
   leagues: ExternalProgram[]
-  /** NAGVA tournaments elsewhere in the region's state, soonest first. */
-  nagvaElsewhere: ExternalProgram[]
+  /** Tournaments elsewhere in the region's state (NAGVA, the Texas Asian Olympics…), soonest first. */
+  elsewhere: ExternalProgram[]
 }
 
 // ─── Form Types ───────────────────────────────────────────────────────────────

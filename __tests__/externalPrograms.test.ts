@@ -29,12 +29,15 @@ describe('outside leagues and tournaments', () => {
       prog('alamo', { kind: 'tournament', series: 'nagva', org: 'NAGVA', region: null, city: 'San Antonio', starts_on: '2026-12-18', ends_on: '2026-12-19', registration_deadline: null }),
       prog('dallas league', { region: 'dallas' }),
       prog('ohio nagva', { kind: 'tournament', series: 'nagva', region: null, state: 'OH' }),
+      prog('asian olympics', { kind: 'tournament', series: 'asian-olympics', org: 'Texas Asian Olympics', region: null, city: 'Northlake', starts_on: '2026-11-14', ends_on: '2026-11-15', registration_deadline: null }),
+      prog('dallas league elsewhere', { region: null, city: 'Dallas' }),
     ]
     const g = programsForRegion(rows, 'austin', TODAY)
     expect(g.leagues.map(p => p.id)).toEqual(['soon league', 'late league'])
     expect(g.tournaments.map(p => p.id)).toEqual(['early cup', 'cup'])
-    expect(g.nagvaElsewhere.map(p => p.id)).toEqual(['alamo'])
-    expect(programsForRegion([], 'austin', TODAY).nagvaElsewhere).toEqual([])
+    // Any tournament elsewhere in the state, not leagues (nobody drives to Dallas weekly).
+    expect(g.elsewhere.map(p => p.id)).toEqual(['asian olympics', 'alamo'])
+    expect(programsForRegion([], 'austin', TODAY).elsewhere).toEqual([])
   })
 
   it('isCurrent drops ended programs and closed deadlines', () => {
