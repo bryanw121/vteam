@@ -423,5 +423,21 @@
     "desktop": {
       "color-contrast": 7
     }
+  },
+  "leagues": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "events-feed-tournaments": {
+    "mobile": {
+      "color-contrast": 9
+    },
+    "desktop": {
+      "color-contrast": 10
+    }
   }
 }
