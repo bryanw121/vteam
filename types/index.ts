@@ -392,6 +392,8 @@ export type EventWithDetails = Event & {
   _isTournament?: boolean
   /** Set for sessions run elsewhere in Austin (Schelagg data). Rendered by ExternalSessionCard, which links out to the venue's sign-up. */
   _external?: ExternalSession
+  /** Set for tournaments run outside vteam (Schelagg's programs feed). Rendered by ExternalProgramCard, which links out to the organizer's sign-up. */
+  _program?: ExternalProgram
 }
 
 /** Last visit's Events feed saved on the device (utils/feedSnapshot.ts). `owner` is the viewer's user id, or null for a guest. */
@@ -419,6 +421,59 @@ export type ExternalSession = Pick<
   | 'id' | 'source_id' | 'title' | 'venue' | 'city' | 'surface' | 'session_type' | 'level' | 'price'
   | 'starts_at' | 'ends_at' | 'signup_url' | 'signup_label' | 'note' | 'verified_at' | 'region'
 >
+
+/** One division of an outside league or tournament: its cap and, where the organizer lists it, how many teams are confirmed (counts only). */
+export type ProgramDivision = { name: string; cap?: number; confirmed?: number }
+
+/** Row of `external_programs`: a league season or tournament run outside vteam, pulled from Schelagg's programs feed (ingest_schelagg_programs). */
+export type ExternalProgram = Pick<
+  Override<Tables<'external_programs'>, {
+    kind: 'league' | 'tournament'
+    surface: 'indoor' | 'sand' | 'grass' | null
+    status: 'open' | 'waitlist' | 'full' | 'closed' | null
+    divisions: ProgramDivision[]
+  }>,
+  | 'id' | 'kind' | 'surface' | 'region' | 'state' | 'series' | 'org' | 'title' | 'venue' | 'city' | 'address'
+  | 'format' | 'divisions' | 'starts_on' | 'ends_on' | 'weekdays' | 'registration_opens' | 'registration_deadline'
+  | 'waitlist_on' | 'team_price' | 'individual_price' | 'price_note' | 'price_changes_on' | 'status'
+  | 'signup_url' | 'source_url' | 'checked_at'
+>
+
+/** Props of ExternalProgramCard. */
+export type ExternalProgramCardProps = {
+  program: ExternalProgram
+  /** No date block, and the dates in the text (lists that aren't grouped by day). */
+  compact?: boolean
+  /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
+  menuInset?: boolean
+}
+
+/** Props of ProgramHostChips. */
+export type ProgramHostChipsProps = {
+  programs: ExternalProgram[]
+  /** The chosen host (an `org`), or null for all. */
+  host: string | null
+  onSelect: (host: string | null) => void
+}
+
+/** Props of ProgramSection. */
+export type ProgramSectionProps = {
+  title: string
+  programs: ExternalProgram[]
+  /** Warning color: deadlines this week. */
+  hot?: boolean
+  testID?: string
+}
+
+/** Outside programs grouped for one viewer's region (utils/externalPrograms). */
+export type ProgramsForRegion = {
+  /** Tournaments in the region, soonest first. */
+  tournaments: ExternalProgram[]
+  /** Leagues in the region open (or opening) for sign-up, soonest deadline first. */
+  leagues: ExternalProgram[]
+  /** Tournaments elsewhere in the region's state (NAGVA, the Texas Asian Olympics…), soonest first. */
+  elsewhere: ExternalProgram[]
+}
 
 // ─── Form Types ───────────────────────────────────────────────────────────────
 // Represent the local state of input forms before data is sent to the database.
