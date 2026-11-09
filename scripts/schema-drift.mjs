@@ -46,17 +46,42 @@ const ALLOWED = {
   'trigger:public.notifications.send_notification_push': 'live',
 }
 
-async function rpc(name, fn) {
-  const { url, key } = PROJECTS[name]
-  const res = await fetch(`${url}/rest/v1/rpc/${fn}`, {
-    method: 'POST',
-    headers: { apikey: key, authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: '{}',
-    signal: AbortSignal.timeout(30_000),
-  })
-  if (!res.ok) throw new Error(`${name}: ${fn} HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`)
-  return res.json()
+/**
+ * Worth trying again: the database was busy, not wrong. Beta is shared with every PR's e2e
+ * suite, and under that load schema_fingerprint() can pass the anon role's statement timeout
+ * (Postgres 57014) or the gateway can answer 502-504. Anything else is a real failure.
+ */
+export function isTransient(status, body = '') {
+  return [502, 503, 504].includes(status) || /"code":"57014"|statement timeout/.test(body)
 }
+
+/** Waits between attempts (ms): 4 tries in all, about 35 s at most. */
+export const RETRY_DELAYS_MS = [5_000, 10_000, 20_000]
+
+async function rpc(name, fn, { delays = RETRY_DELAYS_MS, fetchImpl = fetch, sleep = (ms) => new Promise(r => setTimeout(r, ms)) } = {}) {
+  const { url, key } = PROJECTS[name]
+  for (let attempt = 0; ; attempt++) {
+    let status = 0, body = ''
+    try {
+      const res = await fetchImpl(`${url}/rest/v1/rpc/${fn}`, {
+        method: 'POST',
+        headers: { apikey: key, authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+        body: '{}',
+        signal: AbortSignal.timeout(30_000),
+      })
+      if (res.ok) return res.json()
+      status = res.status
+      body = (await res.text()).slice(0, 300)
+    } catch (e) {
+      body = String(e?.message ?? e) // network error or our own 30 s timeout: also worth a retry
+      status = 503
+    }
+    if (attempt >= delays.length || !isTransient(status, body)) throw new Error(`${name}: ${fn} HTTP ${status}: ${body}`)
+    console.log(`${name}: ${fn} was busy (HTTP ${status}); trying again in ${delays[attempt] / 1000} s`)
+    await sleep(delays[attempt])
+  }
+}
+export { rpc as callRpc }
 
 /** Pure: the list of differences between two fingerprints, minus ALLOWED ones. */
 export function diffFingerprints(live, beta, allowed = ALLOWED) {

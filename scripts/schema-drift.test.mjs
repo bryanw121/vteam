@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { diffFingerprints, evaluate } from './schema-drift.mjs'
+import { callRpc, diffFingerprints, evaluate, isTransient } from './schema-drift.mjs'
 
 test('identical fingerprints have no differences', () => {
   assert.deepEqual(diffFingerprints({ 'table:a': '1', 'column:a.x': '2' }, { 'column:a.x': '2', 'table:a': '1' }), [])
@@ -58,4 +58,31 @@ test('a merged PR must reach live; once it has, only a cleanup note remains', ()
 test('a ledger entry for an unknown PR is an error', () => {
   const r = evaluate({ live, beta: betaAhead, pending: ledger, states: {}, allowed: {} })
   assert.match(r.errors[0], /could not be found/)
+})
+
+test('a busy database is retried; a real error is not', () => {
+  assert.equal(isTransient(500, '{"code":"57014","message":"canceling statement due to statement timeout"}'), true)
+  assert.equal(isTransient(504, ''), true)
+  assert.equal(isTransient(404, '{"code":"PGRST202","message":"Could not find the function"}'), false)
+  assert.equal(isTransient(401, 'Invalid API key'), false)
+})
+
+test('callRpc retries a statement timeout and returns the next good answer', async () => {
+  const replies = [
+    { ok: false, status: 500, text: async () => '{"code":"57014","message":"canceling statement due to statement timeout"}' },
+    { ok: true, status: 200, json: async () => ({ 'table:a': '1' }) },
+  ]
+  const waits = []
+  const out = await callRpc('beta', 'schema_fingerprint', { delays: [1, 2], fetchImpl: async () => replies.shift(), sleep: async (ms) => { waits.push(ms) } })
+  assert.deepEqual(out, { 'table:a': '1' })
+  assert.deepEqual(waits, [1])
+})
+
+test('callRpc gives up after its retries, and at once on a real error', async () => {
+  const timeout = { ok: false, status: 500, text: async () => '{"code":"57014"}' }
+  await assert.rejects(callRpc('beta', 'schema_fingerprint', { delays: [1, 1], fetchImpl: async () => timeout, sleep: async () => {} }), /HTTP 500/)
+  let calls = 0
+  const missing = { ok: false, status: 404, text: async () => '{"code":"PGRST202"}' }
+  await assert.rejects(callRpc('live', 'schema_fingerprint', { delays: [1, 1], fetchImpl: async () => { calls++; return missing }, sleep: async () => {} }), /HTTP 404/)
+  assert.equal(calls, 1)
 })
