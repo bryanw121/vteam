@@ -434,10 +434,10 @@
   },
   "events-feed-tournaments": {
     "mobile": {
-      "color-contrast": 9
+      "color-contrast": 8
     },
     "desktop": {
-      "color-contrast": 10
+      "color-contrast": 8
     }
   }
 }
