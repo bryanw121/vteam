@@ -12,7 +12,9 @@
 --   - fixed URL, no parameters; EXECUTE revoked from every client role (only pg_cron runs it);
 --   - a feed older than 18 hours is not ingested (rows then age out of the app by checked_at);
 --   - a feed with no volleyball rows deletes nothing;
---   - only https sign-up and source links are stored.
+--   - only https sign-up and source links are stored;
+--   - rows missing a required field, or with a date that isn't a date, are skipped rather than
+--     failing the run (dates go through schelagg_safe_date()).
 
 create extension if not exists http with schema extensions;
 
@@ -61,6 +63,20 @@ create policy "external_programs are public"
   to anon, authenticated
   using (true);
 
+-- A YYYY-MM-DD date, or null for anything else, Feb 30 included (a bad date skips the field, not the run).
+create or replace function public.schelagg_safe_date(v text)
+returns date
+language plpgsql
+immutable
+set search_path = public
+as $$
+begin
+  return case when v ~ '^\d{4}-\d{2}-\d{2}$' then v::date end;
+exception when others then
+  return null;
+end;
+$$;
+
 create or replace function public.ingest_schelagg_programs()
 returns integer
 language plpgsql
@@ -106,30 +122,32 @@ begin
     nullif(p->>'venue', ''),
     nullif(p->>'city', ''),
     nullif(p->>'address', ''),
-    (p->>'lat')::double precision,
-    (p->>'lng')::double precision,
+    case when jsonb_typeof(p->'lat') = 'number' then (p->>'lat')::double precision end,
+    case when jsonb_typeof(p->'lng') = 'number' then (p->>'lng')::double precision end,
     nullif(p->>'format', ''),
     case when jsonb_typeof(p->'divisions') = 'array' then p->'divisions' else '[]'::jsonb end,
-    (p->>'starts_on')::date,
-    (p->>'ends_on')::date,
+    public.schelagg_safe_date(p->>'starts_on'),
+    public.schelagg_safe_date(p->>'ends_on'),
     case when jsonb_typeof(p->'weekdays') = 'array'
       then array(select jsonb_array_elements_text(p->'weekdays')) else '{}'::text[] end,
-    (p->>'registration_opens')::date,
-    (p->>'registration_deadline')::date,
-    (p->>'waitlist_on')::date,
+    public.schelagg_safe_date(p->>'registration_opens'),
+    public.schelagg_safe_date(p->>'registration_deadline'),
+    public.schelagg_safe_date(p->>'waitlist_on'),
     nullif(p->>'team_price', ''),
     nullif(p->>'individual_price', ''),
     nullif(p->>'price_note', ''),
-    (p->>'price_changes_on')::date,
+    public.schelagg_safe_date(p->>'price_changes_on'),
     case when p->>'status' in ('open', 'waitlist', 'full', 'closed') then p->>'status' end,
     case when p->>'signup_url' like 'https://%' then p->>'signup_url' end,
     case when p->>'source_url' like 'https://%' then p->>'source_url' end,
-    (p->>'checked_at')::timestamptz,
+    case when p->>'checked_at' ~ '^\d{4}-\d{2}-\d{2}T' then (p->>'checked_at')::timestamptz end,
     run_at
   from jsonb_array_elements(coalesce(feed->'programs', '[]'::jsonb)) as p
   where p->>'sport' = 'volleyball'
     and p->>'kind' in ('league', 'tournament')
+    -- Rows missing a required field are skipped, so one bad row can't fail the whole import.
     and coalesce(p->>'id', '') <> ''
+    and coalesce(p->>'source_id', '') <> ''
     and coalesce(p->>'title', '') <> ''
     and coalesce(p->>'org', '') <> ''
   on conflict (id) do update set

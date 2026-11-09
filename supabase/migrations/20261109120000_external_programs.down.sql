@@ -7,4 +7,5 @@ begin
 end;
 $$;
 drop function if exists public.ingest_schelagg_programs();
+drop function if exists public.schelagg_safe_date(text);
 drop table if exists public.external_programs;
