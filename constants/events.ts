@@ -153,6 +153,17 @@ export const EVENT_CARD_MY_ATTENDANCE_SELECT_ATTENDING_ONLY =
 export const EXTERNAL_SESSION_SELECT =
   'id, source_id, region, title, venue, city, surface, session_type, level, price, starts_at, ends_at, signup_url, signup_label, note, verified_at'
 
+/** Columns the app reads from `external_programs` (Schelagg's leagues and tournaments). */
+export const EXTERNAL_PROGRAM_SELECT =
+  'id, kind, surface, region, state, series, org, title, venue, city, address, format, divisions, starts_on, ends_on, weekdays, registration_opens, registration_deadline, waitlist_on, team_price, individual_price, price_note, price_changes_on, status, signup_url, source_url, checked_at'
+
+/**
+ * Hide outside leagues and tournaments Schelagg hasn't checked for this long. Schelagg reads each
+ * organizer twice a day and vteam ingests every two hours, so older rows mean ingestion (or that
+ * organizer's page) has stopped: show nothing rather than a deadline or price that may have changed.
+ */
+export const EXTERNAL_PROGRAM_MAX_AGE_MS = 48 * 60 * 60 * 1000
+
 /**
  * Hide external sessions the hourly Schelagg feed ingest hasn't refreshed for this long.
  * Each ingest rewrites every upcoming row's `updated_at` and deletes sessions the

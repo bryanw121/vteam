@@ -78,6 +78,8 @@ export const routes = {
   tournament: (id: string) => href(`/tournament/${id}`),
   tournamentCreate: () => href('/tournament/create'),
   tournaments: () => href('/tournaments'),
+  /** Leagues around town open for sign-up (Schelagg's programs feed). Public. */
+  leagues: () => href('/leagues'),
 
   host: (opts: HostRouteOptions = {}) => {
     const query: string[] = []
