@@ -8,7 +8,8 @@ import { ScreenContainer, ScreenHeader, ScreenState } from '../../components/ui'
 import { ProgramSection } from '../../components/programs/ProgramSection'
 import { useExternalPrograms } from '../../hooks/useExternalPrograms'
 import { useToday } from '../../hooks/useToday'
-import { programUrgency } from '../../utils/externalPrograms'
+import { byHost, programUrgency } from '../../utils/externalPrograms'
+import { ProgramHostChips } from '../../components/programs/ProgramHostChips'
 import { routes } from '../../utils/routes'
 import { PROGRAMS_SOURCE_NOTE } from '../../constants/copy'
 
@@ -22,7 +23,9 @@ export default function LeaguesScreen() {
   const today = useToday()
   const programs = useExternalPrograms()
   const [refreshing, setRefreshing] = useState(false)
-  const leagues = programs.data?.leagues ?? []
+  const all = programs.data?.leagues ?? []
+  const [host, setHost] = useState<string | null>(null)
+  const leagues = useMemo(() => byHost(all, host), [all, host])
 
   const groups = useMemo(() => {
     const open = leagues.filter(p => p.status === 'open' || p.status === 'waitlist' || p.status == null)
@@ -45,7 +48,7 @@ export default function LeaguesScreen() {
           ready={!!programs.data}
           error={programs.error && !programs.data ? "Couldn't load leagues." : null}
           onRetry={() => { void programs.refetch({ force: true }) }}
-          empty={leagues.length === 0}
+          empty={all.length === 0}
           emptyIcon="calendar-outline"
           emptyTitle="No leagues open for sign-up"
           emptyBody="Organizers post new seasons every month or two. This checks their sign-up pages twice a day."
@@ -54,6 +57,7 @@ export default function LeaguesScreen() {
             contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xl }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void refresh() }} tintColor={theme.colors.primary} />}
           >
+            <ProgramHostChips programs={all} host={host} onSelect={setHost} />
             <ProgramSection title="Closing this week" programs={groups.soon} hot testID="leagues-soon" />
             <ProgramSection title="Open" programs={groups.open} testID="leagues-open" />
             <ProgramSection title="Not open yet, full or closed" programs={groups.later} testID="leagues-later" />

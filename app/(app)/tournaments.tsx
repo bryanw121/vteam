@@ -17,6 +17,8 @@ import { ProgramSection } from '../../components/programs/ProgramSection'
 import { useExternalPrograms } from '../../hooks/useExternalPrograms'
 import { useFeedRegion } from '../../hooks/useUserSettings'
 import { PROGRAMS_SOURCE_NOTE } from '../../constants/copy'
+import { ProgramHostChips } from '../../components/programs/ProgramHostChips'
+import { byHost } from '../../utils/externalPrograms'
 import type { TournamentListItem } from '../../types'
 
 type Tab = 'upcoming' | 'past'
@@ -71,12 +73,15 @@ export default function TournamentsScreen() {
   const programs = useExternalPrograms()
   const region = useFeedRegion()
   const outside = tab === 'upcoming' ? programs.data : null
-  const outsideCount = (outside?.tournaments.length ?? 0) + (outside?.nagvaElsewhere.length ?? 0)
+  const outsideAll = useMemo(() => [...(outside?.tournaments ?? []), ...(outside?.nagvaElsewhere ?? [])], [outside])
+  const outsideCount = outsideAll.length
+  const [host, setHost] = useState<string | null>(null)
   const city = region.charAt(0).toUpperCase() + region.slice(1)
   const outsideNode = outsideCount ? (
     <View style={{ marginTop: theme.spacing.sm }}>
-      <ProgramSection title={`Around ${city}`} programs={outside!.tournaments} testID="tournaments-around" />
-      <ProgramSection title="NAGVA elsewhere in the state" programs={outside!.nagvaElsewhere} testID="tournaments-nagva" />
+      <ProgramHostChips programs={outsideAll} host={host} onSelect={setHost} />
+      <ProgramSection title={`Around ${city}`} programs={byHost(outside!.tournaments, host)} testID="tournaments-around" />
+      <ProgramSection title="Elsewhere in the state" programs={byHost(outside!.nagvaElsewhere, host)} testID="tournaments-nagva" />
       <Text style={[shared.caption, { marginTop: theme.spacing.md }]}>{PROGRAMS_SOURCE_NOTE}</Text>
     </View>
   ) : null

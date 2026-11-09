@@ -120,3 +120,15 @@ export function programDivisions(p: ExternalProgram): string {
     return d.name
   }).join(', ')
 }
+
+/** Who runs these (ACES, NAGVA, a Reclub club…) with how many each, most first, then by name. */
+export function programHosts(rows: readonly ExternalProgram[]): { org: string; count: number }[] {
+  const counts = new Map<string, number>()
+  for (const p of rows) counts.set(p.org, (counts.get(p.org) ?? 0) + 1)
+  return [...counts].map(([org, count]) => ({ org, count })).sort((a, b) => b.count - a.count || a.org.localeCompare(b.org))
+}
+
+/** Rows from one host, or all of them for null (or a host no longer listed). */
+export function byHost<T extends Pick<ExternalProgram, 'org'>>(rows: readonly T[], host: string | null): T[] {
+  return host && rows.some(p => p.org === host) ? rows.filter(p => p.org === host) : [...rows]
+}

@@ -445,6 +445,14 @@ export type ExternalProgramCardProps = {
   menuInset?: boolean
 }
 
+/** Props of ProgramHostChips. */
+export type ProgramHostChipsProps = {
+  programs: ExternalProgram[]
+  /** The chosen host (an `org`), or null for all. */
+  host: string | null
+  onSelect: (host: string | null) => void
+}
+
 /** Props of ProgramSection. */
 export type ProgramSectionProps = {
   title: string

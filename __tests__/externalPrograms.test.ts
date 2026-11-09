@@ -82,3 +82,16 @@ describe('outside leagues and tournaments', () => {
     expect(isHidden(item, hiddenIndex([options[1].entry]))).toBe(true)
   })
 })
+
+describe('hosts', () => {
+  const { programHosts, byHost } = jest.requireActual('../utils/externalPrograms')
+  const rows = [
+    { id: 'a', org: 'ACES' }, { id: 'b', org: 'NAGVA' }, { id: 'c', org: 'ACES' }, { id: 'd', org: 'Austin Sports & Social Club' },
+  ]
+  it('lists hosts most first, then by name, and filters by one', () => {
+    expect(programHosts(rows)).toEqual([{ org: 'ACES', count: 2 }, { org: 'Austin Sports & Social Club', count: 1 }, { org: 'NAGVA', count: 1 }])
+    expect(byHost(rows, 'ACES').map((p: { id: string }) => p.id)).toEqual(['a', 'c'])
+    expect(byHost(rows, null)).toHaveLength(4)
+    expect(byHost(rows, 'Gone')).toHaveLength(4) // a host no longer listed shows everything
+  })
+})
