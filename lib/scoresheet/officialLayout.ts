@@ -18,7 +18,7 @@ export const SHEET_WIDTH = 792
 export const SHEET_HEIGHT = 612
 
 /** Distance from set 1's block to set 2's. */
-const SET_DY = 244.5
+export const SET_DY = 244.5
 /** Left edges of the six lineup columns (I..VI), each COL_W wide; first the left team, then the right. */
 const COLS: Record<'left' | 'right', number[]> = {
   left: [27.8, 68.4, 109.1, 149.6, 190.3, 230.9],

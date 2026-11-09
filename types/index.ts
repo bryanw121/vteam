@@ -1186,6 +1186,8 @@ export type ChipProps = {
   variant?: ChipVariant
   /** 'radio' for one choice out of a set (inside a `role="radiogroup"`): exposes `aria-checked`, which web and native both read. Default 'button' (a filter). */
   role?: 'button' | 'radio'
+  /** 'touch': at least 44pt tall, for chips tapped mid-task (the live scoresheet's zoom). */
+  size?: 'default' | 'touch'
   testID?: string
 }
 
