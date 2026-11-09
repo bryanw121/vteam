@@ -481,7 +481,9 @@ export default function EventsScreen() {
   // refetch keeps it on screen.
   const feedEmpty = (
     <FeedEmpty
-      loading={loading}
+      // Under Tournament most rows are outside tournaments: keep the spinner until they've loaded too,
+      // rather than saying nothing matches the filter.
+      loading={loading || (tournamentsOnly && programs.isLoading && !programs.data)}
       error={events.length === 0 ? error : null}
       onRetry={() => void refresh()}
       filterActive={activeFilter !== 'all' || surfaceFilter !== 'any'}
