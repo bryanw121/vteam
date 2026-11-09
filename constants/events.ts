@@ -165,6 +165,15 @@ export const EXTERNAL_PROGRAM_SELECT =
 export const EXTERNAL_PROGRAM_MAX_AGE_MS = 48 * 60 * 60 * 1000
 
 /**
+ * How long since Schelagg last confirmed an outside session at its source (`verified_at`) before
+ * vteam says so on the card, and before it stops showing it. A scraped source is rechecked every
+ * 30 minutes, so a few days means its scrape keeps failing and Schelagg is showing the last good
+ * copy. Hand-checked sessions (`source_id = 'manual'`) are rechecked by a person every few weeks, so
+ * they get Schelagg's own "stale" line (over 21 days) and are never hidden for age.
+ */
+export const EXTERNAL_SESSION_CONFIRM_DAYS = { scrapedNote: 2, scrapedHide: 7, manualNote: 21 } as const
+
+/**
  * Hide external sessions the hourly Schelagg feed ingest hasn't refreshed for this long.
  * Each ingest rewrites every upcoming row's `updated_at` and deletes sessions the
  * venue cancelled, so rows older than this mean ingestion has stopped: show no
