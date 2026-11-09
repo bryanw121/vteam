@@ -37,8 +37,10 @@ describe('clientIp', () => {
 
 describe('login-with-username function', () => {
   it('answers an unknown username and any Auth failure with the same generic error', () => {
-    expect(fn).toMatch(/if \(typeof email !== 'string' \|\| !email\) return finish\(\{ error: GENERIC_LOGIN_ERROR \}, 401\)/)
-    expect(fn).toMatch(/if \(outcome\.kind !== 'session'\) return finish\(\{ error: GENERIC_LOGIN_ERROR \}, 401\)/)
+    // Both go through the same fail(), which counts the failed attempt and answers generically.
+    expect(fn).toMatch(/if \(typeof email !== 'string' \|\| !email\) return fail\(\)/)
+    expect(fn).toMatch(/if \(outcome\.kind !== 'session'\) return fail\(\)/)
+    expect(fn).toMatch(/return finish\(\{ error: GENERIC_LOGIN_ERROR \}, 401\)\n {6}\}/)
     expect(GENERIC_LOGIN_ERROR).toBe('Incorrect username or password')
   })
   it('forwards the caller IP to Supabase Auth with a secret key', () => {

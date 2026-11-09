@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { createHandler, LOGIN_UNAVAILABLE } from './handler.ts'
 import { GENERIC_LOGIN_ERROR, LOGIN_LIMITS, MIN_RESPONSE_MS, TOO_MANY_ATTEMPTS } from '../_shared/usernameLogin.ts'
-import { fakeSupabase, type FakeSupabase, type FetchCall, quietly, stubFetch, testDeps } from '../_shared/testing.ts'
+import { fakeSupabase, type FakeSupabase, type FetchCall, NOW, quietly, stubFetch, testDeps } from '../_shared/testing.ts'
 
 const URL_ = 'https://proj.supabase.test'
 const TOKEN_URL = `${URL_}/auth/v1/token?grant_type=password`
@@ -12,12 +12,18 @@ function setup(opts: {
   email?: unknown
   allowed?: boolean | ((key: string) => boolean)
   limitError?: boolean
+  /** The username's failed-attempt row in rate_limits (null: none yet). */
+  failures?: { hits: number; window_start: string } | null
+  failuresError?: boolean
   lookupError?: boolean
   auth?: (call: FetchCall) => Response
   env?: Record<string, string | undefined>
   db?: FakeSupabase | null
 } = {}) {
   const db = opts.db === null ? null : opts.db ?? fakeSupabase({
+    results: {
+      'rate_limits.select': opts.failuresError ? { error: { message: 'db down' } } : { data: opts.failures ?? null },
+    },
     rpc: {
       check_rate_limit: (call) => opts.limitError
         ? { error: { message: 'limiter down' } }
@@ -111,28 +117,69 @@ Deno.test('a bad body is a generic 401 without touching the database', async () 
   }
 })
 
-Deno.test('checks the per-username and per-IP limits before the lookup', async () => {
+const NOW_ISO = () => new Date(NOW).toISOString()
+const countedKeys = (db: FakeSupabase) => db.rpcCalls.filter((c) => c.fn === 'check_rate_limit').map((c) => c.args?.p_key)
+
+Deno.test('checks the IP limit and reads the username lockout before the lookup; a success counts nothing for the username', async () => {
   const { send, db } = setup()
-  await send()
-  assert.deepEqual(db.rpcCalls.map((c) => c.fn), ['check_rate_limit', 'check_rate_limit', 'get_email_by_username'])
-  assert.deepEqual(db.rpcCalls[0].args, { p_key: 'login_user:e2ebot', p_max: LOGIN_LIMITS.perUsername, p_window_seconds: LOGIN_LIMITS.windowSeconds })
-  assert.deepEqual(db.rpcCalls[1].args, { p_key: 'login_ip:203.0.113.7', p_max: LOGIN_LIMITS.perIp, p_window_seconds: LOGIN_LIMITS.windowSeconds })
-  assert.deepEqual(db.rpcCalls[2].args, { p_username: 'e2ebot' })
+  assert.equal((await send()).status, 200)
+  assert.deepEqual(db.rpcCalls.map((c) => c.fn), ['check_rate_limit', 'get_email_by_username'])
+  assert.deepEqual(db.rpcCalls[0].args, { p_key: 'login_ip:203.0.113.7', p_max: LOGIN_LIMITS.perIp, p_window_seconds: LOGIN_LIMITS.windowSeconds })
+  assert.deepEqual(db.rpcCalls[1].args, { p_username: 'e2ebot' })
+  const read = db.callsTo('rate_limits', 'select')
+  assert.equal(read.length, 1)
+  assert.deepEqual(read[0].filters, [['eq', 'key', 'login_user:e2ebot']])
 })
 
-Deno.test('no IP header: only the per-username limit', async () => {
+Deno.test('a wrong password and an unknown username each count one failure for the username', async () => {
+  const wrong = setup({ auth: () => Response.json({ error: 'invalid_grant' }, { status: 400 }) })
+  assert.equal((await wrong.send()).status, 401)
+  assert.deepEqual(countedKeys(wrong.db), ['login_ip:203.0.113.7', 'login_user:e2ebot'])
+  const last = wrong.db.rpcCalls.at(-1)
+  assert.deepEqual(last?.args, { p_key: 'login_user:e2ebot', p_max: LOGIN_LIMITS.perUsername, p_window_seconds: LOGIN_LIMITS.windowSeconds })
+
+  const unknown = setup({ email: null })
+  assert.equal((await unknown.send()).status, 401)
+  assert.deepEqual(countedKeys(unknown.db), ['login_ip:203.0.113.7', 'login_user:e2ebot'])
+})
+
+Deno.test('no IP header: no IP limit, the username lockout still applies', async () => {
   const { send, db } = setup()
   await send(undefined, {})
-  assert.deepEqual(db.rpcCalls.map((c) => c.args?.p_key).filter(Boolean), ['login_user:e2ebot'])
+  assert.deepEqual(countedKeys(db), [])
+  assert.equal(db.callsTo('rate_limits', 'select').length, 1)
 })
 
-Deno.test('over a limit: 429 before the lookup, nothing sent to Auth', async () => {
+Deno.test('over the IP limit: 429 before the lookup, nothing sent to Auth', async () => {
   const { send, db, net } = setup({ allowed: (key) => !key.startsWith('login_ip:') })
   const res = await send()
   assert.equal(res.status, 429)
   assert.deepEqual(await res.json(), { error: TOO_MANY_ATTEMPTS })
   assert.equal(db.rpcCalls.some((c) => c.fn === 'get_email_by_username'), false)
   assert.equal(net.calls.length, 0)
+})
+
+Deno.test('a username out of failed attempts is refused before the lookup, even with the right password', async () => {
+  const { send, db, net } = setup({ failures: { hits: LOGIN_LIMITS.perUsername, window_start: NOW_ISO() } })
+  const res = await send()
+  assert.equal(res.status, 429)
+  assert.deepEqual(await res.json(), { error: TOO_MANY_ATTEMPTS })
+  assert.equal(db.rpcCalls.some((c) => c.fn === 'get_email_by_username'), false)
+  assert.equal(net.calls.length, 0)
+  assert.deepEqual(countedKeys(db), ['login_ip:203.0.113.7'])
+})
+
+Deno.test('failed attempts under the limit, or from an expired window, do not lock out', async () => {
+  const under = setup({ failures: { hits: LOGIN_LIMITS.perUsername - 1, window_start: NOW_ISO() } })
+  assert.equal((await under.send()).status, 200)
+  const expired = new Date(NOW - (LOGIN_LIMITS.windowSeconds + 60) * 1000).toISOString()
+  const old = setup({ failures: { hits: LOGIN_LIMITS.perUsername + 5, window_start: expired } })
+  assert.equal((await old.send()).status, 200)
+})
+
+Deno.test('a failed lockout read does not lock anyone out', async () => {
+  const { send } = setup({ failuresError: true })
+  assert.equal((await send()).status, 200)
 })
 
 Deno.test('a broken limiter does not lock everyone out', async () => {
