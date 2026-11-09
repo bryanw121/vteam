@@ -33,11 +33,15 @@ export const SCREENS = {
   // ── Events ──────────────────────────────────────────────────────────────
   'events-feed': {
     route: '/', ready: 'Lunchtime Pepper',
-    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'app/(app)/(tabs)/(main)/_layout.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx',
+    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'app/(app)/(tabs)/(main)/_layout.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/ExternalProgramCard.tsx', 'hooks/useExternalPrograms.ts',
       'components/MyEventsRail.tsx', 'components/Pager.tsx', 'hooks/useMonthEvents.ts', 'hooks/useMyUpcomingEvents.ts', 'hooks/useTags.ts', 'utils/feed*.ts', 'utils/eventCardPreviews.ts',
       'utils/monthKeys.ts', 'utils/calendar*.ts', 'constants/events.ts', 'components/RefreshControl*.tsx', 'lib/pullGesture.ts',
       'components/event/ForecastChip.tsx', 'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs',
       'hooks/useHiddenFeed.ts', 'utils/hiddenFeed.ts', 'hooks/useUserSettings.ts'],
+  },
+  'events-feed-tournaments': {
+    route: '/', ready: 'Lunchtime Pepper', actions: [{ tap: 'filter-tournament', text: 'Tournament' }, { wait: 400 }], fullPage: true,
+    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'components/ExternalProgramCard.tsx', 'hooks/useExternalPrograms.ts', 'utils/externalPrograms.ts', 'utils/feedItems.ts', 'components/events/LeaguesLink.tsx', 'components/events/AllTournamentsLink.tsx'],
   },
   'events-feed-guest': {
     route: '/', signedIn: false, ready: 'Lunchtime Pepper',
@@ -108,7 +112,8 @@ export const SCREENS = {
   'settings-silenced': { route: '/settings/silenced', ready: 'Hannah', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/silenced.tsx', 'hooks/useSilencedUsers.ts'] },
 
   // ── Tournaments ─────────────────────────────────────────────────────────
-  'tournaments-list': { route: '/tournaments', ready: 'Halloween Sand Classic', sources: ['app/(app)/tournaments.tsx', 'hooks/useTournamentList.ts', 'utils/tournamentList.ts', 'components/events/AllTournamentsLink.tsx'] },
+  'tournaments-list': { route: '/tournaments', ready: 'Halloween Sand Classic', sources: ['app/(app)/tournaments.tsx', 'hooks/useTournamentList.ts', 'utils/tournamentList.ts', 'components/events/AllTournamentsLink.tsx', 'hooks/useExternalPrograms.ts', 'components/ExternalProgramCard.tsx', 'components/programs/ProgramSection.tsx'] },
+  'leagues': { route: '/leagues', ready: 'Sunday Indoor Volleyball', sources: ['app/(app)/leagues.tsx', 'hooks/useExternalPrograms.ts', 'utils/externalPrograms.ts', 'components/ExternalProgramCard.tsx', 'components/programs/ProgramSection.tsx', 'components/events/LeaguesLink.tsx'] },
   'tournaments-list-past': { route: '/tournaments', ready: 'Halloween Sand Classic', actions: [{ tap: 'tournaments-past' }], sources: ['app/(app)/tournaments.tsx', 'hooks/useTournamentList.ts', 'utils/tournamentList.ts'] },
   'tournament-overview': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', sources: TOURNAMENT_DETAIL },
   'tournament-teams': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-teams', text: 'Teams' }], sources: TOURNAMENT_DETAIL },

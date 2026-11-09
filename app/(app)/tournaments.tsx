@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { FlatList, TouchableOpacity, View } from 'react-native'
+import { FlatList, ScrollView, TouchableOpacity, View } from 'react-native'
 import { Text } from '../../components/ui/Text'
 import { Stack, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -13,6 +13,10 @@ import { TourneyStatusBadge } from '../../components/tournament/TournamentBits'
 import { Chip, EmptyState, IconButton, ScreenContainer, ScreenHeader, ScreenState } from '../../components/ui'
 import { routes } from '../../utils/routes'
 import { splitTournaments } from '../../utils/tournamentList'
+import { ProgramSection } from '../../components/programs/ProgramSection'
+import { useExternalPrograms } from '../../hooks/useExternalPrograms'
+import { useFeedRegion } from '../../hooks/useUserSettings'
+import { PROGRAMS_SOURCE_NOTE } from '../../constants/copy'
 import type { TournamentListItem } from '../../types'
 
 type Tab = 'upcoming' | 'past'
@@ -49,7 +53,11 @@ function TournamentRow({ item, onPress }: { item: TournamentListItem; onPress: (
   )
 }
 
-/** Tournaments from the viewer's clubs: upcoming (soonest first) and past (latest first). */
+/**
+ * Tournaments from the viewer's clubs (upcoming soonest first, past latest first), and on Upcoming
+ * the ones run outside vteam (Schelagg's programs feed): around the viewer's city, then NAGVA
+ * elsewhere in the state. Guests see the outside ones; club tournaments need an account.
+ */
 export default function TournamentsScreen() {
   const router = useRouter()
   const { userId, isGuest } = useSession()
@@ -60,11 +68,23 @@ export default function TournamentsScreen() {
 
   const split = useMemo(() => splitTournaments(list.data ?? [], new Date()), [list.data])
   const items = tab === 'upcoming' ? split.upcoming : split.past
+  const programs = useExternalPrograms()
+  const region = useFeedRegion()
+  const outside = tab === 'upcoming' ? programs.data : null
+  const outsideCount = (outside?.tournaments.length ?? 0) + (outside?.nagvaElsewhere.length ?? 0)
+  const city = region.charAt(0).toUpperCase() + region.slice(1)
+  const outsideNode = outsideCount ? (
+    <View style={{ marginTop: theme.spacing.sm }}>
+      <ProgramSection title={`Around ${city}`} programs={outside!.tournaments} testID="tournaments-around" />
+      <ProgramSection title="NAGVA elsewhere in the state" programs={outside!.nagvaElsewhere} testID="tournaments-nagva" />
+      <Text style={[shared.caption, { marginTop: theme.spacing.md }]}>{PROGRAMS_SOURCE_NOTE}</Text>
+    </View>
+  ) : null
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(routes.app()))
 
   async function refresh() {
     setRefreshing(true)
-    try { await list.refetch({ force: true }) } finally { setRefreshing(false) }
+    try { await Promise.all([list.refetch({ force: true }), programs.refetch({ force: true })]) } finally { setRefreshing(false) }
   }
 
   return (
@@ -80,13 +100,16 @@ export default function TournamentsScreen() {
           ) : undefined}
         />
         {isGuest ? (
-          <EmptyState
-            icon="trophy-outline"
-            title="Sign in to see tournaments"
-            body="Tournaments are shared with club members."
-            actionLabel="Sign in"
-            onAction={() => { requireSignIn() }}
-          />
+          <ScrollView contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xl }}>
+            <EmptyState
+              icon="trophy-outline"
+              title="Sign in to see club tournaments"
+              body="Tournaments on vteam are shared with club members."
+              actionLabel="Sign in"
+              onAction={() => { requireSignIn() }}
+            />
+            {outsideNode}
+          </ScrollView>
         ) : (
           <>
             <View style={{ flexDirection: 'row', gap: theme.spacing.sm, paddingHorizontal: theme.spacing.md, paddingTop: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
@@ -98,7 +121,7 @@ export default function TournamentsScreen() {
               ready={!!list.data}
               error={list.error && !list.data ? "Couldn't load tournaments." : null}
               onRetry={() => { void list.refetch({ force: true }) }}
-              empty={items.length === 0}
+              empty={items.length === 0 && !outsideCount}
               emptyIcon="trophy-outline"
               emptyTitle={tab === 'upcoming' ? 'No upcoming tournaments' : 'No past tournaments'}
               emptyBody={tab === 'upcoming' ? 'Tournaments your clubs publish show up here.' : 'Finished tournaments and their podiums live here.'}
@@ -107,6 +130,8 @@ export default function TournamentsScreen() {
                 data={items}
                 keyExtractor={t => t.id}
                 renderItem={({ item }) => <TournamentRow item={item} onPress={() => router.push(routes.tournament(item.id))} />}
+                ListHeaderComponent={outsideNode && items.length ? <Text accessibilityRole="header" style={shared.programSectionTitle}>On vteam · {items.length}</Text> : null}
+                ListFooterComponent={outsideNode}
                 contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xl }}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void refresh() }} tintColor={theme.colors.primary} />}
               />
