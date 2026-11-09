@@ -484,7 +484,7 @@ export function isSurface(value: unknown): value is Surface {
 }
 
 /** A feed item's surface: the host's choice for club events, the venue's for outside sessions. */
-export function surfaceOf(event: { surface?: string | null; _external?: { surface?: string | null } | null }): Surface | null {
-  const s = event._external ? event._external.surface : event.surface
+export function surfaceOf(event: { surface?: string | null; _external?: { surface?: string | null } | null; _program?: { surface?: string | null } | null }): Surface | null {
+  const s = event._external ? event._external.surface : event._program ? event._program.surface : event.surface
   return isSurface(s) ? s : null
 }

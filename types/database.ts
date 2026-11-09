@@ -1,5 +1,3 @@
-// TODO(#102): hand-edited to match migrations 20261028120000_privacy_private_reads.sql and 20261028120200_rate_limit_core.sql until they can be
-// applied on beta (Supabase write approval pending). Regenerate from beta before merging; do not keep this line.
 export type Json =
   | string
   | number
@@ -575,6 +573,20 @@ export type Database = {
             referencedRelation: "event_attendees"
             referencedColumns: ["event_id", "user_id"]
           },
+          {
+            foreignKeyName: "event_attendee_denials_attendee_fkey"
+            columns: ["event_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "event_attendees_attending"
+            referencedColumns: ["event_id", "user_id"]
+          },
+          {
+            foreignKeyName: "event_attendee_denials_attendee_fkey"
+            columns: ["event_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "event_attendees_waitlisted"
+            referencedColumns: ["event_id", "user_id"]
+          },
         ]
       }
       event_attendees: {
@@ -582,6 +594,9 @@ export type Database = {
           denial_reason: string | null
           event_id: string
           joined_at: string | null
+          no_show: boolean
+          no_show_marked_at: string | null
+          no_show_marked_by: string | null
           status: string
           team_number: number | null
           team_pinned: boolean
@@ -591,6 +606,9 @@ export type Database = {
           denial_reason?: string | null
           event_id: string
           joined_at?: string | null
+          no_show?: boolean
+          no_show_marked_at?: string | null
+          no_show_marked_by?: string | null
           status?: string
           team_number?: number | null
           team_pinned?: boolean
@@ -600,6 +618,9 @@ export type Database = {
           denial_reason?: string | null
           event_id?: string
           joined_at?: string | null
+          no_show?: boolean
+          no_show_marked_at?: string | null
+          no_show_marked_by?: string | null
           status?: string
           team_number?: number | null
           team_pinned?: boolean
@@ -611,6 +632,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendees_no_show_marked_by_fkey"
+            columns: ["no_show_marked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -957,6 +985,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      external_programs: {
+        Row: {
+          address: string | null
+          checked_at: string | null
+          city: string | null
+          divisions: Json
+          ends_on: string | null
+          format: string | null
+          id: string
+          individual_price: string | null
+          kind: string
+          lat: number | null
+          lng: number | null
+          org: string
+          price_changes_on: string | null
+          price_note: string | null
+          region: string | null
+          registration_deadline: string | null
+          registration_opens: string | null
+          series: string | null
+          signup_url: string | null
+          source_id: string
+          source_url: string | null
+          starts_on: string | null
+          state: string | null
+          status: string | null
+          surface: string | null
+          team_price: string | null
+          title: string
+          updated_at: string
+          venue: string | null
+          waitlist_on: string | null
+          weekdays: string[]
+        }
+        Insert: {
+          address?: string | null
+          checked_at?: string | null
+          city?: string | null
+          divisions?: Json
+          ends_on?: string | null
+          format?: string | null
+          id: string
+          individual_price?: string | null
+          kind: string
+          lat?: number | null
+          lng?: number | null
+          org: string
+          price_changes_on?: string | null
+          price_note?: string | null
+          region?: string | null
+          registration_deadline?: string | null
+          registration_opens?: string | null
+          series?: string | null
+          signup_url?: string | null
+          source_id: string
+          source_url?: string | null
+          starts_on?: string | null
+          state?: string | null
+          status?: string | null
+          surface?: string | null
+          team_price?: string | null
+          title: string
+          updated_at?: string
+          venue?: string | null
+          waitlist_on?: string | null
+          weekdays?: string[]
+        }
+        Update: {
+          address?: string | null
+          checked_at?: string | null
+          city?: string | null
+          divisions?: Json
+          ends_on?: string | null
+          format?: string | null
+          id?: string
+          individual_price?: string | null
+          kind?: string
+          lat?: number | null
+          lng?: number | null
+          org?: string
+          price_changes_on?: string | null
+          price_note?: string | null
+          region?: string | null
+          registration_deadline?: string | null
+          registration_opens?: string | null
+          series?: string | null
+          signup_url?: string | null
+          source_id?: string
+          source_url?: string | null
+          starts_on?: string | null
+          state?: string | null
+          status?: string | null
+          surface?: string | null
+          team_price?: string | null
+          title?: string
+          updated_at?: string
+          venue?: string | null
+          waitlist_on?: string | null
+          weekdays?: string[]
+        }
+        Relationships: []
       }
       external_sessions: {
         Row: {
@@ -2520,6 +2650,7 @@ export type Database = {
       ad_free_offer: { Args: never; Returns: Json }
       award_event_points: { Args: never; Returns: number }
       can_read_chat_image: { Args: { p_name: string }; Returns: boolean }
+      cancel_friend_request: { Args: { p_user_id: string }; Returns: string }
       check_rate_limit: {
         Args: { p_key: string; p_max: number; p_window_seconds: number }
         Returns: boolean
@@ -2529,6 +2660,10 @@ export type Database = {
         Returns: number
       }
       current_user_is_admin: { Args: never; Returns: boolean }
+      enforce_rate_limit: {
+        Args: { p_key: string; p_max: number; p_window_seconds: number }
+        Returns: undefined
+      }
       event_reminder_text: {
         Args: {
           p_location: string
@@ -2541,12 +2676,15 @@ export type Database = {
           title: string
         }[]
       }
-      enforce_rate_limit: {
-        Args: { p_key: string; p_max: number; p_window_seconds: number }
+      find_or_create_dm: { Args: { other_user_id: string }; Returns: string }
+      friend_accept: {
+        Args: { p_addressee: string; p_request_id: string; p_requester: string }
         Returns: undefined
       }
-      cancel_friend_request: { Args: { p_user_id: string }; Returns: string }
-      find_or_create_dm: { Args: { other_user_id: string }; Returns: string }
+      friend_pair_lock: {
+        Args: { p_a: string; p_b: string }
+        Returns: undefined
+      }
       get_ad_free_status: { Args: never; Returns: Json }
       get_chat_unread_count: { Args: never; Returns: number }
       get_email_by_username: { Args: { p_username: string }; Returns: string }
@@ -2609,6 +2747,7 @@ export type Database = {
         }[]
       }
       ingest_schelagg_feed: { Args: never; Returns: number }
+      ingest_schelagg_programs: { Args: never; Returns: number }
       is_app_admin: { Args: never; Returns: boolean }
       is_club_owner: { Args: { p_club_id: string }; Returns: boolean }
       is_conversation_member: { Args: { conv_id: string }; Returns: boolean }
@@ -2640,6 +2779,7 @@ export type Database = {
         Returns: string
       }
       rollup_app_events: { Args: { p_days?: number }; Returns: number }
+      schelagg_safe_date: { Args: { v: string }; Returns: string }
       schema_fingerprint: { Args: never; Returns: Json }
       schema_pending_changes: { Args: never; Returns: Json }
       send_event_reminders: { Args: never; Returns: number }
@@ -2648,6 +2788,10 @@ export type Database = {
       set_best_friend: {
         Args: { p_best: boolean; p_user_id: string }
         Returns: boolean
+      }
+      set_no_show: {
+        Args: { p_event_id: string; p_user_id: string; p_value: boolean }
+        Returns: undefined
       }
       tournament_registration_check: {
         Args: {

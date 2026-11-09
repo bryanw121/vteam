@@ -62,6 +62,7 @@ export const RLS_MATRIX: Record<TableName, RlsExpectation> = {
   event_tags: { anonSelect: 'all', anonInsert: 'none', why: 'feed filters by tag for guests' },
   events: { anonSelect: 'all', anonInsert: 'none', owner: { column: 'created_by', ownRowsOnly: false, noInsertAsOther: true }, why: 'guest browsing' },
   external_sessions: { anonSelect: 'all', anonInsert: 'none', why: 'venue sessions in the guest feed (Schelagg ingest writes)' },
+  external_programs: { anonSelect: 'all', anonInsert: 'none', why: 'outside leagues and tournaments in the guest feed (Schelagg programs ingest writes)' },
   feedback_submissions: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true } },
   friend_requests: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'requester_id', ownRowsOnly: true, noInsertAsOther: true }, why: 'only the two people on a pending request see it; written only by the friend RPCs' },
   friendships: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true }, why: 'one row per direction, each person reads only their own; written only by the friend RPCs' },

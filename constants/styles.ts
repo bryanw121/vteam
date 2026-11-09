@@ -287,6 +287,17 @@ export const shared = StyleSheet.create({
   forecastCellTime: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
   forecastCellTemp: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lgs, color: theme.colors.text },
   forecastCellPop: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
+  /** Heading over a group of outside leagues / tournaments (ProgramSection). */
+  programSectionTitle: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.xs,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: theme.colors.subtext,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+  },
+  programSectionTitleHot: { color: theme.colors.warning },
   externalCard: {
     backgroundColor: theme.colors.card,
     borderRadius: 20,
