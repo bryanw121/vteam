@@ -39,6 +39,7 @@ export const SNAPSHOT_PREFIXES = [
   'tags',
   'conversations',
   'chatSilences',
+  'external-programs', // public listings (Tournaments, Leagues): safe on a shared device
 ] as const
 
 function storage(): Storage | null {

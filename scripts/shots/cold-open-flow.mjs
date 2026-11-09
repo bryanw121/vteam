@@ -7,8 +7,8 @@
  * refresh 2.6 s, then every REST call ~10 s).
  *
  * Visit 1 (fast server) saves what the device keeps; visit 2 (slow server)
- * measures when the Events feed, the viewer's points on Profile and the Chat
- * list first show. With the device snapshots they should paint well before the
+ * measures when the Events feed, the viewer's points on Profile, the Chat
+ * list and the outside tournaments on Tournaments first show. With the device snapshots they should paint well before the
  * server answers; without them they wait for it.
  *
  *   node scripts/shots/cold-open-flow.mjs --dist dist-mock [--delay 8000] [--out shots/cold-open]
@@ -58,6 +58,9 @@ try {
   await page.goto(`${server.url}/chat`, { waitUntil: 'load' })
   await page.getByTestId('conversation-row').first().waitFor({ timeout: 30000 }).catch(() => {})
   await page.waitForTimeout(2500)
+  await page.goto(`${server.url}/tournaments`, { waitUntil: 'load' })
+  await page.getByTestId('external-program-card').first().waitFor({ timeout: 30000 }).catch(() => {})
+  await page.waitForTimeout(2500)
 
   // Visit 2: the saved access token has expired and the server is slow.
   // (an init script: the mock's own one rewrites a fresh session on every navigation, and this one runs after it)
@@ -79,6 +82,7 @@ try {
     ['events', '/', page.getByTestId('event-card')],
     ['profile', '/profile', page.getByTestId('profile-points-count')],
     ['chat', '/chat', page.getByTestId('conversation-row')],
+    ['tournaments', '/tournaments', page.getByTestId('external-program-card')],
   ]) {
     const start = Date.now()
     await page.goto(`${server.url}${path}`, { waitUntil: 'commit' })
