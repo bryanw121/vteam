@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `99603da674f5`
+> Inventory fingerprint: `f848415e2438`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -624,7 +624,7 @@ TypeScript `enum` keyword.
 | `EventPreviewState` | `upcoming`, `cancelled`, `ended`, `missing` | [`types/index.ts:183`](../types/index.ts#L183) |
 | `FeedbackKind` | `feature`, `bug` | [`types/index.ts:352`](../types/index.ts#L352) |
 | `FeedbackPriority` | `low`, `medium`, `high` | [`types/index.ts:353`](../types/index.ts#L353) |
-| `FeedFilter` | `mine`, `all`, `open_play`, `tournament`, `not_full` | [`types/index.ts:766`](../types/index.ts#L766) |
+| `FeedFilter` | `mine`, `all`, `open_play`, `tournament` | [`types/index.ts:766`](../types/index.ts#L766) |
 | `FeedRsvpAction` | `join`, `leave` | [`types/index.ts:780`](../types/index.ts#L780) |
 | `ForecastTone` | `neutral`, `rain`, `heat` | [`types/index.ts:1959`](../types/index.ts#L1959) |
 | `ForecastWindow` | `show`, `later` | [`types/index.ts:1953`](../types/index.ts#L1953) |
