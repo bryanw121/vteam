@@ -410,6 +410,9 @@ export type QuerySnapshot = {
   entries: Record<string, unknown>
 }
 
+/** How recently Schelagg confirmed an outside session at its source (utils/externalFreshness). */
+export type SessionConfirmation = { state: 'ok' | 'unconfirmed' | 'hidden'; note: string | null }
+
 /** Row of `external_sessions`: a session another Austin venue or group runs, pulled hourly from the Schelagg feed (ingest_schelagg_feed). */
 export type ExternalSession = Pick<
   Override<Tables<'external_sessions'>, { surface: 'indoor' | 'sand' | 'grass' | null }>,
