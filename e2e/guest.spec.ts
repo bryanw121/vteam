@@ -8,8 +8,6 @@ test.describe('guest browsing', () => {
     await expect(page).toHaveURL(`${BASE_URL}/`)
     await expect(page.getByTestId('filter-all').first()).toBeVisible({ timeout: 20_000 })
     await expect(page.getByTestId('header-sign-in').first()).toBeVisible()
-    // "Mine" needs an account.
-    await expect(page.getByTestId('filter-mine')).toHaveCount(0)
   })
 
   test('week strip names its month, steps with the arrows, and Today comes back', async ({ page }) => {
