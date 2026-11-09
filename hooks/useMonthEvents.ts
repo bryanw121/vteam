@@ -28,7 +28,8 @@ import {
   type QueryResult,
 } from '../lib/query'
 import { useSession } from '../contexts/session'
-import { startOfToday } from '../utils'
+import { localDateKey, startOfToday } from '../utils'
+import { sessionConfirmation } from '../utils/externalFreshness'
 import { addMonths, bucketByMonthKey, enumerateMonths, monthEndIso, monthKeyFromIso, monthStartIso } from '../utils/monthKeys'
 import { readFeedSnapshot, SNAPSHOT_MONTHS, writeFeedSnapshot } from '../utils/feedSnapshot'
 import { fetchEventCardPreviews, previewsFromRows, withEventCardPreviews } from '../utils/eventCardPreviews'
@@ -179,7 +180,8 @@ function bucketFeed(
   const combined = [
     ...withEventCardPreviews(events, previews),
     ...normalizeTournaments(tournaments),
-    ...normalizeExternalSessions(external),
+    // Outside sessions whose source hasn't been read for a week are left out (utils/externalFreshness).
+    ...normalizeExternalSessions((external ?? []).filter(s => sessionConfirmation(s, localDateKey(new Date())).state !== 'hidden')),
   ]
   combined.sort((a, b) => a.event_date.localeCompare(b.event_date))
   return bucketByMonthKey(combined, span)
