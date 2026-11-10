@@ -251,6 +251,14 @@ select props->>'source' as source, count(*) as started from app_events where nam
 select name, count(*) from app_events where name in ('tour_completed', 'tour_skipped') group by 1;
 ```
 
+### Job health
+The background work players notice when it breaks (points, event reminders, the Schelagg imports, the nightly prune, push webhook calls) runs inside the database on timers, and a failure shows nowhere in the app. `public.job_health()` (SECURITY DEFINER, executable by anon, aggregates only: no error text, ids or user data) reports every pg_cron job's last successful run and failures in 24h, the newest Schelagg rows, attendees `award_event_points()` should have paid over an hour ago and didn't, and failed `net._http_response` calls. `scripts/job-health.mjs` judges the rows against `EXPECTATIONS` (per job: how long it may go without a success) and `.github/workflows/job-health.yml` runs it on live and beta every 3 hours, so a failure emails the owner with a table in the job summary (feeds are shown only: `feed-freshness.yml` already pages for them). **A new cron job needs an entry in `EXPECTATIONS`**: CI's Web build runs the script on beta with `--expectations-only` and fails until it has one. Read the error message of a failing job:
+```sql
+select jobname, status, return_message, start_time
+from cron.job_run_details join cron.job using (jobid)
+order by start_time desc limit 20;
+```
+
 ### Terms and Privacy
 The policy text lives in `constants/legal.ts` (Markdown subset, rendered by `components/legal/LegalDocument` via `utils/legalMarkdown.ts`) and is served at the public root routes `/terms` and `/privacy` (`app/terms.tsx`, `app/privacy.tsx`, outside both route groups so guests and store reviewers can open them and the sign-up form stays mounted underneath). `AgreementLine` (passive clickwrap) sits under every sign-up / sign-in action on register and login. Placeholders written as `\[...\]` render highlighted until they're filled in. Bump `TERMS_VERSION` when the Terms change materially.
 

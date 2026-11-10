@@ -112,6 +112,10 @@ jobs:
         run: npm run db:drift
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # reads the state of PRs in beta's ledger
+      # Every pg_cron job needs a health expectation (#157): a PR that adds a job on
+      # beta fails here until scripts/job-health.mjs knows how often it should succeed.
+      - name: Job health expectations (beta)
+        run: node scripts/job-health.mjs --project beta --expectations-only
       # Migrations reach live before the PR's code is deployed: flag drops,
       # renames, type changes and new required columns (expand, then contract).
       - name: Migration safety

@@ -119,6 +119,22 @@ test.describe('anon (guest browsing)', () => {
   })
 })
 
+test.describe('job health (#157)', () => {
+  test('a guest can read the aggregate report, and nothing behind it', async () => {
+    const report = await q(() => anon.rpc('job_health'), 'job_health')
+    expect(report.error).toBeNull()
+    const rows = (report.data ?? []) as Record<string, unknown>[]
+    expect(rows.some(r => String(r.check_name).startsWith('cron: '))).toBe(true)
+    for (const row of rows) {
+      expect(Object.keys(row).sort()).toEqual(['check_name', 'detail', 'failures_24h', 'last_ok_at', 'ok'])
+      // Counts and ages only: no ids, no error text.
+      expect(String(row.detail ?? '')).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-|ERROR:/i)
+    }
+    const ledger = await q(() => anon.from('point_events').select('id').limit(1), 'anon point_events')
+    expect(ledger.data ?? []).toEqual([])
+  })
+})
+
 test.describe('event_payments ("I\'ve paid", #6)', () => {
   test('anon reads nothing and cannot write', async () => {
     const res = await q(() => anon.from('event_payments').select('*').limit(1), 'anon event_payments')
