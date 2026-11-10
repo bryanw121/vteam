@@ -90,7 +90,7 @@ export default function ResetPassword() {
 
   const backToSignIn = (
     <TouchableOpacity style={shared.authLink} onPress={() => router.replace(routes.login())} accessibilityRole="link">
-      <Text style={shared.authLinkText}>Back to sign in</Text>
+      <Text style={[shared.authLinkText, { color: theme.colors.primaryText }]}>Back to sign in</Text>
     </TouchableOpacity>
   )
 
@@ -107,7 +107,7 @@ export default function ResetPassword() {
         {stage === 'done' ? (
           <>
             <Text style={shared.authSubtitle}>password updated!</Text>
-            <Text style={[shared.caption, { textAlign: 'center' }]}>
+            <Text style={[shared.captionStrong, { textAlign: 'center' }]}>
               You're signed out on your other devices. Taking you back to the app…
             </Text>
           </>
@@ -120,11 +120,11 @@ export default function ResetPassword() {
         ) : stage === 'expired' ? (
           <View testID="reset-expired" style={{ gap: theme.spacing.sm }}>
             <Text style={shared.authSubtitle}>this link has expired</Text>
-            <Text style={[shared.caption, { textAlign: 'center' }]}>
+            <Text style={[shared.captionStrong, { textAlign: 'center' }]}>
               Reset links work once and expire. Enter your email and we'll send a new one.
             </Text>
             {resendSent ? (
-              <Text style={[shared.caption, { textAlign: 'center' }]} testID="reset-resent">
+              <Text style={[shared.captionStrong, { textAlign: 'center' }]} testID="reset-resent">
                 If that email has an account, a new link is on its way.
               </Text>
             ) : (

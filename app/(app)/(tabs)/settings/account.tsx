@@ -63,18 +63,18 @@ export default function AccountSettingsScreen() {
     >
       <View style={shared.card} testID="account-details">
         <View style={{ gap: 2 }}>
-          <Text style={shared.caption}>Username</Text>
+          <Text style={shared.captionStrong}>Username</Text>
           <Text style={shared.body} testID="account-username">{profile ? `@${profile.username}` : '…'}</Text>
         </View>
         <View style={shared.divider} />
         <View style={{ gap: 2 }}>
-          <Text style={shared.caption}>Email</Text>
+          <Text style={shared.captionStrong}>Email</Text>
           <Text style={shared.body}>{email ? obfuscateEmail(email) : '—'}</Text>
         </View>
         <View style={shared.divider} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md }}>
           <View style={{ flex: 1, gap: 2 }}>
-            <Text style={shared.caption}>Password</Text>
+            <Text style={shared.captionStrong}>Password</Text>
             <Text style={shared.body}>
               {resetState === 'sent' ? 'Check your email for the link' : 'Set a new one by email'}
             </Text>
@@ -90,7 +90,7 @@ export default function AccountSettingsScreen() {
             >
               {resetState === 'sending'
                 ? <Spinner size="small" label="Sending" />
-                : <Text style={shared.authLinkText}>Email link</Text>}
+                : <Text style={[shared.authLinkText, { color: theme.colors.primaryText }]}>Email link</Text>}
             </TouchableOpacity>
           )}
         </View>
