@@ -34,4 +34,8 @@ export const ANALYTICS_EVENTS = {
   playerSetupCompleted: 'player_setup_completed',
   /** The Events feed's first rows were in hand (#184). props: { ms (since navigation start), source: snapshot | prefetch | fetch, cold } */
   feedFirstPaint: 'feed_first_paint',
+  /** A guest tapped Join / Join waitlist / Request and was sent to sign up (#229). props: { action } */
+  joinIntentSaved: 'join_intent_saved',
+  /** Back on the game after signing in. props: { outcome: joined | not_now | skipped | expired, offer? } */
+  joinIntentResumed: 'join_intent_resumed',
 } as const

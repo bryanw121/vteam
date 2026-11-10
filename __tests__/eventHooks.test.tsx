@@ -1,3 +1,4 @@
+import { __resetPendingAction, clearPendingAction, peekPendingAction } from '../utils/pendingAction'
 import React from 'react'
 import { Alert } from 'react-native'
 import { act, render } from '@testing-library/react-native'
@@ -57,7 +58,8 @@ const mockRequireSignIn = jest.fn(() => mockUserId !== null)
 jest.mock('../contexts/session', () => ({
   useSession: () => ({ userId: mockUserId, isGuest: mockUserId === null, loading: false, session: null }),
 }))
-jest.mock('../hooks/useRequireSignIn', () => ({ useRequireSignIn: () => mockRequireSignIn }))
+const mockGoToSignIn = jest.fn()
+jest.mock('../hooks/useRequireSignIn', () => ({ useRequireSignIn: () => mockRequireSignIn, useGoToSignIn: () => mockGoToSignIn }))
 jest.mock('../lib/sentry', () => ({ Sentry: { addBreadcrumb: jest.fn(), captureException: jest.fn() } }))
 // lib/query's useFocusRefetch needs a navigator; nothing here focuses.
 jest.mock('expo-router', () => ({ useFocusEffect: () => {} }))
@@ -139,6 +141,9 @@ const status = () => computeEventStatus({
 let alertSpy: jest.SpyInstance
 beforeEach(() => {
   __resetQueryCache()
+  __resetPendingAction()
+  clearPendingAction()
+  mockGoToSignIn.mockClear()
   mockCalls.length = 0
   mockUserId = 'me'
   mockRespond = router()
@@ -315,13 +320,15 @@ describe('useEventAttendance — join', () => {
     await settle()
   })
 
-  it('sends a guest to sign in instead of writing', async () => {
+  it('sends a guest to sign up instead of writing, remembering the join (#229)', async () => {
     mockUserId = null
     render(<Harness />)
     await settle()
     await act(async () => { await api.attendance.join() })
-    expect(mockRequireSignIn).toHaveBeenCalled()
+    expect(mockGoToSignIn).toHaveBeenCalledWith('register')
     expect(callsTo('event_attendees', 'insert')).toHaveLength(0)
+    const saved = peekPendingAction()
+    expect(saved).toMatchObject({ kind: 'join', eventId: api.data.event?.id, title: api.data.event?.title })
   })
 
   it('leave is optimistic and restores the row if the delete fails', async () => {

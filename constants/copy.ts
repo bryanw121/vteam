@@ -126,3 +126,20 @@ export const TEAM_MODE_COPY = {
 
 /** Under outside leagues and tournaments (Leagues, Tournaments). */
 export const PROGRAMS_SOURCE_NOTE = "From each organizer's sign-up page, checked twice a day by Schelagg. Prices, caps and deadlines change: confirm on their page before you pay. Sign-up happens on their site, not in vteam."
+
+/** The "Grab your spot?" sheet a guest sees back on the game after signing up or in (#229). */
+export const JOIN_INTENT_COPY = {
+  /** `{name}`: their first name, or "you're signed in" without one. */
+  title: (name: string | null) => (name ? `You're signed in, ${name}` : "You're signed in"),
+  question: 'Grab your spot?',
+  join: 'Join the game',
+  waitlist: 'Join the waitlist',
+  request: 'Request to join',
+  waitlistNote: "It's full right now: you'll get a spot if someone drops.",
+  requestNote: 'The host approves each player.',
+  notNow: 'Not now',
+  setupTitle: "You're in!",
+  setupBody: 'Tell us how you play, so hosts and teammates know. It takes 30 seconds.',
+  setup: 'Set up my profile',
+  later: 'Later',
+} as const

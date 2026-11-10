@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { invalidate, removeQueries } from '../lib/query'
+import { clearPendingAction } from '../utils/pendingAction'
 import { useSession } from '../contexts/session'
 import { clearScrollMemory } from '../utils/scrollMemory'
 import { resetChatReadState } from './useConversations'
@@ -32,6 +33,8 @@ export function useCacheUserScope(): void {
     if (seeded !== undefined && seeded !== userId) discardSeededSnapshot()
     setSnapshotOwner(userId)
     if (previous === undefined || previous === userId) return
+    // A join a guest started belongs to whoever was signing in, not to the next person on this device (#229).
+    if (previous && !userId) clearPendingAction()
     USER_SCOPED_PREFIXES.forEach(p => removeQueries(p))
     USER_SCOPED_PREFIXES.forEach(p => invalidate(p))
     // Remembered scroll offsets belong to the previous user's screens too.

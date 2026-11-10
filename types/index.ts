@@ -2079,3 +2079,22 @@ export type CheersSummary = {
   counts: Partial<Record<CheerType, number>>
 }
 
+
+// ─── Join intent (#229) ───────────────────────────────────────────────────────
+
+/**
+ * What a guest was doing when they were sent to sign up, so it can be finished
+ * after: today only joining an event (`kind` leaves room for "message host" or
+ * "join club"). `title`, `startsAt` and `spotsLeft` (when Join was tapped) are
+ * for the sign-up screen's context card; `at` is when it was saved (ms), for expiry.
+ */
+export type PendingAction = { kind: 'join'; eventId: string; title: string; startsAt: string; at: number; spotsLeft?: number | null }
+
+/** `takePendingAction`: a fresh action for this event, one that is too old, or nothing for it. */
+export type PendingActionTake = { status: 'ok'; action: PendingAction } | { status: 'expired' } | null
+
+/** Which signup the "Grab your spot?" sheet offers, or null when there is nothing to offer. */
+export type JoinOffer = 'join' | 'waitlist' | 'request'
+
+/** `join_intent_resumed` outcome. */
+export type JoinIntentOutcome = 'joined' | 'not_now' | 'skipped' | 'expired'
