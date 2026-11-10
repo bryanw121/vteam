@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Platform, ScrollView, View } from 'react-native'
+import { Platform, ScrollView, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../lib/supabase'
@@ -49,7 +49,6 @@ import { DenyRequestDialog } from '../../components/event/DenyRequestDialog'
 import { DeleteEventDialog } from '../../components/event/DeleteEventDialog'
 import { RemoveParticipantDialog } from '../../components/event/RemoveParticipantDialog'
 import { LeaveSheet } from '../../components/event/LeaveSheet'
-import { Toast } from '../../components/Toast'
 import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import { LEAVE_COPY, LEAVE_REASONS, theme, SWIPE_NAVIGATION } from '../../constants'
 import { track } from '../../lib/analytics'
@@ -57,6 +56,7 @@ import { hostWillBeTold, leaveConsequences, leaveDmText, leaveSubtitle } from '.
 import type { LeaveConsequence, LeaveReason, MentionUser, Profile } from '../../types'
 import { profileDisplayName } from '../../utils'
 import { routes, isAppPath, toRoute } from '../../utils/routes'
+import { toast } from '../../lib/toast'
 
 const DETAILS_TAB = 0
 const PEOPLE_TAB = 1
@@ -112,7 +112,6 @@ export default function EventDetail() {
   // The leave sheet (#171): lines are frozen when it opens, so the optimistic
   // leave doesn't reshuffle them under the spinner.
   const [leaveSheet, setLeaveSheet] = useState<{ subtitle: string; lines: LeaveConsequence[]; showReason: boolean } | null>(null)
-  const [leaveDmFailed, setLeaveDmFailed] = useState(false)
 
   // ── Tabs ───────────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState(() => initialTab(tab))
@@ -235,7 +234,7 @@ export default function EventDetail() {
       },
       onError: e => {
         reportEventError(id, userId, 'confirmDelete', e)
-        Alert.alert('Error', 'Could not delete event. Please try again.')
+        toast.error("Couldn't delete the event", e)
       },
     },
   )
@@ -276,7 +275,10 @@ export default function EventDetail() {
     // undefined: the leave failed (useEventAttendance already alerted). The note waits for a real leave.
     if (left === undefined || !text) return
     // The leave stands whatever happens to the message.
-    if (!(await sendDm(event.created_by, text))) setLeaveDmFailed(true)
+    if (!(await sendDm(event.created_by, text))) {
+      const hostId = event.created_by
+      toast.show({ message: LEAVE_COPY.dmFailed, variant: 'error', duration: 8000, action: { label: LEAVE_COPY.messageHost, onPress: () => { void openDm(hostId) } } })
+    }
   }
 
   async function confirmRemove() {
@@ -436,14 +438,6 @@ export default function EventDetail() {
         leaving={attendance.joining}
         onLeave={(reason, note) => { void confirmLeave(reason, note) }}
         onCancel={cancelLeave}
-      />
-      <Toast
-        visible={leaveDmFailed}
-        message={LEAVE_COPY.dmFailed}
-        variant="error"
-        duration={8000}
-        onHide={() => setLeaveDmFailed(false)}
-        action={event ? { label: LEAVE_COPY.messageHost, onPress: () => { void openDm(event.created_by) } } : undefined}
       />
       <AddGuestDialog
         visible={guestDialogOpen}

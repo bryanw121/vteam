@@ -9,7 +9,6 @@ import {
   EVENT_JUST_FILLED_TITLE,
   EXTERNAL_SESSION_SELECT,
   EXTERNAL_SESSION_MAX_AGE_MS,
-  GENERIC_ERROR_MESSAGE,
   STALE,
 } from '../constants'
 import { supabase } from '../lib/supabase'
@@ -35,7 +34,7 @@ import { readFeedSnapshot, SNAPSHOT_MONTHS, writeFeedSnapshot } from '../utils/f
 import { fetchEventCardPreviews, previewsFromRows, withEventCardPreviews } from '../utils/eventCardPreviews'
 import { isFeedRpcUnavailable, parseFeedSpan } from '../utils/feedSpan'
 import { isFeedItemOver, normalizeExternalSessions, normalizeTournaments } from '../utils/feedItems'
-import { notifyError, notifyInfo } from '../utils/notify'
+import { toast } from '../lib/toast'
 import { eventKeys } from './event/keys'
 import type { EventCardPreviews, EventWithDetails, ExternalSession, FeedRsvpResult, FeedRsvpVars, FeedSpanRows } from '../types'
 
@@ -640,6 +639,8 @@ export function useFeedRsvp() {
   const pendingRef = useRef(new Set<string>())
   const [pendingEventIds, setPendingEventIds] = useState<ReadonlySet<string>>(() => new Set())
 
+  // Retry from the failure toast runs the same RSVP again.
+  const rsvpRef = useRef<(vars: FeedRsvpVars) => Promise<void>>(async () => {})
   const rsvp = useCallback(async (vars: FeedRsvpVars) => {
     const { eventId, action, userId } = vars
     if (pendingRef.current.has(eventId)) return
@@ -650,17 +651,18 @@ export function useFeedRsvp() {
     try {
       const result = await writeRsvp(vars)
       invalidate(eventKeys.root(eventId))
-      if (action === 'join' && result.status === 'waitlisted') notifyInfo(EVENT_JUST_FILLED_TITLE, EVENT_JUST_FILLED_BODY)
+      if (action === 'join' && result.status === 'waitlisted') toast.show({ title: EVENT_JUST_FILLED_TITLE, message: EVENT_JUST_FILLED_BODY, variant: 'warning' })
     } catch (e) {
       rollback()
       console.error('[useFeedRsvp]', e instanceof Error ? e.message : (e as { message?: string })?.message ?? e)
-      notifyError('Error', GENERIC_ERROR_MESSAGE)
+      toast.error(action === 'join' ? "Couldn't join" : "Couldn't leave", e, { label: 'Retry', onPress: () => { void rsvpRef.current(vars) } })
     } finally {
       pendingRef.current.delete(eventId)
       setPendingEventIds(new Set(pendingRef.current))
       if (pendingRef.current.size === 0) invalidate(FEED_PREFIX)
     }
   }, [])
+  rsvpRef.current = rsvp
 
   const isPending = useCallback((eventId: string) => pendingEventIds.has(eventId), [pendingEventIds])
 

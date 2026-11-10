@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { Alert } from 'react-native'
+import { useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useMutation } from '../../lib/query'
 import { useRequireSignIn } from '../useRequireSignIn'
@@ -12,6 +11,7 @@ import { eventKeys, patchQuery } from './keys'
 import { attendeeRowsWithProfiles } from './derive'
 import { eventBreadcrumb, reportEventError } from './telemetry'
 import type { EventData } from '../../types'
+import { toast } from '../../lib/toast'
 
 const OPTIMISTIC_STATUS: Partial<Record<SelfAttendanceAction, EventAttendee['status']>> = {
   join: 'attending',
@@ -30,6 +30,17 @@ const BREADCRUMB: Record<SelfAttendanceAction, string> = {
   cancelRequest: 'event:cancel_request',
   rerequest: 'event:rerequest_join',
 }
+/** Toast title when the viewer's own RSVP change fails (#228: these were silent on web). */
+const SELF_ACTION_FAILED: Record<SelfAttendanceAction, string> = {
+  join: "Couldn't join",
+  leave: "Couldn't leave",
+  joinWaitlist: "Couldn't join the waitlist",
+  leaveWaitlist: "Couldn't leave the waitlist",
+  requestToJoin: "Couldn't send your request",
+  cancelRequest: "Couldn't cancel your request",
+  rerequest: "Couldn't send your request",
+}
+
 const ERROR_CONTEXT: Record<SelfAttendanceAction, string> = {
   join: 'handleToggleAttendance',
   leave: 'handleToggleAttendance',
@@ -162,15 +173,20 @@ export function useEventAttendance(data: EventData) {
         const savedStatus = row?.status
         eventBreadcrumb(id, userId, BREADCRUMB[action], { eventTitle: event?.title, savedStatus })
         if (action === 'join' && savedStatus === 'waitlisted') {
-          Alert.alert(EVENT_JUST_FILLED_TITLE, EVENT_JUST_FILLED_BODY)
+          toast.show({ title: EVENT_JUST_FILLED_TITLE, message: EVENT_JUST_FILLED_BODY, variant: 'warning' })
         }
       },
       onError: (e, action) => {
         reportEventError(id, userId, ERROR_CONTEXT[action], e, action === 'join' || action === 'leave' ? { action } : undefined)
-        Alert.alert('Error', action === 'rerequest' ? e.message : GENERIC_ERROR_MESSAGE)
+        if (action === 'rerequest' && e.message) toast.show({ title: SELF_ACTION_FAILED[action], message: e.message, variant: 'error' })
+        else toast.error(SELF_ACTION_FAILED[action], e, { label: 'Retry', onPress: () => { void selfRef.current?.(action) } })
       },
     },
   )
+
+  // Retry from the failure toast runs the same action again.
+  const selfRef = useRef(self.mutate)
+  selfRef.current = self.mutate
 
   /** Guests are sent to sign in for actions that create an RSVP. */
   const run = (action: SelfAttendanceAction) => {
@@ -227,7 +243,8 @@ export function useEventAttendance(data: EventData) {
       onError: (e, vars) => {
         setProcessingRequest(null)
         reportEventError(id, userId, vars.approve ? 'handleApproveRequest' : 'handleDenyRequest', e, { requestedUserId: vars.userId })
-        Alert.alert('Error', vars.approve ? GENERIC_ERROR_MESSAGE : e.message)
+        if (vars.approve || !e.message) toast.error(vars.approve ? "Couldn't approve the request" : "Couldn't deny the request", e)
+        else toast.show({ title: "Couldn't deny the request", message: e.message, variant: 'error' })
       },
     },
   )
@@ -246,7 +263,7 @@ export function useEventAttendance(data: EventData) {
       onSuccess: (_r, uid) => patchAttendees(id, rows => rows.map(r => (r.user_id === uid ? { ...r, status: 'attending' } : r))),
       onError: (e, uid) => {
         reportEventError(id, userId, 'handleApproveFromWaitlist', e, { promotedUserId: uid })
-        Alert.alert('Error', GENERIC_ERROR_MESSAGE)
+        toast.error("Couldn't move them off the waitlist", e)
       },
     },
   )
@@ -254,7 +271,7 @@ export function useEventAttendance(data: EventData) {
   function approveFromWaitlist(waitlistUserId: string) {
     const attendingCount = roster.attendingRows.length
     if (event?.max_attendees && attendingCount >= event.max_attendees) {
-      Alert.alert('Event full', 'The event is still full. Remove an attendee first or increase the capacity.')
+      toast.show({ title: 'Event full', message: 'The event is still full. Remove an attendee first or increase the capacity.', variant: 'warning' })
       return Promise.resolve(undefined)
     }
     return promote.mutate(waitlistUserId)
@@ -288,7 +305,8 @@ export function useEventAttendance(data: EventData) {
       onSuccess: (_r, vars) => eventBreadcrumb(id, userId, vars.value ? 'event:mark_no_show' : 'event:undo_no_show', { targetUserId: vars.userId }),
       onError: (e, vars) => {
         reportEventError(id, userId, 'handleSetNoShow', e, { targetUserId: vars.userId, value: vars.value })
-        Alert.alert('Error', e.message || GENERIC_ERROR_MESSAGE)
+        if (e.message) toast.show({ title: "Couldn't update the no-show", message: e.message, variant: 'error' })
+        else toast.error("Couldn't update the no-show", e)
       },
     },
   )
@@ -330,10 +348,10 @@ export function useEventAttendance(data: EventData) {
         const extra = target.kind === 'guest' ? { guestId: target.guestId } : { removedUserId: target.userId }
         if (e instanceof NothingDeletedError) {
           if (target.kind === 'attendee') reportEventError(id, userId, context, new Error('Delete returned empty — missing RLS policy'), extra)
-          Alert.alert('Could not remove', e.message)
+          toast.show({ title: "Couldn't remove", message: e.message, variant: 'error' })
         } else {
           reportEventError(id, userId, context, e, extra)
-          Alert.alert('Error', e.message)
+          toast.show({ title: "Couldn't remove", message: e.message || GENERIC_ERROR_MESSAGE, variant: 'error' })
         }
       },
     },
@@ -364,7 +382,7 @@ export function useEventAttendance(data: EventData) {
       onSuccess: guest => patchGuests(id, rows => [...rows, guest]),
       onError: e => {
         reportEventError(id, userId, 'handleAddGuest', e)
-        Alert.alert('Error', GENERIC_ERROR_MESSAGE)
+        toast.error("Couldn't add the guest", e)
       },
     },
   )

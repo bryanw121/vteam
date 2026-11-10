@@ -14,6 +14,7 @@ import { useRequireSignIn } from '../../hooks/useRequireSignIn'
 import { usePlayerSetupGate } from '../../hooks/usePlayerSetupGate'
 import { routes } from '../../utils/routes'
 import { TourProvider } from '../../contexts/tour'
+import { ToastHost } from '../../components/ToastHost'
 import { TourTarget } from '../../components/tour/TourTarget'
 import { TOUR_TARGETS } from '../../constants'
 
@@ -48,6 +49,8 @@ export default function AppLayout() {
       {/* Tours draw their overlay above the sidebar and every screen. */}
       <TourProvider>
         <AppLayoutInner />
+        {/* lib/toast messages, above the sidebar and every screen (#228). */}
+        <ToastHost />
       </TourProvider>
     </ChatUnreadProvider>
   )

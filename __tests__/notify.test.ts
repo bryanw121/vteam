@@ -1,43 +1,34 @@
-import { Alert, Platform } from 'react-native'
 import { notifyError, notifyInfo } from '../utils/notify'
+import { __resetToast, toast } from '../lib/toast'
 import { GENERIC_ERROR_MESSAGE } from '../constants/copy'
 import { TOURNAMENT_GENERIC_ERROR } from '../constants/tournamentCopy'
 
-describe('utils/notify', () => {
-  const realOS = Platform.OS
-  let alertSpy: jest.SpyInstance
+describe('utils/notify (#228: a toast on every platform)', () => {
   let webAlert: jest.Mock
   beforeEach(() => {
-    alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+    __resetToast()
     webAlert = jest.fn()
     ;(global as unknown as { window: { alert: unknown } }).window.alert = webAlert
   })
-  afterEach(() => {
-    Platform.OS = realOS
-    alertSpy.mockRestore()
-  })
 
-  it('uses Alert.alert on native', () => {
-    Platform.OS = 'ios'
+  it('shows info as a toast, never window.alert', () => {
     notifyInfo('Saved', 'Done.')
-    expect(alertSpy).toHaveBeenCalledWith('Saved', 'Done.')
+    expect(toast.current()).toMatchObject({ title: 'Saved', message: 'Done.', variant: 'info' })
+    notifyInfo('Saved')
+    expect(toast.current()).toMatchObject({ message: 'Saved', variant: 'info' })
     expect(webAlert).not.toHaveBeenCalled()
   })
 
-  it('uses window.alert on web, where Alert.alert is a no-op', () => {
-    Platform.OS = 'web'
-    notifyInfo('Saved', 'Done.')
-    expect(webAlert).toHaveBeenCalledWith('Saved\n\nDone.')
-    expect(alertSpy).not.toHaveBeenCalled()
-  })
-
   it('notifyError takes a message or an error, falling back to the shared copy', () => {
-    Platform.OS = 'ios'
+    const shown: string[] = []
+    const off = toast.subscribe(t => { if (t) shown.push(t.message) })
     notifyError('Oops', 'Specific.')
     notifyError('Oops', new Error('From server'))
     notifyError('Oops', { not: 'an error' })
     notifyError('Oops')
-    expect(alertSpy.mock.calls.map(c => c[1])).toEqual(['Specific.', 'From server', GENERIC_ERROR_MESSAGE, GENERIC_ERROR_MESSAGE])
+    off()
+    expect(shown).toEqual(['Specific.', 'From server', GENERIC_ERROR_MESSAGE, GENERIC_ERROR_MESSAGE])
+    expect(toast.current()).toMatchObject({ title: 'Oops', variant: 'error' })
   })
 
   it('tournament copy points at the shared generic error', () => {
