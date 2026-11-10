@@ -23,7 +23,7 @@ import { SessionProvider, useSession } from '../contexts/session'
 import { TextScaleProvider } from '../contexts/textScale'
 import { isAppPath, routes, toRoute } from '../utils/routes'
 import { isProtectedPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
-import { supabase } from '../lib/supabase'
+import { recoveryLinkAtStart, supabase } from '../lib/supabase'
 import { APP_NAME, theme, SWIPE_NAVIGATION } from '../constants'
 import { initSentry, Sentry } from '../lib/sentry'
 import { SentryErrorBoundary } from '../components/SentryErrorBoundary'
@@ -158,6 +158,15 @@ function RootNavigator() {
   useEffect(() => {
     Sentry.setUser(userId ? { id: userId } : null)
   }, [userId])
+
+  // A reset link that Auth sent to the Site URL instead of /reset-password
+  // still ends on the form (#223). Once per page load.
+  const recoveryRoutedRef = useRef(false)
+  useEffect(() => {
+    if (!navReady || recoveryRoutedRef.current || !recoveryLinkAtStart) return
+    recoveryRoutedRef.current = true
+    if ((segments as string[])[1] !== 'reset-password') router.replace(routes.resetPassword())
+  }, [navReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Guests may browse; only account-only routes bounce to login. Signed-in users
   // leave the auth screens (except reset-password, where the recovery link

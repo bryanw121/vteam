@@ -61,11 +61,12 @@ export default function Register() {
       const normalizedUsername = username.toLowerCase().trim()
       const normalizedEmail = email.toLowerCase().trim()
 
-      // Check username availability
+      // Check username availability. Usernames are stored lower-case, so an exact
+      // match is enough (ilike treated `_` as a wildcard: `a_b` looked taken if `axb` existed).
       const { data: existingUsername } = await supabase
         .from('profiles')
         .select('id')
-        .ilike('username', normalizedUsername)
+        .eq('username', normalizedUsername)
         .maybeSingle()
 
       if (existingUsername) {

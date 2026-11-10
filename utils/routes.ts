@@ -117,6 +117,8 @@ export const routes = {
   // ── Groups ──────────────────────────────────────────────────────────────
   login: () => href('/(auth)/login'),
   register: () => href('/(auth)/register'),
+  /** Set a new password (where reset emails link, #223). */
+  resetPassword: () => href('/(auth)/reset-password'),
   /** The signed-in app group (resolves to the Events tab). */
   app: () => href('/(app)'),
 }

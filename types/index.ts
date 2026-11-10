@@ -2079,3 +2079,6 @@ export type CheersSummary = {
   counts: Partial<Record<CheerType, number>>
 }
 
+
+/** What a password reset link brought (`utils/recoveryLink`, #223): a good link, an expired or used one, or neither. */
+export type RecoveryLink = 'recovery' | 'expired' | null
