@@ -98,6 +98,7 @@ export const SCREENS = {
   'settings-experimental': { route: '/settings/experimental', ready: 'Scorekeeper', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/experimental.tsx', 'constants/experiments.ts', 'components/scoresheet/MatchRow.tsx'] },
   scorekeeper: { route: '/scorekeeper', ready: 'New match', sources: ['app/(app)/scorekeeper/index.tsx', 'components/scoresheet/MatchRow.tsx', 'hooks/useSavedMatches.ts'] },
   'scorekeeper-new': { route: '/scorekeeper/new', ready: 'NET', sources: ['app/(app)/scorekeeper/new.tsx', 'components/scoresheet/CourtLayout.tsx', 'components/scoresheet/CourtSpot.tsx', 'components/scoresheet/PlayerSheet.tsx', 'lib/scoresheet/rules.ts'] },
+  'settings-privacy': { route: '/settings/privacy', ready: 'Share usage data', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/privacy.tsx', 'lib/analytics.ts'] },
   'settings-display': { route: '/settings/display', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/display.tsx', 'contexts/textScale.tsx'] },
   'settings-notifications': {
     route: '/settings/notifications', ready: 'Reminders',

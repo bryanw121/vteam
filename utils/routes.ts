@@ -41,6 +41,7 @@ export type SettingsSection =
   | 'hidden'
   | 'notifications'
   | 'display'
+  | 'privacy'
   | 'feedback'
   | 'badges'
   | 'delete-account'

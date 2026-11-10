@@ -32,6 +32,7 @@ import { useMinVersion } from '../hooks/useMinVersion'
 import { useCacheUserScope } from '../hooks/useCacheUserScope'
 import { UpdateRequiredScreen } from '../components/UpdateRequiredScreen'
 import { startQuerySnapshot } from '../lib/querySnapshot'
+import { noteScreen, screenPattern, setUsageUser, startUsageTracking } from '../lib/analytics'
 
 initSentry()
 // Last visit's profile / settings / chat list into the cache before the first render (web).
@@ -153,6 +154,19 @@ function RootNavigator() {
       if (isAppPath(path)) router.push(toRoute(path))
     })
   }, [navReady]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Usage metrics: sessions and heartbeats once the signed-in user is known; a new session when
+  // the account changes; the screen type for every route outside the tab pager (the tabs
+  // layout records which tab is on show there).
+  useEffect(() => {
+    if (!navReady) return
+    startUsageTracking(userId)
+    setUsageUser(userId)
+  }, [navReady, userId])
+  useEffect(() => {
+    if (!navReady || (segments as string[]).includes('(main)')) return
+    noteScreen(screenPattern(segments as string[]))
+  }, [navReady, segments])
 
   // Keep Sentry user context in sync with auth state
   useEffect(() => {
