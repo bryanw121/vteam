@@ -528,6 +528,8 @@ export type MajorCity = Tables<'major_cities'>
 
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
 export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
+  /** Notification switches (`useMyProfile` exposes them as `profile.notification_prefs`). Missing reads as the defaults. */
+  notification_prefs?: NotificationPrefs | null
   home_city: MajorCity | null
   /** What the player hid from their Events feed (`user_settings.hidden_feed`). Missing reads as nothing hidden. */
   hidden_feed?: HiddenFeedEntry[]
@@ -2071,6 +2073,12 @@ export type UserProfileData = {
 
 /** hooks/useEventHistory: past events attended / hosted, or upcoming hosted. */
 export type EventHistoryKind = 'attended' | 'hosted-past' | 'hosted-upcoming'
+
+/** hooks/useMyProfile: cheers a player received, in all and by type (Profile total + badge check). */
+export type CheersReceived = {
+  total: number
+  byType: Record<string, number>
+}
 
 /** hooks/useCheersSummary: the viewer's cheers screen. */
 export type CheersSummary = {
