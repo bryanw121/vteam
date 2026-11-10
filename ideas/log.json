@@ -304,5 +304,29 @@
     "status": "approved",
     "summary": "Run the cold-open flow in CI with paint and request budgets, name new reads and duplicates, fix the script's 1.5 s measuring floor.",
     "issue": 225
+  },
+  {
+    "date": "2026-11-10",
+    "n": 1,
+    "title": "Game recap card: after a game, share a picture of it, with a link to the host's next one",
+    "bucket": "competitor-gap",
+    "status": "proposed",
+    "summary": "Ended games get a 'Your game' card (points, cheers, games this year) with Share: a 1080x1920 picture from a new api/og/recap Edge route plus the event link; guests opening it see the host's next game. Replaces the Leave/spots-left footer that ended games still show. Strava stickers, Playtomic results, Apple Sports cards. No schema change. M."
+  },
+  {
+    "date": "2026-11-10",
+    "n": 2,
+    "title": "Messages that show up on the web: replace 54 silent Alert.alert calls with one toast and inline errors",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "Alert.alert is a no-op in react-native-web; 54 calls (9 in useEventAttendance: 'it just filled', join errors; feedback form validation) are silent for web users. lib/toast + one ToastHost, notifyInfo on top of it (no window.alert), inline form errors, theme tokens for Toast, and a test banning Alert imports. M, 5 small PRs."
+  },
+  {
+    "date": "2026-11-10",
+    "n": 3,
+    "title": "Finish the join you started: a guest who taps Join is signed up and back on the game with one tap to confirm",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "Save a pending join when a guest taps Join, show the game on the sign-up screen (default New here), drop the silent 'Account created!' + login hop, and on return show a 'Grab your spot?' sheet before player setup (which becomes an inline card). Client-only, funnel metrics. S-M."
   }
 ]
