@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { View, TouchableOpacity, Alert } from 'react-native'
+import { View, TouchableOpacity } from 'react-native'
 import { Text, TextInput } from '../../components/ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
@@ -15,6 +15,7 @@ import { AgreementLine } from '../../components/legal/AgreementLine'
 import { TERMS_VERSION } from '../../constants/legal'
 import { Spinner } from '../../components/ui/Spinner'
 import { JoinContextCard } from '../../components/auth/JoinContextCard'
+import { toast } from '../../lib/toast'
 
 export default function Register() {
   const router = useRouter()
@@ -108,7 +109,8 @@ export default function Register() {
       // With a session (email confirmation off) the root layout already takes
       // them back where they came from (#229: the game they were joining).
       if (data.session) return
-      Alert.alert('Account created', 'Check your email to confirm it, then sign in.')
+      // A toast, not Alert.alert: that does nothing on the web (#228). The (auth) layout hosts toasts, so it shows over sign-in.
+      toast.show({ title: 'Account created', message: 'Check your email to confirm it, then sign in.', variant: 'success', duration: 8000 })
       router.replace(routes.login())
     } finally {
       setLoading(false)

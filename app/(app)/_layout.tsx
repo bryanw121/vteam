@@ -16,6 +16,7 @@ import { routes, toRoute } from '../../utils/routes'
 import { queryString } from '../../utils/urlState'
 import { tabParams } from '../../utils/tabViews'
 import { TourProvider } from '../../contexts/tour'
+import { ToastHost } from '../../components/ToastHost'
 import { TourTarget } from '../../components/tour/TourTarget'
 import { TOUR_TARGETS } from '../../constants'
 
@@ -50,6 +51,8 @@ export default function AppLayout() {
       {/* Tours draw their overlay above the sidebar and every screen. */}
       <TourProvider>
         <AppLayoutInner />
+        {/* lib/toast messages, above the sidebar and every screen (#228). */}
+        <ToastHost />
       </TourProvider>
     </ChatUnreadProvider>
   )

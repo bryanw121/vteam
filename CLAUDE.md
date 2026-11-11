@@ -256,6 +256,9 @@ select props->>'source' as source, count(*) as started from app_events where nam
 select name, count(*) from app_events where name in ('tour_completed', 'tour_skipped') group by 1;
 ```
 
+### Messages: toasts, not alerts
+`Alert.alert` does nothing in react-native-web, and most players are on the web. Tell someone something with `toast` from `lib/toast` (#228): `toast.show({ title?, message, variant: 'error' | 'warning' | 'success' | 'info', action?: { label, onPress } })`, or `toast.error("Couldn't join", e, retryAction?)` for a failed write (it says "Check your connection" for network errors and `GENERIC_ERROR_MESSAGE` otherwise, never a raw database message). It is module-level like `lib/query`, so hooks and mutation handlers call it directly; `ToastHost` (in `app/(app)/_layout.tsx` and `app/(auth)/_layout.tsx`) draws one toast at a time (a new one replaces it), with theme colours (`toast*Bg` tokens), role alert and a dismiss button. `notifyInfo` / `notifyError` (`utils/notify`) are thin wrappers over it. A choice still goes through `confirmDestructive` / `ConfirmDialog`. `__tests__/noSilentAlerts.test.ts` fails when a new file imports `Alert`; its `NOT_YET_CONVERTED` list only shrinks.
+
 ### Terms and Privacy
 The policy text lives in `constants/legal.ts` (Markdown subset, rendered by `components/legal/LegalDocument` via `utils/legalMarkdown.ts`) and is served at the public root routes `/terms` and `/privacy` (`app/terms.tsx`, `app/privacy.tsx`, outside both route groups so guests and store reviewers can open them and the sign-up form stays mounted underneath). `AgreementLine` (passive clickwrap) sits under every sign-up / sign-in action on register and login. Placeholders written as `\[...\]` render highlighted until they're filled in. Bump `TERMS_VERSION` when the Terms change materially.
 

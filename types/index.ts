@@ -1580,6 +1580,20 @@ export type LeaveReason = 'something_came_up' | 'sick' | 'injured' | 'work'
 /** Toast with an optional action button (e.g. "Message host" after a failed leave note). */
 export type ToastAction = { label: string; onPress: () => void }
 
+/** How a toast looks: what kind of news it is (#228). */
+export type ToastVariant = 'error' | 'warning' | 'success' | 'info'
+
+/** One message for `toast.show` (`lib/toast`). */
+export type ToastMessage = {
+  message: string
+  /** Bold first line, e.g. "Couldn't join". */
+  title?: string
+  variant?: ToastVariant
+  action?: ToastAction
+  /** ms before it hides by itself (default 4000; 8000 with an action). */
+  duration?: number
+}
+
 /** Host removing someone from the roster (the X on a card). */
 export type RemoveTarget =
   | { kind: 'attendee'; userId: string; firstName: string | null; lastName: string | null; username: string }
