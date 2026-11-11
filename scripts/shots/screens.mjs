@@ -121,6 +121,8 @@ export const SCREENS = {
   'settings-badges': { route: '/settings/badges', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**', 'hooks/useBadges.ts'] },
   'settings-badge-link': { route: '/settings/badges?badge=event_attendee', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'hooks/useUrlParam.ts'] },
   'settings-feedback': { route: '/settings/feedback', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/feedback.tsx'] },
+  // Submit with nothing filled in: what's missing, under each field (#228).
+  'settings-feedback-errors': { route: '/settings/feedback', ready: 'Submit', actions: [{ click: 'Submit' }, { wait: 300 }], sources: [...SETTINGS, 'app/(app)/(tabs)/settings/feedback.tsx', 'utils/feedbackForm.ts'] },
   'settings-hidden': { route: '/settings/hidden', ready: 'ACES Volleyball', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hidden.tsx', 'hooks/useHiddenFeed.ts', 'utils/hiddenFeed.ts', 'hooks/useUserSettings.ts'] },
   'settings-silenced': { route: '/settings/silenced', ready: 'Hannah', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/silenced.tsx', 'hooks/useSilencedUsers.ts'] },
   'admin-metrics': { route: '/settings/metrics', ready: 'Daily active people', sources: METRICS },
