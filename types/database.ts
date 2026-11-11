@@ -2740,6 +2740,22 @@ export type Database = {
       account_deletion_plan: { Args: { p_user: string }; Returns: Json }
       account_is_being_deleted: { Args: { p_user: string }; Returns: boolean }
       ad_free_offer: { Args: never; Returns: Json }
+      admin_metrics_overview: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: Json
+      }
+      admin_online_now: { Args: never; Returns: Json }
+      admin_retention: { Args: { p_weeks?: number }; Returns: Json }
+      admin_user_activity: { Args: { p_user: string }; Returns: Json }
+      admin_users: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
       app_heartbeat: {
         Args: {
           p_anon: string
@@ -2750,6 +2766,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      app_version_key: { Args: { p_version: string }; Returns: number[] }
       award_event_points: { Args: never; Returns: number }
       can_read_chat_image: { Args: { p_name: string }; Returns: boolean }
       cancel_friend_request: { Args: { p_user_id: string }; Returns: string }
