@@ -175,10 +175,11 @@ jobs:
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
       - name: Install Chromium
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+      # System packages come from apt; the script falls back to archive.ubuntu.com when the
+      # runner's Azure mirror doesn't resolve, instead of failing every browser job.
       - name: Install Chromium system deps
-        if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        run: scripts/ci/install-playwright-deps.sh
       - uses: actions/download-artifact@v4
         with:
           name: web-dist-mock
@@ -262,10 +263,11 @@ jobs:
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
       - name: Install Chromium
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+      # System packages come from apt; the script falls back to archive.ubuntu.com when the
+      # runner's Azure mirror doesn't resolve, instead of failing every browser job.
       - name: Install Chromium system deps
-        if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        run: scripts/ci/install-playwright-deps.sh
       - uses: actions/download-artifact@v4
         with:
           name: web-dist
