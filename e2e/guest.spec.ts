@@ -56,7 +56,8 @@ test.describe('guest browsing', () => {
       page.on('pageerror', err => errors.push(err.message))
       for (const path of ['/', '/clubs']) {
         await page.goto(`${BASE_URL}${path}`)
-        await expect(page.getByTestId('header-sign-in').first()).toBeVisible({ timeout: 20_000 })
+        // The phone pager keeps other tabs mounted (hidden), each with its own sign-in button.
+        await expect(page.getByTestId('header-sign-in').filter({ visible: true }).first()).toBeVisible({ timeout: 20_000 })
       }
       expect(errors.filter(m => /#418|[Hh]ydrat/.test(m))).toEqual([])
     })
