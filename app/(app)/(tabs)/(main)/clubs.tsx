@@ -363,6 +363,9 @@ export default function ClubsScreen() {
             placeholderTextColor={theme.colors.subtext}
             style={{
               flex: 1,
+              // A web <input> keeps an intrinsic width (~20 characters) unless allowed to shrink;
+              // at Extra large text on a 320px phone that pushed the page sideways.
+              minWidth: 0,
               fontFamily: theme.fonts.body,
               fontSize: theme.font.size.base,
               color: theme.colors.text,

@@ -497,7 +497,9 @@
     }
   },
   "profile-edit-link": {
-    "mobile": {},
+    "mobile": {
+      "color-contrast": 4
+    },
     "desktop": {
       "color-contrast": 2
     }
