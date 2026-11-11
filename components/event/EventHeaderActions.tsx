@@ -7,6 +7,8 @@ import { theme } from '../../constants'
 import { routes } from '../../utils/routes'
 import { shareUrl } from '../../constants/share'
 import { eventShareMessage } from '../../utils/eventShare'
+import { track } from '../../lib/analytics'
+import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import { Button } from '../Button'
 import { IconButton } from '../ui'
 import { AnchorOptionsMenu } from '../AnchorOptionsMenu'
@@ -76,10 +78,12 @@ export function EventHeaderActions({ eventId, title, eventDate, canManage, delet
     // beside `message`, so the link isn't repeated in the text. Android only
     // sends `message`, so there the link goes on its own line.
     const message = eventShareMessage(title, eventDate)
+    track(ANALYTICS_EVENTS.shareTapped, { surface: 'event', method: 'share_sheet' })
     await Share.share(Platform.OS === 'ios' ? { message, url: link } : { message: `${message}\n${link}` })
   }
 
   async function handleCopyLink() {
+    track(ANALYTICS_EVENTS.shareTapped, { surface: 'event', method: 'copy_link' })
     await navigator.clipboard.writeText(link)
     setLinkCopied(true)
     if (copiedTimer.current) clearTimeout(copiedTimer.current)
@@ -87,6 +91,7 @@ export function EventHeaderActions({ eventId, title, eventDate, canManage, delet
   }
 
   async function handleWebShare() {
+    track(ANALYTICS_EVENTS.shareTapped, { surface: 'event', method: 'web_share' })
     await navigator.share({ title: title ?? 'Event', text: eventShareMessage(title, eventDate), url: link })
     setMenuOpen(false)
   }

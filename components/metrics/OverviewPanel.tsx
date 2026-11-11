@@ -3,12 +3,12 @@ import { Pressable, View } from 'react-native'
 import { Text } from '../ui/Text'
 import { Chip, ScreenState } from '../ui'
 import { theme } from '../../constants'
-import { useMetricsOverview } from '../../hooks/useAdminMetrics'
+import { useMetricsEvents, useMetricsOverview } from '../../hooks/useAdminMetrics'
 import {
-  clockTime, formatDelta, formatSeconds, metricsRange, percentOf, platformShares, screenLabel, shortDay, weekdayDay,
+  clockTime, feedFilterLabel, formatDelta, formatSeconds, metricsRange, outsideKindsLine, percentOf, platformShares, screenLabel, shortDay, weekdayDay,
 } from '../../utils/metrics'
-import type { MetricsOverview, MetricsPlatform, MetricsRangeDays } from '../../types'
-import { CountRows, MetricCard, StatCard } from './MetricBits'
+import type { MetricsEvents, MetricsOverview, MetricsPlatform, MetricsRangeDays } from '../../types'
+import { CountRows, FunnelBars, MetricCard, StatCard } from './MetricBits'
 import { MetricBarChart, MetricLineChart } from './MetricCharts'
 import { metricsStyles as s } from './metricsStyles'
 
@@ -29,6 +29,8 @@ export function OverviewPanel({ onOpenLive }: Props) {
   const [days, setDays] = useState<MetricsRangeDays>(30)
   const range = useMemo(() => metricsRange(days), [days])
   const { data, isLoading, error, refetch } = useMetricsOverview(range)
+  // The part-3 events load beside it; their cards wait for them without holding up the rest.
+  const events = useMetricsEvents(range)
 
   return (
     <View style={s.stack}>
@@ -38,13 +40,13 @@ export function OverviewPanel({ onOpenLive }: Props) {
         ))}
       </View>
       <ScreenState loading={isLoading} ready={!!data} error={error ? 'Could not load metrics.' : null} onRetry={() => void refetch({ force: true })}>
-        {data ? <Overview data={data} days={days} onOpenLive={onOpenLive} /> : null}
+        {data ? <Overview data={data} events={events.data ?? null} days={days} onOpenLive={onOpenLive} /> : null}
       </ScreenState>
     </View>
   )
 }
 
-function Overview({ data, days, onOpenLive }: { data: MetricsOverview; days: MetricsRangeDays; onOpenLive: () => void }) {
+function Overview({ data, events, days, onOpenLive }: { data: MetricsOverview; events: MetricsEvents | null; days: MetricsRangeDays; onOpenLive: () => void }) {
   const dauDelta = formatDelta(data.dau_avg, data.dau_avg_prev, `prior ${days} days`)
   const wauDelta = formatDelta(data.wau, data.wau_prev, 'last week')
   const stickiness = data.dau_avg !== null ? percentOf(data.dau_avg, data.mau) : null
@@ -54,11 +56,6 @@ function Overview({ data, days, onOpenLive }: { data: MetricsOverview; days: Met
   const busiest = data.daily.reduce<MetricsOverview['daily'][number] | null>((best, d) => (!best || d.active > best.active ? d : best), null)
   const record = data.daily.reduce<MetricsOverview['daily'][number] | null>((best, d) => (d.peak !== null && (!best || d.peak > (best.peak ?? 0)) ? d : best), null)
   const shares = platformShares(data.platforms)
-  const funnelSteps = [
-    { label: 'Opened the feed', n: data.funnel.feed, of: null as number | null },
-    { label: 'Opened an event', n: data.funnel.event, of: data.funnel.feed },
-    { label: 'RSVPed', n: data.funnel.rsvp, of: data.funnel.event },
-  ]
 
   return (
     <View style={s.stack}>
@@ -157,28 +154,64 @@ function Overview({ data, days, onOpenLive }: { data: MetricsOverview; days: Met
           { label: 'Friend requests', value: data.actions.friend_requests },
           { label: 'Clubs joined', value: data.actions.clubs_joined },
           { label: 'Outside sign-up links opened', value: data.actions.outside_links },
+          ...(events ? [{ label: 'Events shared', value: events.shares.taps }] : []),
         ]} />
       </MetricCard>
 
       <MetricCard title="Feed → RSVP">
-        <View style={{ gap: 6 }}>
-          {funnelSteps.map(step => {
-            const width = Math.max(percentOf(step.n, data.funnel.feed) ?? 0, 8)
-            const ofPrev = step.of === null ? null : percentOf(step.n, step.of)
-            return (
-              <View key={step.label} style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-                <View style={{ flex: 1, minHeight: 28, justifyContent: 'center', paddingHorizontal: theme.spacing.sm }}>
-                  <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${width}%`, borderRadius: 6, backgroundColor: theme.colors.primarySoft }} />
-                  <Text style={[s.label, { color: theme.colors.text }]}>{`${step.label} · ${step.n}`}</Text>
-                </View>
-                {ofPrev !== null ? <Text style={[s.label, { color: theme.colors.subtextStrong, minWidth: 40, textAlign: 'right' }]}>{`${ofPrev}%`}</Text> : null}
-              </View>
-            )
-          })}
-        </View>
+        <FunnelBars steps={[
+          { label: 'Opened the feed', n: data.funnel.feed },
+          { label: 'Opened an event', n: data.funnel.event },
+          { label: 'RSVPed', n: data.funnel.rsvp },
+        ]} />
         <Text style={s.note}>{`People, last ${days} days. Percent = of the step before.`}</Text>
       </MetricCard>
+
+      {events ? <EventCards events={events} days={days} /> : null}
     </View>
+  )
+}
+
+/** The cards fed by the part-3 client events (admin_metrics_events). */
+function EventCards({ events, days }: { events: MetricsEvents; days: MetricsRangeDays }) {
+  const kinds = outsideKindsLine(events.outside_links.by_kind)
+  return (
+    <>
+      <MetricCard title="Guest → sign-up → RSVP">
+        <FunnelBars steps={[
+          { label: 'Guest devices', n: events.guest_funnel.guests },
+          { label: 'Signed in', n: events.guest_funnel.signed_in },
+          { label: 'RSVPed', n: events.guest_funnel.rsvped },
+        ]} />
+        <Text style={s.note}>{`Devices that first came as guests in the last ${days} days. Percent = of the step before.`}</Text>
+      </MetricCard>
+
+      <MetricCard title="Outside sign-ups" aside={`${events.outside_links.taps} taps · ${events.outside_links.people} people`}>
+        {events.outside_links.top_orgs.length
+          ? <CountRows rows={events.outside_links.top_orgs.map(o => ({ label: o.org, value: o.taps }))} />
+          : <Text style={s.note}>Nobody has tapped through to an outside sign-up in this range yet.</Text>}
+        {kinds ? <Text style={s.note}>{kinds}</Text> : null}
+      </MetricCard>
+
+      <View style={s.grid2}>
+        <View style={s.gridCell}>
+          <MetricCard title="Feed filters">
+            {events.filters.length
+              ? <CountRows rows={events.filters.slice(0, 5).map(f => ({ label: feedFilterLabel(f.filter, f.surface), value: f.times }))} />
+              : <Text style={s.note}>No filter changes yet.</Text>}
+          </MetricCard>
+        </View>
+        <View style={s.gridCell}>
+          <MetricCard title="Scorekeeper">
+            <CountRows rows={[
+              { label: 'Matches started', value: events.scorekeeper.started },
+              { label: 'Matches finished', value: events.scorekeeper.finished },
+              { label: 'People scoring', value: events.scorekeeper.people },
+            ]} />
+          </MetricCard>
+        </View>
+      </View>
+    </>
   )
 }
 

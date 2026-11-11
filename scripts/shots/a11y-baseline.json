@@ -7,6 +7,14 @@
       "color-contrast": 3
     }
   },
+  "admin-metrics-events": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
   "admin-metrics-live": {
     "mobile": {
       "color-contrast": 1

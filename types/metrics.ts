@@ -147,3 +147,19 @@ export type AdminUserActivity = {
   kudos_given: number
   recent: AdminSession[]
 }
+
+/** admin_metrics_events: what the part-3 client events add to Overview. */
+export type MetricsEvents = {
+  from: string
+  to: string
+  outside_links: {
+    taps: number
+    people: number
+    by_kind: Partial<Record<'session' | 'league' | 'tournament' | 'court' | 'unknown', number>>
+    top_orgs: { org: string; taps: number; people: number }[]
+  }
+  shares: { taps: number; people: number; by_method: Partial<Record<'share_sheet' | 'web_share' | 'copy_link' | 'unknown', number>> }
+  filters: { filter: string; surface: string; times: number; people: number }[]
+  scorekeeper: { started: number; finished: number; people: number }
+  guest_funnel: { guests: number; signed_in: number; rsvped: number }
+}
