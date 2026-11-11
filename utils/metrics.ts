@@ -219,3 +219,25 @@ export function activeDayWeeks<T extends { day: string }>(days: readonly T[]): (
   while (last.length < 7) last.push(null)
   return weeks
 }
+
+const FILTER_LABELS: Record<string, string> = { all: 'All', open_play: 'Open Play', tournament: 'Tournament' }
+const SURFACE_LABELS: Record<string, string> = { all: 'any surface', indoor: 'indoor', sand: 'sand', grass: 'grass' }
+
+/** "Tournament · sand", "Open Play · any surface" for a feed_filter_changed pair. */
+export function feedFilterLabel(filter: string, surface: string): string {
+  return `${FILTER_LABELS[filter] ?? filter} · ${SURFACE_LABELS[surface] ?? surface}`
+}
+
+const OUTSIDE_KIND_LABELS: Record<string, string> = { session: 'sessions', league: 'leagues', tournament: 'tournaments', court: 'court bookings' }
+
+/** "12 sessions · 4 leagues · 1 court booking", largest first; empty when nothing was tapped. */
+export function outsideKindsLine(byKind: Partial<Record<string, number>>): string {
+  return Object.entries(byKind)
+    .filter((e): e is [string, number] => (e[1] ?? 0) > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(([kind, n]) => {
+      const label = OUTSIDE_KIND_LABELS[kind] ?? kind
+      return `${n} ${n === 1 ? label.replace(/s$/, '') : label}`
+    })
+    .join(' · ')
+}

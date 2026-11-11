@@ -1,7 +1,7 @@
 import {
-  activeDayWeeks, activityLevel, chicagoDateKey, daysBetween, formatDelta, formatSeconds, lastSeenLabel,
+  activeDayWeeks, activityLevel, chicagoDateKey, daysBetween, feedFilterLabel, formatDelta, formatSeconds, lastSeenLabel,
   mergeSmallCohorts, metricsRange, minutesSince, percentOf, platformShares, platformVersion, retentionLevel,
-  screenLabel, screenPath, shortDay,
+  outsideKindsLine, screenLabel, screenPath, shortDay,
 } from '../utils/metrics'
 import type { RetentionCohort } from '../types'
 
@@ -136,5 +136,18 @@ describe('active days grid', () => {
 
   it('shades by minutes', () => {
     expect([0, 5, 20, 45].map(activityLevel)).toEqual([0, 1, 2, 3])
+  })
+})
+
+describe('part 3 labels', () => {
+  it('names feed filter pairs', () => {
+    expect(feedFilterLabel('tournament', 'sand')).toBe('Tournament · sand')
+    expect(feedFilterLabel('all', 'all')).toBe('All · any surface')
+    expect(feedFilterLabel('new_chip', 'indoor')).toBe('new_chip · indoor')
+  })
+
+  it('summarizes outside link-outs by kind, largest first, singular when one', () => {
+    expect(outsideKindsLine({ league: 4, session: 12, court: 1, tournament: 0 })).toBe('12 sessions · 4 leagues · 1 court booking')
+    expect(outsideKindsLine({})).toBe('')
   })
 })

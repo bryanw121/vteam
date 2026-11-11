@@ -27,6 +27,8 @@ import { IconButton } from '../../../../components/ui'
 import { myStatusFor, useMyUpcomingEvents } from '../../../../hooks/useMyUpcomingEvents'
 import { NotificationPopup } from '../../../../components/NotificationPopup'
 import { BANNERS, BREAKPOINTS, COMPACT_TEXT_SCALE, FEED_STALE_NOTICE, SWIPE_NAVIGATION, TIGHT_TEXT_SCALE, TOUR_TARGETS, shared, theme } from '../../../../constants'
+import { track } from '../../../../lib/analytics'
+import { ANALYTICS_EVENTS } from '../../../../constants/analytics'
 import { TourTarget } from '../../../../components/tour/TourTarget'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
@@ -160,6 +162,7 @@ export default function EventsScreen() {
 
   const selectFilters = useCallback((next: StoredFeedFilters) => {
     filtersTouchedRef.current = true
+    track(ANALYTICS_EVENTS.feedFilterChanged, { filter: next.filter, surface: next.surface })
     setChosenFilter(next.filter)
     setSurfaceFilter(next.surface)
     saveFeedFilters(next)

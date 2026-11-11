@@ -42,6 +42,14 @@ export const ANALYTICS_EVENTS = {
   sessionStart: 'session_start',
   /** The screen type changed. props: { screen (route pattern, e.g. /event/[id], or a tab's path), from? } */
   screenView: 'screen_view',
+  /** Tapped through to a sign-up or booking page run outside vteam (Schelagg data). props: { kind: session | league | tournament | court, org (venue or organizer name, never a URL) } */
+  outsideLinkOpened: 'outside_link_opened',
+  /** Shared an event. props: { surface: 'event', method: share_sheet | web_share | copy_link } */
+  shareTapped: 'share_tapped',
+  /** Changed the Events feed filters (not the restore on open). props: { filter, surface } */
+  feedFilterChanged: 'feed_filter_changed',
+  /** A Scorekeeper match started or finished (device-only, so this is the only record). props: { stage: started | finished, sets (sets played) } */
+  scorekeeperMatch: 'scorekeeper_match',
   /** A Share button sent or copied a screen's link. props: { screen (tournament, tournaments, leagues, events, profile), how: share | copy, filtered } */
   linkShared: 'link_shared',
 } as const

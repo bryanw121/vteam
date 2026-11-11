@@ -2740,6 +2740,10 @@ export type Database = {
       account_deletion_plan: { Args: { p_user: string }; Returns: Json }
       account_is_being_deleted: { Args: { p_user: string }; Returns: boolean }
       ad_free_offer: { Args: never; Returns: Json }
+      admin_metrics_events: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: Json
+      }
       admin_metrics_overview: {
         Args: { p_from?: string; p_to?: string }
         Returns: Json

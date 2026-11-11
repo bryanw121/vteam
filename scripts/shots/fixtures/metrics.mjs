@@ -126,8 +126,31 @@ export function metricsRpc(now) {
     }
   }
 
+  const events = ({ p_from, p_to }) => ({
+    from: p_from, to: p_to,
+    outside_links: {
+      taps: 41, people: 19,
+      by_kind: { session: 27, league: 9, tournament: 3, court: 2 },
+      top_orgs: [
+        { org: 'Volleyworld', taps: 14, people: 8 },
+        { org: 'ACES', taps: 9, people: 6 },
+        { org: 'ATX Beach', taps: 8, people: 5 },
+        { org: 'Austin Sports & Social Club', taps: 6, people: 4 },
+      ],
+    },
+    shares: { taps: 23, people: 11, by_method: { share_sheet: 15, copy_link: 6, web_share: 2 } },
+    filters: [
+      { filter: 'tournament', surface: 'all', times: 31, people: 14 },
+      { filter: 'open_play', surface: 'sand', times: 18, people: 9 },
+      { filter: 'all', surface: 'indoor', times: 7, people: 5 },
+    ],
+    scorekeeper: { started: 9, finished: 6, people: 3 },
+    guest_funnel: { guests: 134, signed_in: 12, rsvped: 7 },
+  })
+
   return {
     current_user_is_admin: () => true,
+    admin_metrics_events: events,
     admin_metrics_overview: overview,
     admin_online_now: online,
     admin_retention: retention,

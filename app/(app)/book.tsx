@@ -12,6 +12,8 @@ import { shared, theme, COURTS_DAYS, SURFACE_OPTIONS } from '../../constants'
 import { useCourtAvailability } from '../../hooks/useCourtAvailability'
 import { useRequireSignIn } from '../../hooks/useRequireSignIn'
 import { openExternalUrl } from '../../lib/openExternalUrl'
+import { track } from '../../lib/analytics'
+import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import {
   austinNow, courtsAgeMs, dayOptions, dayParts, facilityDays, formatAge, gridSpan, isCourtsOld, pickDay, venueCalendarUrl,
 } from '../../utils/courts'
@@ -80,6 +82,7 @@ export default function BookCourtScreen() {
 
   function book(day: FacilityDay) {
     // Open the venue's calendar on the day being viewed when its platform supports it.
+    track(ANALYTICS_EVENTS.outsideLinkOpened, { kind: 'court', org: day.venue.id })
     void openExternalUrl(venueCalendarUrl(day.venue, dayIso))
   }
 
@@ -162,7 +165,10 @@ export default function BookCourtScreen() {
                 </Text>
                 {e.calendar ? (
                   <TouchableOpacity
-                    onPress={() => void openExternalUrl(e.calendar!)}
+                    onPress={() => {
+                      track(ANALYTICS_EVENTS.outsideLinkOpened, { kind: 'court', org: e.venue ?? 'unknown' })
+                      void openExternalUrl(e.calendar!)
+                    }}
                     accessibilityRole="link"
                     style={shared.bookFollowUp}
                   >
