@@ -119,7 +119,7 @@ describe('Share sends an https link (#130)', () => {
   it('no longer builds links with expo-linking', () => {
     const src = readFileSync(resolve(__dirname, '../components/event/EventHeaderActions.tsx'), 'utf8')
     expect(src).not.toMatch(/createURL|window\.location\.href/)
-    expect(src).toMatch(/shareUrl\(routes\.event\(eventId\)\)/)
+    expect(src).toMatch(/shareUrl\(routes\.event\(eventId[,)]/)
   })
 })
 

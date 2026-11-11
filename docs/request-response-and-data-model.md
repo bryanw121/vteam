@@ -305,7 +305,7 @@ erDiagram
   [`types/index.ts:480`](../types/index.ts#L480)).
 - Opening a DM invokes `find_or_create_dm(other_user_id)` and expects one
   conversation UUID
-  ([`app/(app)/(tabs)/chat.tsx:193`](../app/%28app%29/%28tabs%29/chat.tsx#L193)).
+  ([`app/(app)/(tabs)/(main)/chat.tsx:193`](../app/%28app%29/%28tabs%29/chat.tsx#L193)).
 - A message page fetches 40 messages at a time with sender and reaction embeds,
   then separately fetches referenced reply messages to avoid an ambiguous
   self-join
@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `b465641ffacb`
+> Inventory fingerprint: `75d5de902954`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -452,36 +452,36 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 |---|---|
 | `ad_banners` | [`hooks/useFeedAds.ts:18`](../hooks/useFeedAds.ts#L18) |
 | `app_config` | [`hooks/useMinVersion.ts:19`](../hooks/useMinVersion.ts#L19) |
-| `app_events` | [`lib/analytics.ts:132`](../lib/analytics.ts#L132) |
+| `app_events` | [`lib/analytics.ts:159`](../lib/analytics.ts#L159) |
 | `chat_silences` | [`hooks/useSilencedUsers.ts:27`](../hooks/useSilencedUsers.ts#L27)<br>[`supabase/functions/send-chat-push/handler.ts:142`](../supabase/functions/send-chat-push/handler.ts#L142) |
-| `cheers` | [`hooks/event/useEventCheers.ts:16`](../hooks/event/useEventCheers.ts#L16)<br>[`hooks/useCheersSummary.ts:12`](../hooks/useCheersSummary.ts#L12)<br>[`hooks/useMyProfile.ts:188`](../hooks/useMyProfile.ts#L188)<br>[`hooks/useUserProfile.ts:21`](../hooks/useUserProfile.ts#L21)<br>[`utils/badges.ts:33`](../utils/badges.ts#L33) |
-| `club_members` | [`app/(app)/(tabs)/clubs.tsx:84`](../app/%28app%29/%28tabs%29/clubs.tsx#L84)<br>[`app/(app)/chat/[id].tsx:92`](../app/%28app%29/chat/%5Bid%5D.tsx#L92)<br>[`app/(app)/club/[id].tsx:128`](../app/%28app%29/club/%5Bid%5D.tsx#L128)<br>[`app/(app)/host.tsx:160`](../app/%28app%29/host.tsx#L160)<br>[`app/(app)/tournament/create.tsx:774`](../app/%28app%29/tournament/create.tsx#L774) |
-| `club_post_comments` | [`components/ClubPostCard.tsx:90`](../components/ClubPostCard.tsx#L90) |
-| `club_post_likes` | [`components/ClubPostCard.tsx:61`](../components/ClubPostCard.tsx#L61) |
-| `club_posts` | [`components/ClubPostCard.tsx:255`](../components/ClubPostCard.tsx#L255)<br>[`hooks/useClub.ts:71`](../hooks/useClub.ts#L71) |
-| `clubs` | [`app/(app)/(tabs)/clubs.tsx:207`](../app/%28app%29/%28tabs%29/clubs.tsx#L207)<br>[`app/(app)/club/[id].tsx:184`](../app/%28app%29/club/%5Bid%5D.tsx#L184)<br>[`app/(app)/club/create.tsx:63`](../app/%28app%29/club/create.tsx#L63)<br>[`hooks/useClub.ts:53`](../hooks/useClub.ts#L53) |
+| `cheers` | [`hooks/event/useEventCheers.ts:16`](../hooks/event/useEventCheers.ts#L16)<br>[`hooks/useCheersSummary.ts:12`](../hooks/useCheersSummary.ts#L12)<br>[`hooks/useMyProfile.ts:72`](../hooks/useMyProfile.ts#L72)<br>[`hooks/useUserProfile.ts:21`](../hooks/useUserProfile.ts#L21)<br>[`utils/badges.ts:41`](../utils/badges.ts#L41) |
+| `club_members` | [`app/(app)/(tabs)/(main)/clubs.tsx:87`](../app/%28app%29/%28tabs%29/%28main%29/clubs.tsx#L87)<br>[`app/(app)/chat/[id].tsx:93`](../app/%28app%29/chat/%5Bid%5D.tsx#L93)<br>[`app/(app)/club/[id].tsx:132`](../app/%28app%29/club/%5Bid%5D.tsx#L132)<br>[`app/(app)/host.tsx:160`](../app/%28app%29/host.tsx#L160)<br>[`app/(app)/tournament/create.tsx:774`](../app/%28app%29/tournament/create.tsx#L774) |
+| `club_post_comments` | [`components/ClubPostCard.tsx:91`](../components/ClubPostCard.tsx#L91) |
+| `club_post_likes` | [`components/ClubPostCard.tsx:63`](../components/ClubPostCard.tsx#L63) |
+| `club_posts` | [`components/ClubPostCard.tsx:257`](../components/ClubPostCard.tsx#L257)<br>[`hooks/useClub.ts:71`](../hooks/useClub.ts#L71) |
+| `clubs` | [`app/(app)/(tabs)/(main)/clubs.tsx:224`](../app/%28app%29/%28tabs%29/%28main%29/clubs.tsx#L224)<br>[`app/(app)/club/[id].tsx:188`](../app/%28app%29/club/%5Bid%5D.tsx#L188)<br>[`app/(app)/club/create.tsx:65`](../app/%28app%29/club/create.tsx#L65)<br>[`hooks/useClub.ts:53`](../hooks/useClub.ts#L53) |
 | `conversation_members` | [`supabase/functions/send-chat-push/handler.ts:126`](../supabase/functions/send-chat-push/handler.ts#L126) |
 | `conversations` | [`hooks/useConversations.ts:276`](../hooks/useConversations.ts#L276)<br>[`supabase/functions/send-chat-push/handler.ts:125`](../supabase/functions/send-chat-push/handler.ts#L125) |
 | `event_attendee_denials` | [`hooks/event/useMyDenialReason.ts:8`](../hooks/event/useMyDenialReason.ts#L8) |
-| `event_attendees` | [`app/(app)/host.tsx:399`](../app/%28app%29/host.tsx#L399)<br>[`hooks/event/useEventAttendance.ts:95`](../hooks/event/useEventAttendance.ts#L95)<br>[`hooks/event/useEventTeams.ts:92`](../hooks/event/useEventTeams.ts#L92)<br>[`hooks/useMonthEvents.ts:611`](../hooks/useMonthEvents.ts#L611)<br>[`hooks/useMyUpcomingEvents.ts:100`](../hooks/useMyUpcomingEvents.ts#L100)<br>[`utils/badges.ts:18`](../utils/badges.ts#L18) |
+| `event_attendees` | [`app/(app)/host.tsx:399`](../app/%28app%29/host.tsx#L399)<br>[`hooks/event/useEventAttendance.ts:110`](../hooks/event/useEventAttendance.ts#L110)<br>[`hooks/event/useEventTeams.ts:92`](../hooks/event/useEventTeams.ts#L92)<br>[`hooks/useMonthEvents.ts:610`](../hooks/useMonthEvents.ts#L610)<br>[`hooks/useMyUpcomingEvents.ts:100`](../hooks/useMyUpcomingEvents.ts#L100)<br>[`utils/badges.ts:25`](../utils/badges.ts#L25) |
 | `event_cohosts` | [`hooks/event/useCohosts.ts:61`](../hooks/event/useCohosts.ts#L61)<br>[`hooks/event/useEventData.ts:61`](../hooks/event/useEventData.ts#L61) |
 | `event_comments` | [`hooks/event/useEventComments.ts:41`](../hooks/event/useEventComments.ts#L41)<br>[`hooks/event/useEventData.ts:81`](../hooks/event/useEventData.ts#L81) |
-| `event_guests` | [`hooks/event/useEventAttendance.ts:300`](../hooks/event/useEventAttendance.ts#L300)<br>[`hooks/event/useEventData.ts:51`](../hooks/event/useEventData.ts#L51)<br>[`hooks/event/useEventTeams.ts:103`](../hooks/event/useEventTeams.ts#L103) |
+| `event_guests` | [`hooks/event/useEventAttendance.ts:336`](../hooks/event/useEventAttendance.ts#L336)<br>[`hooks/event/useEventData.ts:51`](../hooks/event/useEventData.ts#L51)<br>[`hooks/event/useEventTeams.ts:103`](../hooks/event/useEventTeams.ts#L103) |
 | `event_guests_attending` | [`hooks/event/useEventData.ts:43`](../hooks/event/useEventData.ts#L43) |
 | `event_payments` | [`hooks/event/useEventPayments.ts:13`](../hooks/event/useEventPayments.ts#L13) |
 | `event_tags` | [`app/(app)/host.tsx:363`](../app/%28app%29/host.tsx#L363) |
-| `events` | [`app/(app)/host.tsx:181`](../app/%28app%29/host.tsx#L181)<br>[`components/event/EventDetailScreen.tsx:228`](../components/event/EventDetailScreen.tsx#L228)<br>[`hooks/event/useEventData.ts:30`](../hooks/event/useEventData.ts#L30)<br>[`hooks/useClub.ts:45`](../hooks/useClub.ts#L45)<br>[`hooks/useEventHistory.ts:18`](../hooks/useEventHistory.ts#L18)<br>[`hooks/useForecast.ts:78`](../hooks/useForecast.ts#L78)<br>+2 more files |
+| `events` | [`app/(app)/host.tsx:181`](../app/%28app%29/host.tsx#L181)<br>[`components/event/EventDetailScreen.tsx:271`](../components/event/EventDetailScreen.tsx#L271)<br>[`hooks/event/useEventData.ts:30`](../hooks/event/useEventData.ts#L30)<br>[`hooks/useClub.ts:45`](../hooks/useClub.ts#L45)<br>[`hooks/useEventHistory.ts:18`](../hooks/useEventHistory.ts#L18)<br>[`hooks/useForecast.ts:78`](../hooks/useForecast.ts#L78)<br>+2 more files |
 | `external_programs` | [`hooks/useExternalPrograms.ts:25`](../hooks/useExternalPrograms.ts#L25) |
-| `external_sessions` | [`hooks/useMonthEvents.ts:285`](../hooks/useMonthEvents.ts#L285) |
-| `feedback_submissions` | [`app/(app)/(tabs)/settings/feedback.tsx:50`](../app/%28app%29/%28tabs%29/settings/feedback.tsx#L50)<br>[`supabase/functions/send-feedback-email/handler.ts:88`](../supabase/functions/send-feedback-email/handler.ts#L88) |
+| `external_sessions` | [`hooks/useMonthEvents.ts:284`](../hooks/useMonthEvents.ts#L284) |
+| `feedback_submissions` | [`app/(app)/(tabs)/settings/feedback.tsx:62`](../app/%28app%29/%28tabs%29/settings/feedback.tsx#L62)<br>[`supabase/functions/send-feedback-email/handler.ts:88`](../supabase/functions/send-feedback-email/handler.ts#L88) |
 | `friend_requests` | [`hooks/useFriends.ts:37`](../hooks/useFriends.ts#L37) |
 | `friendships` | [`hooks/useFriends.ts:36`](../hooks/useFriends.ts#L36) |
 | `major_cities` | [`hooks/useMajorCities.ts:10`](../hooks/useMajorCities.ts#L10) |
 | `message_reactions` | [`hooks/useMessages.ts:431`](../hooks/useMessages.ts#L431) |
 | `messages` | [`hooks/useMessages.ts:85`](../hooks/useMessages.ts#L85)<br>[`hooks/useOpenDm.ts:45`](../hooks/useOpenDm.ts#L45) |
-| `notifications` | [`hooks/event/useCohosts.ts:73`](../hooks/event/useCohosts.ts#L73)<br>[`hooks/event/useEventAttendance.ts:77`](../hooks/event/useEventAttendance.ts#L77)<br>[`hooks/useNotifications.ts:34`](../hooks/useNotifications.ts#L34)<br>[`utils/badges.ts:217`](../utils/badges.ts#L217) |
+| `notifications` | [`hooks/event/useCohosts.ts:73`](../hooks/event/useCohosts.ts#L73)<br>[`hooks/event/useEventAttendance.ts:91`](../hooks/event/useEventAttendance.ts#L91)<br>[`hooks/useNotifications.ts:34`](../hooks/useNotifications.ts#L34)<br>[`utils/badges.ts:233`](../utils/badges.ts#L233) |
 | `point_balances` | [`hooks/usePoints.ts:24`](../hooks/usePoints.ts#L24) |
-| `profiles` | [`app/_layout.tsx:49`](../app/_layout.tsx#L49)<br>[`app/(app)/(tabs)/chat.tsx:55`](../app/%28app%29/%28tabs%29/chat.tsx#L55)<br>[`app/(auth)/register.tsx:66`](../app/%28auth%29/register.tsx#L66)<br>[`hooks/event/useCohosts.ts:37`](../hooks/event/useCohosts.ts#L37)<br>[`hooks/event/useEventData.ts:109`](../hooks/event/useEventData.ts#L109)<br>[`hooks/tournament/api.ts:192`](../hooks/tournament/api.ts#L192)<br>+6 more files |
+| `profiles` | [`app/(app)/(tabs)/(main)/chat.tsx:55`](../app/%28app%29/%28tabs%29/%28main%29/chat.tsx#L55)<br>[`app/(auth)/register.tsx:68`](../app/%28auth%29/register.tsx#L68)<br>[`hooks/event/useCohosts.ts:37`](../hooks/event/useCohosts.ts#L37)<br>[`hooks/event/useEventData.ts:109`](../hooks/event/useEventData.ts#L109)<br>[`hooks/tournament/api.ts:192`](../hooks/tournament/api.ts#L192)<br>[`hooks/useMessages.ts:68`](../hooks/useMessages.ts#L68)<br>+5 more files |
 | `push_receipts` | [`supabase/functions/check-push-receipts/handler.ts:42`](../supabase/functions/check-push-receipts/handler.ts#L42)<br>[`supabase/functions/send-chat-push/handler.ts:206`](../supabase/functions/send-chat-push/handler.ts#L206)<br>[`supabase/functions/send-notification-push/handler.ts:150`](../supabase/functions/send-notification-push/handler.ts#L150) |
 | `push_tokens` | [`supabase/functions/check-push-receipts/handler.ts:87`](../supabase/functions/check-push-receipts/handler.ts#L87)<br>[`supabase/functions/send-chat-push/handler.ts:151`](../supabase/functions/send-chat-push/handler.ts#L151)<br>[`supabase/functions/send-notification-push/handler.ts:104`](../supabase/functions/send-notification-push/handler.ts#L104)<br>[`utils/pushNotifications.ts:111`](../utils/pushNotifications.ts#L111) |
 | `rate_limits` | [`supabase/functions/login-with-username/handler.ts:67`](../supabase/functions/login-with-username/handler.ts#L67) |
@@ -498,10 +498,10 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `tournament_team_members` | [`hooks/tournament/api.ts:194`](../hooks/tournament/api.ts#L194) |
 | `tournament_teams` | [`hooks/tournament/api.ts:125`](../hooks/tournament/api.ts#L125) |
 | `tournament_trophies` | [`hooks/tournament/api.ts:459`](../hooks/tournament/api.ts#L459) |
-| `tournaments` | [`app/(app)/tournament/create.tsx:704`](../app/%28app%29/tournament/create.tsx#L704)<br>[`hooks/tournament/api.ts:111`](../hooks/tournament/api.ts#L111)<br>[`hooks/useMonthEvents.ts:276`](../hooks/useMonthEvents.ts#L276)<br>[`hooks/useTournamentList.ts:22`](../hooks/useTournamentList.ts#L22) |
-| `user_badges` | [`hooks/useBadges.ts:52`](../hooks/useBadges.ts#L52)<br>[`hooks/useUserProfile.ts:22`](../hooks/useUserProfile.ts#L22)<br>[`utils/badges.ts:170`](../utils/badges.ts#L170) |
+| `tournaments` | [`app/(app)/tournament/create.tsx:704`](../app/%28app%29/tournament/create.tsx#L704)<br>[`hooks/tournament/api.ts:111`](../hooks/tournament/api.ts#L111)<br>[`hooks/useMonthEvents.ts:275`](../hooks/useMonthEvents.ts#L275)<br>[`hooks/useTournamentList.ts:22`](../hooks/useTournamentList.ts#L22) |
+| `user_badges` | [`hooks/useBadges.ts:53`](../hooks/useBadges.ts#L53)<br>[`hooks/useUserProfile.ts:22`](../hooks/useUserProfile.ts#L22)<br>[`utils/badges.ts:186`](../utils/badges.ts#L186) |
 | `user_event_templates` | [`app/(app)/host.tsx:207`](../app/%28app%29/host.tsx#L207) |
-| `user_settings` | [`hooks/useHiddenFeed.ts:28`](../hooks/useHiddenFeed.ts#L28)<br>[`hooks/useMyProfile.ts:89`](../hooks/useMyProfile.ts#L89)<br>[`hooks/useUserSettings.ts:23`](../hooks/useUserSettings.ts#L23)<br>[`supabase/functions/send-notification-push/handler.ts:102`](../supabase/functions/send-notification-push/handler.ts#L102) |
+| `user_settings` | [`hooks/useHiddenFeed.ts:28`](../hooks/useHiddenFeed.ts#L28)<br>[`hooks/useMyProfile.ts:127`](../hooks/useMyProfile.ts#L127)<br>[`hooks/useUserSettings.ts:24`](../hooks/useUserSettings.ts#L24)<br>[`supabase/functions/send-notification-push/handler.ts:102`](../supabase/functions/send-notification-push/handler.ts#L102) |
 
 </details>
 
@@ -510,16 +510,23 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | RPC | Call sites | SQL definition |
 |---|---|---|
 | `accept_tournament_invite` | [`hooks/tournament/api.ts:260`](../hooks/tournament/api.ts#L260) | [`supabase/migrations/20261025120000_tournament_rpcs.sql:18`](../supabase/migrations/20261025120000_tournament_rpcs.sql#L18) |
+| `admin_metrics_overview` | [`hooks/useAdminMetrics.ts:50`](../hooks/useAdminMetrics.ts#L50) | [`supabase/migrations/20261111120000_admin_metrics.sql:33`](../supabase/migrations/20261111120000_admin_metrics.sql#L33) |
+| `admin_online_now` | [`hooks/useAdminMetrics.ts:61`](../hooks/useAdminMetrics.ts#L61) | [`supabase/migrations/20261111120000_admin_metrics.sql:200`](../supabase/migrations/20261111120000_admin_metrics.sql#L200) |
+| `admin_retention` | [`hooks/useAdminMetrics.ts:80`](../hooks/useAdminMetrics.ts#L80) | [`supabase/migrations/20261111120000_admin_metrics.sql:268`](../supabase/migrations/20261111120000_admin_metrics.sql#L268) |
+| `admin_user_activity` | [`hooks/useAdminMetrics.ts:101`](../hooks/useAdminMetrics.ts#L101) | [`supabase/migrations/20261111120000_admin_metrics.sql:427`](../supabase/migrations/20261111120000_admin_metrics.sql#L427) |
+| `admin_users` | [`hooks/useAdminMetrics.ts:92`](../hooks/useAdminMetrics.ts#L92) | [`supabase/migrations/20261111120000_admin_metrics.sql:339`](../supabase/migrations/20261111120000_admin_metrics.sql#L339) |
+| `app_heartbeat` | [`lib/analytics.ts:224`](../lib/analytics.ts#L224) | [`supabase/migrations/20261110230000_usage_sessions.sql:74`](../supabase/migrations/20261110230000_usage_sessions.sql#L74) |
 | `cancel_friend_request` | [`hooks/useFriends.ts:71`](../hooks/useFriends.ts#L71) | [`supabase/migrations/20261028203837_friends.sql:256`](../supabase/migrations/20261028203837_friends.sql#L256) |
 | `check_rate_limit` | [`supabase/functions/login-with-username/handler.ts:140`](../supabase/functions/login-with-username/handler.ts#L140) | [`supabase/migrations/20261028120200_rate_limit_core.sql:19`](../supabase/migrations/20261028120200_rate_limit_core.sql#L19) |
 | `complete_tournament` | [`hooks/tournament/api.ts:449`](../hooks/tournament/api.ts#L449) | [`supabase/migrations/20261028205312_tournament_trophies.sql:67`](../supabase/migrations/20261028205312_tournament_trophies.sql#L67) |
+| `current_user_is_admin` | [`hooks/useAdminMetrics.ts:31`](../hooks/useAdminMetrics.ts#L31) | [`supabase/migrations/20261028170100_ads.sql:18`](../supabase/migrations/20261028170100_ads.sql#L18) |
 | `delete_account` | [`supabase/functions/delete-account/handler.ts:84`](../supabase/functions/delete-account/handler.ts#L84) | [`supabase/migrations/20261028130000_account_deletion.sql:190`](../supabase/migrations/20261028130000_account_deletion.sql#L190) |
 | `find_or_create_dm` | [`hooks/useOpenDm.ts:70`](../hooks/useOpenDm.ts#L70) | Not checked in |
 | `get_account_deletion_preview` | [`hooks/useAccountDeletion.ts:18`](../hooks/useAccountDeletion.ts#L18) | [`supabase/migrations/20261028130000_account_deletion.sql:166`](../supabase/migrations/20261028130000_account_deletion.sql#L166) |
 | `get_ad_free_status` | [`hooks/useAdFree.ts:25`](../hooks/useAdFree.ts#L25) | [`supabase/migrations/20261028170200_ad_free_redeem.sql:48`](../supabase/migrations/20261028170200_ad_free_redeem.sql#L48) |
 | `get_email_by_username` | [`supabase/functions/login-with-username/handler.ts:161`](../supabase/functions/login-with-username/handler.ts#L161) | Not checked in |
 | `get_event_card_attendee_previews` | [`utils/eventCardPreviews.ts:35`](../utils/eventCardPreviews.ts#L35) | [`supabase/migrations/20260811030000_event_card_attendee_previews_rpc.sql:2`](../supabase/migrations/20260811030000_event_card_attendee_previews_rpc.sql#L2) |
-| `get_feed_span` | [`hooks/useMonthEvents.ts:220`](../hooks/useMonthEvents.ts#L220) | [`supabase/migrations/20261025220000_get_feed_span.sql:33`](../supabase/migrations/20261025220000_get_feed_span.sql#L33) |
+| `get_feed_span` | [`hooks/useMonthEvents.ts:219`](../hooks/useMonthEvents.ts#L219) | [`supabase/migrations/20261025220000_get_feed_span.sql:33`](../supabase/migrations/20261025220000_get_feed_span.sql#L33) |
 | `get_friends_going` | [`hooks/useFriendsGoing.ts:37`](../hooks/useFriendsGoing.ts#L37) | [`supabase/migrations/20261028203837_friends.sql:354`](../supabase/migrations/20261028203837_friends.sql#L354) |
 | `get_my_conversations` | [`hooks/useConversations.ts:36`](../hooks/useConversations.ts#L36) | Not checked in |
 | `mark_all_notifications_read` | [`hooks/useNotifications.ts:99`](../hooks/useNotifications.ts#L99) | [`supabase/migrations/20260402120000_notifications_inbox.sql:112`](../supabase/migrations/20260402120000_notifications_inbox.sql#L112) |
@@ -531,7 +538,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `respond_friend_request` | [`hooks/useFriends.ts:72`](../hooks/useFriends.ts#L72) | [`supabase/migrations/20261028203837_friends.sql:216`](../supabase/migrations/20261028203837_friends.sql#L216) |
 | `send_friend_request` | [`hooks/useFriends.ts:70`](../hooks/useFriends.ts#L70) | [`supabase/migrations/20261028203837_friends.sql:144`](../supabase/migrations/20261028203837_friends.sql#L144) |
 | `set_best_friend` | [`hooks/useFriends.ts:74`](../hooks/useFriends.ts#L74) | [`supabase/migrations/20261028203837_friends.sql:318`](../supabase/migrations/20261028203837_friends.sql#L318) |
-| `set_no_show` | [`hooks/event/useEventAttendance.ts:270`](../hooks/event/useEventAttendance.ts#L270) | [`supabase/migrations/20261104190000_event_no_show.sql:60`](../supabase/migrations/20261104190000_event_no_show.sql#L60) |
+| `set_no_show` | [`hooks/event/useEventAttendance.ts:305`](../hooks/event/useEventAttendance.ts#L305) | [`supabase/migrations/20261104190000_event_no_show.sql:60`](../supabase/migrations/20261104190000_event_no_show.sql#L60) |
 
 ### Other Supabase surfaces
 
@@ -541,28 +548,28 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Surface | Name | Call sites |
 |---|---|---|
 | Auth | `exchangeCodeForSession` | [`lib/socialAuth.ts:24`](../lib/socialAuth.ts#L24) |
-| Auth | `getSession` | [`app/_layout.tsx:45`](../app/_layout.tsx#L45)<br>[`app/(app)/(tabs)/settings/account.tsx:22`](../app/%28app%29/%28tabs%29/settings/account.tsx#L22)<br>[`app/(auth)/reset-password.tsx:33`](../app/%28auth%29/reset-password.tsx#L33)<br>[`components/ClubPostCard.tsx:243`](../components/ClubPostCard.tsx#L243)<br>[`contexts/session.tsx:35`](../contexts/session.tsx#L35)<br>[`lib/sessionUser.ts:10`](../lib/sessionUser.ts#L10) |
+| Auth | `getSession` | [`app/(app)/(tabs)/settings/account.tsx:23`](../app/%28app%29/%28tabs%29/settings/account.tsx#L23)<br>[`app/(auth)/reset-password.tsx:33`](../app/%28auth%29/reset-password.tsx#L33)<br>[`contexts/session.tsx:35`](../contexts/session.tsx#L35)<br>[`lib/sessionUser.ts:10`](../lib/sessionUser.ts#L10) |
 | Auth | `getUser` | [`contexts/session.tsx:15`](../contexts/session.tsx#L15)<br>[`lib/sessionUser.ts:6`](../lib/sessionUser.ts#L6) |
 | Auth | `onAuthStateChange` | [`app/(auth)/reset-password.tsx:28`](../app/%28auth%29/reset-password.tsx#L28)<br>[`contexts/session.tsx:40`](../contexts/session.tsx#L40) |
-| Auth | `resetPasswordForEmail` | [`app/(auth)/login.tsx:95`](../app/%28auth%29/login.tsx#L95) |
+| Auth | `resetPasswordForEmail` | [`app/(auth)/login.tsx:102`](../app/%28auth%29/login.tsx#L102) |
 | Auth | `setSession` | [`lib/socialAuth.ts:27`](../lib/socialAuth.ts#L27)<br>[`lib/usernameAuth.ts:27`](../lib/usernameAuth.ts#L27)<br>[`supabase/functions/login-with-username/handler.ts:19`](../supabase/functions/login-with-username/handler.ts#L19) |
 | Auth | `signInWithIdToken` | [`lib/socialAuth.ts:78`](../lib/socialAuth.ts#L78) |
 | Auth | `signInWithOAuth` | [`lib/socialAuth.ts:38`](../lib/socialAuth.ts#L38) |
 | Auth | `signInWithOtp` | [`lib/socialAuth.ts:89`](../lib/socialAuth.ts#L89) |
-| Auth | `signInWithPassword` | [`app/(auth)/login.tsx:120`](../app/%28auth%29/login.tsx#L120)<br>[`hooks/useAccountDeletion.ts:70`](../hooks/useAccountDeletion.ts#L70) |
-| Auth | `signOut` | [`app/(app)/(tabs)/settings/account.tsx:30`](../app/%28app%29/%28tabs%29/settings/account.tsx#L30)<br>[`hooks/useAccountDeletion.ts:63`](../hooks/useAccountDeletion.ts#L63) |
-| Auth | `signUp` | [`app/(auth)/register.tsx:76`](../app/%28auth%29/register.tsx#L76) |
+| Auth | `signInWithPassword` | [`app/(auth)/login.tsx:127`](../app/%28auth%29/login.tsx#L127)<br>[`hooks/useAccountDeletion.ts:70`](../hooks/useAccountDeletion.ts#L70) |
+| Auth | `signOut` | [`app/(app)/(tabs)/settings/account.tsx:31`](../app/%28app%29/%28tabs%29/settings/account.tsx#L31)<br>[`hooks/useAccountDeletion.ts:63`](../hooks/useAccountDeletion.ts#L63) |
+| Auth | `signUp` | [`app/(auth)/register.tsx:78`](../app/%28auth%29/register.tsx#L78) |
 | Auth | `startAutoRefresh` | [`lib/supabase.ts:59`](../lib/supabase.ts#L59) |
 | Auth | `stopAutoRefresh` | [`lib/supabase.ts:60`](../lib/supabase.ts#L60) |
 | Auth | `updateUser` | [`app/(auth)/reset-password.tsx:47`](../app/%28auth%29/reset-password.tsx#L47) |
 | Auth | `verifyOtp` | [`lib/socialAuth.ts:97`](../lib/socialAuth.ts#L97) |
-| Realtime table | `chat_silences` | [`utils/chatUtils.ts:102`](../utils/chatUtils.ts#L102) |
-| Realtime table | `conversation_members` | [`utils/chatUtils.ts:97`](../utils/chatUtils.ts#L97) |
-| Realtime table | `message_reactions` | [`utils/chatUtils.ts:81`](../utils/chatUtils.ts#L81) |
-| Realtime table | `messages` | [`utils/chatUtils.ts:75`](../utils/chatUtils.ts#L75) |
+| Realtime table | `chat_silences` | [`utils/chatUtils.ts:98`](../utils/chatUtils.ts#L98) |
+| Realtime table | `conversation_members` | [`utils/chatUtils.ts:93`](../utils/chatUtils.ts#L93) |
+| Realtime table | `message_reactions` | [`utils/chatUtils.ts:77`](../utils/chatUtils.ts#L77) |
+| Realtime table | `messages` | [`utils/chatUtils.ts:71`](../utils/chatUtils.ts#L71) |
 | Storage bucket | `avatars` | [`components/profile/useAvatarUploader.ts:88`](../components/profile/useAvatarUploader.ts#L88) |
 | Storage bucket | `chat-images` | [`hooks/useChatImageUrl.ts:27`](../hooks/useChatImageUrl.ts#L27)<br>[`hooks/useMessages.ts:470`](../hooks/useMessages.ts#L470) |
-| Storage bucket | `club-avatars` | [`app/(app)/club/[id].tsx:203`](../app/%28app%29/club/%5Bid%5D.tsx#L203) |
+| Storage bucket | `club-avatars` | [`app/(app)/club/[id].tsx:207`](../app/%28app%29/club/%5Bid%5D.tsx#L207) |
 | Edge Function | `places-proxy` | [`components/LocationPickerField.tsx:70`](../components/LocationPickerField.tsx#L70) |
 | Edge Function | `send-feedback-email` | [`lib/feedback.ts:15`](../lib/feedback.ts#L15) |
 
@@ -576,37 +583,39 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Share links and previews (#130) | [`EventPreviewRow`](../types/index.ts#L179), [`EventPreviewState`](../types/index.ts#L183), [`EventPreviewMeta`](../types/index.ts#L186), [`Surface`](../types/index.ts#L197), [`CheerType`](../types/index.ts#L200), [`Cheer`](../types/index.ts#L214), [`EventAttendee`](../types/index.ts#L233), [`NoShowColumns`](../types/index.ts#L248), [`SetNoShowArgs`](../types/index.ts#L255), [`NoShowWindow`](../types/index.ts#L258), [`EventAttendeeWithProfile`](../types/index.ts#L266), [`EventAttendeeCountEmbed`](../types/index.ts#L271), [`EventComment`](../types/index.ts#L279), [`MentionUser`](../types/index.ts#L282), [`EventCommentWithAuthor`](../types/index.ts#L289), [`EventEditSource`](../types/index.ts#L294), [`CommentPage`](../types/index.ts#L304), [`EventCommentsPage`](../types/index.ts#L315), [`EventGuest`](../types/index.ts#L321), [`EventGuestPublicRow`](../types/index.ts#L330), [`EventCohost`](../types/index.ts#L336), [`EventCohostWithProfile`](../types/index.ts#L339), [`FeedbackSubmission`](../types/index.ts#L347), [`FeedbackKind`](../types/index.ts#L352), [`FeedbackPriority`](../types/index.ts#L353) |
 | Query Response Types | [`EventWithDetails`](../types/index.ts#L367), [`FeedSnapshot`](../types/index.ts#L400), [`QuerySnapshot`](../types/index.ts#L408), [`SessionConfirmation`](../types/index.ts#L416), [`ExternalSession`](../types/index.ts#L419), [`ProgramDivision`](../types/index.ts#L426), [`ExternalProgram`](../types/index.ts#L429), [`ExternalProgramCardProps`](../types/index.ts#L443), [`ProgramHostChipsProps`](../types/index.ts#L452), [`ProgramSectionProps`](../types/index.ts#L460), [`ProgramsForRegion`](../types/index.ts#L469) |
 | Form Types | [`CreateEventForm`](../types/index.ts#L482), [`Tag`](../types/index.ts#L506), [`UserEventTemplate`](../types/index.ts#L515) |
-| Club Types | [`MembershipType`](../types/index.ts#L522), [`MajorCity`](../types/index.ts#L527), [`UserSettings`](../types/index.ts#L530), [`HiddenFeedKind`](../types/index.ts#L540), [`HiddenFeedEntry`](../types/index.ts#L548), [`HideFeedOption`](../types/index.ts#L556), [`FeedItemShellProps`](../types/index.ts#L562), [`HiddenCountRowProps`](../types/index.ts#L573), [`HideFeedSheetProps`](../types/index.ts#L580), [`HiddenFeedControls`](../types/index.ts#L590), [`UsernameLoginSession`](../types/index.ts#L599), [`ReminderLeadMinutes`](../types/index.ts#L608), [`NotificationSettingRowProps`](../types/index.ts#L611), [`ReminderCopy`](../types/index.ts#L621), [`BannerDef`](../types/index.ts#L628), [`BannerAction`](../types/index.ts#L641) |
-| Ads (constants/ads.ts, hooks/useFeedAds.ts, utils/feedAds.ts) | [`AdBanner`](../types/index.ts#L646), [`FeedAds`](../types/index.ts#L649), [`FeedAdPlacement`](../types/index.ts#L655), [`AdFreeStatus`](../types/index.ts#L660), [`AdFreeRedeemResult`](../types/index.ts#L668) |
-| Tours (constants/tours.ts, contexts/tour.tsx) | [`TourId`](../types/index.ts#L675), [`TourPlacement`](../types/index.ts#L678), [`TourStepDef`](../types/index.ts#L680), [`TourDef`](../types/index.ts#L691), [`TourSource`](../types/index.ts#L697), [`TourShell`](../types/index.ts#L700), [`TourControls`](../types/index.ts#L708), [`TourRect`](../types/index.ts#L715), [`TourSize`](../types/index.ts#L717), [`TourInsets`](../types/index.ts#L719), [`TourCardPosition`](../types/index.ts#L722), [`TourMeasurable`](../types/index.ts#L725), [`Club`](../types/index.ts#L734), [`ClubMember`](../types/index.ts#L740), [`ClubWithDetails`](../types/index.ts#L746), [`ClubPost`](../types/index.ts#L756), [`ClubPostLike`](../types/index.ts#L761), [`ClubPostComment`](../types/index.ts#L766), [`ClubPostCommentWithAuthor`](../types/index.ts#L769), [`ClubPostWithFeed`](../types/index.ts#L774) |
-| Derived / Computed Types | [`AttendanceStatus`](../types/index.ts#L788), [`TeamAssignment`](../types/index.ts#L803), [`MyEventStatus`](../types/index.ts#L809), [`MyUpcomingEvent`](../types/index.ts#L812) |
-| Events Feed Types | [`FeedFilter`](../types/index.ts#L824), [`FeedFilterChip`](../types/index.ts#L826), [`SurfaceFilter`](../types/index.ts#L829), [`SurfaceFilterProps`](../types/index.ts#L831), [`FeedRsvpAction`](../types/index.ts#L838), [`FeedRsvpVars`](../types/index.ts#L840), [`FeedRsvpResult`](../types/index.ts#L843), [`EventsHeaderProps`](../types/index.ts#L845), [`FilterChipsProps`](../types/index.ts#L852), [`FeedEmptyProps`](../types/index.ts#L860), [`NextUpCardProps`](../types/index.ts#L870) |
-| Chat Types | [`ConversationType`](../types/index.ts#L877), [`Message`](../types/index.ts#L880), [`MessageReaction`](../types/index.ts#L882), [`ConversationRow`](../types/index.ts#L885), [`ChatSilence`](../types/index.ts#L915), [`ChatSilenceWithProfile`](../types/index.ts#L918), [`ProfileBrief`](../types/index.ts#L929), [`MessageWithDetails`](../types/index.ts#L931), [`ChatMessageListProps`](../types/index.ts#L944) |
-| Friends (#15) | [`Friend`](../types/index.ts#L961), [`FriendRequest`](../types/index.ts#L966), [`FriendsData`](../types/index.ts#L971), [`FriendStatus`](../types/index.ts#L978), [`FriendButtonProps`](../types/index.ts#L981), [`FriendManageSheetProps`](../types/index.ts#L990), [`FriendRowProps`](../types/index.ts#L1002), [`FriendsGoingLineProps`](../types/index.ts#L1016), [`FriendGoing`](../types/index.ts#L1024) |
-| Badge Types | [`CardBgType`](../types/index.ts#L1028), [`BadgeType`](../types/index.ts#L1030), [`UserBadge`](../types/index.ts#L1051) |
-| Tournament Types | [`TournamentStatus`](../types/index.ts#L1055), [`TournamentFormat`](../types/index.ts#L1056), [`TournamentBracketType`](../types/index.ts#L1057), [`TournamentStage`](../types/index.ts#L1058), [`TournamentTeamStatus`](../types/index.ts#L1059), [`TournamentMatchStatus`](../types/index.ts#L1060), [`Tournament`](../types/index.ts#L1062), [`TournamentRules`](../types/index.ts#L1070), [`TournamentTeam`](../types/index.ts#L1072), [`TournamentTeamMember`](../types/index.ts#L1074), [`TournamentPool`](../types/index.ts#L1076), [`TournamentMatch`](../types/index.ts#L1078), [`TournamentSet`](../types/index.ts#L1083), [`TournamentDraft`](../types/index.ts#L1086) |
-| Tournament Discussion | [`TournamentComment`](../types/index.ts#L1124), [`TournamentCommentWithAuthor`](../types/index.ts#L1126), [`TournamentCommentsPage`](../types/index.ts#L1132) |
-| Tournament Team Management | [`TournamentTeamInvitationStatus`](../types/index.ts#L1136), [`TournamentTeamInvitation`](../types/index.ts#L1137), [`TournamentJoinRequestStatus`](../types/index.ts#L1139), [`TournamentTeamJoinRequest`](../types/index.ts#L1140) |
-| Tournament Prizes | [`TournamentPrize`](../types/index.ts#L1144) |
-| Tournament Team with roster | [`TournamentTeamWithRoster`](../types/index.ts#L1148) |
-| Google Places prediction | [`GooglePlacePrediction`](../types/index.ts#L1162), [`AppConfigRow`](../types/index.ts#L1174), [`UpdateRequirement`](../types/index.ts#L1180) |
-| Session | [`SessionState`](../types/index.ts#L1190) |
-| UI primitives (components/ui) | [`IoniconName`](../types/index.ts#L1200), [`SpinnerProps`](../types/index.ts#L1203), [`ScreenStateProps`](../types/index.ts#L1208), [`EmptyStateProps`](../types/index.ts#L1226), [`ChipVariant`](../types/index.ts#L1235), [`ChipProps`](../types/index.ts#L1237), [`IconButtonProps`](../types/index.ts#L1250), [`ScreenHeaderProps`](../types/index.ts#L1265), [`ConfirmDialogProps`](../types/index.ts#L1280), [`BottomSheetProps`](../types/index.ts#L1298), [`ScreenContainerProps`](../types/index.ts#L1311) |
-| Profile / club / host (Phase B4) | [`ProfilePatch`](../types/index.ts#L1322), [`ToastState`](../types/index.ts#L1326), [`ClubListItem`](../types/index.ts#L1329), [`ClubDetailData`](../types/index.ts#L1336), [`ClubPostsData`](../types/index.ts#L1344), [`OwnedClubOption`](../types/index.ts#L1351) |
-| Schedule generator | [`ScheduleConfig`](../types/index.ts#L1360), [`ScheduleInput`](../types/index.ts#L1374), [`SchedulePool`](../types/index.ts#L1395), [`ScheduleMatch`](../types/index.ts#L1403), [`TimedBracketMatch`](../types/index.ts#L1418), [`GeneratedSchedule`](../types/index.ts#L1420) |
-| Screen data | [`TournamentCore`](../types/index.ts#L1430), [`TournamentViewer`](../types/index.ts#L1437), [`JoinRequestRequester`](../types/index.ts#L1439), [`TournamentJoinRequestWithRequester`](../types/index.ts#L1441), [`PendingInvite`](../types/index.ts#L1445), [`MyRegistration`](../types/index.ts#L1448), [`TournamentMatchRow`](../types/index.ts#L1456), [`TournamentConfirm`](../types/index.ts#L1466), [`TournamentInviteCandidate`](../types/index.ts#L1473) |
-| Event detail hooks (hooks/event) | [`TeamSource`](../types/index.ts#L1477), [`BalancePlayer`](../types/index.ts#L1480), [`TeamSummary`](../types/index.ts#L1482), [`TeamMode`](../types/index.ts#L1484), [`RandomizeResult`](../types/index.ts#L1486), [`PendingCheer`](../types/index.ts#L1491), [`EventCommentPostVars`](../types/index.ts#L1494), [`RemoveDialogState`](../types/index.ts#L1497), [`RemoveDialogAction`](../types/index.ts#L1498), [`ZoneLayout`](../types/index.ts#L1501), [`LazyChunkBoundaryProps`](../types/index.ts#L1504), [`LazyChunkBoundaryState`](../types/index.ts#L1505), [`LegendBorderProps`](../types/index.ts#L1508), [`EventData`](../types/index.ts#L1512), [`EventAttendanceApi`](../types/index.ts#L1513), [`EventCommentsApi`](../types/index.ts#L1514), [`EventPaymentsApi`](../types/index.ts#L1515), [`EventCheersApi`](../types/index.ts#L1516), [`CohostsApi`](../types/index.ts#L1517), [`EventTeamsApi`](../types/index.ts#L1518), [`TeamDragApi`](../types/index.ts#L1519), [`TournamentActions`](../types/index.ts#L1520), [`JoinAction`](../types/index.ts#L1526), [`JoinActionState`](../types/index.ts#L1536), [`SelfAttendanceAction`](../types/index.ts#L1541), [`LeaveConsequencePart`](../types/index.ts#L1551), [`LeaveConsequence`](../types/index.ts#L1557), [`LeaveEventInfo`](../types/index.ts#L1564), [`LeaveRosterInfo`](../types/index.ts#L1569), [`LeaveViewerInfo`](../types/index.ts#L1572), [`LeaveReason`](../types/index.ts#L1575), [`ToastAction`](../types/index.ts#L1578), [`RemoveTarget`](../types/index.ts#L1581), [`RosterAction`](../types/index.ts#L1586), [`NoShowRowAction`](../types/index.ts#L1598), [`RosterMenu`](../types/index.ts#L1606), [`RosterActionContext`](../types/index.ts#L1609) |
-| Profile hooks | [`MyProfile`](../types/index.ts#L1621), [`AvatarUploader`](../types/index.ts#L1642) |
-| Chat hooks / utils | [`SenderProfile`](../types/index.ts#L1659), [`ReplySnapshot`](../types/index.ts#L1660), [`MessageRecord`](../types/index.ts#L1663), [`DebouncedCall`](../types/index.ts#L1665), [`PendingSend`](../types/index.ts#L1675), [`ConversationLookupRow`](../types/index.ts#L1683) |
-| Shared component contracts | [`EventCardRsvpHandler`](../types/index.ts#L1699), [`RowEventCardRsvpHandler`](../types/index.ts#L1700), [`TeamCardActions`](../types/index.ts#L1703), [`CheerCounts`](../types/index.ts#L1716), [`AnchorRect`](../types/index.ts#L1719), [`AnchorMenuOption`](../types/index.ts#L1721), [`LocationValue`](../types/index.ts#L1729), [`ClubLocationFields`](../types/index.ts#L1742) |
-| Badges, previews, tournament tabs | [`BadgeStats`](../types/index.ts#L1746), [`BadgeAwardPlan`](../types/index.ts#L1761), [`EventCardPreviews`](../types/index.ts#L1767), [`EventCardPreviewRow`](../types/index.ts#L1770), [`FeedSpanRows`](../types/index.ts#L1778), [`StoredFeedFilters`](../types/index.ts#L1786), [`TournamentTabName`](../types/index.ts#L1791) |
-| Schelagg court availability and session checks (lib/schelagg, utils/courts) | [`HHMM`](../types/index.ts#L1796), [`HHMMRange`](../types/index.ts#L1799), [`MinuteRange`](../types/index.ts#L1802), [`CourtsCourt`](../types/index.ts#L1804), [`CourtsFacility`](../types/index.ts#L1810), [`CourtsVenue`](../types/index.ts#L1819), [`CourtsError`](../types/index.ts#L1836), [`CourtsResponse`](../types/index.ts#L1839), [`CourtsData`](../types/index.ts#L1849), [`AustinNow`](../types/index.ts#L1852), [`CourtLane`](../types/index.ts#L1854), [`FacilityDay`](../types/index.ts#L1863), [`DayOption`](../types/index.ts#L1882), [`SessionCheckStatus`](../types/index.ts#L1884), [`SessionCheckResult`](../types/index.ts#L1887), [`SessionLinkDecision`](../types/index.ts#L1908), [`SessionLinkNotice`](../types/index.ts#L1923), [`CreateMenuSectionKey`](../types/index.ts#L1927) |
-| Usage metrics (lib/analytics.ts) | [`AnalyticsEventName`](../types/index.ts#L1931), [`AnalyticsProps`](../types/index.ts#L1934) |
-| Legal pages (/terms, /privacy) | [`LegalSpan`](../types/index.ts#L1939), [`LegalBlock`](../types/index.ts#L1942), [`VenmoLinks`](../types/index.ts#L1950) |
-| Text size (#43) | [`TextSizeId`](../types/index.ts#L1960), [`TextSizeOption`](../types/index.ts#L1962), [`TextScaleContextValue`](../types/index.ts#L1969) |
-| Account deletion (#99) | [`AccountDeletionSuccessor`](../types/index.ts#L1982), [`AccountDeletionPlan`](../types/index.ts#L1988), [`AccountDeletionBlock`](../types/index.ts#L2004), [`WebScrollableRef`](../types/index.ts#L2006) |
-| Weather on outdoor games (#165) | [`ForecastHour`](../types/index.ts#L2011), [`Forecast`](../types/index.ts#L2028), [`ForecastWindow`](../types/index.ts#L2035), [`ForecastCell`](../types/index.ts#L2038), [`ForecastTone`](../types/index.ts#L2041), [`ForecastSummary`](../types/index.ts#L2044), [`ForecastCourt`](../types/index.ts#L2059) |
-| Public profile, history, cheers summary (#185) | [`UserProfileData`](../types/index.ts#L2064), [`EventHistoryKind`](../types/index.ts#L2073), [`CheersSummary`](../types/index.ts#L2076) |
+| Club Types | [`MembershipType`](../types/index.ts#L522), [`MajorCity`](../types/index.ts#L527), [`UserSettings`](../types/index.ts#L530), [`HiddenFeedKind`](../types/index.ts#L542), [`HiddenFeedEntry`](../types/index.ts#L550), [`HideFeedOption`](../types/index.ts#L558), [`FeedItemShellProps`](../types/index.ts#L564), [`HiddenCountRowProps`](../types/index.ts#L575), [`HideFeedSheetProps`](../types/index.ts#L582), [`HiddenFeedControls`](../types/index.ts#L592), [`UsernameLoginSession`](../types/index.ts#L601), [`ReminderLeadMinutes`](../types/index.ts#L610), [`NotificationSettingRowProps`](../types/index.ts#L613), [`ReminderCopy`](../types/index.ts#L623), [`BannerDef`](../types/index.ts#L630), [`BannerAction`](../types/index.ts#L643) |
+| Ads (constants/ads.ts, hooks/useFeedAds.ts, utils/feedAds.ts) | [`AdBanner`](../types/index.ts#L648), [`FeedAds`](../types/index.ts#L651), [`FeedAdPlacement`](../types/index.ts#L657), [`AdFreeStatus`](../types/index.ts#L662), [`AdFreeRedeemResult`](../types/index.ts#L670) |
+| Tours (constants/tours.ts, contexts/tour.tsx) | [`TourId`](../types/index.ts#L677), [`TourPlacement`](../types/index.ts#L680), [`TourStepDef`](../types/index.ts#L682), [`TourDef`](../types/index.ts#L693), [`TourSource`](../types/index.ts#L699), [`TourShell`](../types/index.ts#L702), [`TourControls`](../types/index.ts#L710), [`TourRect`](../types/index.ts#L717), [`TourSize`](../types/index.ts#L719), [`TourInsets`](../types/index.ts#L721), [`TourCardPosition`](../types/index.ts#L724), [`TourMeasurable`](../types/index.ts#L727), [`Club`](../types/index.ts#L736), [`ClubMember`](../types/index.ts#L742), [`ClubWithDetails`](../types/index.ts#L748), [`ClubPost`](../types/index.ts#L758), [`ClubPostLike`](../types/index.ts#L763), [`ClubPostComment`](../types/index.ts#L768), [`ClubPostCommentWithAuthor`](../types/index.ts#L771), [`ClubPostWithFeed`](../types/index.ts#L776) |
+| Derived / Computed Types | [`AttendanceStatus`](../types/index.ts#L790), [`TeamAssignment`](../types/index.ts#L805), [`MyEventStatus`](../types/index.ts#L811), [`MyUpcomingEvent`](../types/index.ts#L814) |
+| Events Feed Types | [`FeedFilter`](../types/index.ts#L826), [`FeedFilterChip`](../types/index.ts#L828), [`SurfaceFilter`](../types/index.ts#L831), [`SurfaceFilterProps`](../types/index.ts#L833), [`FeedRsvpAction`](../types/index.ts#L840), [`FeedRsvpVars`](../types/index.ts#L842), [`FeedRsvpResult`](../types/index.ts#L845), [`EventsHeaderProps`](../types/index.ts#L847), [`FilterChipsProps`](../types/index.ts#L854), [`FeedEmptyProps`](../types/index.ts#L862), [`NextUpCardProps`](../types/index.ts#L872) |
+| Chat Types | [`ConversationType`](../types/index.ts#L879), [`Message`](../types/index.ts#L882), [`MessageReaction`](../types/index.ts#L884), [`ConversationRow`](../types/index.ts#L887), [`ChatSilence`](../types/index.ts#L917), [`ChatSilenceWithProfile`](../types/index.ts#L920), [`ProfileBrief`](../types/index.ts#L931), [`MessageWithDetails`](../types/index.ts#L933), [`ChatMessageListProps`](../types/index.ts#L946) |
+| Friends (#15) | [`Friend`](../types/index.ts#L963), [`FriendRequest`](../types/index.ts#L968), [`FriendsData`](../types/index.ts#L973), [`FriendStatus`](../types/index.ts#L980), [`FriendButtonProps`](../types/index.ts#L983), [`FriendManageSheetProps`](../types/index.ts#L992), [`FriendRowProps`](../types/index.ts#L1004), [`FriendsGoingLineProps`](../types/index.ts#L1018), [`FriendGoing`](../types/index.ts#L1026) |
+| Badge Types | [`CardBgType`](../types/index.ts#L1030), [`BadgeType`](../types/index.ts#L1032), [`UserBadge`](../types/index.ts#L1053) |
+| Tournament Types | [`TournamentStatus`](../types/index.ts#L1057), [`TournamentFormat`](../types/index.ts#L1058), [`TournamentBracketType`](../types/index.ts#L1059), [`TournamentStage`](../types/index.ts#L1060), [`TournamentTeamStatus`](../types/index.ts#L1061), [`TournamentMatchStatus`](../types/index.ts#L1062), [`Tournament`](../types/index.ts#L1064), [`TournamentRules`](../types/index.ts#L1072), [`TournamentTeam`](../types/index.ts#L1074), [`TournamentTeamMember`](../types/index.ts#L1076), [`TournamentPool`](../types/index.ts#L1078), [`TournamentMatch`](../types/index.ts#L1080), [`TournamentSet`](../types/index.ts#L1085), [`TournamentDraft`](../types/index.ts#L1088) |
+| Tournament Discussion | [`TournamentComment`](../types/index.ts#L1126), [`TournamentCommentWithAuthor`](../types/index.ts#L1128), [`TournamentCommentsPage`](../types/index.ts#L1134) |
+| Tournament Team Management | [`TournamentTeamInvitationStatus`](../types/index.ts#L1138), [`TournamentTeamInvitation`](../types/index.ts#L1139), [`TournamentJoinRequestStatus`](../types/index.ts#L1141), [`TournamentTeamJoinRequest`](../types/index.ts#L1142) |
+| Tournament Prizes | [`TournamentPrize`](../types/index.ts#L1146) |
+| Tournament Team with roster | [`TournamentTeamWithRoster`](../types/index.ts#L1150) |
+| Google Places prediction | [`GooglePlacePrediction`](../types/index.ts#L1164), [`AppConfigRow`](../types/index.ts#L1176), [`UpdateRequirement`](../types/index.ts#L1182) |
+| Session | [`SessionState`](../types/index.ts#L1192) |
+| UI primitives (components/ui) | [`IoniconName`](../types/index.ts#L1202), [`SpinnerProps`](../types/index.ts#L1205), [`ScreenStateProps`](../types/index.ts#L1210), [`EmptyStateProps`](../types/index.ts#L1228), [`ChipVariant`](../types/index.ts#L1237), [`ChipProps`](../types/index.ts#L1239), [`IconButtonProps`](../types/index.ts#L1252), [`ScreenHeaderProps`](../types/index.ts#L1267), [`ConfirmDialogProps`](../types/index.ts#L1282), [`BottomSheetProps`](../types/index.ts#L1300), [`ScreenContainerProps`](../types/index.ts#L1313) |
+| Profile / club / host (Phase B4) | [`ProfilePatch`](../types/index.ts#L1324), [`ToastState`](../types/index.ts#L1328), [`ClubListItem`](../types/index.ts#L1331), [`ClubDetailData`](../types/index.ts#L1338), [`ClubPostsData`](../types/index.ts#L1346), [`OwnedClubOption`](../types/index.ts#L1353) |
+| Schedule generator | [`ScheduleConfig`](../types/index.ts#L1363), [`ScheduleInput`](../types/index.ts#L1377), [`SchedulePool`](../types/index.ts#L1398), [`ScheduleMatch`](../types/index.ts#L1406), [`TimedBracketMatch`](../types/index.ts#L1421), [`GeneratedSchedule`](../types/index.ts#L1423) |
+| Screen data | [`TournamentCore`](../types/index.ts#L1433), [`TournamentViewer`](../types/index.ts#L1440), [`JoinRequestRequester`](../types/index.ts#L1442), [`TournamentJoinRequestWithRequester`](../types/index.ts#L1444), [`PendingInvite`](../types/index.ts#L1448), [`MyRegistration`](../types/index.ts#L1451), [`TournamentMatchRow`](../types/index.ts#L1459), [`TournamentConfirm`](../types/index.ts#L1469), [`TournamentInviteCandidate`](../types/index.ts#L1476) |
+| Event detail hooks (hooks/event) | [`TeamSource`](../types/index.ts#L1480), [`BalancePlayer`](../types/index.ts#L1483), [`TeamSummary`](../types/index.ts#L1485), [`TeamMode`](../types/index.ts#L1487), [`RandomizeResult`](../types/index.ts#L1489), [`PendingCheer`](../types/index.ts#L1494), [`EventCommentPostVars`](../types/index.ts#L1497), [`RemoveDialogState`](../types/index.ts#L1500), [`RemoveDialogAction`](../types/index.ts#L1501), [`ZoneLayout`](../types/index.ts#L1504), [`LazyChunkBoundaryProps`](../types/index.ts#L1507), [`LazyChunkBoundaryState`](../types/index.ts#L1508), [`LegendBorderProps`](../types/index.ts#L1511), [`EventData`](../types/index.ts#L1515), [`EventAttendanceApi`](../types/index.ts#L1516), [`EventCommentsApi`](../types/index.ts#L1517), [`EventPaymentsApi`](../types/index.ts#L1518), [`EventCheersApi`](../types/index.ts#L1519), [`CohostsApi`](../types/index.ts#L1520), [`EventTeamsApi`](../types/index.ts#L1521), [`TeamDragApi`](../types/index.ts#L1522), [`TournamentActions`](../types/index.ts#L1523), [`JoinAction`](../types/index.ts#L1529), [`JoinActionState`](../types/index.ts#L1539), [`SelfAttendanceAction`](../types/index.ts#L1544), [`LeaveConsequencePart`](../types/index.ts#L1554), [`LeaveConsequence`](../types/index.ts#L1560), [`LeaveEventInfo`](../types/index.ts#L1567), [`LeaveRosterInfo`](../types/index.ts#L1572), [`LeaveViewerInfo`](../types/index.ts#L1575), [`LeaveReason`](../types/index.ts#L1578), [`ToastAction`](../types/index.ts#L1581), [`ToastVariant`](../types/index.ts#L1584), [`ToastMessage`](../types/index.ts#L1587), [`RemoveTarget`](../types/index.ts#L1598), [`RosterAction`](../types/index.ts#L1603), [`NoShowRowAction`](../types/index.ts#L1615), [`RosterMenu`](../types/index.ts#L1623), [`RosterActionContext`](../types/index.ts#L1626) |
+| Profile hooks | [`MyProfile`](../types/index.ts#L1638), [`AvatarUploader`](../types/index.ts#L1659) |
+| Chat hooks / utils | [`SenderProfile`](../types/index.ts#L1676), [`ReplySnapshot`](../types/index.ts#L1677), [`MessageRecord`](../types/index.ts#L1680), [`DebouncedCall`](../types/index.ts#L1682), [`PendingSend`](../types/index.ts#L1692), [`ConversationLookupRow`](../types/index.ts#L1700) |
+| Shared component contracts | [`EventCardRsvpHandler`](../types/index.ts#L1716), [`RowEventCardRsvpHandler`](../types/index.ts#L1717), [`TeamCardActions`](../types/index.ts#L1720), [`CheerCounts`](../types/index.ts#L1733), [`AnchorRect`](../types/index.ts#L1736), [`AnchorMenuOption`](../types/index.ts#L1738), [`LocationValue`](../types/index.ts#L1746), [`ClubLocationFields`](../types/index.ts#L1759) |
+| Badges, previews, tournament tabs | [`BadgeStats`](../types/index.ts#L1763), [`BadgeAwardPlan`](../types/index.ts#L1778), [`EventCardPreviews`](../types/index.ts#L1784), [`EventCardPreviewRow`](../types/index.ts#L1787), [`FeedSpanRows`](../types/index.ts#L1795), [`StoredFeedFilters`](../types/index.ts#L1803), [`TournamentTabName`](../types/index.ts#L1808) |
+| Schelagg court availability and session checks (lib/schelagg, utils/courts) | [`HHMM`](../types/index.ts#L1813), [`HHMMRange`](../types/index.ts#L1816), [`MinuteRange`](../types/index.ts#L1819), [`CourtsCourt`](../types/index.ts#L1821), [`CourtsFacility`](../types/index.ts#L1827), [`CourtsVenue`](../types/index.ts#L1836), [`CourtsError`](../types/index.ts#L1853), [`CourtsResponse`](../types/index.ts#L1856), [`CourtsData`](../types/index.ts#L1866), [`AustinNow`](../types/index.ts#L1869), [`CourtLane`](../types/index.ts#L1871), [`FacilityDay`](../types/index.ts#L1880), [`DayOption`](../types/index.ts#L1899), [`SessionCheckStatus`](../types/index.ts#L1901), [`SessionCheckResult`](../types/index.ts#L1904), [`SessionLinkDecision`](../types/index.ts#L1925), [`SessionLinkNotice`](../types/index.ts#L1940), [`CreateMenuSectionKey`](../types/index.ts#L1944) |
+| Usage metrics (lib/analytics.ts) | [`AnalyticsEventName`](../types/index.ts#L1948), [`AnalyticsProps`](../types/index.ts#L1951) |
+| Legal pages (/terms, /privacy) | [`LegalSpan`](../types/index.ts#L1956), [`LegalBlock`](../types/index.ts#L1959), [`VenmoLinks`](../types/index.ts#L1967) |
+| Text size (#43) | [`TextSizeId`](../types/index.ts#L1977), [`TextSizeOption`](../types/index.ts#L1979), [`TextScaleContextValue`](../types/index.ts#L1986) |
+| Account deletion (#99) | [`AccountDeletionSuccessor`](../types/index.ts#L1999), [`AccountDeletionPlan`](../types/index.ts#L2005), [`AccountDeletionBlock`](../types/index.ts#L2021), [`WebScrollableRef`](../types/index.ts#L2023) |
+| Weather on outdoor games (#165) | [`ForecastHour`](../types/index.ts#L2028), [`Forecast`](../types/index.ts#L2045), [`ForecastWindow`](../types/index.ts#L2052), [`ForecastCell`](../types/index.ts#L2055), [`ForecastTone`](../types/index.ts#L2058), [`ForecastSummary`](../types/index.ts#L2061), [`ForecastCourt`](../types/index.ts#L2076) |
+| Public profile, history, cheers summary (#185) | [`UserProfileData`](../types/index.ts#L2081), [`EventHistoryKind`](../types/index.ts#L2090), [`CheersReceived`](../types/index.ts#L2093), [`CheersSummary`](../types/index.ts#L2099) |
+| Join intent (#229) | [`PendingAction`](../types/index.ts#L2114), [`PendingActionTake`](../types/index.ts#L2117), [`JoinOffer`](../types/index.ts#L2120), [`JoinIntentOutcome`](../types/index.ts#L2123) |
+| View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2128), [`FeedbackFieldErrors`](../types/index.ts#L2134) |
 
 ### Constrained string values
 
@@ -615,55 +624,58 @@ TypeScript `enum` keyword.
 
 | Type or field | Values | Source |
 |---|---|---|
-| `AccountDeletionBlock` | `reauth_required`, `plan_changed` | [`types/index.ts:2004`](../types/index.ts#L2004) |
+| `AccountDeletionBlock` | `reauth_required`, `plan_changed` | [`types/index.ts:2021`](../types/index.ts#L2021) |
 | `BadgeStat` | `events_attended_past`, `events_hosted_past`, `cheers_received_total`, `cheers_given_events`, `spike_cheers`, `serve_cheers`, `block_cheers`, `set_cheers`, `dig_pass_cheers`, `communication_cheers`, `beta_active`, `tournament_hosted`, `profile_complete`, `vex_member` | [`constants/badges.ts:43`](../constants/badges.ts#L43) |
-| `BadgeType` | `event_attendee`, `event_host`, `cheers_received`, `cheers_given`, `spike_cheer`, `serve_cheer`, `block_cheer`, `set_cheer`, `dig_pass_cheer`, `communication_cheer`, `beta_tester`, `tournament_director`, `profile_complete`, `vex_spirit` | [`types/index.ts:1030`](../types/index.ts#L1030) |
-| `CardBgType` | `ember`, `frost`, `aurora` | [`types/index.ts:1028`](../types/index.ts#L1028) |
+| `BadgeType` | `event_attendee`, `event_host`, `cheers_received`, `cheers_given`, `spike_cheer`, `serve_cheer`, `block_cheer`, `set_cheer`, `dig_pass_cheer`, `communication_cheer`, `beta_tester`, `tournament_director`, `profile_complete`, `vex_spirit` | [`types/index.ts:1032`](../types/index.ts#L1032) |
+| `CardBgType` | `ember`, `frost`, `aurora` | [`types/index.ts:1030`](../types/index.ts#L1030) |
 | `CheerType` | `spike`, `block`, `serve`, `dig`, `set`, `pass`, `communication` | [`types/index.ts:200`](../types/index.ts#L200) |
-| `ChipProps.role` | `button`, `radio` | [`types/index.ts:1244`](../types/index.ts#L1244) |
-| `ChipProps.size` | `default`, `touch` | [`types/index.ts:1246`](../types/index.ts#L1246) |
-| `ChipVariant` | `solid`, `tint` | [`types/index.ts:1235`](../types/index.ts#L1235) |
-| `ConversationType` | `dm`, `club` | [`types/index.ts:877`](../types/index.ts#L877) |
-| `CreateMenuSectionKey` | `vteam`, `venue` | [`types/index.ts:1927`](../types/index.ts#L1927) |
-| `EventCardRsvpHandler` | `join`, `leave` | [`types/index.ts:1699`](../types/index.ts#L1699) |
-| `EventHistoryKind` | `attended`, `hosted-past`, `hosted-upcoming` | [`types/index.ts:2073`](../types/index.ts#L2073) |
+| `ChipProps.role` | `button`, `radio` | [`types/index.ts:1246`](../types/index.ts#L1246) |
+| `ChipProps.size` | `default`, `touch` | [`types/index.ts:1248`](../types/index.ts#L1248) |
+| `ChipVariant` | `solid`, `tint` | [`types/index.ts:1237`](../types/index.ts#L1237) |
+| `ConversationType` | `dm`, `club` | [`types/index.ts:879`](../types/index.ts#L879) |
+| `CreateMenuSectionKey` | `vteam`, `venue` | [`types/index.ts:1944`](../types/index.ts#L1944) |
+| `EventCardRsvpHandler` | `join`, `leave` | [`types/index.ts:1716`](../types/index.ts#L1716) |
+| `EventHistoryKind` | `attended`, `hosted-past`, `hosted-upcoming` | [`types/index.ts:2090`](../types/index.ts#L2090) |
 | `EventPreviewState` | `upcoming`, `cancelled`, `ended`, `missing` | [`types/index.ts:183`](../types/index.ts#L183) |
 | `FeedbackKind` | `feature`, `bug` | [`types/index.ts:352`](../types/index.ts#L352) |
 | `FeedbackPriority` | `low`, `medium`, `high` | [`types/index.ts:353`](../types/index.ts#L353) |
-| `FeedFilter` | `all`, `open_play`, `tournament` | [`types/index.ts:824`](../types/index.ts#L824) |
-| `FeedRsvpAction` | `join`, `leave` | [`types/index.ts:838`](../types/index.ts#L838) |
-| `ForecastTone` | `neutral`, `rain`, `heat` | [`types/index.ts:2041`](../types/index.ts#L2041) |
-| `ForecastWindow` | `show`, `later` | [`types/index.ts:2035`](../types/index.ts#L2035) |
-| `FriendsGoingLineProps.tone` | `onDark`, `onCard` | [`types/index.ts:1019`](../types/index.ts#L1019) |
-| `FriendStatus` | `none`, `requested`, `incoming`, `friends` | [`types/index.ts:978`](../types/index.ts#L978) |
-| `HiddenFeedKind` | `item`, `venue`, `host`, `type` | [`types/index.ts:540`](../types/index.ts#L540) |
-| `JoinAction` | `leave`, `leave-waitlist`, `cancel-request`, `rerequest`, `waitlist`, `request`, `join` | [`types/index.ts:1526`](../types/index.ts#L1526) |
-| `LeaveConsequence.kind` | `waitlist`, `full`, `open`, `approval`, `hostNotified`, `paid`, `points` | [`types/index.ts:1558`](../types/index.ts#L1558) |
-| `LeaveReason` | `something_came_up`, `sick`, `injured`, `work` | [`types/index.ts:1575`](../types/index.ts#L1575) |
+| `FeedFilter` | `all`, `open_play`, `tournament` | [`types/index.ts:826`](../types/index.ts#L826) |
+| `FeedRsvpAction` | `join`, `leave` | [`types/index.ts:840`](../types/index.ts#L840) |
+| `ForecastTone` | `neutral`, `rain`, `heat` | [`types/index.ts:2058`](../types/index.ts#L2058) |
+| `ForecastWindow` | `show`, `later` | [`types/index.ts:2052`](../types/index.ts#L2052) |
+| `FriendsGoingLineProps.tone` | `onDark`, `onCard` | [`types/index.ts:1021`](../types/index.ts#L1021) |
+| `FriendStatus` | `none`, `requested`, `incoming`, `friends` | [`types/index.ts:980`](../types/index.ts#L980) |
+| `HiddenFeedKind` | `item`, `venue`, `host`, `type` | [`types/index.ts:542`](../types/index.ts#L542) |
+| `JoinAction` | `leave`, `leave-waitlist`, `cancel-request`, `rerequest`, `waitlist`, `request`, `join` | [`types/index.ts:1529`](../types/index.ts#L1529) |
+| `JoinIntentOutcome` | `joined`, `not_now`, `skipped`, `expired` | [`types/index.ts:2123`](../types/index.ts#L2123) |
+| `JoinOffer` | `join`, `waitlist`, `request` | [`types/index.ts:2120`](../types/index.ts#L2120) |
+| `LeaveConsequence.kind` | `waitlist`, `full`, `open`, `approval`, `hostNotified`, `paid`, `points` | [`types/index.ts:1561`](../types/index.ts#L1561) |
+| `LeaveReason` | `something_came_up`, `sick`, `injured`, `work` | [`types/index.ts:1578`](../types/index.ts#L1578) |
 | `MembershipType` | `open`, `invite` | [`types/index.ts:522`](../types/index.ts#L522) |
-| `Message` | `messages`, `mentions` | [`types/index.ts:880`](../types/index.ts#L880) |
-| `MyEventStatus` | `hosting`, `attending`, `waitlisted`, `requested` | [`types/index.ts:809`](../types/index.ts#L809) |
+| `Message` | `messages`, `mentions` | [`types/index.ts:882`](../types/index.ts#L882) |
+| `MyEventStatus` | `hosting`, `attending`, `waitlisted`, `requested` | [`types/index.ts:811`](../types/index.ts#L811) |
 | `NOTIFICATION_TYPES / NotificationType` | `tournament_team_invite`, `tournament_join_request`, `tournament_join_accepted`, `tournament_join_declined`, `tournament_free_agent_assigned`, `tournament_mention`, `chat_mention` | [`types/index.ts:103`](../types/index.ts#L103) |
 | `ProfileBorder` | `bronze`, `gold`, `gradient`, `storm`, `aether` | [`types/index.ts:66`](../types/index.ts#L66) |
 | `RecurrenceCadence` | `weekly`, `biweekly`, `monthly` | [`constants/events.ts:90`](../constants/events.ts#L90) |
-| `RosterAction.key` | `message`, `message-adder`, `profile`, `no-show`, `remove` | [`types/index.ts:1587`](../types/index.ts#L1587) |
-| `ScheduleMatch.stage` | `pool_play`, `bracket`, `round_robin` | [`types/index.ts:1405`](../types/index.ts#L1405) |
-| `SelfAttendanceAction` | `join`, `leave`, `joinWaitlist`, `leaveWaitlist`, `requestToJoin`, `cancelRequest`, `rerequest` | [`types/index.ts:1541`](../types/index.ts#L1541) |
-| `SessionCheckStatus` | `scheduled`, `canceled`, `changed`, `gone`, `unknown` | [`types/index.ts:1884`](../types/index.ts#L1884) |
+| `RosterAction.key` | `message`, `message-adder`, `profile`, `no-show`, `remove` | [`types/index.ts:1604`](../types/index.ts#L1604) |
+| `ScheduleMatch.stage` | `pool_play`, `bracket`, `round_robin` | [`types/index.ts:1408`](../types/index.ts#L1408) |
+| `SelfAttendanceAction` | `join`, `leave`, `joinWaitlist`, `leaveWaitlist`, `requestToJoin`, `cancelRequest`, `rerequest` | [`types/index.ts:1544`](../types/index.ts#L1544) |
+| `SessionCheckStatus` | `scheduled`, `canceled`, `changed`, `gone`, `unknown` | [`types/index.ts:1901`](../types/index.ts#L1901) |
 | `Surface` | `indoor`, `sand`, `grass` | [`types/index.ts:197`](../types/index.ts#L197) |
-| `TeamMode` | `random`, `balanced` | [`types/index.ts:1484`](../types/index.ts#L1484) |
-| `TextSizeId` | `small`, `default`, `large`, `xlarge` | [`types/index.ts:1960`](../types/index.ts#L1960) |
-| `TourId` | `intro`, `scorekeeper`, `scorekeeperExample` | [`types/index.ts:675`](../types/index.ts#L675) |
-| `TournamentBracketType` | `single`, `double` | [`types/index.ts:1057`](../types/index.ts#L1057) |
-| `TournamentFormat` | `pool_play`, `bracket`, `pool_bracket`, `round_robin` | [`types/index.ts:1056`](../types/index.ts#L1056) |
-| `TournamentJoinRequestStatus` | `pending`, `approved`, `declined` | [`types/index.ts:1139`](../types/index.ts#L1139) |
-| `TournamentMatchStatus` | `scheduled`, `in_progress`, `completed`, `forfeit` | [`types/index.ts:1060`](../types/index.ts#L1060) |
-| `TournamentStage` | `pool_play`, `bracket`, `round_robin` | [`types/index.ts:1058`](../types/index.ts#L1058) |
-| `TournamentStatus` | `draft`, `published`, `in_progress`, `completed`, `cancelled` | [`types/index.ts:1055`](../types/index.ts#L1055) |
-| `TournamentTeamInvitationStatus` | `pending`, `accepted`, `declined` | [`types/index.ts:1136`](../types/index.ts#L1136) |
-| `TournamentTeamStatus` | `registered`, `waitlisted`, `free_agent`, `disqualified` | [`types/index.ts:1059`](../types/index.ts#L1059) |
-| `TourPlacement` | `auto`, `top`, `bottom` | [`types/index.ts:678`](../types/index.ts#L678) |
-| `TourSource` | `banner`, `profile_menu`, `first_use`, `help_button`, `other` | [`types/index.ts:697`](../types/index.ts#L697) |
+| `TeamMode` | `random`, `balanced` | [`types/index.ts:1487`](../types/index.ts#L1487) |
+| `TextSizeId` | `small`, `default`, `large`, `xlarge` | [`types/index.ts:1977`](../types/index.ts#L1977) |
+| `ToastVariant` | `error`, `warning`, `success`, `info` | [`types/index.ts:1584`](../types/index.ts#L1584) |
+| `TourId` | `intro`, `scorekeeper`, `scorekeeperExample` | [`types/index.ts:677`](../types/index.ts#L677) |
+| `TournamentBracketType` | `single`, `double` | [`types/index.ts:1059`](../types/index.ts#L1059) |
+| `TournamentFormat` | `pool_play`, `bracket`, `pool_bracket`, `round_robin` | [`types/index.ts:1058`](../types/index.ts#L1058) |
+| `TournamentJoinRequestStatus` | `pending`, `approved`, `declined` | [`types/index.ts:1141`](../types/index.ts#L1141) |
+| `TournamentMatchStatus` | `scheduled`, `in_progress`, `completed`, `forfeit` | [`types/index.ts:1062`](../types/index.ts#L1062) |
+| `TournamentStage` | `pool_play`, `bracket`, `round_robin` | [`types/index.ts:1060`](../types/index.ts#L1060) |
+| `TournamentStatus` | `draft`, `published`, `in_progress`, `completed`, `cancelled` | [`types/index.ts:1057`](../types/index.ts#L1057) |
+| `TournamentTeamInvitationStatus` | `pending`, `accepted`, `declined` | [`types/index.ts:1138`](../types/index.ts#L1138) |
+| `TournamentTeamStatus` | `registered`, `waitlisted`, `free_agent`, `disqualified` | [`types/index.ts:1061`](../types/index.ts#L1061) |
+| `TourPlacement` | `auto`, `top`, `bottom` | [`types/index.ts:680`](../types/index.ts#L680) |
+| `TourSource` | `banner`, `profile_menu`, `first_use`, `help_button`, `other` | [`types/index.ts:699`](../types/index.ts#L699) |
 | `VolleyballPosition` | `setter`, `libero`, `outside_hitter`, `defensive_specialist`, `opposite_hitter`, `middle_blocker` | [`types/index.ts:31`](../types/index.ts#L31) |
 <!-- END GENERATED: code-inventory -->
 

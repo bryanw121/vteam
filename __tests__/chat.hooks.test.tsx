@@ -355,15 +355,15 @@ describe('useMessages', () => {
       if (call.ops.some(([op]) => op === 'update')) return { data: null, error: { message: 'nope' } }
       return { data: [msg({ sender_id: 'me' })], error: null }
     }
-    const alert = jest.spyOn(require('react-native').Alert, 'alert').mockImplementation(() => {})
+    const shown = jest.spyOn(require('../lib/toast').toast, 'show')
     const room = renderHook(() => useMessages('c1'))
     await flush()
     let ok: boolean | undefined
     await act(async () => { ok = await room.result.current.editMessage('m1', 'changed') })
     expect(ok).toBe(false)
     expect(room.result.current.messages[0].content).toBe('hello')
-    expect(alert).toHaveBeenCalled()
-    alert.mockRestore()
+    expect(shown).toHaveBeenCalledWith(expect.objectContaining({ title: "Couldn't edit message", variant: 'error' }))
+    shown.mockRestore()
   })
 })
 
