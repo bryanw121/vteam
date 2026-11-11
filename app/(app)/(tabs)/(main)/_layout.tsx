@@ -7,8 +7,8 @@ import { useTabsActive, useTabsShell } from '../../../../contexts/tabs'
 import { nextMountedTabs, prefetchNeighbor } from '../../../../utils/tabMount'
 import EventsScreen from './index'
 import ProfileScreen from './profile/index'
-import ClubsScreen from '../clubs'
-import ChatScreen from '../chat'
+import ClubsScreen from './clubs'
+import ChatScreen from './chat'
 
 /** One screen per tab; rendered in TABS order so page i is TABS[i]. */
 const TAB_SCREENS: Record<TabKey, ComponentType> = {

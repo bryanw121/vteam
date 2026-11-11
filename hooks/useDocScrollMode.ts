@@ -20,6 +20,7 @@ import { TABS } from '../constants/navigation'
 // Note: the event detail page (/event/[id]) manages the body class itself,
 // since only its Details/People tabs use document scroll.
 const DOC_SCROLL_TABS = new Set(TABS.filter(tab => tab.docScroll).map(tab => tab.pageIndex))
+const TAB_PATHS = new Set<string>(TABS.map(tab => tab.path))
 
 export function useDocScrollMode(
   isNarrowWeb: boolean,
@@ -45,7 +46,8 @@ export function useDocScrollMode(
   // Platform check is needed here.
   const active =
     isNarrowWeb &&
-    effectivePath === '/' &&
+    // Any tab's own path: on narrow web the address follows the tab that's showing (`/profile`, `/clubs`).
+    TAB_PATHS.has(effectivePath) &&
     DOC_SCROLL_TABS.has(activeTabIndex)
 
   useEffect(() => {

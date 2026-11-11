@@ -85,7 +85,7 @@ describe('doc-scroll wiring (narrow mobile web, where the body scrolls)', () => 
   })
 
   it('the Clubs doc-scroll list passes a refreshControl', () => {
-    const clubs = read('app/(app)/(tabs)/clubs.tsx')
+    const clubs = read('app/(app)/(tabs)/(main)/clubs.tsx')
     const branch = clubs.slice(clubs.indexOf('<DocScrollView'), clubs.indexOf('</DocScrollView>'))
     expect(branch).toMatch(/refreshControl=\{<RefreshControl/)
   })

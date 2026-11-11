@@ -10,10 +10,13 @@ import { Button } from '../../../../components/Button'
 import { Input } from '../../../../components/Input'
 import { shared, theme } from '../../../../constants'
 import type { FeedbackKind, FeedbackPriority } from '../../../../types'
+import { useUrlParam } from '../../../../hooks/useUrlParam'
+import { VIEW } from '../../../../utils/urlViews'
 
 export default function FeedbackScreen() {
   useStackBackTitle('Submit feedback')
-  const [kind, setKind] = useState<FeedbackKind>('feature')
+  // Feature / Bug is in the URL (`?type=bug`) so a "Report a problem" link opens it ready. What's typed never is.
+  const [kind, setKind] = useUrlParam('type', VIEW.feedback.type)
   const [priority, setPriority] = useState<FeedbackPriority>('medium')
   const [platform, setPlatform] = useState<string | null>(null)
   const [deviceType, setDeviceType] = useState('')

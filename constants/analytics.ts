@@ -38,4 +38,6 @@ export const ANALYTICS_EVENTS = {
   sessionStart: 'session_start',
   /** The screen type changed. props: { screen (route pattern, e.g. /event/[id], or a tab's path), from? } */
   screenView: 'screen_view',
+  /** A Share button sent or copied a screen's link. props: { screen (tournament, tournaments, leagues, events, profile), how: share | copy, filtered } */
+  linkShared: 'link_shared',
 } as const

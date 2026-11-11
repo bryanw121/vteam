@@ -22,7 +22,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider, useSession } from '../contexts/session'
 import { TextScaleProvider } from '../contexts/textScale'
 import { isAppPath, routes, toRoute } from '../utils/routes'
-import { isProtectedPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
+import { isProtectedPath, returnPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
 import { APP_NAME, theme, SWIPE_NAVIGATION } from '../constants'
 import { initSentry, Sentry } from '../lib/sentry'
 import { SentryErrorBoundary } from '../components/SentryErrorBoundary'
@@ -187,7 +187,7 @@ function RootNavigator() {
         // rather than parking the next sign-in on that page.
         router.replace(routes.app())
       } else {
-        setPostSignInRedirect(pathname)
+        setPostSignInRedirect(returnPath(pathname))
         router.replace(routes.login())
       }
     } else if (userId && inAuthGroup && !onResetPassword) {
