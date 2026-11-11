@@ -14,6 +14,7 @@ import { takeGuestReturnPath } from '../../utils/authGate'
 import { AgreementLine } from '../../components/legal/AgreementLine'
 import { TERMS_VERSION } from '../../constants/legal'
 import { Spinner } from '../../components/ui/Spinner'
+import { JoinContextCard } from '../../components/auth/JoinContextCard'
 
 export default function Register() {
   const router = useRouter()
@@ -104,7 +105,10 @@ export default function Register() {
           .eq('id', data.user.id)
       }
 
-      Alert.alert('Success', 'Account created!')
+      // With a session (email confirmation off) the root layout already takes
+      // them back where they came from (#229: the game they were joining).
+      if (data.session) return
+      Alert.alert('Account created', 'Check your email to confirm it, then sign in.')
       router.replace(routes.login())
     } finally {
       setLoading(false)
@@ -121,6 +125,7 @@ export default function Register() {
           </View>
         </View>
         <Text style={shared.authSubtitle}>create your account</Text>
+        <JoinContextCard screen="register" />
 
         {/* ── Social sign-up ── */}
         {socialError ? (

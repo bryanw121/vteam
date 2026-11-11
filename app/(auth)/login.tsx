@@ -18,6 +18,7 @@ import { routes, toRoute } from '../../utils/routes'
 import { takeGuestReturnPath } from '../../utils/authGate'
 import { AgreementLine } from '../../components/legal/AgreementLine'
 import { Spinner } from '../../components/ui/Spinner'
+import { JoinContextCard } from '../../components/auth/JoinContextCard'
 import { useUrlParam } from '../../hooks/useUrlParam'
 import { VIEW } from '../../utils/urlViews'
 
@@ -319,6 +320,7 @@ export default function Login() {
         ) : (
           <>
             <Text style={shared.authSubtitle}>sign in to continue</Text>
+            <JoinContextCard screen="login" />
 
             <Input
               label="Email or username"

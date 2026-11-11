@@ -511,5 +511,21 @@
     "desktop": {
       "color-contrast": 16
     }
+  },
+  "register-join-context": {
+    "mobile": {
+      "color-contrast": 2
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "event-join-intent-sheet": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 6
+    }
   }
 }

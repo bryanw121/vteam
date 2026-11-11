@@ -18,6 +18,11 @@ import { IDS } from './fixtures/index.mjs'
 import { P } from './fixtures/people.mjs'
 
 const E = IDS.event
+/** A join a guest saved a minute before the capture's "now" (#229). */
+const joinIntent = opts => JSON.stringify({
+  kind: 'join', eventId: IDS.event.nextWeekIndoor, title: 'Indoor Open Gym', startsAt: '2026-11-18T19:30:00', spotsLeft: 11,
+  at: new Date(opts.now).getTime() - 60_000,
+})
 const T = IDS.tournament
 
 const EVENT_DETAIL = [
@@ -139,6 +144,18 @@ export const SCREENS = {
   // ── Auth and legal (signed out) ─────────────────────────────────────────
   login: { route: '/login', signedIn: false, sources: ['app/(auth)/login.tsx', 'app/(auth)/_layout.tsx', 'components/legal/**', 'components/GoogleLogo.tsx', 'components/Input.tsx', 'components/Button.tsx'] },
   register: { route: '/register', signedIn: false, sources: ['app/(auth)/register.tsx', 'app/(auth)/_layout.tsx', 'components/legal/**', 'components/Input.tsx'] },
+  // A guest who tapped Join (#229): the game they're joining, and the New here / I have an account switch.
+  'register-join-context': {
+    route: '/register', signedIn: false, ready: "YOU'RE JOINING",
+    sessionStorage: opts => ({ 'vteam.pendingAction': joinIntent(opts) }),
+    sources: ['app/(auth)/register.tsx', 'components/auth/JoinContextCard.tsx', 'utils/pendingAction.ts'],
+  },
+  // Back on that game after signing in: one tap to grab the spot.
+  'event-join-intent-sheet': {
+    route: `/event/${E.nextWeekIndoor}`, ready: 'Grab your spot?',
+    sessionStorage: opts => ({ 'vteam.pendingAction': joinIntent(opts) }),
+    sources: [...EVENT_DETAIL, 'components/event/JoinIntentSheet.tsx', 'utils/pendingAction.ts'],
+  },
   'reset-password': { route: '/reset-password', signedIn: false, sources: ['app/(auth)/reset-password.tsx', 'app/(auth)/_layout.tsx'] },
   terms: { route: '/terms', signedIn: false, sources: ['app/terms.tsx', 'components/legal/**', 'constants/legal.ts', 'utils/legalMarkdown.ts'] },
   privacy: { route: '/privacy', signedIn: false, sources: ['app/privacy.tsx', 'components/legal/**', 'constants/legal.ts', 'utils/legalMarkdown.ts'] },
