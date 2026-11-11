@@ -6,7 +6,7 @@ import { AppState } from 'react-native'
 import { supabase } from '../lib/supabase'
 import {
   ANALYTICS_FLUSH_MS, HEARTBEAT_MS, SESSION_IDLE_MS, __bufferedEvents, __resetAnalytics, __usageSession, flush,
-  isUsageSharingOn, needsNewSession, noteScreen, screenPattern, setUsageSharing, setUsageUser, startUsageTracking, track,
+  needsNewSession, noteScreen, screenPattern, setUsageUser, startUsageTracking, track,
 } from '../lib/analytics'
 
 describe('lib/analytics', () => {
@@ -168,21 +168,6 @@ describe('usage sessions', () => {
     expect(views).toEqual([{ screen: '/' }, { screen: '/event/[id]', from: '/' }])
     await jest.advanceTimersByTimeAsync(HEARTBEAT_MS)
     expect(heartbeats().at(-1)).toMatchObject({ p_screen: '/event/[id]' })
-  })
-
-  it('turning usage sharing off drops unsent events and stops heartbeats', async () => {
-    startUsageTracking(null)
-    await jest.advanceTimersByTimeAsync(0)
-    track('banner_shown', { banner: 'x' })
-    await setUsageSharing(false)
-    expect(await isUsageSharingOn()).toBe(false)
-    expect(__bufferedEvents()).toHaveLength(0)
-    const sent = heartbeats().length
-    await jest.advanceTimersByTimeAsync(HEARTBEAT_MS * 2)
-    expect(heartbeats()).toHaveLength(sent)
-    track('banner_shown', { banner: 'y' })
-    await flush()
-    expect(rows().filter(r => r.name === 'banner_shown')).toHaveLength(0)
   })
 
   it('stops heartbeating if the function is missing (migration not applied yet)', async () => {

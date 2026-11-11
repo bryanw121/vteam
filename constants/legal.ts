@@ -157,7 +157,7 @@ These providers may process data in the United States and other countries.
 
 **Other sharing.** We may disclose information when we believe in good faith it is reasonably necessary to comply with law or legal process; to enforce our Terms; to protect the rights, property or safety of vteam, our users or others; to investigate fraud or abuse; or in connection with a merger, sale, financing, reorganization or transfer of all or part of the Service. We may also share information that is aggregated or de-identified. As of the effective date, vteam does not sell personal information or use it for third-party advertising.
 
-**Usage data.** We use it to see which parts of vteam get used and when it is busiest. Only vteam administrators can see it, including which account a session belongs to. It never includes what you type, which events or profiles you view, or your location. Detailed usage data is kept for 180 days; after that we keep only daily totals that don't identify anyone. You can turn it off for your device in the app (Profile > Privacy > Share usage data).
+**Usage data.** We use it to see which parts of vteam get used and when it is busiest. Only vteam administrators can see it, including which account a session belongs to. It never includes what you type, which events or profiles you view, or your location. Detailed usage data is kept for 180 days; after that we keep only daily totals that don't identify anyone.
 
 **How long we keep it.** We generally keep information for as long as your account is open and as long as we consider reasonably necessary for the purposes above. After an account is deleted, we take reasonable steps to delete or de-identify personal information within a reasonable time, but we may keep information as needed to comply with law, resolve disputes, prevent abuse, enforce our Terms, or where it remains in backups, logs or providers' systems. Content others have copied or that appears in their conversations may remain visible.
 
@@ -167,7 +167,6 @@ These providers may process data in the United States and other countries.
 
 - **Edit your profile** in the app.
 - **Turn off push notifications** in the app or your phone's settings.
-- **Turn off usage data** for your device in the app (Profile > Privacy > Share usage data).
 - **Delete your account** in the app (Profile > Account Settings > Delete account), or by emailing us. Instructions: vteamvolleyball.com/delete-account.
 - **Request access to your data** by emailing us. We may need to verify your identity, and will respond as required by applicable law.
 

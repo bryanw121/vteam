@@ -20,7 +20,7 @@ type IconName = ComponentProps<typeof Ionicons>['name']
 /** A row opens a settings screen (`section`) or runs one of the callbacks (`action`). */
 type MenuRow = { title: string; icon: IconName } & (
   | { section: SettingsSection }
-  | { action: 'tour' | 'terms' | 'privacy-policy' }
+  | { action: 'tour' | 'terms' | 'privacy' }
 )
 
 type MenuGroup = { title: string; rows: readonly MenuRow[] }
@@ -43,7 +43,6 @@ const MENU_GROUPS: readonly MenuGroup[] = [
       { title: 'Display', icon: 'text-outline', section: 'display' },
       { title: 'Hidden in feed', icon: 'funnel-outline', section: 'hidden' },
       { title: 'Silenced people', icon: 'eye-off-outline', section: 'silenced' },
-      { title: 'Privacy', icon: 'lock-closed-outline', section: 'privacy' },
     ],
   },
   {
@@ -65,7 +64,7 @@ const MENU_GROUPS: readonly MenuGroup[] = [
       { title: 'Take the tour', icon: 'compass-outline', action: 'tour' },
       { title: 'Submit feedback', icon: 'chatbubble-ellipses-outline', section: 'feedback' },
       { title: 'Terms and Conditions', icon: 'document-text-outline', action: 'terms' },
-      { title: 'Privacy Policy', icon: 'shield-checkmark-outline', action: 'privacy-policy' },
+      { title: 'Privacy Policy', icon: 'shield-checkmark-outline', action: 'privacy' },
     ],
   },
 ]
@@ -74,7 +73,7 @@ const rowKey = (row: MenuRow) => ('section' in row ? row.section : row.action)
 
 /** The settings shortcuts under the profile hero, in labelled groups. Navigation is the caller's (`onOpen`). */
 export function ProfileMenu({ onOpen, onTakeTour, onOpenTerms, onOpenPrivacy, friendRequestCount = 0 }: Props) {
-  const actions = { tour: onTakeTour, terms: onOpenTerms, 'privacy-policy': onOpenPrivacy }
+  const actions = { tour: onTakeTour, terms: onOpenTerms, privacy: onOpenPrivacy }
   return (
     <View style={styles.groups}>
       {MENU_GROUPS.map(group => (
