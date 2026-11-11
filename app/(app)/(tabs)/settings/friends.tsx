@@ -6,7 +6,7 @@ import { RefreshControl } from '../../../../components/RefreshControl'
 import { Button } from '../../../../components/Button'
 import { IconButton, ScreenState } from '../../../../components/ui'
 import { FriendRow } from '../../../../components/profile/FriendRow'
-import { Toast } from '../../../../components/Toast'
+import { toast } from '../../../../lib/toast'
 import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useFriendActions, useFriends, type FriendAction } from '../../../../hooks/useFriends'
 import { useSilencedUsers } from '../../../../hooks/useSilencedUsers'
@@ -24,7 +24,6 @@ export default function FriendsScreen() {
   const { run, isPending } = useFriendActions()
   const { silencedUserIds } = useSilencedUsers()
   const [refreshing, setRefreshing] = useState(false)
-  const [toast, setToast] = useState<{ message: string; variant: 'error' | 'success' | 'info' } | null>(null)
 
   const incoming = visibleIncoming(data.incoming, silencedUserIds)
   const friends = sortFriends(data.friends)
@@ -32,8 +31,8 @@ export default function FriendsScreen() {
 
   async function act(action: FriendAction, success?: string) {
     const err = await run(action)
-    if (err) setToast({ message: friendErrorMessage(err) ?? GENERIC_ERROR_MESSAGE, variant: 'error' })
-    else if (success) setToast({ message: success, variant: 'success' })
+    if (err) toast.show({ message: friendErrorMessage(err) ?? GENERIC_ERROR_MESSAGE, variant: 'error' })
+    else if (success) toast.show({ message: success, variant: 'success' })
   }
 
   async function onRefresh() {
@@ -130,7 +129,7 @@ export default function FriendsScreen() {
                         active={f.is_best_friend}
                         label={f.is_best_friend ? 'Remove from best friends' : 'Mark as best friend'}
                         onPress={() => {
-                          if (atLimit) setToast({ message: FRIEND_COPY.bestFriendLimit, variant: 'info' })
+                          if (atLimit) toast.show({ message: FRIEND_COPY.bestFriendLimit, variant: 'info' })
                           else void act({ kind: 'best', userId: f.friend_id, best: !f.is_best_friend })
                         }}
                         testID="friend-best-star"
@@ -170,7 +169,6 @@ export default function FriendsScreen() {
           )}
         </ScrollView>
       </ScreenState>
-      <Toast message={toast?.message ?? ''} variant={toast?.variant ?? 'info'} visible={!!toast} onHide={() => setToast(null)} />
     </View>
   )
 }

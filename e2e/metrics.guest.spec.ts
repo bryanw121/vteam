@@ -8,11 +8,16 @@ import { ANALYTICS_EVENTS as E } from '../constants/analytics'
 // spec opts in and intercepts the insert, so nothing reaches the real table.
 const BANNER_ID = BANNERS.austinPilot.id
 const STEPS = TOURS.intro.steps
-type Row = { name: string; props: Record<string, unknown>; anon_id?: string; platform?: string }
+type Row = { name: string; props: Record<string, unknown>; anon_id?: string; platform?: string; session_id?: string | null; app_version?: string }
+type Heartbeat = { p_session: string; p_anon: string; p_platform: string; p_version?: string; p_screen?: string }
 
-async function captureInserts(page: Page): Promise<{ rows: Row[]; requests: number }> {
-  const captured = { rows: [] as Row[], requests: 0 }
+async function captureInserts(page: Page): Promise<{ rows: Row[]; requests: number; heartbeats: Heartbeat[] }> {
+  const captured = { rows: [] as Row[], requests: 0, heartbeats: [] as Heartbeat[] }
   await page.addInitScript(() => window.localStorage.setItem('vteam.analytics', 'on'))
+  await page.route('**/rest/v1/rpc/app_heartbeat*', async route => {
+    captured.heartbeats.push(route.request().postDataJSON() as Heartbeat)
+    await route.fulfill({ status: 204, body: '' })
+  })
   await page.route('**/rest/v1/app_events*', async route => {
     if (route.request().method() === 'POST') {
       captured.requests++
@@ -90,5 +95,25 @@ test.describe('usage metrics', () => {
     await hidePage(page)
     await expect.poll(() => named(captured.rows, E.bannerDismissed).length, { timeout: 15_000 }).toBe(1)
     expect(named(captured.rows, E.bannerDismissed)[0].props).toEqual({ banner: BANNER_ID })
+  })
+
+  test('a visit opens a session: session_start, screen views and a heartbeat, all with the same session', async ({ page }) => {
+    const captured = await captureInserts(page)
+    await page.goto(`${BASE_URL}/`)
+    await expect.poll(() => captured.heartbeats.length, { timeout: 20_000 }).toBeGreaterThan(0)
+    await page.goto(`${BASE_URL}/privacy`)
+    await expect(page.getByText('Usage data.', { exact: false }).first()).toBeVisible({ timeout: 20_000 })
+    await hidePage(page)
+
+    await expect.poll(() => named(captured.rows, E.screenView).length, { timeout: 15_000 }).toBeGreaterThan(0)
+    const hb = captured.heartbeats[0]
+    expect(hb).toMatchObject({ p_platform: 'web', p_session: expect.stringMatching(/^[A-Za-z0-9-]{8,64}$/) })
+    const start = named(captured.rows, E.sessionStart)
+    expect(start.length).toBeGreaterThan(0)
+    expect(start[0].props).toMatchObject({ cold: true })
+    // Screen types only: never an id in the screen.
+    for (const r of named(captured.rows, E.screenView)) expect(String(r.props.screen)).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}/)
+    // Every row carries a session id and the app version.
+    expect(captured.rows.every(r => typeof r.session_id === 'string' && typeof r.app_version === 'string')).toBe(true)
   })
 })

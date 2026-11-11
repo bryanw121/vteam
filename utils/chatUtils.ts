@@ -1,8 +1,8 @@
-import { Alert, Platform } from 'react-native'
 import type { RealtimeBinding } from '../lib/realtime'
 import type {
   ConversationRow, DebouncedCall, Message, MessageReaction, MessageRecord, MessageWithDetails, ReplySnapshot, SenderProfile,
 } from '../types'
+import { toast } from '../lib/toast'
 
 export function timeAgo(iso: string | null): string {
   if (!iso) return ''
@@ -34,13 +34,9 @@ export function lastMessagePreview(row: ConversationRow, myId: string, silencedI
   return `${prefix}${row.last_message_content ?? ''}`
 }
 
-/** Alert that also works on web (react-native-web's Alert.alert is a no-op). */
+/** A chat action failed: a toast on every platform (#228). */
 export function chatAlert(title: string, message: string): void {
-  if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined') window.alert(`${title}\n\n${message}`)
-  } else {
-    Alert.alert(title, message)
-  }
+  toast.show({ title, message, variant: 'error' })
 }
 
 // ── Realtime topics & bindings ───────────────────────────────────────────────

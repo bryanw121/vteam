@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { Alert } from 'react-native'
 import { supabase } from '../../lib/supabase'
 import { getQueryData, invalidate, setQueryData, useFocusRefetch, useMutation, useQuery } from '../../lib/query'
 import { GENERIC_ERROR_MESSAGE, STALE } from '../../constants'
 import { eventKeys } from './keys'
 import { reportEventError } from './telemetry'
+import { toast } from '../../lib/toast'
 
 const NONE: string[] = []
 
@@ -65,7 +65,7 @@ export function useEventPayments(
       },
       onError: e => {
         reportEventError(eventId, userId, 'payments.toggle', e)
-        Alert.alert('Could not save', GENERIC_ERROR_MESSAGE)
+        toast.error("Couldn't save", e)
       },
     },
   )

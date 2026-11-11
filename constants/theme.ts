@@ -32,6 +32,11 @@ export const theme = {
     error:        '#FF5555',
     warning:      '#FFA040',
     success:      '#00D26A',
+    // Toast surfaces (#228): dark tints of each status colour, so light text reads on them (>= 4.5:1).
+    toastErrorBg:   '#3A1620',
+    toastWarningBg: '#3A2710',
+    toastSuccessBg: '#0F2E22',
+    toastInfoBg:    '#251C4E',
     white:        '#FFFFFF',
     sheetInk:     '#0D2480',   // pen ink on the official scoresheet (officialPdf.ts INK)
     black:        '#000000',

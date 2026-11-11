@@ -18,6 +18,9 @@ import { routes, toRoute } from '../../utils/routes'
 import { takeGuestReturnPath } from '../../utils/authGate'
 import { AgreementLine } from '../../components/legal/AgreementLine'
 import { Spinner } from '../../components/ui/Spinner'
+import { JoinContextCard } from '../../components/auth/JoinContextCard'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { VIEW } from '../../utils/urlViews'
 
 export default function Login() {
   const router = useRouter()
@@ -28,14 +31,18 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({})
-  const [forgotMode, setForgotMode] = useState(false)
+  // Forgot password and the emailed-code form are in the URL (`?mode=reset`, `?mode=code`), so other screens can link straight to them.
+  const [mode, setMode] = useUrlParam('mode', VIEW.login.mode)
+  const forgotMode = mode === 'reset'
+  const setForgotMode = (on: boolean) => setMode(on ? 'reset' : null)
   const [resetEmail, setResetEmail] = useState('')
   const [resetSent, setResetSent] = useState<string | null>(null)
   const [resetLoading, setResetLoading] = useState(false)
   const [resetError, setResetError] = useState('')
 
   // ── OTP (magic code) mode ──────────────────────────────────────────────────
-  const [otpMode, setOtpMode] = useState(false)
+  const otpMode = mode === 'code'
+  const setOtpMode = (on: boolean) => setMode(on ? 'code' : null)
   const [otpEmail, setOtpEmail] = useState('')
   const [otpCode, setOtpCode] = useState('')
   const [otpCodeSent, setOtpCodeSent] = useState(false)
@@ -305,6 +312,7 @@ export default function Login() {
         ) : (
           <>
             <Text style={shared.authSubtitle}>sign in to continue</Text>
+            <JoinContextCard screen="login" />
 
             <Input
               label="Email or username"

@@ -1,4 +1,4 @@
-import { planBadgeAwards, badgeStatValue } from '../utils/badges'
+import { planBadgeAwards, badgeStatValue, mergeAwardedBadges } from '../utils/badges'
 import type { BadgeStats } from '../types'
 import { BADGE_DEFINITIONS, VEX_MEMBER_ACTIVE } from '../constants/badges'
 import type { UserBadge } from '../types'
@@ -123,5 +123,21 @@ describe('planBadgeAwards', () => {
     )
     const types = plan.inserts.map(i => i.badge_type)
     expect(types).toEqual(expect.arrayContaining(['event_attendee', 'event_host', 'profile_complete']))
+  })
+})
+
+describe('mergeAwardedBadges (#224)', () => {
+  const badge = (id: string, badge_type: string, tier: number, display_order: number | null = null) =>
+    ({ id, user_id: 'u1', badge_type, tier, awarded_at: '2026-11-01T00:00:00Z', display_order, display_tier: null }) as UserBadge
+
+  it('replaces upgraded rows in place and adds new ones last', () => {
+    const existing = [badge('a', 'regular', 1, 1), badge('b', 'host', 1)]
+    const merged = mergeAwardedBadges(existing, [badge('c', 'spike', 1), badge('a', 'regular', 2, 1)])
+    expect(merged.map(b => [b.id, b.tier])).toEqual([['a', 2], ['b', 1], ['c', 1]])
+  })
+
+  it('leaves the list as it was when nothing was awarded', () => {
+    const existing = [badge('a', 'regular', 1)]
+    expect(mergeAwardedBadges(existing, [])).toEqual(existing)
   })
 })

@@ -1,5 +1,7 @@
 import { AppState, Platform } from 'react-native'
 import { supabase } from './supabase'
+import { ANALYTICS_EVENTS } from '../constants/analytics'
+import { currentAppVersion } from '../utils/appVersion'
 import type { AnalyticsEventName, AnalyticsProps } from '../types'
 
 /**
@@ -12,6 +14,15 @@ import type { AnalyticsEventName, AnalyticsProps } from '../types'
  * Off under Jest, and in automated browsers (navigator.webdriver) so e2e runs
  * don't write rows, unless a test opts in with localStorage
  * `vteam.analytics = 'on'` (the metrics e2e does, and intercepts the insert).
+ *
+ * Sessions and online now (usage metrics design, Nov 2026): `startUsageTracking()` (root
+ * layout, once) opens a session (a random id kept in memory) and, while the app is open and
+ * visible, calls `app_heartbeat` once a minute with the session, device, platform, app version
+ * and the screen type now on (`noteScreen`). A new session starts on launch, after 30 minutes
+ * hidden or in the background, and when the signed-in account changes (`setUsageUser`). Every
+ * event carries its session id and the app version. There is no per-player opt-out (creating an
+ * account accepts it; the Privacy Policy says so); it stays off under Jest and in automated
+ * browsers like the events.
  */
 
 export const ANALYTICS_FLUSH_MS = 10_000
@@ -22,8 +33,11 @@ const MAX_BATCH = 50
 const MAX_PROPS_CHARS = 900
 const ANON_ID_KEY = 'vteam.anonId'
 const OPT_IN_KEY = 'vteam.analytics'
+/** Back after longer than this hidden / in the background = a new session. */
+export const SESSION_IDLE_MS = 30 * 60_000
+export const HEARTBEAT_MS = 60_000
 
-type PendingEvent = { name: AnalyticsEventName; props: AnalyticsProps }
+type PendingEvent = { name: AnalyticsEventName; props: AnalyticsProps; session: string | null }
 
 let buffer: PendingEvent[] = []
 let timer: ReturnType<typeof setTimeout> | null = null
@@ -32,6 +46,16 @@ let listening = false
 let disabled: boolean | null = null
 let anonId: string | null = null
 let anonIdLoading: Promise<string> | null = null
+
+/** The open session; null before startUsageTracking() or after opting out. */
+let session: { id: string; userId: string | null } | null = null
+let sessionUser: string | null = null
+let hiddenAt: number | null = null
+let visible = false
+let started = false
+let heartbeatTimer: ReturnType<typeof setInterval> | null = null
+let heartbeatMissing = false
+let screen: string | null = null
 
 function webStorage(): Storage | null {
   if (Platform.OS !== 'web') return null
@@ -107,7 +131,7 @@ export function track(name: AnalyticsEventName, props: AnalyticsProps = {}): voi
   try {
     if (isDisabled()) return
     if (JSON.stringify(props).length > MAX_PROPS_CHARS) props = {}
-    buffer.push({ name, props })
+    buffer.push({ name, props, session: session?.id ?? null })
     if (buffer.length > MAX_BUFFER) buffer.splice(0, buffer.length - MAX_BUFFER)
     listen()
     schedule()
@@ -127,8 +151,11 @@ export function flush(): Promise<void> {
   flushing = (async () => {
     try {
       const id = await loadAnonId()
+      const version = currentAppVersion()
       while (buffer.length && !disabled) {
-        const batch = buffer.splice(0, MAX_BATCH).map(e => ({ name: e.name, props: e.props, anon_id: id, platform: Platform.OS }))
+        const batch = buffer.splice(0, MAX_BATCH).map(e => ({
+          name: e.name, props: e.props, anon_id: id, platform: Platform.OS, session_id: e.session, app_version: version,
+        }))
         const { error } = await supabase.from('app_events').insert(batch)
         if (error) {
           if (isMissingTable(error)) { disabled = true; buffer = [] }
@@ -144,6 +171,133 @@ export function flush(): Promise<void> {
   return flushing
 }
 
+/**
+ * Whether coming back should open a new session: none yet, the account changed, or the app was
+ * hidden / in the background for longer than SESSION_IDLE_MS. Pure; exported for tests.
+ */
+export function needsNewSession(
+  current: { userId: string | null } | null,
+  userId: string | null,
+  hiddenSince: number | null,
+  now: number,
+): boolean {
+  if (!current) return true
+  if (current.userId !== userId) return true
+  return hiddenSince !== null && now - hiddenSince > SESSION_IDLE_MS
+}
+
+/** The screen type a route stands for: groups and `index` dropped, params kept as written (`/event/[id]`). Pure. */
+export function screenPattern(segments: readonly string[]): string {
+  const parts = segments.filter(s => !(s.startsWith('(') && s.endsWith(')')) && s !== 'index')
+  return '/' + parts.join('/')
+}
+
+function webReferrer(): string | null {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return null
+  try {
+    const ref = document.referrer
+    if (!ref) return 'direct'
+    const host = new URL(ref).host
+    if (typeof window !== 'undefined' && host === window.location.host) return 'internal'
+    return /google|bing|duckduckgo|yahoo/.test(host) ? 'search' : 'link'
+  } catch { return null }
+}
+
+function openSession(cold: boolean): void {
+  if (isDisabled()) return
+  session = { id: randomId(), userId: sessionUser }
+  const props: AnalyticsProps = { cold }
+  if (cold) {
+    const ref = webReferrer()
+    if (ref) props.referrer = ref
+  }
+  track(ANALYTICS_EVENTS.sessionStart, props)
+}
+
+/** One heartbeat for the open session. Never throws; stops for good if the function is missing. */
+async function heartbeat(): Promise<void> {
+  try {
+    if (isDisabled() || heartbeatMissing || !visible || !session) return
+    const id = await loadAnonId()
+    const current = session
+    if (!current) return
+    const { error } = await supabase.rpc('app_heartbeat', {
+      p_session: current.id,
+      p_anon: id,
+      p_platform: Platform.OS,
+      p_version: currentAppVersion(),
+      p_screen: screen ?? undefined,
+    })
+    if (error && (error.code === 'PGRST202' || /app_heartbeat/.test(error.message ?? ''))) heartbeatMissing = true
+  } catch { /* offline etc.: the next one tries again */ }
+}
+
+function startHeartbeat(): void {
+  stopHeartbeat()
+  heartbeatTimer = setInterval(() => { void heartbeat() }, HEARTBEAT_MS)
+}
+
+function stopHeartbeat(): void {
+  if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null }
+}
+
+function onShown(): void {
+  if (visible) return
+  visible = true
+  const cold = !session
+  if (needsNewSession(session, sessionUser, hiddenAt, Date.now())) openSession(cold)
+  hiddenAt = null
+  void heartbeat()
+  startHeartbeat()
+}
+
+function onHidden(): void {
+  if (!visible) return
+  visible = false
+  hiddenAt = Date.now()
+  stopHeartbeat()
+  void flush()
+}
+
+/**
+ * Open the first session and keep heartbeats going while the app is visible. Call once, from the
+ * root layout, after the session (signed-in user) is known. A no-op when analytics is off.
+ */
+export function startUsageTracking(userId: string | null): void {
+  try {
+    if (started || isDisabled()) return
+    started = true
+    sessionUser = userId
+    AppState.addEventListener('change', state => { if (state === 'active') onShown(); else onHidden() })
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') onHidden(); else onShown() })
+    }
+    const shown = Platform.OS === 'web' && typeof document !== 'undefined'
+      ? document.visibilityState !== 'hidden'
+      : AppState.currentState === 'active' || AppState.currentState == null
+    if (shown) onShown()
+  } catch { /* never break the app for metrics */ }
+}
+
+/** The signed-in account changed (sign in / out): the next activity is a new session. */
+export function setUsageUser(userId: string | null): void {
+  if (userId === sessionUser) return
+  sessionUser = userId
+  if (!started || !visible || !session) return
+  openSession(false)
+  void heartbeat()
+}
+
+/** The screen type now on (`screenPattern`, or a tab's path); records a screen_view when it changes. */
+export function noteScreen(pattern: string): void {
+  try {
+    if (pattern === screen) return
+    const from = screen
+    screen = pattern
+    track(ANALYTICS_EVENTS.screenView, from ? { screen: pattern, from } : { screen: pattern })
+  } catch { /* never break the app for metrics */ }
+}
+
 /** Test-only: reset module state; `enabled` overrides the Jest / webdriver switch. */
 export function __resetAnalytics(opts: { enabled?: boolean } = {}): void {
   if (timer) clearTimeout(timer)
@@ -153,6 +307,19 @@ export function __resetAnalytics(opts: { enabled?: boolean } = {}): void {
   anonId = null
   anonIdLoading = null
   disabled = opts.enabled === undefined ? null : !opts.enabled
+  stopHeartbeat()
+  session = null
+  sessionUser = null
+  hiddenAt = null
+  visible = false
+  started = false
+  heartbeatMissing = false
+  screen = null
+}
+
+/** Test-only: the open session. */
+export function __usageSession(): { id: string; userId: string | null } | null {
+  return session
 }
 
 /** Test-only. */

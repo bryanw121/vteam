@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Alert } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
 import { supabase } from '../../lib/supabase'
 import { Sentry } from '../../lib/sentry'
@@ -7,6 +6,7 @@ import { AVATARS_BUCKET, AVATAR_MAX_FILE_BYTES } from '../../constants'
 import { useSession } from '../../contexts/session'
 import { resolveProfileAvatarUriWithError } from '../../utils'
 import type { AvatarUploader, Profile, ProfilePatch } from '../../types'
+import { toast } from '../../lib/toast'
 
 const TOO_BIG = 'Photo must be smaller than 3 MB. Please try again.'
 
@@ -49,7 +49,7 @@ export function useAvatarUploader({ profile, updateProfile, onSaved, onToast }: 
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
       if (!perm.granted) {
-        Alert.alert('Permission needed', 'Allow photo library access to upload a profile picture.')
+        toast.show({ title: 'Photo access needed', message: 'Allow photo library access to upload a profile picture.', variant: 'warning' })
         return
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -65,7 +65,7 @@ export function useAvatarUploader({ profile, updateProfile, onSaved, onToast }: 
       setPending(asset)
     } catch (e) {
       Sentry.captureException(e)
-      Alert.alert('Error', 'Could not select photo. Please try again.')
+      toast.error("Couldn't select the photo", e)
     }
   }, [onToast])
 
@@ -93,7 +93,7 @@ export function useAvatarUploader({ profile, updateProfile, onSaved, onToast }: 
       onSaved({ ...profile, avatar_url: path })
     } catch (e) {
       Sentry.captureException(e)
-      Alert.alert('Error', 'Could not upload photo. Please try again.')
+      toast.error("Couldn't upload the photo", e)
     } finally {
       setUploading(false)
     }
@@ -109,7 +109,7 @@ export function useAvatarUploader({ profile, updateProfile, onSaved, onToast }: 
       if (!(await updateProfile({ avatar_url: null }))) throw new Error('Could not remove the profile picture')
     } catch (e) {
       Sentry.captureException(e)
-      Alert.alert('Error', 'Could not remove photo. Please try again.')
+      toast.error("Couldn't remove the photo", e)
     } finally {
       setUploading(false)
     }

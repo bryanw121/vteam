@@ -1,16 +1,13 @@
-import { Alert, Platform } from 'react-native'
+import { toast } from '../lib/toast'
 import { GENERIC_ERROR_MESSAGE } from '../constants/copy'
 
 /**
- * One-button alerts that work on native and web. `Alert.alert` is a no-op in
- * react-native-web, so fall back to `window.alert` there.
+ * Tell the user something, on every platform (#228). Shown as a toast:
+ * `Alert.alert` is a no-op in react-native-web, and `window.alert` (used here
+ * before) blocks the page and reads like a browser error.
  */
 export function notifyInfo(title: string, message?: string): void {
-  if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined') window.alert(message ? `${title}\n\n${message}` : title)
-    return
-  }
-  Alert.alert(title, message)
+  toast.show(message ? { title, message, variant: 'info' } : { message: title, variant: 'info' })
 }
 
 /**
@@ -25,5 +22,5 @@ export function notifyError(title: string, message?: unknown): void {
       : message instanceof Error && message.message
         ? message.message
         : GENERIC_ERROR_MESSAGE
-  notifyInfo(title, text)
+  toast.show({ title, message: text, variant: 'error' })
 }
