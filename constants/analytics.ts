@@ -34,6 +34,10 @@ export const ANALYTICS_EVENTS = {
   playerSetupCompleted: 'player_setup_completed',
   /** The Events feed's first rows were in hand (#184). props: { ms (since navigation start), source: snapshot | prefetch | fetch, cold } */
   feedFirstPaint: 'feed_first_paint',
+  /** A guest tapped Join / Join waitlist / Request and was sent to sign up (#229). props: { action } */
+  joinIntentSaved: 'join_intent_saved',
+  /** Back on the game after signing in. props: { outcome: joined | not_now | skipped | expired, offer? } */
+  joinIntentResumed: 'join_intent_resumed',
   /** A session opened: launch, back after 30 min away, or a different account signed in. props: { cold, referrer? (web, cold only: direct | internal | search | link) } */
   sessionStart: 'session_start',
   /** The screen type changed. props: { screen (route pattern, e.g. /event/[id], or a tab's path), from? } */
@@ -46,4 +50,6 @@ export const ANALYTICS_EVENTS = {
   feedFilterChanged: 'feed_filter_changed',
   /** A Scorekeeper match started or finished (device-only, so this is the only record). props: { stage: started | finished, sets (sets played) } */
   scorekeeperMatch: 'scorekeeper_match',
+  /** A Share button sent or copied a screen's link. props: { screen (tournament, tournaments, leagues, events, profile), how: share | copy, filtered } */
+  linkShared: 'link_shared',
 } as const

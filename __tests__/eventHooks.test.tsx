@@ -1,5 +1,6 @@
+import { __resetPendingAction, clearPendingAction, peekPendingAction } from '../utils/pendingAction'
 import React from 'react'
-import { Alert } from 'react-native'
+import { toast } from '../lib/toast'
 import { act, render } from '@testing-library/react-native'
 import { __resetQueryCache, invalidate } from '../lib/query'
 import { eventKeys } from '../hooks/event/keys'
@@ -57,7 +58,8 @@ const mockRequireSignIn = jest.fn(() => mockUserId !== null)
 jest.mock('../contexts/session', () => ({
   useSession: () => ({ userId: mockUserId, isGuest: mockUserId === null, loading: false, session: null }),
 }))
-jest.mock('../hooks/useRequireSignIn', () => ({ useRequireSignIn: () => mockRequireSignIn }))
+const mockGoToSignIn = jest.fn()
+jest.mock('../hooks/useRequireSignIn', () => ({ useRequireSignIn: () => mockRequireSignIn, useGoToSignIn: () => mockGoToSignIn }))
 jest.mock('../lib/sentry', () => ({ Sentry: { addBreadcrumb: jest.fn(), captureException: jest.fn() } }))
 // lib/query's useFocusRefetch needs a navigator; nothing here focuses.
 jest.mock('expo-router', () => ({ useFocusEffect: () => {} }))
@@ -136,15 +138,18 @@ const status = () => computeEventStatus({
   isHostOrCohost: false,
 })
 
-let alertSpy: jest.SpyInstance
+let toastSpy: jest.SpyInstance
 beforeEach(() => {
   __resetQueryCache()
+  __resetPendingAction()
+  clearPendingAction()
+  mockGoToSignIn.mockClear()
   mockCalls.length = 0
   mockUserId = 'me'
   mockRespond = router()
-  alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+  toastSpy = jest.spyOn(toast, 'show')
 })
-afterEach(() => alertSpy.mockRestore())
+afterEach(() => toastSpy.mockRestore())
 
 // ─── useEventData ────────────────────────────────────────────────────────────
 
@@ -245,7 +250,7 @@ describe('useEventAttendance — no-show flag (#151)', () => {
     await act(async () => { saved = await api.attendance.setNoShow('amy', true) })
     expect(saved).toBe(false)
     expect(api.data.roster.attendingRows[0].no_show).toBe(false)
-    expect(alertSpy).toHaveBeenCalledWith('Error', expect.stringContaining('2 hours after it ends'))
+    expect(toastSpy).toHaveBeenCalledWith(expect.objectContaining({ title: "Couldn't update the no-show", message: expect.stringContaining('2 hours after it ends') }))
   })
 })
 
@@ -287,7 +292,7 @@ describe('useEventAttendance — join', () => {
     await act(async () => { await api.attendance.join() })
     expect(status().isAttending).toBe(false)
     expect(api.data.roster.rows).toHaveLength(0)
-    expect(alertSpy).toHaveBeenCalledWith('Error', GENERIC_ERROR_MESSAGE)
+    expect(toastSpy).toHaveBeenCalledWith(expect.objectContaining({ title: "Couldn't join", message: GENERIC_ERROR_MESSAGE, action: expect.objectContaining({ label: 'Retry' }) }))
   })
 
   it('reads back a waitlisted status when the last spot went first', async () => {
@@ -300,7 +305,7 @@ describe('useEventAttendance — join', () => {
     expect(status().isWaitlisted).toBe(true)
     expect(status().waitlistPosition).toBe(1)
     expect(api.data.roster.waitlistProfiles.map(p => p.id)).toEqual(['me'])
-    expect(alertSpy).toHaveBeenCalledWith('Event just filled up', expect.stringContaining('waitlist'))
+    expect(toastSpy).toHaveBeenCalledWith(expect.objectContaining({ title: 'Event just filled up', message: expect.stringContaining('waitlist'), variant: 'warning' }))
   })
 
   it('ignores a second tap while the first join is in flight', async () => {
@@ -315,13 +320,15 @@ describe('useEventAttendance — join', () => {
     await settle()
   })
 
-  it('sends a guest to sign in instead of writing', async () => {
+  it('sends a guest to sign up instead of writing, remembering the join (#229)', async () => {
     mockUserId = null
     render(<Harness />)
     await settle()
     await act(async () => { await api.attendance.join() })
-    expect(mockRequireSignIn).toHaveBeenCalled()
+    expect(mockGoToSignIn).toHaveBeenCalledWith('register')
     expect(callsTo('event_attendees', 'insert')).toHaveLength(0)
+    const saved = peekPendingAction()
+    expect(saved).toMatchObject({ kind: 'join', eventId: api.data.event?.id, title: api.data.event?.title })
   })
 
   it('leave is optimistic and restores the row if the delete fails', async () => {
@@ -372,7 +379,7 @@ describe('useEventComments', () => {
     await act(async () => { await api.comments.post('hi', false, []).catch(() => { rejected = true }) })
     expect(rejected).toBe(true)
     expect(api.comments.comments).toHaveLength(0)
-    expect(alertSpy).toHaveBeenCalledWith('Error', 'Could not post comment. Please try again.')
+    expect(toastSpy).toHaveBeenCalledWith(expect.objectContaining({ title: "Couldn't post your comment" }))
   })
 
   it('replaces an edited comment in place', async () => {
@@ -452,11 +459,11 @@ describe('useEventCheers — revoke double tap', () => {
     act(() => { cheers.toggleCheer('b', 'mvp') })
     await settle()
     expect(callsTo('cheers', 'delete')).toHaveLength(1)
-    expect(alertSpy).not.toHaveBeenCalled()
+    expect(toastSpy).not.toHaveBeenCalled()
 
     await act(async () => { held.resolve({ data: null, error: null }) })
     await settle()
-    expect(alertSpy).not.toHaveBeenCalled()
+    expect(toastSpy).not.toHaveBeenCalled()
   })
 })
 

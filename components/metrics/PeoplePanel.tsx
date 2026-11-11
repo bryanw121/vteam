@@ -10,6 +10,8 @@ import { lastSeenLabel, platformVersion } from '../../utils/metrics'
 import type { AdminUserRow, AdminUserSort } from '../../types'
 import { PersonRow } from './MetricBits'
 import { metricsStyles as s } from './metricsStyles'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { VIEW } from '../../utils/urlViews'
 
 type Props = {
   active: boolean
@@ -26,7 +28,8 @@ const SORTS: { id: AdminUserSort; label: string }[] = [
 export function PeoplePanel({ active, onOpenPerson }: Props) {
   const [input, setInput] = useState('')
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<AdminUserSort>('last_seen')
+  // The sort is in the URL; the search isn't (names and emails stay out of addresses and server logs).
+  const [sort, setSort] = useUrlParam('sort', VIEW.metrics.sort)
   const [pages, setPages] = useState(1)
 
   // Search once typing pauses.

@@ -127,6 +127,9 @@ export async function visitScreen(browser, baseUrl, name, screen, size, opts, on
     page.on('pageerror', e => result.errors.push(e.message.split('\n')[0].slice(0, 300)))
     const signedIn = screen.signedIn !== false
     const { misses } = await installSupabaseMock(page, { now: opts.now, signedIn, seenIds: opts.seenIds, relationships: opts.relationships })
+    // Per-tab state a screen needs before it loads (e.g. a guest's saved join, #229). A function gets `opts` (for `now`).
+    const seed = typeof screen.sessionStorage === 'function' ? screen.sessionStorage(opts) : screen.sessionStorage
+    if (seed) await page.addInitScript(entries => { for (const [k, v] of Object.entries(entries)) sessionStorage.setItem(k, v) }, seed)
     await page.goto(baseUrl + screen.route, { waitUntil: 'load', timeout: 30000 })
     const loadedAt = Date.now()
     if (screen.ready) {

@@ -9,6 +9,9 @@ import { ProgramSection } from '../../components/programs/ProgramSection'
 import { useExternalPrograms } from '../../hooks/useExternalPrograms'
 import { useToday } from '../../hooks/useToday'
 import { byHost, programUrgency } from '../../utils/externalPrograms'
+import { ShareLinkButton } from '../../components/ShareLinkButton'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { VIEW } from '../../utils/urlViews'
 import { ProgramHostChips } from '../../components/programs/ProgramHostChips'
 import { routes } from '../../utils/routes'
 import { PROGRAMS_SOURCE_NOTE } from '../../constants/copy'
@@ -24,7 +27,10 @@ export default function LeaguesScreen() {
   const programs = useExternalPrograms()
   const [refreshing, setRefreshing] = useState(false)
   const all = programs.data?.leagues ?? []
-  const [host, setHost] = useState<string | null>(null)
+  // The organizer chip is in the URL (`?host=ACES`); one no longer listed shows everyone.
+  const [hostParam, setHostParam] = useUrlParam('host', VIEW.leagues.host)
+  const host = hostParam || null
+  const setHost = (next: string | null) => setHostParam(next ?? '')
   const leagues = useMemo(() => byHost(all, host), [all, host])
 
   const groups = useMemo(() => {
@@ -42,7 +48,20 @@ export default function LeaguesScreen() {
     <View style={shared.screen}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenContainer>
-        <ScreenHeader title="Leagues" safeTop onBack={() => (router.canGoBack() ? router.back() : router.replace(routes.app()))} />
+        <ScreenHeader
+          title="Leagues"
+          safeTop
+          onBack={() => (router.canGoBack() ? router.back() : router.replace(routes.app()))}
+          right={(
+            <ShareLinkButton
+              path={routes.leagues({ host: hostParam })}
+              title="Volleyball leagues open for sign-up, on vteam"
+              screen="leagues"
+              filtered={!!host}
+              testID="leagues-share-button"
+            />
+          )}
+        />
         <ScreenState
           loading={programs.isLoading}
           ready={!!programs.data}

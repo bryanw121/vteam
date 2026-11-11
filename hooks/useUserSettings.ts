@@ -12,14 +12,15 @@ import type { MajorCity, ReminderLeadMinutes, UserSettings } from '../types'
  * The signed-in user's private settings (`user_settings`, owner-only RLS):
  * home city (which region's outside sessions the feed shows), the one-time
  * banners already seen, how long before an event reminders arrive, and what
- * they hid from the Events feed (`useHiddenFeed`).
+ * they hid from the Events feed (`useHiddenFeed`), and the notification
+ * switches `useMyProfile` reads from this same query (#224: one read, not two).
  * Guests have none; a missing row reads as defaults.
  */
-const SETTINGS_SELECT = 'user_id, home_city_id, seen_banners, reminder_lead_minutes, hidden_feed, home_city:major_cities(id, display_name, city_name, admin_region, country_code)'
+const SETTINGS_SELECT = 'user_id, home_city_id, seen_banners, reminder_lead_minutes, hidden_feed, notification_prefs, home_city:major_cities(id, display_name, city_name, admin_region, country_code)'
 
 export const userSettingsKey = (userId: string) => queryKey('settings', userId)
 
-async function fetchSettings(userId: string): Promise<UserSettings | null> {
+export async function fetchSettings(userId: string): Promise<UserSettings | null> {
   const { data, error } = await supabase.from('user_settings').select(SETTINGS_SELECT).eq('user_id', userId).maybeSingle()
   if (error) throw error
   if (!data) return null
@@ -56,6 +57,7 @@ export function useUserSettings() {
           home_city_id: city?.id ?? null,
           home_city: city ?? null,
           hidden_feed: prev?.hidden_feed ?? [],
+          notification_prefs: prev?.notification_prefs ?? null,
         }))
         return () => setQueryData(key, before ?? null)
       },
@@ -86,6 +88,7 @@ export function useUserSettings() {
           home_city: prev?.home_city ?? null,
           reminder_lead_minutes: minutes,
           hidden_feed: prev?.hidden_feed ?? [],
+          notification_prefs: prev?.notification_prefs ?? null,
         }))
         return () => setQueryData(key, before ?? null)
       },

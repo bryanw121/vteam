@@ -18,6 +18,9 @@ import { poolTables as buildPoolTables, resultWrites, tournamentPodium } from '.
 import { profileDisplayName } from '../../../utils'
 import { routes } from '../../../utils/routes'
 import { ConfirmDialog, ScreenHeader, ScreenState } from '../../../components/ui'
+import { ShareLinkButton } from '../../../components/ShareLinkButton'
+import { useUrlParam } from '../../../hooks/useUrlParam'
+import { VIEW } from '../../../utils/urlViews'
 import { DiscussionTab } from '../../../components/tournament/DiscussionTab'
 import { MatchResultSheet } from '../../../components/tournament/MatchResultSheet'
 import { ResultsTab } from '../../../components/tournament/ResultsTab'
@@ -44,7 +47,10 @@ export default function TournamentDetailScreen() {
   const { userId } = useSession()
   const requireSignIn = useRequireSignIn()
 
-  const [activeTab, setActiveTab] = useState<TournamentTabName>('Overview')
+  // The tab is in the URL (`?tab=schedule`) so a shared link opens it.
+  const [tabIndex, setTabIndex] = useUrlParam('tab', VIEW.tournament.tab)
+  const activeTab: TournamentTabName = TOURNAMENT_TABS[tabIndex] ?? 'Overview'
+  const setActiveTab = (tab: TournamentTabName) => setTabIndex(Math.max(0, TOURNAMENT_TABS.indexOf(tab)))
   // Matches and pools are only needed once the Schedule or Results tab has been opened.
   const wantsMatches = activeTab === 'Schedule' || activeTab === 'Results'
   const [scheduleOpened, setScheduleOpened] = useState(false)
@@ -287,7 +293,20 @@ export default function TournamentDetailScreen() {
       >
         {tournament && (
           <>
-            <TournamentHero tournament={tournament} registeredTeamCount={registeredTeams.length} onBack={goBack} />
+            <TournamentHero
+              tournament={tournament}
+              registeredTeamCount={registeredTeams.length}
+              onBack={goBack}
+              actions={(
+                <ShareLinkButton
+                  path={routes.tournament(tournament.id, { tab: tabIndex })}
+                  title={`${tournament.title} on vteam`}
+                  screen="tournament"
+                  filtered={tabIndex > 0}
+                  testID="tournament-share-button"
+                />
+              )}
+            />
 
             {/* Tab bar: scrolls sideways when five labels don't fit (narrow phones), spreads out otherwise. */}
             <View style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border, backgroundColor: theme.colors.background }}>
