@@ -101,10 +101,11 @@ describe('Chip', () => {
     expect(screen.getByTestId('chip').props.accessibilityState).toEqual({ selected: true })
   })
 
-  it('tint variant uses a translucent primary wash with primary text', () => {
+  it('tint variant uses a translucent primary wash with readable primary text', () => {
     render(<Chip label="Joined" active variant="tint" onPress={() => {}} testID="chip" />)
     expect(flat(screen.getByTestId('chip')).backgroundColor).toBe(theme.colors.primary + '24')
-    expect(flat(screen.getByText('Joined')).color).toBe(theme.colors.primary)
+    // Text uses primaryText (#134: primary itself is under 4.5:1 on the dark background).
+    expect(flat(screen.getByText('Joined')).color).toBe(theme.colors.primaryText)
   })
 
   it('appends the badge to the label and fires onPress', () => {
@@ -257,13 +258,13 @@ describe('Button', () => {
     expect(flat(screen.getByTestId('btn')).backgroundColor).toBe(bg)
   })
 
-  it('secondary has a primary border, ghost has none; both use a primary label', () => {
+  it('secondary has a primary border, ghost has none; both use a readable primary label', () => {
     const { rerender } = render(<Button label="Go" variant="secondary" onPress={() => {}} testID="btn" />)
     expect(flat(screen.getByTestId('btn')).borderColor).toBe(theme.colors.primary)
-    expect(flat(screen.getByText('Go')).color).toBe(theme.colors.primary)
+    expect(flat(screen.getByText('Go')).color).toBe(theme.colors.primaryText)
     rerender(<Button label="Go" variant="ghost" onPress={() => {}} testID="btn" />)
     expect(flat(screen.getByTestId('btn')).borderWidth).toBeUndefined()
-    expect(flat(screen.getByText('Go')).color).toBe(theme.colors.primary)
+    expect(flat(screen.getByText('Go')).color).toBe(theme.colors.primaryText)
   })
 
   it('sm size and fullWidth=false apply', () => {
