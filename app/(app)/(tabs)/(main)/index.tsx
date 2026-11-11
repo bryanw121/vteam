@@ -54,7 +54,7 @@ import { planFeedAds } from '../../../../utils/feedAds'
 import { FeedBanner } from '../../../../components/ads/FeedBanner'
 import { SponsoredLabel } from '../../../../components/ads/SponsoredLabel'
 import { Spinner } from '../../../../components/ui/Spinner'
-import { Toast } from '../../../../components/Toast'
+import { toast } from '../../../../lib/toast'
 import { FeedItemShell, HiddenCountRow, HideFeedSheet } from '../../../../components/events/FeedHiding'
 import { useHiddenFeed } from '../../../../hooks/useHiddenFeed'
 import { hiddenIndex, hideOptions, isHidden, matchingEntries } from '../../../../utils/hiddenFeed'
@@ -132,7 +132,10 @@ export default function EventsScreen() {
   const hiddenIdx = useMemo(() => hiddenIndex(hiddenFeed.entries), [hiddenFeed.entries])
   const [revealedKeys, setRevealedKeys] = useState<ReadonlySet<string>>(() => new Set())
   const [hideTarget, setHideTarget] = useState<EventWithDetails | null>(null)
-  const [hideToast, setHideToast] = useState<{ message: string; undo: HiddenFeedEntry[] } | null>(null)
+  // "Hidden: …" with Undo (shared toast, #228).
+  const showHideToast = (message: string, undo: HiddenFeedEntry[]) => {
+    toast.show({ message, variant: 'info', duration: 5000, action: { label: 'Undo', onPress: () => hiddenFeed.restore(undo) } })
+  }
   const [notifOpen, setNotifOpen] = useState(false)
   const [curWeekPage, setCurWeekPage] = useState(() => idxForWeek(getWeekStart(new Date(selectedDate + 'T00:00:00'))))
   const [curMonthPage, setCurMonthPage] = useState(() => idxForMonth(selectedDate.substring(0, 7)))
@@ -326,7 +329,7 @@ export default function EventsScreen() {
     const before = hiddenFeed.entries
     setHideTarget(null)
     hiddenFeed.hide(option.entry)
-    setHideToast({ message: `Hidden: ${option.entry.label}`, undo: before })
+    showHideToast(`Hidden: ${option.entry.label}`, before)
   }, [hiddenFeed])
 
   const unhideItem = useCallback((event: EventWithDetails) => {
@@ -334,7 +337,7 @@ export default function EventsScreen() {
     const matches = matchingEntries(event, before)
     if (matches.length === 0) return
     hiddenFeed.restore(before.filter(e => !matches.includes(e)))
-    setHideToast({ message: `Showing again: ${matches.map(m => m.label).join(', ')}`, undo: before })
+    showHideToast(`Showing again: ${matches.map(m => m.label).join(', ')}`, before)
   }, [hiddenFeed])
 
   const hideOptionsFor = useMemo(
@@ -712,14 +715,6 @@ export default function EventsScreen() {
           onPick={pickHideOption}
           onDismiss={() => setHideTarget(null)}
         />
-        <Toast
-          message={hideToast?.message ?? ''}
-          variant="info"
-          visible={!!hideToast}
-          onHide={() => setHideToast(null)}
-          duration={5000}
-          action={hideToast ? { label: 'Undo', onPress: () => hiddenFeed.restore(hideToast.undo) } : undefined}
-        />
       </View>
     )
   }
@@ -936,14 +931,6 @@ export default function EventsScreen() {
         options={hideOptionsFor}
         onPick={pickHideOption}
         onDismiss={() => setHideTarget(null)}
-      />
-      <Toast
-        message={hideToast?.message ?? ''}
-        variant="info"
-        visible={!!hideToast}
-        onHide={() => setHideToast(null)}
-        duration={5000}
-        action={hideToast ? { label: 'Undo', onPress: () => hiddenFeed.restore(hideToast.undo) } : undefined}
       />
     </View>
   )

@@ -535,5 +535,13 @@
     "desktop": {
       "color-contrast": 6
     }
+  },
+  "settings-feedback-errors": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 6
+    }
   }
 }

@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `01b9b19fa148`
+> Inventory fingerprint: `34791ac71639`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -455,11 +455,11 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `app_events` | [`lib/analytics.ts:159`](../lib/analytics.ts#L159) |
 | `chat_silences` | [`hooks/useSilencedUsers.ts:27`](../hooks/useSilencedUsers.ts#L27)<br>[`supabase/functions/send-chat-push/handler.ts:142`](../supabase/functions/send-chat-push/handler.ts#L142) |
 | `cheers` | [`hooks/event/useEventCheers.ts:16`](../hooks/event/useEventCheers.ts#L16)<br>[`hooks/useCheersSummary.ts:12`](../hooks/useCheersSummary.ts#L12)<br>[`hooks/useMyProfile.ts:72`](../hooks/useMyProfile.ts#L72)<br>[`hooks/useUserProfile.ts:21`](../hooks/useUserProfile.ts#L21)<br>[`utils/badges.ts:41`](../utils/badges.ts#L41) |
-| `club_members` | [`app/(app)/(tabs)/(main)/clubs.tsx:86`](../app/%28app%29/%28tabs%29/%28main%29/clubs.tsx#L86)<br>[`app/(app)/chat/[id].tsx:92`](../app/%28app%29/chat/%5Bid%5D.tsx#L92)<br>[`app/(app)/club/[id].tsx:128`](../app/%28app%29/club/%5Bid%5D.tsx#L128)<br>[`app/(app)/host.tsx:160`](../app/%28app%29/host.tsx#L160)<br>[`app/(app)/tournament/create.tsx:774`](../app/%28app%29/tournament/create.tsx#L774) |
-| `club_post_comments` | [`components/ClubPostCard.tsx:90`](../components/ClubPostCard.tsx#L90) |
-| `club_post_likes` | [`components/ClubPostCard.tsx:61`](../components/ClubPostCard.tsx#L61) |
-| `club_posts` | [`components/ClubPostCard.tsx:255`](../components/ClubPostCard.tsx#L255)<br>[`hooks/useClub.ts:71`](../hooks/useClub.ts#L71) |
-| `clubs` | [`app/(app)/(tabs)/(main)/clubs.tsx:223`](../app/%28app%29/%28tabs%29/%28main%29/clubs.tsx#L223)<br>[`app/(app)/club/[id].tsx:184`](../app/%28app%29/club/%5Bid%5D.tsx#L184)<br>[`app/(app)/club/create.tsx:63`](../app/%28app%29/club/create.tsx#L63)<br>[`hooks/useClub.ts:53`](../hooks/useClub.ts#L53) |
+| `club_members` | [`app/(app)/(tabs)/(main)/clubs.tsx:87`](../app/%28app%29/%28tabs%29/%28main%29/clubs.tsx#L87)<br>[`app/(app)/chat/[id].tsx:93`](../app/%28app%29/chat/%5Bid%5D.tsx#L93)<br>[`app/(app)/club/[id].tsx:132`](../app/%28app%29/club/%5Bid%5D.tsx#L132)<br>[`app/(app)/host.tsx:160`](../app/%28app%29/host.tsx#L160)<br>[`app/(app)/tournament/create.tsx:774`](../app/%28app%29/tournament/create.tsx#L774) |
+| `club_post_comments` | [`components/ClubPostCard.tsx:91`](../components/ClubPostCard.tsx#L91) |
+| `club_post_likes` | [`components/ClubPostCard.tsx:63`](../components/ClubPostCard.tsx#L63) |
+| `club_posts` | [`components/ClubPostCard.tsx:257`](../components/ClubPostCard.tsx#L257)<br>[`hooks/useClub.ts:71`](../hooks/useClub.ts#L71) |
+| `clubs` | [`app/(app)/(tabs)/(main)/clubs.tsx:224`](../app/%28app%29/%28tabs%29/%28main%29/clubs.tsx#L224)<br>[`app/(app)/club/[id].tsx:188`](../app/%28app%29/club/%5Bid%5D.tsx#L188)<br>[`app/(app)/club/create.tsx:65`](../app/%28app%29/club/create.tsx#L65)<br>[`hooks/useClub.ts:53`](../hooks/useClub.ts#L53) |
 | `conversation_members` | [`supabase/functions/send-chat-push/handler.ts:126`](../supabase/functions/send-chat-push/handler.ts#L126) |
 | `conversations` | [`hooks/useConversations.ts:276`](../hooks/useConversations.ts#L276)<br>[`supabase/functions/send-chat-push/handler.ts:125`](../supabase/functions/send-chat-push/handler.ts#L125) |
 | `event_attendee_denials` | [`hooks/event/useMyDenialReason.ts:8`](../hooks/event/useMyDenialReason.ts#L8) |
@@ -473,7 +473,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `events` | [`app/(app)/host.tsx:181`](../app/%28app%29/host.tsx#L181)<br>[`components/event/EventDetailScreen.tsx:271`](../components/event/EventDetailScreen.tsx#L271)<br>[`hooks/event/useEventData.ts:30`](../hooks/event/useEventData.ts#L30)<br>[`hooks/useClub.ts:45`](../hooks/useClub.ts#L45)<br>[`hooks/useEventHistory.ts:18`](../hooks/useEventHistory.ts#L18)<br>[`hooks/useForecast.ts:78`](../hooks/useForecast.ts#L78)<br>+2 more files |
 | `external_programs` | [`hooks/useExternalPrograms.ts:25`](../hooks/useExternalPrograms.ts#L25) |
 | `external_sessions` | [`hooks/useMonthEvents.ts:284`](../hooks/useMonthEvents.ts#L284) |
-| `feedback_submissions` | [`app/(app)/(tabs)/settings/feedback.tsx:53`](../app/%28app%29/%28tabs%29/settings/feedback.tsx#L53)<br>[`supabase/functions/send-feedback-email/handler.ts:88`](../supabase/functions/send-feedback-email/handler.ts#L88) |
+| `feedback_submissions` | [`app/(app)/(tabs)/settings/feedback.tsx:62`](../app/%28app%29/%28tabs%29/settings/feedback.tsx#L62)<br>[`supabase/functions/send-feedback-email/handler.ts:88`](../supabase/functions/send-feedback-email/handler.ts#L88) |
 | `friend_requests` | [`hooks/useFriends.ts:37`](../hooks/useFriends.ts#L37) |
 | `friendships` | [`hooks/useFriends.ts:36`](../hooks/useFriends.ts#L36) |
 | `major_cities` | [`hooks/useMajorCities.ts:10`](../hooks/useMajorCities.ts#L10) |
@@ -549,7 +549,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Surface | Name | Call sites |
 |---|---|---|
 | Auth | `exchangeCodeForSession` | [`lib/socialAuth.ts:24`](../lib/socialAuth.ts#L24) |
-| Auth | `getSession` | [`app/(app)/(tabs)/settings/account.tsx:22`](../app/%28app%29/%28tabs%29/settings/account.tsx#L22)<br>[`app/(auth)/reset-password.tsx:33`](../app/%28auth%29/reset-password.tsx#L33)<br>[`components/ClubPostCard.tsx:243`](../components/ClubPostCard.tsx#L243)<br>[`contexts/session.tsx:35`](../contexts/session.tsx#L35)<br>[`lib/sessionUser.ts:10`](../lib/sessionUser.ts#L10) |
+| Auth | `getSession` | [`app/(app)/(tabs)/settings/account.tsx:23`](../app/%28app%29/%28tabs%29/settings/account.tsx#L23)<br>[`app/(auth)/reset-password.tsx:33`](../app/%28auth%29/reset-password.tsx#L33)<br>[`contexts/session.tsx:35`](../contexts/session.tsx#L35)<br>[`lib/sessionUser.ts:10`](../lib/sessionUser.ts#L10) |
 | Auth | `getUser` | [`contexts/session.tsx:15`](../contexts/session.tsx#L15)<br>[`lib/sessionUser.ts:6`](../lib/sessionUser.ts#L6) |
 | Auth | `onAuthStateChange` | [`app/(auth)/reset-password.tsx:28`](../app/%28auth%29/reset-password.tsx#L28)<br>[`contexts/session.tsx:40`](../contexts/session.tsx#L40) |
 | Auth | `resetPasswordForEmail` | [`app/(auth)/login.tsx:102`](../app/%28auth%29/login.tsx#L102) |
@@ -558,19 +558,19 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Auth | `signInWithOAuth` | [`lib/socialAuth.ts:38`](../lib/socialAuth.ts#L38) |
 | Auth | `signInWithOtp` | [`lib/socialAuth.ts:89`](../lib/socialAuth.ts#L89) |
 | Auth | `signInWithPassword` | [`app/(auth)/login.tsx:127`](../app/%28auth%29/login.tsx#L127)<br>[`hooks/useAccountDeletion.ts:70`](../hooks/useAccountDeletion.ts#L70) |
-| Auth | `signOut` | [`app/(app)/(tabs)/settings/account.tsx:30`](../app/%28app%29/%28tabs%29/settings/account.tsx#L30)<br>[`hooks/useAccountDeletion.ts:63`](../hooks/useAccountDeletion.ts#L63) |
+| Auth | `signOut` | [`app/(app)/(tabs)/settings/account.tsx:31`](../app/%28app%29/%28tabs%29/settings/account.tsx#L31)<br>[`hooks/useAccountDeletion.ts:63`](../hooks/useAccountDeletion.ts#L63) |
 | Auth | `signUp` | [`app/(auth)/register.tsx:78`](../app/%28auth%29/register.tsx#L78) |
 | Auth | `startAutoRefresh` | [`lib/supabase.ts:59`](../lib/supabase.ts#L59) |
 | Auth | `stopAutoRefresh` | [`lib/supabase.ts:60`](../lib/supabase.ts#L60) |
 | Auth | `updateUser` | [`app/(auth)/reset-password.tsx:47`](../app/%28auth%29/reset-password.tsx#L47) |
 | Auth | `verifyOtp` | [`lib/socialAuth.ts:97`](../lib/socialAuth.ts#L97) |
-| Realtime table | `chat_silences` | [`utils/chatUtils.ts:102`](../utils/chatUtils.ts#L102) |
-| Realtime table | `conversation_members` | [`utils/chatUtils.ts:97`](../utils/chatUtils.ts#L97) |
-| Realtime table | `message_reactions` | [`utils/chatUtils.ts:81`](../utils/chatUtils.ts#L81) |
-| Realtime table | `messages` | [`utils/chatUtils.ts:75`](../utils/chatUtils.ts#L75) |
+| Realtime table | `chat_silences` | [`utils/chatUtils.ts:98`](../utils/chatUtils.ts#L98) |
+| Realtime table | `conversation_members` | [`utils/chatUtils.ts:93`](../utils/chatUtils.ts#L93) |
+| Realtime table | `message_reactions` | [`utils/chatUtils.ts:77`](../utils/chatUtils.ts#L77) |
+| Realtime table | `messages` | [`utils/chatUtils.ts:71`](../utils/chatUtils.ts#L71) |
 | Storage bucket | `avatars` | [`components/profile/useAvatarUploader.ts:88`](../components/profile/useAvatarUploader.ts#L88) |
 | Storage bucket | `chat-images` | [`hooks/useChatImageUrl.ts:27`](../hooks/useChatImageUrl.ts#L27)<br>[`hooks/useMessages.ts:470`](../hooks/useMessages.ts#L470) |
-| Storage bucket | `club-avatars` | [`app/(app)/club/[id].tsx:203`](../app/%28app%29/club/%5Bid%5D.tsx#L203) |
+| Storage bucket | `club-avatars` | [`app/(app)/club/[id].tsx:207`](../app/%28app%29/club/%5Bid%5D.tsx#L207) |
 | Edge Function | `places-proxy` | [`components/LocationPickerField.tsx:70`](../components/LocationPickerField.tsx#L70) |
 | Edge Function | `send-feedback-email` | [`lib/feedback.ts:15`](../lib/feedback.ts#L15) |
 
@@ -616,7 +616,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Weather on outdoor games (#165) | [`ForecastHour`](../types/index.ts#L2028), [`Forecast`](../types/index.ts#L2045), [`ForecastWindow`](../types/index.ts#L2052), [`ForecastCell`](../types/index.ts#L2055), [`ForecastTone`](../types/index.ts#L2058), [`ForecastSummary`](../types/index.ts#L2061), [`ForecastCourt`](../types/index.ts#L2076) |
 | Public profile, history, cheers summary (#185) | [`UserProfileData`](../types/index.ts#L2081), [`EventHistoryKind`](../types/index.ts#L2090), [`CheersReceived`](../types/index.ts#L2093), [`CheersSummary`](../types/index.ts#L2099) |
 | Join intent (#229) | [`PendingAction`](../types/index.ts#L2114), [`PendingActionTake`](../types/index.ts#L2117), [`JoinOffer`](../types/index.ts#L2120), [`JoinIntentOutcome`](../types/index.ts#L2123) |
-| View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2128) |
+| View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2128), [`FeedbackFieldErrors`](../types/index.ts#L2134) |
 
 ### Constrained string values
 

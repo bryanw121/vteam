@@ -1,4 +1,4 @@
-import { Alert, ScrollView, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import { useCallback, useState } from 'react'
@@ -9,6 +9,7 @@ import { Button } from '../../../../components/Button'
 import { shared, theme } from '../../../../constants'
 import { useRouter } from 'expo-router'
 import { routes } from '../../../../utils/routes'
+import { toast } from '../../../../lib/toast'
 
 export default function AccountSettingsScreen() {
   useStackBackTitle('Account settings')
@@ -28,7 +29,7 @@ export default function AccountSettingsScreen() {
 
   async function handleSignOut() {
     const { error } = await supabase.auth.signOut()
-    if (error) Alert.alert('Error', error.message)
+    if (error) toast.error("Couldn't sign out", error)
   }
 
   return (
