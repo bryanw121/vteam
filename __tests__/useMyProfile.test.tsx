@@ -11,6 +11,7 @@ import {
   useMyCheersCount,
   useMyProfile,
 } from '../hooks/useMyProfile'
+import { useUserSettings, userSettingsKey } from '../hooks/useUserSettings'
 import type { MyProfile } from '../types'
 import type { QueryResult } from '../lib/query'
 
@@ -83,7 +84,7 @@ function Probe() {
 
 async function flush() {
   await act(async () => {
-    for (let i = 0; i < 6; i++) await Promise.resolve()
+    for (let i = 0; i < 12; i++) await Promise.resolve()
   })
 }
 
@@ -174,6 +175,30 @@ describe('useMyProfile', () => {
       expect.objectContaining({ table: 'user_settings', patch: expect.objectContaining({ user_id: 'u1', notification_prefs: prefs }) }),
       { table: 'profiles', patch: { bio: 'x' }, id: 'u1' },
     ])
+    // The settings query holds the switches too, so a later profile refetch keeps them.
+    expect((getQueryData(userSettingsKey('u1')) as { notification_prefs: unknown }).notification_prefs).toEqual(prefs)
+  })
+
+  it('shares one user_settings read with useUserSettings (#224)', async () => {
+    mockQueued.profiles = [{ data: ROW, error: null }]
+    mockQueued.user_settings = [{ data: { user_id: 'u1', notification_prefs: { push: { kudos: false }, in_app: {} } }, error: null }]
+    function Both() {
+      useUserSettings()
+      return <Probe />
+    }
+    render(<Both />)
+    await flush()
+    expect(mockSelectCalls.filter(c => c.table === 'user_settings')).toHaveLength(1)
+    expect(me.profile?.notification_prefs).toEqual({ push: { kudos: false }, in_app: {} })
+  })
+
+  it('surfaces a failed settings read instead of showing default switches', async () => {
+    mockQueued.profiles = [{ data: ROW, error: null }]
+    mockQueued.user_settings = [{ data: null, error: { message: 'denied' } }, { data: null, error: { message: 'denied' } }]
+    render(<Probe />)
+    await flush()
+    expect(me.profile).toBeUndefined()
+    expect(me.error?.message).toBe('denied')
   })
 
   it('rolls the cache back and reports false when the write fails', async () => {
@@ -228,21 +253,23 @@ describe('useMyProfile', () => {
 })
 
 describe('useMyCheersCount', () => {
-  it('asks for an exact head-only count of cheers received by the user', async () => {
+  const rows = (...types: string[]) => types.map(cheer_type => ({ cheer_type }))
+
+  it('reads received cheers by type once and shows their total', async () => {
     mockQueued.profiles = [{ data: ROW, error: null }]
-    mockQueued.cheers = [{ data: null, error: null, count: 7 }]
+    mockQueued.cheers = [{ data: rows('spike', 'spike', 'serve'), error: null }]
     render(<Probe />)
     await flush()
-    const call = mockSelectCalls.find(c => c.table === 'cheers')!
-    expect(call.columns).toBe('id')
-    expect(call.options).toEqual({ count: 'exact', head: true })
-    expect(cheers.data).toBe(7)
-    expect(getQueryData(myCheersCountKey('u1'))).toBe(7)
+    const calls = mockSelectCalls.filter(c => c.table === 'cheers')
+    expect(calls).toHaveLength(1)
+    expect(calls[0].columns).toBe('cheer_type')
+    expect(cheers.data).toBe(3)
+    expect(getQueryData(myCheersCountKey('u1'))).toEqual({ total: 3, byType: { spike: 2, serve: 1 } })
   })
 
-  it('reads a null count as zero', async () => {
+  it('reads no rows as zero', async () => {
     mockQueued.profiles = [{ data: ROW, error: null }]
-    mockQueued.cheers = [{ data: null, error: null, count: null }]
+    mockQueued.cheers = [{ data: [], error: null }]
     render(<Probe />)
     await flush()
     expect(cheers.data).toBe(0)
@@ -250,11 +277,13 @@ describe('useMyCheersCount', () => {
 
   it('keeps the last known count when a refresh fails', async () => {
     mockQueued.profiles = [{ data: ROW, error: null }]
-    mockQueued.cheers = [{ data: null, error: null, count: 7 }, { data: null, error: { message: 'offline' } }]
+    mockQueued.cheers = [{ data: rows('set', 'dig'), error: null }, { data: null, error: { message: 'offline' } }]
     render(<Probe />)
     await flush()
-    await act(async () => { await cheers.refetch({ force: true }) })
-    expect(cheers.data).toBe(7)
+    let refreshed: number | undefined = -1
+    await act(async () => { refreshed = await cheers.refetch({ force: true }) })
+    expect(refreshed).toBeUndefined()
+    expect(cheers.data).toBe(2)
     expect(cheers.error?.message).toBe('offline')
   })
 })

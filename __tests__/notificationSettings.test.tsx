@@ -15,6 +15,7 @@ type Update = { patch: Record<string, unknown>; release: (r: { error: unknown })
 let mockUpdates: Update[]
 let mockUpserts: Record<string, unknown>[]
 let mockLead: number | null
+let mockSettingsReads: string[]
 
 jest.mock('../lib/supabase', () => ({
   supabase: {
@@ -24,10 +25,12 @@ jest.mock('../lib/supabase', () => ({
         chain.eq = () => chain
         chain.maybeSingle = () => {
           if (table !== 'user_settings') return Promise.resolve({ data: null, error: null })
-          // useMyProfile reads only the private prefs; useUserSettings reads the rest of the row.
-          if (columns === 'notification_prefs') return Promise.resolve({ data: { notification_prefs: mockPrefs }, error: null })
+          // One read of the row: useMyProfile takes the switches from useUserSettings' query (#224).
+          mockSettingsReads.push(columns)
           return Promise.resolve({
-            data: mockLead === null ? null : { user_id: 'u1', home_city_id: null, seen_banners: [], reminder_lead_minutes: mockLead, home_city: null },
+            data: mockLead === null && mockPrefs === null
+              ? null
+              : { user_id: 'u1', home_city_id: null, seen_banners: [], reminder_lead_minutes: mockLead ?? 120, home_city: null, notification_prefs: mockPrefs },
             error: null,
           })
         }
@@ -54,7 +57,7 @@ jest.mock('../lib/supabase', () => ({
 
 async function flush() {
   await act(async () => {
-    for (let i = 0; i < 6; i++) await Promise.resolve()
+    for (let i = 0; i < 12; i++) await Promise.resolve()
   })
 }
 
@@ -65,6 +68,7 @@ beforeEach(() => {
   mockUpdates = []
   mockUpserts = []
   mockLead = 120
+  mockSettingsReads = []
   mockPrefs = null
 })
 
@@ -98,6 +102,13 @@ describe('notification settings', () => {
     await act(async () => { mockUpdates[0].release({ error: { message: 'denied' } }) })
     await flush()
     expect(view.getByText('Could not save settings. Please try again.')).toBeTruthy()
+  })
+
+  it('reads user_settings once for the switches and the reminder time (#224)', async () => {
+    render(<NotificationSettingsScreen />)
+    await flush()
+    expect(mockSettingsReads).toHaveLength(1)
+    expect(mockSettingsReads[0]).toContain('notification_prefs')
   })
 
   it('has no "coming soon" label: push is live', async () => {

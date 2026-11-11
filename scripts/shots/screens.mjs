@@ -18,6 +18,11 @@ import { IDS } from './fixtures/index.mjs'
 import { P } from './fixtures/people.mjs'
 
 const E = IDS.event
+/** A join a guest saved a minute before the capture's "now" (#229). */
+const joinIntent = opts => JSON.stringify({
+  kind: 'join', eventId: IDS.event.nextWeekIndoor, title: 'Indoor Open Gym', startsAt: '2026-11-18T19:30:00', spotsLeft: 11,
+  at: new Date(opts.now).getTime() - 60_000,
+})
 const T = IDS.tournament
 
 const EVENT_DETAIL = [
@@ -28,6 +33,7 @@ const EVENT_DETAIL = [
 const TOURNAMENT_DETAIL = ['app/(app)/tournament/[id].tsx', 'components/tournament/**', 'hooks/tournament/**', 'lib/tournament*.ts', 'constants/tournamentCopy.ts', 'types/tournament.ts']
 // settings/index.tsx only bounces back (settings live under Profile), so it has no screen of its own.
 const SETTINGS = ['app/(app)/(tabs)/settings/_layout.tsx', 'app/(app)/(tabs)/settings/index.tsx']
+const METRICS = [...SETTINGS, 'app/(app)/(tabs)/settings/metrics/**', 'components/metrics/**', 'hooks/useAdminMetrics.ts', 'utils/metrics.ts', 'types/metrics.ts']
 
 export const SCREENS = {
   // ── Events ──────────────────────────────────────────────────────────────
@@ -42,6 +48,11 @@ export const SCREENS = {
   'events-feed-tournaments': {
     route: '/', ready: 'Lunchtime Pepper', actions: [{ tap: 'filter-tournament', text: 'Tournament' }, { wait: 400 }], fullPage: true,
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'components/ExternalProgramCard.tsx', 'hooks/useExternalPrograms.ts', 'utils/externalPrograms.ts', 'utils/feedItems.ts', 'components/events/LeaguesLink.tsx', 'components/events/AllTournamentsLink.tsx'],
+  },
+  // Shareable links: each opens straight on the view it names.
+  'events-feed-link': {
+    route: '/?type=tournament&surface=sand', ready: 'Lunchtime Pepper', fullPage: true,
+    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'hooks/useUrlParam.ts', 'utils/urlState.ts', 'utils/urlViews.ts', 'components/ShareLinkButton.tsx'],
   },
   'events-feed-guest': {
     route: '/', signedIn: false, ready: 'Lunchtime Pepper',
@@ -69,13 +80,13 @@ export const SCREENS = {
   notifications: { route: '/notifications', ready: 'Running 10 minutes late', sources: ['app/(app)/notifications.tsx', 'hooks/useNotifications.ts', 'components/NotificationPopup.tsx'] },
 
   // ── Clubs ───────────────────────────────────────────────────────────────
-  'clubs-list': { route: '/clubs', ready: 'Eastside Sand Social', sources: ['app/(app)/(tabs)/clubs.tsx', 'components/MajorCityAutocomplete.tsx'] },
+  'clubs-list': { route: '/clubs', ready: 'Eastside Sand Social', sources: ['app/(app)/(tabs)/(main)/clubs.tsx', 'components/MajorCityAutocomplete.tsx'] },
   'club-detail': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts', 'components/ClubPostCard.tsx', 'components/EventCard.tsx'] },
   'club-detail-guest': { route: `/club/${IDS.club.indoor}`, signedIn: false, ready: 'Austin Indoor League', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts'] },
   'club-create': { route: '/club/create', sources: ['app/(app)/club/create.tsx'] },
 
   // ── Chat ────────────────────────────────────────────────────────────────
-  'chat-list': { route: '/chat', ready: 'Jordan', sources: ['app/(app)/(tabs)/chat.tsx', 'hooks/useConversations.ts', 'hooks/useChatUnread.tsx', 'hooks/useOpenDm.ts'] },
+  'chat-list': { route: '/chat', ready: 'Jordan', sources: ['app/(app)/(tabs)/(main)/chat.tsx', 'hooks/useConversations.ts', 'hooks/useChatUnread.tsx', 'hooks/useOpenDm.ts'] },
   'chat-conversation': {
     route: `/chat/${IDS.conversation.jordan}`, ready: 'Bringing the good ball',
     sources: ['app/(app)/chat/**', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx', 'components/ReactionPicker.tsx', 'hooks/useMessages.ts', 'hooks/useSilencedUsers.ts'],
@@ -85,8 +96,9 @@ export const SCREENS = {
   // ── Profile ─────────────────────────────────────────────────────────────
   'profile-own': {
     route: '/profile', ready: 'Maya',
-    sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'hooks/useMyProfile.ts', 'hooks/useBadges.ts', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
+    sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'hooks/useMyProfile.ts', 'hooks/useAdminMetrics.ts', 'hooks/useBadges.ts', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
   },
+  'profile-edit-link': { route: '/profile?edit=1', ready: 'Maya', sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/EditProfileForm.tsx', 'hooks/useUrlParam.ts'] },
   'profile-own-guest': { route: '/profile', signedIn: false, sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/SignInPrompt.tsx'] },
   'profile-other': {
     route: `/profile/${P.jordanr}`, ready: 'Jordan',
@@ -107,14 +119,21 @@ export const SCREENS = {
   'settings-hosted': { route: '/settings/hosted', ready: 'Sand Doubles at Butler', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hosted.tsx'] },
   'settings-cheers': { route: '/settings/cheers', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/cheers.tsx', 'components/CheerRadarChart.tsx'] },
   'settings-badges': { route: '/settings/badges', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**', 'hooks/useBadges.ts'] },
+  'settings-badge-link': { route: '/settings/badges?badge=event_attendee', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'hooks/useUrlParam.ts'] },
   'settings-feedback': { route: '/settings/feedback', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/feedback.tsx'] },
   'settings-hidden': { route: '/settings/hidden', ready: 'ACES Volleyball', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hidden.tsx', 'hooks/useHiddenFeed.ts', 'utils/hiddenFeed.ts', 'hooks/useUserSettings.ts'] },
   'settings-silenced': { route: '/settings/silenced', ready: 'Hannah', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/silenced.tsx', 'hooks/useSilencedUsers.ts'] },
+  'admin-metrics': { route: '/settings/metrics', ready: 'Daily active people', sources: METRICS },
+  'admin-metrics-live': { route: '/settings/metrics?tab=live', ready: 'By platform', sources: METRICS },
+  'admin-metrics-people': { route: '/settings/metrics?tab=people', ready: 'Sessions 30d', sources: METRICS },
+  'admin-metrics-retention': { route: '/settings/metrics?tab=retention', ready: 'Guests who signed up', sources: METRICS },
+  'admin-metrics-person': { route: `/settings/metrics/${P.jordanr}`, ready: 'Recent sessions', sources: METRICS },
 
   // ── Tournaments ─────────────────────────────────────────────────────────
   'tournaments-list': { route: '/tournaments', ready: 'Halloween Sand Classic', sources: ['app/(app)/tournaments.tsx', 'hooks/useTournamentList.ts', 'utils/tournamentList.ts', 'components/events/AllTournamentsLink.tsx', 'hooks/useExternalPrograms.ts', 'components/ExternalProgramCard.tsx', 'components/programs/ProgramSection.tsx'] },
   'leagues': { route: '/leagues', ready: 'Sunday Indoor Volleyball', sources: ['app/(app)/leagues.tsx', 'hooks/useExternalPrograms.ts', 'utils/externalPrograms.ts', 'components/ExternalProgramCard.tsx', 'components/programs/ProgramSection.tsx', 'components/events/LeaguesLink.tsx'] },
   'tournaments-list-past': { route: '/tournaments', ready: 'Halloween Sand Classic', actions: [{ tap: 'tournaments-past' }], sources: ['app/(app)/tournaments.tsx', 'hooks/useTournamentList.ts', 'utils/tournamentList.ts'] },
+  'tournament-schedule-link': { route: `/tournament/${T.upcoming}?tab=schedule`, ready: 'Halloween Sand Classic', sources: [...TOURNAMENT_DETAIL, 'hooks/useUrlParam.ts', 'utils/urlViews.ts', 'components/ShareLinkButton.tsx'] },
   'tournament-overview': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', sources: TOURNAMENT_DETAIL },
   'tournament-teams': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-teams', text: 'Teams' }], sources: TOURNAMENT_DETAIL },
   'tournament-schedule': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-schedule', text: 'Schedule' }], sources: TOURNAMENT_DETAIL },
@@ -125,6 +144,18 @@ export const SCREENS = {
   // ── Auth and legal (signed out) ─────────────────────────────────────────
   login: { route: '/login', signedIn: false, sources: ['app/(auth)/login.tsx', 'app/(auth)/_layout.tsx', 'components/legal/**', 'components/GoogleLogo.tsx', 'components/Input.tsx', 'components/Button.tsx'] },
   register: { route: '/register', signedIn: false, sources: ['app/(auth)/register.tsx', 'app/(auth)/_layout.tsx', 'components/legal/**', 'components/Input.tsx'] },
+  // A guest who tapped Join (#229): the game they're joining, and the New here / I have an account switch.
+  'register-join-context': {
+    route: '/register', signedIn: false, ready: "YOU'RE JOINING",
+    sessionStorage: opts => ({ 'vteam.pendingAction': joinIntent(opts) }),
+    sources: ['app/(auth)/register.tsx', 'components/auth/JoinContextCard.tsx', 'utils/pendingAction.ts'],
+  },
+  // Back on that game after signing in: one tap to grab the spot.
+  'event-join-intent-sheet': {
+    route: `/event/${E.nextWeekIndoor}`, ready: 'Grab your spot?',
+    sessionStorage: opts => ({ 'vteam.pendingAction': joinIntent(opts) }),
+    sources: [...EVENT_DETAIL, 'components/event/JoinIntentSheet.tsx', 'utils/pendingAction.ts'],
+  },
   'reset-password': { route: '/reset-password', signedIn: false, sources: ['app/(auth)/reset-password.tsx', 'app/(auth)/_layout.tsx'] },
   terms: { route: '/terms', signedIn: false, sources: ['app/terms.tsx', 'components/legal/**', 'constants/legal.ts', 'utils/legalMarkdown.ts'] },
   privacy: { route: '/privacy', signedIn: false, sources: ['app/privacy.tsx', 'components/legal/**', 'constants/legal.ts', 'utils/legalMarkdown.ts'] },

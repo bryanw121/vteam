@@ -528,6 +528,8 @@ export type MajorCity = Tables<'major_cities'>
 
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
 export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
+  /** Notification switches (`useMyProfile` exposes them as `profile.notification_prefs`). Missing reads as the defaults. */
+  notification_prefs?: NotificationPrefs | null
   home_city: MajorCity | null
   /** What the player hid from their Events feed (`user_settings.hidden_feed`). Missing reads as nothing hidden. */
   hidden_feed?: HiddenFeedEntry[]
@@ -1354,6 +1356,7 @@ export type OwnedClubOption = { id: string; name: string }
 
 export * from './tournament'
 export * from './scoresheet'
+export * from './metrics'
 
 // ─── Schedule generator ───────────────────────────────────────────────────────
 
@@ -2086,6 +2089,12 @@ export type UserProfileData = {
 /** hooks/useEventHistory: past events attended / hosted, or upcoming hosted. */
 export type EventHistoryKind = 'attended' | 'hosted-past' | 'hosted-upcoming'
 
+/** hooks/useMyProfile: cheers a player received, in all and by type (Profile total + badge check). */
+export type CheersReceived = {
+  total: number
+  byType: Record<string, number>
+}
+
 /** hooks/useCheersSummary: the viewer's cheers screen. */
 export type CheersSummary = {
   totalReceived: number
@@ -2093,3 +2102,30 @@ export type CheersSummary = {
   counts: Partial<Record<CheerType, number>>
 }
 
+
+// ─── Join intent (#229) ───────────────────────────────────────────────────────
+
+/**
+ * What a guest was doing when they were sent to sign up, so it can be finished
+ * after: today only joining an event (`kind` leaves room for "message host" or
+ * "join club"). `title`, `startsAt` and `spotsLeft` (when Join was tapped) are
+ * for the sign-up screen's context card; `at` is when it was saved (ms), for expiry.
+ */
+export type PendingAction = { kind: 'join'; eventId: string; title: string; startsAt: string; at: number; spotsLeft?: number | null }
+
+/** `takePendingAction`: a fresh action for this event, one that is too old, or nothing for it. */
+export type PendingActionTake = { status: 'ok'; action: PendingAction } | { status: 'expired' } | null
+
+/** Which signup the "Grab your spot?" sheet offers, or null when there is nothing to offer. */
+export type JoinOffer = 'join' | 'waitlist' | 'request'
+
+/** `join_intent_resumed` outcome. */
+export type JoinIntentOutcome = 'joined' | 'not_now' | 'skipped' | 'expired'
+
+// ─── View state in the URL (utils/urlState, hooks/useUrlParam) ────────────────
+
+/** How one URL param maps to a screen's view value. `format` returns undefined for the default, which leaves the param out. */
+export type UrlCodec<T> = {
+  parse: (raw: string | undefined) => T
+  format: (value: T) => string | undefined
+}

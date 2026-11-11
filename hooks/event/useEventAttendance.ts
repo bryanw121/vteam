@@ -1,7 +1,10 @@
 import { useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useMutation } from '../../lib/query'
-import { useRequireSignIn } from '../useRequireSignIn'
+import { useGoToSignIn, useRequireSignIn } from '../useRequireSignIn'
+import { setPendingAction } from '../../utils/pendingAction'
+import { track } from '../../lib/analytics'
+import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import { ATTENDEE_SELECT, EVENT_JUST_FILLED_BODY, EVENT_JUST_FILLED_TITLE, GENERIC_ERROR_MESSAGE, GUEST_SELECT } from '../../constants'
 import type {
   EventAttendee, EventAttendeeWithProfile, EventGuest, EventWithDetails, NotificationType, Profile, RemoveTarget,
@@ -98,6 +101,7 @@ async function notify(row: TablesInsert<'notifications'> & { notification_type: 
 export function useEventAttendance(data: EventData) {
   const { id, userId, event, viewerProfile, roster } = data
   const requireSignIn = useRequireSignIn()
+  const goToSignIn = useGoToSignIn()
 
   const self = useMutation(
     async (action: SelfAttendanceAction): Promise<EventAttendeeWithProfile | null> => {
@@ -188,10 +192,24 @@ export function useEventAttendance(data: EventData) {
   const selfRef = useRef(self.mutate)
   selfRef.current = self.mutate
 
-  /** Guests are sent to sign in for actions that create an RSVP. */
+  /**
+   * Guests are sent to sign up for actions that create an RSVP, and the join is
+   * remembered (#229): after the account exists they land back here with a
+   * "Grab your spot?" sheet (`takePendingAction` on the event screen).
+   */
   const run = (action: SelfAttendanceAction) => {
     if (!userId) {
-      if (OPTIMISTIC_STATUS[action]) requireSignIn()
+      if (OPTIMISTIC_STATUS[action]) {
+        if (event) {
+          const taken = roster.attendingRows.length + roster.attendingGuests.length
+          const spotsLeft = event.max_attendees ? Math.max(0, event.max_attendees - taken) : null
+          setPendingAction({ kind: 'join', eventId: id, title: event.title, startsAt: event.event_date, at: Date.now(), spotsLeft })
+          track(ANALYTICS_EVENTS.joinIntentSaved, { action })
+          goToSignIn('register')
+        } else {
+          requireSignIn()
+        }
+      }
       return Promise.resolve(undefined)
     }
     return self.mutate(action)

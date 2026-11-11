@@ -29,6 +29,7 @@ import {
   useKeyboardInset,
   useRemoveDialog,
   useTeamDrag,
+  eventDateMs,
 } from '../../hooks/event'
 import { Pager } from '../../components/Pager'
 import { ScreenState } from '../../components/ui'
@@ -39,7 +40,9 @@ import { PeopleTab } from '../../components/event/PeopleTab'
 import { EventHeaderActions } from '../../components/event/EventHeaderActions'
 import { EventHero } from '../../components/event/EventHero'
 import { EventDetailSkeleton } from '../../components/event/EventDetailSkeleton'
-import { EventTabBar, EVENT_TABS } from '../../components/event/EventTabBar'
+import { EventTabBar } from '../../components/event/EventTabBar'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { VIEW } from '../../utils/urlViews'
 import { JoinFooter } from '../../components/event/JoinFooter'
 import { DragGhost } from '../../components/event/DragGhost'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -49,11 +52,14 @@ import { DenyRequestDialog } from '../../components/event/DenyRequestDialog'
 import { DeleteEventDialog } from '../../components/event/DeleteEventDialog'
 import { RemoveParticipantDialog } from '../../components/event/RemoveParticipantDialog'
 import { LeaveSheet } from '../../components/event/LeaveSheet'
+import { JoinIntentSheet } from '../../components/event/JoinIntentSheet'
+import { usePlayerSetupNeeded } from '../../hooks/usePlayerSetupGate'
+import { shouldOfferJoin, takePendingAction } from '../../utils/pendingAction'
 import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import { LEAVE_COPY, LEAVE_REASONS, theme, SWIPE_NAVIGATION } from '../../constants'
 import { track } from '../../lib/analytics'
 import { hostWillBeTold, leaveConsequences, leaveDmText, leaveSubtitle } from '../../utils/leaveConsequences'
-import type { LeaveConsequence, LeaveReason, MentionUser, Profile } from '../../types'
+import type { JoinIntentOutcome, JoinOffer, LeaveConsequence, LeaveReason, MentionUser, Profile } from '../../types'
 import { profileDisplayName } from '../../utils'
 import { routes, isAppPath, toRoute } from '../../utils/routes'
 import { toast } from '../../lib/toast'
@@ -62,11 +68,6 @@ const DETAILS_TAB = 0
 const PEOPLE_TAB = 1
 const DISCUSSION_TAB = 2
 const CHEERS_TAB = 3
-
-function initialTab(tab: string | undefined): number {
-  const t = parseInt(tab ?? '0', 10)
-  return isNaN(t) ? DETAILS_TAB : Math.max(0, Math.min(EVENT_TABS.length - 1, t))
-}
 
 /**
  * Event detail: banner + Details / People / Discussion / Cheers tabs, the RSVP
@@ -85,7 +86,7 @@ function withWebGestureRoot(screen: React.ReactElement) {
 }
 
 export default function EventDetail() {
-  const { id, from, tab } = useLocalSearchParams<{ id: string; from?: string; tab?: string }>()
+  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const isMobileWeb = useIsNarrowWeb()
@@ -114,10 +115,11 @@ export default function EventDetail() {
   const [leaveSheet, setLeaveSheet] = useState<{ subtitle: string; lines: LeaveConsequence[]; showReason: boolean } | null>(null)
 
   // ── Tabs ───────────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState(() => initialTab(tab))
+  // The tab is in the URL (`?tab=people`; older `?tab=1` links still work), so a copied link opens it.
+  const [activeTab, setActiveTab] = useUrlParam('tab', VIEW.event.tab)
   // Lazy-mount each tab on first visit (People is prefetched next to Details).
   const [mountedTabs, setMountedTabs] = useState(() => {
-    const start = initialTab(tab)
+    const start = activeTab
     const initial = new Set<number>([DETAILS_TAB, start])
     if (start === DETAILS_TAB) initial.add(PEOPLE_TAB)
     return initial
@@ -211,6 +213,48 @@ export default function EventDetail() {
   const requiresApproval = event?.requires_approval === true
   const [footerHeight, setFooterHeight] = useState(80)
 
+  // ── Finishing a guest's Join (#229) ────────────────────────────────────────
+  // A guest who tapped Join signed up or in and is back here: offer the spot
+  // once, with one tap, using the same join as the footer button.
+  const setupNeeded = usePlayerSetupNeeded()
+  const [joinIntent, setJoinIntent] = useState<{ stage: 'offer' | 'setup'; offer: JoinOffer } | null>(null)
+  const joinIntentCheckedRef = useRef(false)
+  useEffect(() => {
+    if (joinIntentCheckedRef.current || !userId || !event || data.isLoading) return
+    joinIntentCheckedRef.current = true
+    const taken = takePendingAction(id)
+    if (!taken) return
+    if (taken.status === 'expired') {
+      track(ANALYTICS_EVENTS.joinIntentResumed, { outcome: 'expired' satisfies JoinIntentOutcome })
+      return
+    }
+    const offer = shouldOfferJoin(eventStatus, { cancelled: !!event.cancelled_at, over: eventOver, requiresApproval })
+    if (!offer) {
+      track(ANALYTICS_EVENTS.joinIntentResumed, { outcome: 'skipped' satisfies JoinIntentOutcome })
+      return
+    }
+    setJoinIntent({ stage: 'offer', offer })
+  }, [userId, event, data.isLoading]) // eslint-disable-line react-hooks/exhaustive-deps -- once, when the signed-in view is ready
+
+  async function confirmJoinIntent() {
+    if (!joinIntent) return
+    const run = joinIntent.offer === 'waitlist' ? attendance.joinWaitlist : joinIntent.offer === 'request' ? attendance.requestToJoin : attendance.join
+    const row = await run()
+    if (!row) { setJoinIntent(null); return } // failed: useEventAttendance already said so
+    track(ANALYTICS_EVENTS.joinIntentResumed, { outcome: 'joined' satisfies JoinIntentOutcome, offer: joinIntent.offer })
+    setJoinIntent(setupNeeded ? { ...joinIntent, stage: 'setup' } : null)
+  }
+  function dismissJoinIntent() {
+    if (joinIntent?.stage === 'offer') track(ANALYTICS_EVENTS.joinIntentResumed, { outcome: 'not_now' satisfies JoinIntentOutcome, offer: joinIntent.offer })
+    setJoinIntent(null)
+  }
+  const joinIntentWhen = event
+    ? (() => {
+        const start = new Date(eventDateMs(event.event_date))
+        return `${start.toLocaleDateString('en-US', { weekday: 'short' })} ${start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+      })()
+    : ''
+
   // ── Navigation + host actions ──────────────────────────────────────────────
   function goBack() {
     // back() first — it cleanly pops the event screen, so a stale screen can't make a
@@ -293,6 +337,7 @@ export default function EventDetail() {
   const headerActions = (
     <EventHeaderActions
       eventId={id}
+      tab={activeTab}
       title={event?.title}
       eventDate={event?.event_date}
       canManage={isHostOrCohost}
@@ -428,6 +473,22 @@ export default function EventDetail() {
       </ScreenState>
       )}
 
+      {joinIntent && event && (
+        <JoinIntentSheet
+          stage={joinIntent.stage}
+          layout={Platform.OS === 'web' && !isMobileWeb ? 'dialog' : 'sheet'}
+          offer={joinIntent.offer}
+          firstName={data.viewerProfile?.first_name ?? null}
+          title={event.title}
+          when={joinIntentWhen}
+          spotsLeft={eventStatus.spotsLeft}
+          joining={attendance.joining}
+          onJoin={() => { void confirmJoinIntent() }}
+          onNotNow={dismissJoinIntent}
+          onSetup={() => { setJoinIntent(null); router.push(routes.welcome(routes.event(id))) }}
+          onLater={() => setJoinIntent(null)}
+        />
+      )}
       <LeaveSheet
         visible={leaveSheet !== null}
         layout={Platform.OS === 'web' && !isMobileWeb ? 'dialog' : 'sheet'}
