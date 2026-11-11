@@ -95,7 +95,7 @@ function NewDMModal({ visible, onDismiss, onSelect, silencedUserIds, myId }: {
             }}
           />
           <TouchableOpacity onPress={handleDismiss}>
-            <Text style={{ color: theme.colors.primary, fontSize: theme.font.size.md }}>Cancel</Text>
+            <Text style={{ color: theme.colors.primaryText, fontSize: theme.font.size.md }}>Cancel</Text>
           </TouchableOpacity>
         </View>
 

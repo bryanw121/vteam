@@ -107,7 +107,7 @@ export default function SilencedPeopleScreen() {
                       opacity: pressed ? 0.75 : 1,
                     })}
                   >
-                    <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }}>
+                    <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }}>
                       Unsilence
                     </Text>
                   </Pressable>

@@ -623,7 +623,7 @@ export function PeopleTab({
             <View style={{ gap: theme.spacing.xs }}>
               {waitlistProfiles.map((profile, idx) => (
                 <View key={profile.id} style={[shared.card, { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }]}>
-                  <Text style={[shared.caption, { minWidth: 20, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }]}>#{idx + 1}</Text>
+                  <Text style={[shared.caption, { minWidth: 20, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }]}>#{idx + 1}</Text>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={shared.body}>{profileDisplayName(profile)}</Text>
                     {eventStatus.isOwner ? (
@@ -645,7 +645,7 @@ export function PeopleTab({
               ))}
               {waitlistGuests.map((g, idx) => (
                 <View key={g.id} style={[shared.card, { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }]}>
-                  <Text style={[shared.caption, { minWidth: 20, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }]}>#{waitlistProfiles.length + idx + 1}</Text>
+                  <Text style={[shared.caption, { minWidth: 20, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }]}>#{waitlistProfiles.length + idx + 1}</Text>
                   <Text style={[shared.body, { flex: 1 }]}>{guestFullName(g)}</Text>
                   <View style={shared.tag}><Text style={shared.tagText}>Guest</Text></View>
                   {(() => {
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
   stepBtnDisabled: { opacity: 0.35 },
   stepBtnText: {
     fontSize: theme.font.size.lg,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     lineHeight: 22,
   },
   stepLabel: {

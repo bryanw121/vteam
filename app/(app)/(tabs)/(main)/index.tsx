@@ -1284,7 +1284,7 @@ const weekNavStyles = StyleSheet.create({
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: theme.font.size.sm,
     fontWeight: theme.font.weight.bold,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
   },
 })
 

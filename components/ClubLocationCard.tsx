@@ -52,7 +52,7 @@ export function ClubLocationCard({ club }: Props) {
             {club.location_address}
           </Text>
         ) : null}
-        <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primary, marginTop: 4, fontWeight: theme.font.weight.semibold }}>
+        <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText, marginTop: 4, fontWeight: theme.font.weight.semibold }}>
           Open in Maps →
         </Text>
       </View>

@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   announcementBadgeText: {
     fontSize: theme.font.size.xs,
     fontWeight: theme.font.weight.semibold,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     letterSpacing: 0.3,
   },
   content: {
@@ -268,15 +268,15 @@ const styles = StyleSheet.create({
   },
   replyBtn: {
     fontSize: theme.font.size.sm,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     fontWeight: '600',
   },
   link: {
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     textDecorationLine: 'underline',
   },
   mention: {
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     fontWeight: '600',
   },
   actionBtn: {

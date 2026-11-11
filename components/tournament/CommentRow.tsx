@@ -21,7 +21,7 @@ function CommentBody({ body, usernameToId }: { body: string; usernameToId: Map<s
         if (/^@\w+$/.test(part)) {
           const uid = usernameToId.get(part.slice(1))
           if (uid) return (
-            <Text key={i} style={{ color: theme.colors.primary, fontWeight: '600' }}
+            <Text key={i} style={{ color: theme.colors.primaryText, fontWeight: '600' }}
               onPress={() => router.push(routes.profileOf(uid))}>{part}</Text>
           )
         }
@@ -62,7 +62,7 @@ export function CommentRow({ comment, indent = 0, replies = [], viewerId, isOrga
           {comment.is_announcement && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <Ionicons name="megaphone-outline" size={12} color={theme.colors.primary} />
-              <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: 0.6 }}>Announcement</Text>
+              <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, textTransform: 'uppercase', letterSpacing: 0.6 }}>Announcement</Text>
             </View>
           )}
           <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
@@ -88,7 +88,7 @@ export function CommentRow({ comment, indent = 0, replies = [], viewerId, isOrga
                 </Text>
                 {indent === 0 && (
                   <TouchableOpacity hitSlop={8} onPress={() => onReply(comment)}>
-                    <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: '600' }}>Reply</Text>
+                    <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: '600' }}>Reply</Text>
                   </TouchableOpacity>
                 )}
               </View>
