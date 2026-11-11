@@ -28,6 +28,7 @@ const EVENT_DETAIL = [
 const TOURNAMENT_DETAIL = ['app/(app)/tournament/[id].tsx', 'components/tournament/**', 'hooks/tournament/**', 'lib/tournament*.ts', 'constants/tournamentCopy.ts', 'types/tournament.ts']
 // settings/index.tsx only bounces back (settings live under Profile), so it has no screen of its own.
 const SETTINGS = ['app/(app)/(tabs)/settings/_layout.tsx', 'app/(app)/(tabs)/settings/index.tsx']
+const METRICS = [...SETTINGS, 'app/(app)/(tabs)/settings/metrics/**', 'components/metrics/**', 'hooks/useAdminMetrics.ts', 'utils/metrics.ts', 'types/metrics.ts']
 
 export const SCREENS = {
   // ── Events ──────────────────────────────────────────────────────────────
@@ -85,7 +86,7 @@ export const SCREENS = {
   // ── Profile ─────────────────────────────────────────────────────────────
   'profile-own': {
     route: '/profile', ready: 'Maya',
-    sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'hooks/useMyProfile.ts', 'hooks/useBadges.ts', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
+    sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'hooks/useMyProfile.ts', 'hooks/useAdminMetrics.ts', 'hooks/useBadges.ts', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
   },
   'profile-own-guest': { route: '/profile', signedIn: false, sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/SignInPrompt.tsx'] },
   'profile-other': {
@@ -110,6 +111,11 @@ export const SCREENS = {
   'settings-feedback': { route: '/settings/feedback', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/feedback.tsx'] },
   'settings-hidden': { route: '/settings/hidden', ready: 'ACES Volleyball', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hidden.tsx', 'hooks/useHiddenFeed.ts', 'utils/hiddenFeed.ts', 'hooks/useUserSettings.ts'] },
   'settings-silenced': { route: '/settings/silenced', ready: 'Hannah', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/silenced.tsx', 'hooks/useSilencedUsers.ts'] },
+  'admin-metrics': { route: '/settings/metrics', ready: 'Daily active people', sources: METRICS },
+  'admin-metrics-live': { route: '/settings/metrics?tab=live', ready: 'By platform', sources: METRICS },
+  'admin-metrics-people': { route: '/settings/metrics?tab=people', ready: 'Sessions 30d', sources: METRICS },
+  'admin-metrics-retention': { route: '/settings/metrics?tab=retention', ready: 'Guests who signed up', sources: METRICS },
+  'admin-metrics-person': { route: `/settings/metrics/${P.jordanr}`, ready: 'Recent sessions', sources: METRICS },
 
   // ── Tournaments ─────────────────────────────────────────────────────────
   'tournaments-list': { route: '/tournaments', ready: 'Halloween Sand Classic', sources: ['app/(app)/tournaments.tsx', 'hooks/useTournamentList.ts', 'utils/tournamentList.ts', 'components/events/AllTournamentsLink.tsx', 'hooks/useExternalPrograms.ts', 'components/ExternalProgramCard.tsx', 'components/programs/ProgramSection.tsx'] },

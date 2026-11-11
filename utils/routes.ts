@@ -46,6 +46,7 @@ export type SettingsSection =
   | 'delete-account'
   | 'ad-free'
   | 'experimental'
+  | 'metrics'
 
 export type HostRouteOptions = {
   /** Event id to edit. */
@@ -113,6 +114,10 @@ export const routes = {
   scorekeeperSheet: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/sheet`),
   scorekeeperCopy: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/copy`),
   settings: (section?: SettingsSection) => href(section ? `/settings/${section}` : '/settings'),
+  /** Admin usage metrics (Profile → Admin metrics); `tab` opens a section other than Overview. Admins only (the server checks). */
+  metrics: (tab?: 'live' | 'people' | 'retention') => href(tab ? `/settings/metrics?tab=${tab}` : '/settings/metrics'),
+  /** One person's usage (Admin metrics → People). */
+  metricsPerson: (id: string) => href(`/settings/metrics/${encodeURIComponent(id)}`),
 
   // ── Groups ──────────────────────────────────────────────────────────────
   login: () => href('/(auth)/login'),
