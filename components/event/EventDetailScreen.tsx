@@ -40,7 +40,9 @@ import { PeopleTab } from '../../components/event/PeopleTab'
 import { EventHeaderActions } from '../../components/event/EventHeaderActions'
 import { EventHero } from '../../components/event/EventHero'
 import { EventDetailSkeleton } from '../../components/event/EventDetailSkeleton'
-import { EventTabBar, EVENT_TABS } from '../../components/event/EventTabBar'
+import { EventTabBar } from '../../components/event/EventTabBar'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { VIEW } from '../../utils/urlViews'
 import { JoinFooter } from '../../components/event/JoinFooter'
 import { DragGhost } from '../../components/event/DragGhost'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -67,11 +69,6 @@ const PEOPLE_TAB = 1
 const DISCUSSION_TAB = 2
 const CHEERS_TAB = 3
 
-function initialTab(tab: string | undefined): number {
-  const t = parseInt(tab ?? '0', 10)
-  return isNaN(t) ? DETAILS_TAB : Math.max(0, Math.min(EVENT_TABS.length - 1, t))
-}
-
 /**
  * Event detail: banner + Details / People / Discussion / Cheers tabs, the RSVP
  * footer and the host's dialogs. Data and writes live in `hooks/event/*`; this
@@ -89,7 +86,7 @@ function withWebGestureRoot(screen: React.ReactElement) {
 }
 
 export default function EventDetail() {
-  const { id, from, tab } = useLocalSearchParams<{ id: string; from?: string; tab?: string }>()
+  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const isMobileWeb = useIsNarrowWeb()
@@ -119,10 +116,11 @@ export default function EventDetail() {
   const [leaveDmFailed, setLeaveDmFailed] = useState(false)
 
   // ── Tabs ───────────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState(() => initialTab(tab))
+  // The tab is in the URL (`?tab=people`; older `?tab=1` links still work), so a copied link opens it.
+  const [activeTab, setActiveTab] = useUrlParam('tab', VIEW.event.tab)
   // Lazy-mount each tab on first visit (People is prefetched next to Details).
   const [mountedTabs, setMountedTabs] = useState(() => {
-    const start = initialTab(tab)
+    const start = activeTab
     const initial = new Set<number>([DETAILS_TAB, start])
     if (start === DETAILS_TAB) initial.add(PEOPLE_TAB)
     return initial
@@ -337,6 +335,7 @@ export default function EventDetail() {
   const headerActions = (
     <EventHeaderActions
       eventId={id}
+      tab={activeTab}
       title={event?.title}
       eventDate={event?.event_date}
       canManage={isHostOrCohost}

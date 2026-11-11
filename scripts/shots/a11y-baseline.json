@@ -1,4 +1,44 @@
 {
+  "admin-metrics": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-live": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-people": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-person": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-retention": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
   "chat-club": {
     "mobile": {
       "color-contrast": 7
@@ -97,6 +137,16 @@
       "color-contrast": 23
     }
   },
+  "event-leave-sheet": {
+    "mobile": {
+      "aria-progressbar-name": 1,
+      "color-contrast": 10
+    },
+    "desktop": {
+      "aria-progressbar-name": 2,
+      "color-contrast": 11
+    }
+  },
   "event-paid-bottom": {
     "mobile": {
       "color-contrast": 20
@@ -111,6 +161,14 @@
     },
     "desktop": {
       "color-contrast": 25
+    }
+  },
+  "event-people-balanced": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 7
     }
   },
   "events-feed": {
@@ -129,6 +187,14 @@
       "color-contrast": 44
     }
   },
+  "events-feed-tournaments": {
+    "mobile": {
+      "color-contrast": 8
+    },
+    "desktop": {
+      "color-contrast": 8
+    }
+  },
   "host-create": {
     "mobile": {
       "color-contrast": 10
@@ -143,6 +209,14 @@
     },
     "desktop": {
       "color-contrast": 15
+    }
+  },
+  "leagues": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
     }
   },
   "login": {
@@ -273,6 +347,14 @@
       "color-contrast": 14
     }
   },
+  "settings-hidden": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
   "settings-history": {
     "mobile": {
       "color-contrast": 5
@@ -295,14 +377,6 @@
     },
     "desktop": {
       "color-contrast": 11
-    }
-  },
-  "settings-hidden": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 3
     }
   },
   "settings-silenced": {
@@ -385,19 +459,12 @@
       "color-contrast": 9
     }
   },
-  "event-leave-sheet": {
+  "welcome-city": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 10
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 2,
-      "color-contrast": 11
-    }
-  },
-  "welcome-position": {
-    "desktop": {
-      "color-contrast": 2
+      "color-contrast": 3
     }
   },
   "welcome-level": {
@@ -408,36 +475,41 @@
       "color-contrast": 3
     }
   },
-  "welcome-city": {
-    "mobile": {
-      "color-contrast": 1
-    },
+  "welcome-position": {
     "desktop": {
-      "color-contrast": 3
+      "color-contrast": 2
     }
   },
-  "event-people-balanced": {
+  "events-feed-link": {
     "mobile": {
       "color-contrast": 5
     },
     "desktop": {
-      "color-contrast": 7
+      "color-contrast": 9
     }
   },
-  "leagues": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "events-feed-tournaments": {
+  "tournament-schedule-link": {
     "mobile": {
       "color-contrast": 8
     },
     "desktop": {
-      "color-contrast": 8
+      "color-contrast": 10
+    }
+  },
+  "profile-edit-link": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "settings-badge-link": {
+    "mobile": {
+      "color-contrast": 14
+    },
+    "desktop": {
+      "color-contrast": 16
     }
   },
   "register-join-context": {

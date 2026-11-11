@@ -132,29 +132,35 @@ export type Database = {
       app_events: {
         Row: {
           anon_id: string | null
+          app_version: string | null
           created_at: string
           id: number
           name: string
           platform: string | null
           props: Json
+          session_id: string | null
           user_id: string | null
         }
         Insert: {
           anon_id?: string | null
+          app_version?: string | null
           created_at?: string
           id?: never
           name: string
           platform?: string | null
           props?: Json
+          session_id?: string | null
           user_id?: string | null
         }
         Update: {
           anon_id?: string | null
+          app_version?: string | null
           created_at?: string
           id?: never
           name?: string
           platform?: string | null
           props?: Json
+          session_id?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -183,6 +189,90 @@ export type Database = {
           people?: number
           platform?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      app_online_daily: {
+        Row: {
+          avg_online: number
+          day: string
+          peak: number
+          peak_at: string | null
+          samples: number
+          updated_at: string
+        }
+        Insert: {
+          avg_online?: number
+          day: string
+          peak: number
+          peak_at?: string | null
+          samples?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_online?: number
+          day?: string
+          peak?: number
+          peak_at?: string | null
+          samples?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      app_online_samples: {
+        Row: {
+          at: string
+          by_platform: Json
+          online: number
+          signed_in: number
+        }
+        Insert: {
+          at: string
+          by_platform?: Json
+          online: number
+          signed_in: number
+        }
+        Update: {
+          at?: string
+          by_platform?: Json
+          online?: number
+          signed_in?: number
+        }
+        Relationships: []
+      }
+      app_sessions: {
+        Row: {
+          anon_id: string
+          app_version: string | null
+          heartbeats: number
+          id: string
+          last_seen: string
+          platform: string
+          screen: string | null
+          started_at: string
+          user_id: string | null
+        }
+        Insert: {
+          anon_id: string
+          app_version?: string | null
+          heartbeats?: number
+          id: string
+          last_seen?: string
+          platform: string
+          screen?: string | null
+          started_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          anon_id?: string
+          app_version?: string | null
+          heartbeats?: number
+          id?: string
+          last_seen?: string
+          platform?: string
+          screen?: string | null
+          started_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2650,6 +2740,33 @@ export type Database = {
       account_deletion_plan: { Args: { p_user: string }; Returns: Json }
       account_is_being_deleted: { Args: { p_user: string }; Returns: boolean }
       ad_free_offer: { Args: never; Returns: Json }
+      admin_metrics_overview: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: Json
+      }
+      admin_online_now: { Args: never; Returns: Json }
+      admin_retention: { Args: { p_weeks?: number }; Returns: Json }
+      admin_user_activity: { Args: { p_user: string }; Returns: Json }
+      admin_users: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
+      app_heartbeat: {
+        Args: {
+          p_anon: string
+          p_platform: string
+          p_screen?: string
+          p_session: string
+          p_version?: string
+        }
+        Returns: undefined
+      }
+      app_version_key: { Args: { p_version: string }; Returns: number[] }
       award_event_points: { Args: never; Returns: number }
       can_read_chat_image: { Args: { p_name: string }; Returns: boolean }
       cancel_friend_request: { Args: { p_user_id: string }; Returns: string }
@@ -2790,6 +2907,8 @@ export type Database = {
         Returns: string
       }
       rollup_app_events: { Args: { p_days?: number }; Returns: number }
+      rollup_app_online: { Args: { p_days?: number }; Returns: number }
+      sample_app_online: { Args: never; Returns: undefined }
       schelagg_safe_date: { Args: { v: string }; Returns: string }
       schema_fingerprint: { Args: never; Returns: Json }
       schema_pending_changes: { Args: never; Returns: Json }
