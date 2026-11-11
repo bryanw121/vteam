@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useFocusEffect, Stack, usePathname, useRouter } from "expo-router";
+import { useFocusEffect, Stack, usePathname, useRouter, useSegments } from "expo-router";
 import { Animated, Platform, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "../../../components/ui/Text";
 import { BlurView } from "expo-blur";
@@ -18,6 +18,7 @@ import { shouldRefreshEventsOnFocus } from "../../../utils/monthKeys";
 import { useRequireSignIn } from "../../../hooks/useRequireSignIn";
 import { useTourShell } from "../../../contexts/tour";
 import { TourTarget } from "../../../components/tour/TourTarget";
+import { noteScreen } from "../../../lib/analytics";
 import { TOUR_TARGETS } from "../../../constants";
 
 // The bottom bar renders TABS (constants/navigation.ts) in pager order, with the
@@ -179,6 +180,15 @@ export default function TabsLayout() {
     ...wideWebShellValue,
     activeTabIndex: wideWebTabIndex,
   }), [wideWebShellValue, wideWebTabIndex]);
+
+  // Usage metrics: the pager's tabs share one route, so the screen type there is the tab on
+  // show (the root layout records every other route by its pattern).
+  const segments = useSegments() as string[];
+  const onPager = segments.includes("(main)");
+  const shownTab = Platform.OS === "web" && !isNarrowWeb ? wideWebTabIndex : activeTabIndex;
+  useEffect(() => {
+    if (onPager) noteScreen(TABS[shownTab].path);
+  }, [onPager, shownTab]);
 
   // ── Web (wide): sidebar in (app)/_layout — let Expo Router render the route ─
   // Placed after all hooks so hook order is stable across the breakpoint.
