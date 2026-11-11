@@ -410,3 +410,35 @@ test.describe('definer hardening (#111)', () => {
     expect(dm.error?.code).toBe(RLS_DENIED)
   })
 })
+
+test.describe('admin usage metrics (#232 part 2)', () => {
+  // The e2e account is not in app_admins: every admin_* function must refuse it (42501), and
+  // guests can't execute them at all. The functions are the only way to read app_sessions,
+  // app_online_samples and app_online_daily, so this is what keeps usage data admin-only.
+  const calls: [string, Record<string, unknown>][] = [
+    ['admin_metrics_overview', { p_from: '2026-11-01', p_to: '2026-11-07' }],
+    ['admin_online_now', {}],
+    ['admin_retention', { p_weeks: 4 }],
+    ['admin_users', { p_search: '', p_sort: 'last_seen', p_limit: 5, p_offset: 0 }],
+    ['admin_user_activity', { p_user: BUDDY_ID }],
+  ]
+
+  test('a signed-in non-admin gets nothing from the admin functions', async () => {
+    const admin = await q(() => me.rpc('current_user_is_admin'), 'current_user_is_admin')
+    expect(admin.error).toBeNull()
+    expect(admin.data, 'the e2e account must not be an admin').toBe(false)
+    for (const [fn, args] of calls) {
+      const res = await q(() => me.rpc(fn as never, args as never), `me ${fn}`)
+      expect(res.error?.code, `${fn} for a non-admin`).toBe(RLS_DENIED)
+      expect(res.data, `${fn} returned data to a non-admin`).toBeNull()
+    }
+  })
+
+  test('guests cannot execute them', async () => {
+    for (const [fn, args] of calls) {
+      const res = await q(() => anon.rpc(fn as never, args as never), `anon ${fn}`)
+      expect(res.error, `anon ${fn}`).not.toBeNull()
+      expect(res.data, `${fn} returned data to a guest`).toBeNull()
+    }
+  })
+})

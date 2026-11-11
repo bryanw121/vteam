@@ -84,6 +84,22 @@ export const shared = StyleSheet.create({
   authSubtitle: { fontSize: font.size.md, color: colors.subtext, marginBottom: spacing.xl, textAlign: 'center' },
   authLink:     { marginTop: spacing.md, alignItems: 'center' },
   authLinkText: { color: colors.primaryText, fontSize: font.size.md },
+  // Join intent (#229): the game a guest was joining, on the sign-up / sign-in card.
+  joinContextCard: {
+    borderWidth: 1, borderColor: colors.timeBorder, backgroundColor: colors.time,
+    borderRadius: theme.radius.md, padding: spacing.md, gap: spacing.xs, marginBottom: spacing.md,
+  },
+  joinContextEyebrow: { fontFamily: theme.fonts.bodyMedium, fontSize: font.size.xs, color: colors.timeInk, letterSpacing: 0.5 },
+  joinContextTitle: { fontFamily: theme.fonts.bodyMedium, fontSize: font.size.md, color: colors.text },
+  joinContextMeta: { fontFamily: theme.fonts.body, fontSize: font.size.sm, color: colors.timeText },
+  authModeSwitch: {
+    flexDirection: 'row', borderWidth: 1, borderColor: colors.border, borderRadius: theme.radius.md,
+    padding: 3, marginBottom: spacing.md,
+  },
+  authModeOption: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.sm },
+  authModeOptionActive: { backgroundColor: colors.primarySoft },
+  authModeText: { fontFamily: theme.fonts.bodyMedium, fontSize: font.size.sm, color: colors.subtextStrong },
+  authModeTextActive: { color: colors.text },
   authLinkSubtle: { color: colors.subtext, fontSize: font.size.md },
 
   // ─── Divider ──────────────────────────────────────────────

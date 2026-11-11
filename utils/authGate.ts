@@ -71,3 +71,18 @@ export function takeGuestReturnPath(): string {
   const path = takePostSignInRedirect()
   return path && !isProtectedPath(path) ? path : routes.events()
 }
+
+/**
+ * The page to come back to after signing in: the path plus, on the web, its
+ * query (the filters and tab in the link), so a guest who opened a filtered link
+ * lands on the same view. Native has no address bar; its screens keep their own view.
+ */
+export function returnPath(pathname: string): string {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return pathname
+  try {
+    const { pathname: here, search } = window.location
+    return here === pathname && search ? pathname + search : pathname
+  } catch {
+    return pathname
+  }
+}

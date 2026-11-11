@@ -32,6 +32,9 @@ import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
 import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, Notification, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
 import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters } from '../../../../utils/feedFilters'
+import { useUrlParam } from '../../../../hooks/useUrlParam'
+import { feedDay } from '../../../../utils/urlState'
+import { VIEW } from '../../../../utils/urlViews'
 import { useTabsShell } from '../../../../contexts/tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSession } from '../../../../contexts/session'
@@ -49,10 +52,11 @@ import { planFeedAds } from '../../../../utils/feedAds'
 import { FeedBanner } from '../../../../components/ads/FeedBanner'
 import { SponsoredLabel } from '../../../../components/ads/SponsoredLabel'
 import { Spinner } from '../../../../components/ui/Spinner'
-import { Toast } from '../../../../components/Toast'
+import { toast } from '../../../../lib/toast'
 import { FeedItemShell, HiddenCountRow, HideFeedSheet } from '../../../../components/events/FeedHiding'
 import { useHiddenFeed } from '../../../../hooks/useHiddenFeed'
 import { hiddenIndex, hideOptions, isHidden, matchingEntries } from '../../../../utils/hiddenFeed'
+import { ShareLinkButton } from '../../../../components/ShareLinkButton'
 
 // Anchors for the week/month pager indexes only. "Today" itself comes from
 // useToday() so it rolls over at midnight in an app left open (#195).
@@ -108,11 +112,17 @@ export default function EventsScreen() {
   const insets = useSafeAreaInsets()
 
   const today = useToday()
-  const [selectedDate, setSelectedDate] = useState<string>(today)
-  // Filters are remembered per device (utils/feedFilters): restored before the
-  // first paint on web, a moment later on native.
-  const [chosenFilter, setChosenFilter] = useState<FeedFilter>(() => feedFiltersNow()?.filter ?? DEFAULT_FEED_FILTERS.filter)
-  const [surfaceFilter, setSurfaceFilter] = useState<SurfaceFilterValue>(() => feedFiltersNow()?.surface ?? DEFAULT_FEED_FILTERS.surface)
+  // The view is in the URL (`/?type=tournament&surface=sand&day=2026-11-14`, utils/urlViews) so a
+  // copied link opens it. A link's filters show for that visit only; without them the
+  // filters remembered on this device (utils/feedFilters) are used and written to the address.
+  const [linkDay, setUrlDay] = useUrlParam('day', VIEW.feed.day, { tab: 'events' })
+  const [selectedDate, setSelectedDate] = useState<string>(() => feedDay(linkDay, today) ?? today)
+  const [chosenFilter, setChosenFilter, typeInLink] = useUrlParam('type', VIEW.feed.type, {
+    tab: 'events', fallback: () => feedFiltersNow()?.filter ?? DEFAULT_FEED_FILTERS.filter,
+  })
+  const [surfaceFilter, setSurfaceFilter, surfaceInLink] = useUrlParam('surface', VIEW.feed.surface, {
+    tab: 'events', fallback: () => feedFiltersNow()?.surface ?? DEFAULT_FEED_FILTERS.surface,
+  })
   const feedRegion = useFeedRegion()
   // What this player hid from the feed (Settings → Hidden in feed). Days (mobile)
   // or months (desktop) in `revealedKeys` show their hidden items, dimmed.
@@ -120,10 +130,13 @@ export default function EventsScreen() {
   const hiddenIdx = useMemo(() => hiddenIndex(hiddenFeed.entries), [hiddenFeed.entries])
   const [revealedKeys, setRevealedKeys] = useState<ReadonlySet<string>>(() => new Set())
   const [hideTarget, setHideTarget] = useState<EventWithDetails | null>(null)
-  const [hideToast, setHideToast] = useState<{ message: string; undo: HiddenFeedEntry[] } | null>(null)
+  // "Hidden: …" with Undo (shared toast, #228).
+  const showHideToast = (message: string, undo: HiddenFeedEntry[]) => {
+    toast.show({ message, variant: 'info', duration: 5000, action: { label: 'Undo', onPress: () => hiddenFeed.restore(undo) } })
+  }
   const [notifOpen, setNotifOpen] = useState(false)
-  const [curWeekPage, setCurWeekPage] = useState(WEEK_CENTER)
-  const [curMonthPage, setCurMonthPage] = useState(MONTH_CENTER)
+  const [curWeekPage, setCurWeekPage] = useState(() => idxForWeek(getWeekStart(new Date(selectedDate + 'T00:00:00'))))
+  const [curMonthPage, setCurMonthPage] = useState(() => idxForMonth(selectedDate.substring(0, 7)))
   const [eventsPullRefreshing, setEventsPullRefreshing] = useState(false)
   const { userId: currentUserId, isGuest } = useSession()
   const requireSignIn = useRequireSignIn()
@@ -133,9 +146,9 @@ export default function EventsScreen() {
   const myUpcoming = useMyUpcomingEvents(events, currentUserId)
   const activeFilter = chosenFilter
 
-  const filtersTouchedRef = useRef(false)
+  const filtersTouchedRef = useRef(typeInLink || surfaceInLink)
   useEffect(() => {
-    if (feedFiltersNow()) return
+    if (filtersTouchedRef.current || feedFiltersNow()) return
     let live = true
     void loadFeedFilters().then(saved => {
       if (!live || filtersTouchedRef.current) return
@@ -313,7 +326,7 @@ export default function EventsScreen() {
     const before = hiddenFeed.entries
     setHideTarget(null)
     hiddenFeed.hide(option.entry)
-    setHideToast({ message: `Hidden: ${option.entry.label}`, undo: before })
+    showHideToast(`Hidden: ${option.entry.label}`, before)
   }, [hiddenFeed])
 
   const unhideItem = useCallback((event: EventWithDetails) => {
@@ -321,7 +334,7 @@ export default function EventsScreen() {
     const matches = matchingEntries(event, before)
     if (matches.length === 0) return
     hiddenFeed.restore(before.filter(e => !matches.includes(e)))
-    setHideToast({ message: `Showing again: ${matches.map(m => m.label).join(', ')}`, undo: before })
+    showHideToast(`Showing again: ${matches.map(m => m.label).join(', ')}`, before)
   }, [hiddenFeed])
 
   const hideOptionsFor = useMemo(
@@ -348,6 +361,7 @@ export default function EventsScreen() {
 
   const selectDate = useCallback((dateStr: string) => {
     setSelectedDate(dateStr)
+    setUrlDay(dateStr === today ? '' : dateStr)
     setCurWeekPage(idxForWeek(getWeekStart(new Date(dateStr + 'T00:00:00'))))
     setCurMonthPage(idxForMonth(dateStr.substring(0, 7)))
     const sectionIndex = sections.findIndex(s => s.date === dateStr)
@@ -375,7 +389,16 @@ export default function EventsScreen() {
         }
       }
     }, 50)
-  }, [sections])
+  }, [sections, today, setUrlDay])
+
+  // A link to a day (`?day=`) scrolls there once that day's games have loaded.
+  const linkedDayRef = useRef<string | null>(selectedDate !== today ? selectedDate : null)
+  useEffect(() => {
+    const day = linkedDayRef.current
+    if (!day || !sections.some(sec => sec.date === day)) return
+    linkedDayRef.current = null
+    selectDate(day)
+  }, [sections, selectDate])
 
   const goPrevWeek  = useCallback(() => setCurWeekPage(p => p - 1), [])
   const goNextWeek  = useCallback(() => setCurWeekPage(p => p + 1), [])
@@ -433,7 +456,18 @@ export default function EventsScreen() {
   const forecasts = useFeedForecasts(allEvents)
   const sponsoredIds = useMemo(() => new Set(showAds ? feedAds?.sponsoredEventIds ?? [] : []), [showAds, feedAds])
 
-  const headerRight = isGuest ? <SignInButton /> : (
+  // Share appears once the view is more than the plain feed: a filter or a day other than today.
+  const viewFiltered = activeFilter !== 'all' || surfaceFilter !== 'any' || selectedDate !== today
+  const shareButton = viewFiltered ? (
+    <ShareLinkButton
+      path={routes.events({ type: activeFilter, surface: surfaceFilter, day: selectedDate === today ? '' : selectedDate })}
+      title="Volleyball games on vteam"
+      screen="events"
+      filtered
+      testID="events-share-button"
+    />
+  ) : null
+  const accountButton = isGuest ? <SignInButton /> : (
     <IconButton
       icon={notifOpen ? 'notifications' : 'notifications-outline'}
       label="Notifications"
@@ -442,6 +476,12 @@ export default function EventsScreen() {
       onPress={toggleNotifPanel}
     />
   )
+  const headerRight = shareButton ? (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+      {shareButton}
+      {accountButton}
+    </View>
+  ) : accountButton
 
   // A refresh failed while older events are on screen (cache or last visit's
   // saved feed): say so rather than silently showing what may be out of date.
@@ -672,14 +712,6 @@ export default function EventsScreen() {
           onPick={pickHideOption}
           onDismiss={() => setHideTarget(null)}
         />
-        <Toast
-          message={hideToast?.message ?? ''}
-          variant="info"
-          visible={!!hideToast}
-          onHide={() => setHideToast(null)}
-          duration={5000}
-          action={hideToast ? { label: 'Undo', onPress: () => hiddenFeed.restore(hideToast.undo) } : undefined}
-        />
       </View>
     )
   }
@@ -896,14 +928,6 @@ export default function EventsScreen() {
         options={hideOptionsFor}
         onPick={pickHideOption}
         onDismiss={() => setHideTarget(null)}
-      />
-      <Toast
-        message={hideToast?.message ?? ''}
-        variant="info"
-        visible={!!hideToast}
-        onHide={() => setHideToast(null)}
-        duration={5000}
-        action={hideToast ? { label: 'Undo', onPress: () => hiddenFeed.restore(hideToast.undo) } : undefined}
       />
     </View>
   )

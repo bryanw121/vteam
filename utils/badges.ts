@@ -1,17 +1,24 @@
 import { supabase } from '../lib/supabase'
 import { BADGE_DEFINITIONS, BETA_ACTIVE, VEX_MEMBER_ACTIVE, badgeTierLabel } from '../constants/badges'
 import type { BadgeDef } from '../constants/badges'
-import type { BadgeAwardPlan, BadgeStats, UserBadge, Profile } from '../types'
+import type { BadgeAwardPlan, BadgeStats, CheersReceived, UserBadge, Profile } from '../types'
+import { countCheers } from './cheers'
+import { USER_BADGE_SELECT } from '../constants/selects'
 
 // ─── Stats ────────────────────────────────────────────────────────────────────
 
+/**
+ * `received`: the player's received cheers by type when the caller already has
+ * them (Profile's shared read, #224); otherwise they are read here.
+ */
 export async function collectBadgeStats(
   userId: string,
   profile: Pick<Profile, 'first_name' | 'last_name' | 'position' | 'avatar_url'>,
+  received?: CheersReceived,
 ): Promise<BadgeStats> {
   const now = new Date().toISOString()
 
-  const [attendedRes, hostedRes, cheersReceivedRes, cheersGivenRes] = await Promise.all([
+  const [attendedRes, hostedRes, receivedCheers, cheersGivenRes] = await Promise.all([
     // Past events attended (status = attending, event already started).
     // head+count — only the tally is used, so the rows are never transferred.
     supabase
@@ -29,10 +36,10 @@ export async function collectBadgeStats(
       .lt('event_date', now),
 
     // All cheers received (with type breakdown)
-    supabase
-      .from('cheers')
-      .select('cheer_type')
-      .eq('receiver_id', userId),
+    received
+      ? Promise.resolve(received)
+      : supabase.from('cheers').select('cheer_type').eq('receiver_id', userId)
+          .then(res => countCheers((res.data ?? []) as { cheer_type: string }[])),
 
     // Events where this user gave cheers (for distinct-event count)
     supabase
@@ -54,11 +61,7 @@ export async function collectBadgeStats(
   )
 
   // Cheer breakdown
-  const cheersReceived = cheersReceivedRes.data ?? []
-  const byType: Record<string, number> = {}
-  for (const c of cheersReceived as { cheer_type: string }[]) {
-    byType[c.cheer_type] = (byType[c.cheer_type] ?? 0) + 1
-  }
+  const byType = receivedCheers.byType
 
   // Distinct events where cheers were given
   const cheersGiven = cheersGivenRes.data ?? []
@@ -76,7 +79,7 @@ export async function collectBadgeStats(
   return {
     events_attended_past: attendedCount,
     events_hosted_past: hostedCount,
-    cheers_received_total: cheersReceived.length,
+    cheers_received_total: receivedCheers.total,
     cheers_given_events: distinctCheersGivenEvents,
     spike_cheers: byType['spike'] ?? 0,
     serve_cheers: byType['serve'] ?? 0,
@@ -87,6 +90,19 @@ export async function collectBadgeStats(
     tournament_hosted: tournamentHosted,
     profile_complete: profileComplete,
   }
+}
+
+/**
+ * The badge list after an award: changed rows replace theirs (upgrades), new
+ * ones go last (they have no display slot, and the list is ordered by slot).
+ * Lets the check update the cache from the rows the award returned instead of
+ * reading the whole list again (#224).
+ */
+export function mergeAwardedBadges(existing: UserBadge[], awarded: UserBadge[]): UserBadge[] {
+  const byId = new Map(awarded.map(b => [b.id, b]))
+  const merged = existing.map(b => byId.get(b.id) ?? b)
+  const known = new Set(existing.map(b => b.id))
+  return [...merged, ...awarded.filter(b => !known.has(b.id))]
 }
 
 // ─── Award logic ──────────────────────────────────────────────────────────────
@@ -169,7 +185,7 @@ export async function checkAndAwardBadges(
     const { data, error } = await supabase
       .from('user_badges')
       .insert(plan.inserts.map(i => ({ user_id: userId, badge_type: i.badge_type, tier: i.tier })))
-      .select('id, user_id, badge_type, tier, awarded_at, display_order')
+      .select(USER_BADGE_SELECT)
 
     if (!error && data) {
       awarded.push(...(data as UserBadge[]))
@@ -196,7 +212,7 @@ export async function checkAndAwardBadges(
           .from('user_badges')
           .update({ tier: u.tier, awarded_at: awardedAt })
           .eq('id', u.id)
-          .select('id, user_id, badge_type, tier, awarded_at, display_order')
+          .select(USER_BADGE_SELECT)
           .single(),
       ),
     )

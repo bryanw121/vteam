@@ -42,6 +42,7 @@ export function useHiddenFeed(): HiddenFeedControls {
           home_city_id: prev?.home_city_id ?? null,
           home_city: prev?.home_city ?? null,
           hidden_feed: next,
+          notification_prefs: prev?.notification_prefs ?? null,
         }))
         return () => setQueryData(key, before ?? null)
       },

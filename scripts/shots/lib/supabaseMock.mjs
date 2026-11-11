@@ -15,6 +15,7 @@ import { createDb } from './postgrest.mjs'
 import { buildFixtures, VIEWS, ME } from '../fixtures/index.mjs'
 import { PEOPLE } from '../fixtures/people.mjs'
 import { buildForecast } from '../fixtures/forecast.mjs'
+import { metricsRpc } from '../fixtures/metrics.mjs'
 
 export const MOCK_SUPABASE_URL = 'https://shotsmock.supabase.co'
 export const MOCK_ANON_KEY = 'shots-mock-anon-key'
@@ -116,6 +117,8 @@ function rpcHandlers(db, signedIn, now) {
     },
     mark_notification_read: () => null,
     mark_all_notifications_read: () => null,
+    // The signed-in fixture viewer is an admin, so Profile shows Admin metrics and its screens have data.
+    ...(signedIn ? metricsRpc(now) : { current_user_is_admin: () => false }),
   }
 }
 

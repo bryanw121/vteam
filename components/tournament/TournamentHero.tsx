@@ -24,10 +24,12 @@ type Props = {
   tournament: Tournament
   registeredTeamCount: number
   onBack: () => void
+  /** Shown next to the status badge (the Share button). */
+  actions?: React.ReactNode
 }
 
 /** Title block at the top of the tournament page: status, format, title, place/date, countdowns. */
-export function TournamentHero({ tournament, registeredTeamCount, onBack }: Props) {
+export function TournamentHero({ tournament, registeredTeamCount, onBack, actions }: Props) {
   const insets = useSafeAreaInsets()
   return (
     <View style={{ backgroundColor: theme.colors.card, overflow: 'hidden' }}>
@@ -62,7 +64,10 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack }: Prop
           >
             <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
           </TouchableOpacity>
-          <TourneyStatusBadge status={tournament.status} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+            <TourneyStatusBadge status={tournament.status} />
+            {actions}
+          </View>
         </View>
 
         <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
