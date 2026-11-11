@@ -331,5 +331,29 @@
     "status": "approved",
     "summary": "Save a pending join when a guest taps Join, show the game on the sign-up screen (default New here), drop the silent 'Account created!' + login hop, and on return show a 'Grab your spot?' sheet before player setup (which becomes an inline card). Client-only, funnel metrics. S-M.",
     "issue": 229
+  },
+  {
+    "date": "2026-11-11",
+    "n": 1,
+    "title": "Reports that reach someone: \"Report player\" sends a real report, and the team sees it within the hour",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "Both Report player buttons (profile, DM) only show a success toast. Replace with a sheet (reason, details, also silence) writing a private user_reports row via report_user() RPC, emailing the team, and an Admin metrics Reports tab with dismiss/warn/suspend. Needed for App Store guideline 1.2."
+  },
+  {
+    "date": "2026-11-11",
+    "n": 2,
+    "title": "Shared event links open with the game already on screen: the event comes inside the page",
+    "bucket": "latency",
+    "status": "proposed",
+    "summary": "api/event-page.ts already reads the event for preview tags; read the full anon-visible event + cohosts + public guests there and inline them as a JSON seed that useEventData seeds as stale. Phone, guest, /event/<id>: visible 13.3 s -> ~5.5 s with an 8 s server; Join waits for fresh data."
+  },
+  {
+    "date": "2026-11-11",
+    "n": 3,
+    "title": "Schema first, then code: hold the production deploy until live has the merged migration",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "4 of 11 schema PRs deployed 43 min-3 h before their migration reached live (#232: heartbeat 404, app_events 400 on live). Add a 'Live schema ready' check on push to main (schema-drift --ready, polls) and require it via Vercel Deployment Checks."
   }
 ]
