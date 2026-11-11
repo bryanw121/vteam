@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `a3f3b7347207`
+> Inventory fingerprint: `6e579b2a3f9b`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -452,7 +452,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 |---|---|
 | `ad_banners` | [`hooks/useFeedAds.ts:18`](../hooks/useFeedAds.ts#L18) |
 | `app_config` | [`hooks/useMinVersion.ts:19`](../hooks/useMinVersion.ts#L19) |
-| `app_events` | [`lib/analytics.ts:132`](../lib/analytics.ts#L132) |
+| `app_events` | [`lib/analytics.ts:159`](../lib/analytics.ts#L159) |
 | `chat_silences` | [`hooks/useSilencedUsers.ts:27`](../hooks/useSilencedUsers.ts#L27)<br>[`supabase/functions/send-chat-push/handler.ts:142`](../supabase/functions/send-chat-push/handler.ts#L142) |
 | `cheers` | [`hooks/event/useEventCheers.ts:16`](../hooks/event/useEventCheers.ts#L16)<br>[`hooks/useCheersSummary.ts:12`](../hooks/useCheersSummary.ts#L12)<br>[`hooks/useMyProfile.ts:72`](../hooks/useMyProfile.ts#L72)<br>[`hooks/useUserProfile.ts:21`](../hooks/useUserProfile.ts#L21)<br>[`utils/badges.ts:41`](../utils/badges.ts#L41) |
 | `club_members` | [`app/(app)/(tabs)/clubs.tsx:84`](../app/%28app%29/%28tabs%29/clubs.tsx#L84)<br>[`app/(app)/chat/[id].tsx:92`](../app/%28app%29/chat/%5Bid%5D.tsx#L92)<br>[`app/(app)/club/[id].tsx:128`](../app/%28app%29/club/%5Bid%5D.tsx#L128)<br>[`app/(app)/host.tsx:160`](../app/%28app%29/host.tsx#L160)<br>[`app/(app)/tournament/create.tsx:774`](../app/%28app%29/tournament/create.tsx#L774) |
@@ -510,6 +510,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | RPC | Call sites | SQL definition |
 |---|---|---|
 | `accept_tournament_invite` | [`hooks/tournament/api.ts:260`](../hooks/tournament/api.ts#L260) | [`supabase/migrations/20261025120000_tournament_rpcs.sql:18`](../supabase/migrations/20261025120000_tournament_rpcs.sql#L18) |
+| `app_heartbeat` | [`lib/analytics.ts:224`](../lib/analytics.ts#L224) | [`supabase/migrations/20261110230000_usage_sessions.sql:74`](../supabase/migrations/20261110230000_usage_sessions.sql#L74) |
 | `cancel_friend_request` | [`hooks/useFriends.ts:71`](../hooks/useFriends.ts#L71) | [`supabase/migrations/20261028203837_friends.sql:256`](../supabase/migrations/20261028203837_friends.sql#L256) |
 | `check_rate_limit` | [`supabase/functions/login-with-username/handler.ts:140`](../supabase/functions/login-with-username/handler.ts#L140) | [`supabase/migrations/20261028120200_rate_limit_core.sql:19`](../supabase/migrations/20261028120200_rate_limit_core.sql#L19) |
 | `complete_tournament` | [`hooks/tournament/api.ts:449`](../hooks/tournament/api.ts#L449) | [`supabase/migrations/20261028205312_tournament_trophies.sql:67`](../supabase/migrations/20261028205312_tournament_trophies.sql#L67) |

@@ -34,4 +34,8 @@ export const ANALYTICS_EVENTS = {
   playerSetupCompleted: 'player_setup_completed',
   /** The Events feed's first rows were in hand (#184). props: { ms (since navigation start), source: snapshot | prefetch | fetch, cold } */
   feedFirstPaint: 'feed_first_paint',
+  /** A session opened: launch, back after 30 min away, or a different account signed in. props: { cold, referrer? (web, cold only: direct | internal | search | link) } */
+  sessionStart: 'session_start',
+  /** The screen type changed. props: { screen (route pattern, e.g. /event/[id], or a tab's path), from? } */
+  screenView: 'screen_view',
 } as const
