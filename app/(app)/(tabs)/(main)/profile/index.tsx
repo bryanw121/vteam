@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, Platform, Pressable, View } from 'react-native'
+import { Platform, Pressable, View } from 'react-native'
 import { RefreshControl } from '../../../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter } from 'expo-router'
 import { DocScrollView } from '../../../../../components/DocScrollView'
-import { Toast } from '../../../../../components/Toast'
+import { toast } from '../../../../../lib/toast'
 import { SignInPrompt } from '../../../../../components/SignInPrompt'
 import { ScreenState } from '../../../../../components/ui'
 import { ProfileHero } from '../../../../../components/profile/ProfileHero'
@@ -31,7 +31,7 @@ import { visibleIncoming } from '../../../../../utils/friends'
 import { pointsBalanceKey, usePointsBalance } from '../../../../../hooks/usePoints'
 import { routes } from '../../../../../utils/routes'
 import { useIsAdmin } from '../../../../../hooks/useAdminMetrics'
-import type { Profile, ProfilePatch, ToastState, UserBadge } from '../../../../../types'
+import type { Profile, ProfilePatch, UserBadge } from '../../../../../types'
 import { useUrlParam } from '../../../../../hooks/useUrlParam'
 import { VIEW } from '../../../../../utils/urlViews'
 import { ShareLinkButton } from '../../../../../components/ShareLinkButton'
@@ -64,9 +64,7 @@ function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, upda
   const [editing, setEditing] = useUrlParam('edit', VIEW.profile.edit, { tab: 'profile' })
   const section: 'menu' | 'edit' = editing ? 'edit' : 'menu'
   const setSection = (next: 'menu' | 'edit') => setEditing(next === 'edit')
-  const [toast, setToast] = useState<ToastState | null>(null)
-
-  const showToast = useCallback((message: string) => setToast({ message, variant: 'error' }), [])
+  const showToast = useCallback((message: string) => { toast.show({ message, variant: 'error' }) }, [])
   const onAvatarSaved = useCallback((updated: Profile) => { void checkBadges(updated, true) }, [checkBadges])
   const uploader = useAvatarUploader({ profile, updateProfile, onSaved: onAvatarSaved, onToast: showToast })
 
@@ -89,11 +87,11 @@ function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, upda
   async function handleSave(patch: ProfilePatch) {
     const saved = await updateProfile(patch)
     if (!saved) {
-      Alert.alert('Error', 'Could not save profile. Please try again.')
+      toast.error("Couldn't save your profile")
       return
     }
     void checkBadges({ ...profile, ...patch }, true)
-    Alert.alert('Saved', 'Your profile was updated.')
+    toast.show({ message: 'Your profile was updated.', variant: 'success' })
     setSection('menu')
   }
 
@@ -168,7 +166,6 @@ function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, upda
           />
         )}
       </DocScrollView>
-      <Toast message={toast?.message ?? ''} variant={toast?.variant ?? 'error'} visible={!!toast} onHide={() => setToast(null)} />
     </View>
   )
 }

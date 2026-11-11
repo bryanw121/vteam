@@ -2129,3 +2129,6 @@ export type UrlCodec<T> = {
   parse: (raw: string | undefined) => T
   format: (value: T) => string | undefined
 }
+
+/** Field errors on the feedback form (#228: shown under each field, not as an alert). */
+export type FeedbackFieldErrors = { title?: string; description?: string; platform?: string }
