@@ -2080,3 +2080,11 @@ export type CheersSummary = {
   counts: Partial<Record<CheerType, number>>
 }
 
+
+// ─── View state in the URL (utils/urlState, hooks/useUrlParam) ────────────────
+
+/** How one URL param maps to a screen's view value. `format` returns undefined for the default, which leaves the param out. */
+export type UrlCodec<T> = {
+  parse: (raw: string | undefined) => T
+  format: (value: T) => string | undefined
+}

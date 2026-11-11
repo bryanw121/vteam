@@ -6,8 +6,8 @@ import { Pager } from '../../../../components/Pager'
 import { useTabsActive, useTabsShell } from '../../../../contexts/tabs'
 import EventsScreen from './index'
 import ProfileScreen from './profile/index'
-import ClubsScreen from '../clubs'
-import ChatScreen from '../chat'
+import ClubsScreen from './clubs'
+import ChatScreen from './chat'
 
 const TAB_COUNT = TABS.length
 /** One screen per tab; rendered in TABS order so page i is TABS[i]. */

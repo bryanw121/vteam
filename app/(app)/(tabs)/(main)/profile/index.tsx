@@ -32,6 +32,9 @@ import { pointsBalanceKey, usePointsBalance } from '../../../../../hooks/usePoin
 import { routes } from '../../../../../utils/routes'
 import { useIsAdmin } from '../../../../../hooks/useAdminMetrics'
 import type { Profile, ProfilePatch, ToastState, UserBadge } from '../../../../../types'
+import { useUrlParam } from '../../../../../hooks/useUrlParam'
+import { VIEW } from '../../../../../utils/urlViews'
+import { ShareLinkButton } from '../../../../../components/ShareLinkButton'
 
 type Props = {
   profile: Profile
@@ -57,7 +60,10 @@ function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, upda
   const trophies = useUserTrophies(profile.id)
   const { setTabBarHidden, tabBarHeight, docScrollActive } = useTabsShell()
   const lastScrollY = useRef(0)
-  const [section, setSection] = useState<'menu' | 'edit'>('menu')
+  // The editor is in the URL (`/profile?edit=1`) so a refresh keeps it open and nudges can link to it.
+  const [editing, setEditing] = useUrlParam('edit', VIEW.profile.edit, { tab: 'profile' })
+  const section: 'menu' | 'edit' = editing ? 'edit' : 'menu'
+  const setSection = (next: 'menu' | 'edit') => setEditing(next === 'edit')
   const [toast, setToast] = useState<ToastState | null>(null)
 
   const showToast = useCallback((message: string) => setToast({ message, variant: 'error' }), [])
@@ -112,6 +118,18 @@ function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, upda
             <Pressable onPress={() => setSection('menu')} hitSlop={10} accessibilityRole="button" accessibilityLabel="Close editor">
               <Ionicons name="close" size={22} color={theme.colors.subtext} />
             </Pressable>
+          </View>
+        )}
+
+        {section === 'menu' && (
+          <View style={{ alignItems: 'flex-end', marginBottom: theme.spacing.xs }}>
+            {/* /profile opens the viewer's own profile, so share the public one. */}
+            <ShareLinkButton
+              path={routes.profileOf(profile.id)}
+              title={`${[profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'My profile'} on vteam`}
+              screen="profile"
+              testID="profile-share-button"
+            />
           </View>
         )}
 
