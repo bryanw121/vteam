@@ -30,6 +30,7 @@ import { useSilencedUsers } from '../../../../../hooks/useSilencedUsers'
 import { visibleIncoming } from '../../../../../utils/friends'
 import { pointsBalanceKey, usePointsBalance } from '../../../../../hooks/usePoints'
 import { routes } from '../../../../../utils/routes'
+import { useIsAdmin } from '../../../../../hooks/useAdminMetrics'
 import type { Profile, ProfilePatch, ToastState, UserBadge } from '../../../../../types'
 
 type Props = {
@@ -43,10 +44,12 @@ type Props = {
   checkBadges: ReturnType<typeof useBadges>['checkBadges']
   refreshing: boolean
   onRefresh: () => void
+  /** Show the Admin metrics row (the server still checks every read). */
+  isAdmin: boolean
 }
 
 /** The loaded Profile tab: hero card, then either the settings menu or the edit form. */
-function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, updateProfile, setDisplaySlot, checkBadges, refreshing, onRefresh }: Props) {
+function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, updateProfile, setDisplaySlot, checkBadges, refreshing, onRefresh, isAdmin }: Props) {
   const router = useRouter()
   const tour = useTour()
   const { data: friends } = useFriends()
@@ -133,6 +136,7 @@ function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, upda
               onOpenTerms={() => router.push(routes.terms())}
               onOpenPrivacy={() => router.push(routes.privacy())}
               friendRequestCount={visibleIncoming(friends.incoming, silencedUserIds).length}
+              showAdmin={isAdmin}
             />
           </>
         ) : (
@@ -162,6 +166,7 @@ function MyProfileSignedIn() {
   const cheers = useMyCheersCount({ enabled: isActive })
   const points = usePointsBalance(userId, { enabled: isActive })
   const { badges, checkBadges, fetchBadges, setDisplaySlot } = useBadges({ enabled: isActive })
+  const { isAdmin } = useIsAdmin({ enabled: isActive })
 
   // Refetch on focus / foreground only while visible, and only when stale.
   useFocusRefetch(isActive && userId ? myProfileKey(userId) : null)
@@ -209,6 +214,7 @@ function MyProfileSignedIn() {
       checkBadges={checkBadges}
       refreshing={refreshing}
       onRefresh={() => void handleRefresh()}
+      isAdmin={isAdmin}
     />
   )
 }
