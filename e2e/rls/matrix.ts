@@ -46,6 +46,7 @@ export const RLS_MATRIX: Record<TableName, RlsExpectation> = {
   app_sessions: { anonSelect: 'none', anonInsert: 'none', signedInSelect: 'none', why: 'usage metrics: written only by app_heartbeat(), read only by admin functions' },
   app_online_samples: { anonSelect: 'none', anonInsert: 'none', signedInSelect: 'none', why: 'service-only (minute job)' },
   app_online_daily: { anonSelect: 'none', anonInsert: 'none', signedInSelect: 'none', why: 'service-only (nightly job)' },
+  metrics_excluded_users: { anonSelect: 'none', anonInsert: 'none', signedInSelect: 'none', why: 'service-only list of test accounts; read only by admin_metrics_overview' },
   chat_silences: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true } },
   cheers: { anonSelect: 'all', anonInsert: 'none', anonColumns: 'id, event_id, receiver_id, cheer_type, created_at', owner: { column: 'giver_id', ownRowsOnly: false, noInsertAsOther: true }, why: 'cheers counts show on public profiles; guests can\'t see giver_id (#102)' },
   club_members: { anonSelect: 'all', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: false, noInsertAsOther: true }, why: 'club pages list members to guests' },

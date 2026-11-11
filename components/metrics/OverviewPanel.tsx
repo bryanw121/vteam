@@ -158,6 +158,7 @@ function Overview({ data, events, days, onOpenLive }: { data: MetricsOverview; e
           { label: 'Outside sign-up links opened', value: data.actions.outside_links },
           ...(events ? [{ label: 'Events shared', value: events.shares.taps }] : []),
         ]} />
+        <Text style={s.note}>Test accounts (the e2e bots) are left out of these counts.</Text>
       </MetricCard>
 
       <MetricCard title="Feed → RSVP">
