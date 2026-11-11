@@ -11,20 +11,9 @@ const ROOT = resolve(__dirname, '..')
 /** confirmDestructive's native dialog: a real choice, which a toast can't ask. */
 const ALLOWED = new Set(['utils/confirm.ts'])
 
-/** Not converted yet (#228 steps 3–4). */
+/** Not converted yet: register.tsx waits for #229, which changes the same lines. */
 const NOT_YET_CONVERTED = new Set([
-  'app/(app)/(tabs)/(main)/profile/index.tsx',
-  'app/(app)/(tabs)/clubs.tsx',
-  'app/(app)/(tabs)/settings/account.tsx',
-  'app/(app)/(tabs)/settings/feedback.tsx',
-  'app/(app)/chat/[id].tsx',
-  'app/(app)/club/[id].tsx',
-  'app/(app)/club/create.tsx',
   'app/(auth)/register.tsx',
-  'components/ClubPostCard.tsx',
-  'components/EventCommentRow.tsx',
-  'components/profile/useAvatarUploader.ts',
-  'utils/chatUtils.ts',
 ])
 
 function sources(dir: string): string[] {

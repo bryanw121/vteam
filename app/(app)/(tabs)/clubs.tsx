@@ -4,7 +4,7 @@
 */
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { FlatList, TouchableOpacity, View, Alert } from 'react-native'
+import { FlatList, TouchableOpacity, View } from 'react-native'
 import { Text, TextInput } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
 import { Image } from 'expo-image'
@@ -25,6 +25,7 @@ import { resolveClubAvatarUri } from '../../../utils'
 import { routes } from '../../../utils/routes'
 import type { ClubListItem, MajorCity } from '../../../types'
 import { Spinner } from '../../../components/ui/Spinner'
+import { toast } from '../../../lib/toast'
 
 /** List payload: member count; membership embed is added when signed in. */
 const CLUB_LIST_SELECT_BASE =
@@ -94,7 +95,7 @@ function ClubCard({ club, userId, listKey, isOwner, isMember, onPress }: ClubCar
         })
         return () => replaceClubInList(listKey, before)
       },
-      onError: error => Alert.alert('Could not join', error.message),
+      onError: error => { toast.error("Couldn't join the club", error) },
       // The club's own page lists its members and posts.
       invalidates: [queryKey('club', club.id)],
     },
