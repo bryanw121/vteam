@@ -479,5 +479,37 @@
     "desktop": {
       "color-contrast": 2
     }
+  },
+  "events-feed-link": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
+  "tournament-schedule-link": {
+    "mobile": {
+      "color-contrast": 8
+    },
+    "desktop": {
+      "color-contrast": 10
+    }
+  },
+  "profile-edit-link": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "settings-badge-link": {
+    "mobile": {
+      "color-contrast": 14
+    },
+    "desktop": {
+      "color-contrast": 16
+    }
   }
 }

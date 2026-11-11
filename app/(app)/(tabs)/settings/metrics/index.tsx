@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { ScrollView, View } from 'react-native'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { Text } from '../../../../../components/ui/Text'
 import { EmptyState, ScreenContainer, Spinner } from '../../../../../components/ui'
 import { MetricsTabs } from '../../../../../components/metrics/MetricsTabs'
@@ -14,8 +13,9 @@ import { useTabsShell } from '../../../../../contexts/tabs'
 import { shared, theme } from '../../../../../constants'
 import { routes } from '../../../../../utils/routes'
 import type { MetricsTab } from '../../../../../types'
+import { useUrlParam } from '../../../../../hooks/useUrlParam'
+import { VIEW } from '../../../../../utils/urlViews'
 
-const TAB_IDS: readonly MetricsTab[] = ['overview', 'live', 'people', 'retention']
 
 /**
  * Profile → Admin metrics (#232 design, part 2): Overview · Live · People · Retention. Every
@@ -26,15 +26,10 @@ export default function AdminMetricsScreen() {
   useStackBackTitle('Admin metrics')
   const router = useRouter()
   const { tabBarHeight } = useTabsShell()
-  const params = useLocalSearchParams<{ tab?: string }>()
-  const initial = TAB_IDS.includes(params.tab as MetricsTab) ? (params.tab as MetricsTab) : 'overview'
-  const [tab, setTab] = useState<MetricsTab>(initial)
+  const [tab, setTab] = useUrlParam('tab', VIEW.metrics.tab)
   const { isAdmin, checked } = useIsAdmin()
 
-  const changeTab = (next: MetricsTab) => {
-    setTab(next)
-    router.setParams({ tab: next === 'overview' ? undefined : next })
-  }
+  const changeTab = (next: MetricsTab) => setTab(next)
   const openPerson = (id: string) => router.push(routes.metricsPerson(id))
 
   return (

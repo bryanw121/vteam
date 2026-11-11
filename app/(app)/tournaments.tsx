@@ -19,6 +19,9 @@ import { useFeedRegion } from '../../hooks/useUserSettings'
 import { PROGRAMS_SOURCE_NOTE } from '../../constants/copy'
 import { ProgramHostChips } from '../../components/programs/ProgramHostChips'
 import { byHost } from '../../utils/externalPrograms'
+import { ShareLinkButton } from '../../components/ShareLinkButton'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { VIEW } from '../../utils/urlViews'
 import type { TournamentListItem } from '../../types'
 
 type Tab = 'upcoming' | 'past'
@@ -64,7 +67,8 @@ export default function TournamentsScreen() {
   const router = useRouter()
   const { userId, isGuest } = useSession()
   const requireSignIn = useRequireSignIn()
-  const [tab, setTab] = useState<Tab>('upcoming')
+  // Upcoming / Past and the organizer chip are in the URL (`?view=past&host=NAGVA`).
+  const [tab, setTab] = useUrlParam('view', VIEW.tournaments.view)
   const list = useTournamentList(userId)
   const [refreshing, setRefreshing] = useState(false)
 
@@ -75,7 +79,9 @@ export default function TournamentsScreen() {
   const outside = tab === 'upcoming' ? programs.data : null
   const outsideAll = useMemo(() => [...(outside?.tournaments ?? []), ...(outside?.elsewhere ?? [])], [outside])
   const outsideCount = outsideAll.length
-  const [host, setHost] = useState<string | null>(null)
+  const [hostParam, setHostParam] = useUrlParam('host', VIEW.tournaments.host)
+  const host = hostParam || null
+  const setHost = (next: string | null) => setHostParam(next ?? '')
   const city = region.charAt(0).toUpperCase() + region.slice(1)
   const outsideNode = outsideCount ? (
     <View style={{ marginTop: theme.spacing.sm }}>
@@ -124,9 +130,20 @@ export default function TournamentsScreen() {
           title="Tournaments"
           safeTop
           onBack={goBack}
-          right={!isGuest ? (
-            <IconButton icon="add" label="Create a tournament" size={44} onPress={() => router.push(routes.tournamentCreate())} />
-          ) : undefined}
+          right={(
+            <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+              <ShareLinkButton
+                path={routes.tournaments({ view: tab, host: hostParam })}
+                title="Volleyball tournaments on vteam"
+                screen="tournaments"
+                filtered={tab !== 'upcoming' || !!host}
+                testID="tournaments-share-button"
+              />
+              {!isGuest && (
+                <IconButton icon="add" label="Create a tournament" size={44} onPress={() => router.push(routes.tournamentCreate())} />
+              )}
+            </View>
+          )}
         />
         {isGuest ? (
           <ScrollView contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xl }}>

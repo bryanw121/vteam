@@ -11,6 +11,8 @@ import type { MetricsOverview, MetricsPlatform, MetricsRangeDays } from '../../t
 import { CountRows, MetricCard, StatCard } from './MetricBits'
 import { MetricBarChart, MetricLineChart } from './MetricCharts'
 import { metricsStyles as s } from './metricsStyles'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { VIEW } from '../../utils/urlViews'
 
 type Props = {
   onOpenLive: () => void
@@ -26,7 +28,7 @@ export const PLATFORM_COLORS: Record<MetricsPlatform, string> = {
 
 /** Metrics → Overview: headline numbers for the last 7, 30 or 90 days. */
 export function OverviewPanel({ onOpenLive }: Props) {
-  const [days, setDays] = useState<MetricsRangeDays>(30)
+  const [days, setDays] = useUrlParam('range', VIEW.metrics.range)
   const range = useMemo(() => metricsRange(days), [days])
   const { data, isLoading, error, refetch } = useMetricsOverview(range)
 

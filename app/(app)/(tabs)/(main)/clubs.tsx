@@ -3,28 +3,30 @@
 -- (schema comments retained from prior clubs setup — see git history for full DDL)
 */
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { FlatList, TouchableOpacity, View, Alert } from 'react-native'
-import { Text, TextInput } from '../../../components/ui/Text'
-import { RefreshControl } from '../../../components/RefreshControl'
+import { Text, TextInput } from '../../../../components/ui/Text'
+import { RefreshControl } from '../../../../components/RefreshControl'
 import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Stack, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { supabase } from '../../../lib/supabase'
-import { queryKey, setQueryData, useFocusRefetch, useMutation, useQuery } from '../../../lib/query'
-import { useSession } from '../../../contexts/session'
-import { useRequireSignIn } from '../../../hooks/useRequireSignIn'
-import { SignInButton } from '../../../components/SignInButton'
-import { ScreenState } from '../../../components/ui'
-import { CLUBS_TAB_INDEX, STALE, shared, theme } from '../../../constants'
-import { DocScrollView } from '../../../components/DocScrollView'
-import { useTabsActive, useTabsShell } from '../../../contexts/tabs'
-import { resolveClubAvatarUri } from '../../../utils'
-import { routes } from '../../../utils/routes'
-import type { ClubListItem, MajorCity } from '../../../types'
-import { Spinner } from '../../../components/ui/Spinner'
+import { supabase } from '../../../../lib/supabase'
+import { queryKey, setQueryData, useFocusRefetch, useMutation, useQuery } from '../../../../lib/query'
+import { useSession } from '../../../../contexts/session'
+import { useRequireSignIn } from '../../../../hooks/useRequireSignIn'
+import { SignInButton } from '../../../../components/SignInButton'
+import { ScreenState } from '../../../../components/ui'
+import { CLUBS_TAB_INDEX, STALE, shared, theme } from '../../../../constants'
+import { DocScrollView } from '../../../../components/DocScrollView'
+import { useTabsActive, useTabsShell } from '../../../../contexts/tabs'
+import { resolveClubAvatarUri } from '../../../../utils'
+import { routes } from '../../../../utils/routes'
+import type { ClubListItem, MajorCity } from '../../../../types'
+import { Spinner } from '../../../../components/ui/Spinner'
+import { useUrlParam } from '../../../../hooks/useUrlParam'
+import { VIEW } from '../../../../utils/urlViews'
 
 /** List payload: member count; membership embed is added when signed in. */
 const CLUB_LIST_SELECT_BASE =
@@ -177,7 +179,6 @@ function ClubCard({ club, userId, listKey, isOwner, isMember, onPress }: ClubCar
   )
 }
 
-type ClubFilter = 'joined' | 'nearby' | 'popular'
 
 const EMPTY_CLUBS: ClubListItem[] = []
 
@@ -189,13 +190,28 @@ export default function ClubsScreen() {
   const isActive = activeTabIndex === CLUBS_TAB_INDEX
   const { isGuest, userId, loading: sessionLoading } = useSession()
   const [refreshing, setRefreshing] = useState(false)
-  const [filter, setFilter] = useState<ClubFilter>('joined')
+  // The filter and search are in the URL (`/clubs?filter=popular&q=sand`) so a copied link opens them.
+  const [filter, setFilter] = useUrlParam('filter', VIEW.clubs.filter, { tab: 'clubs' })
   // Guests have no joined clubs, so show them Popular. An effect, not the initial
   // state: on a direct load the screen can mount before the session has loaded.
   useEffect(() => {
-    if (isGuest) setFilter(f => (f === 'joined' ? 'popular' : f))
-  }, [isGuest])
-  const [searchQuery, setSearchQuery] = useState('')
+    if (isGuest && filter === 'joined') setFilter('popular')
+  }, [isGuest]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [linkQuery, setLinkQuery] = useUrlParam('q', VIEW.clubs.q, { tab: 'clubs' })
+  const [searchQuery, setSearchQuery] = useState(linkQuery)
+  // The list filters on every keystroke; the address catches up once typing pauses.
+  const wroteQuery = useRef(linkQuery)
+  useEffect(() => {
+    if (searchQuery.trim() === linkQuery.trim()) return
+    const t = setTimeout(() => { wroteQuery.current = searchQuery.trim(); setLinkQuery(searchQuery) }, 400)
+    return () => clearTimeout(t)
+  }, [searchQuery]) // eslint-disable-line react-hooks/exhaustive-deps
+  // A link opened while the tab is mounted (or Back) brings its own search; the address catching up with typing doesn't.
+  useEffect(() => {
+    if (linkQuery.trim() === wroteQuery.current) return
+    wroteQuery.current = linkQuery.trim()
+    setSearchQuery(linkQuery)
+  }, [linkQuery])
 
   // One cache entry per viewer (membership flags depend on who is signed in).
   // Fetched when this page is the active tab, refetched on focus only when stale.
@@ -347,6 +363,9 @@ export default function ClubsScreen() {
             placeholderTextColor={theme.colors.subtext}
             style={{
               flex: 1,
+              // A web <input> keeps an intrinsic width (~20 characters) unless allowed to shrink;
+              // at Extra large text on a 320px phone that pushed the page sideways.
+              minWidth: 0,
               fontFamily: theme.fonts.body,
               fontSize: theme.font.size.base,
               color: theme.colors.text,

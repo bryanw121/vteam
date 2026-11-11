@@ -12,7 +12,9 @@ import { ChatUnreadProvider, useChatUnread } from '../../hooks/useChatUnread'
 import { useIsNarrowWeb } from '../../hooks/useIsNarrowWeb'
 import { useRequireSignIn } from '../../hooks/useRequireSignIn'
 import { usePlayerSetupGate } from '../../hooks/usePlayerSetupGate'
-import { routes } from '../../utils/routes'
+import { routes, toRoute } from '../../utils/routes'
+import { queryString } from '../../utils/urlState'
+import { tabParams } from '../../utils/tabViews'
 import { TourProvider } from '../../contexts/tour'
 import { TourTarget } from '../../components/tour/TourTarget'
 import { TOUR_TARGETS } from '../../constants'
@@ -70,7 +72,8 @@ function AppLayoutInner() {
   const requireSignIn = useRequireSignIn()
 
   function goToTab(index: number) {
-    router.replace(TABS[index].path)
+    // Back to the tab with the filters it last had (utils/tabViews).
+    router.replace(toRoute(TABS[index].path + queryString(tabParams(TABS[index].key))))
   }
 
   // Anyone may open the menu ("Book a court" is public); creating on vteam asks guests to sign in (goCreate).
