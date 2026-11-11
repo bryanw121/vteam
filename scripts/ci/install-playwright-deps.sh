@@ -3,13 +3,14 @@
 #
 # GitHub's Ubuntu runners fetch packages through an Azure mirror list. When that mirror's name
 # stops resolving ("Temporary failure resolving 'azure.archive.ubuntu.com'"), every e2e and a11y
-# job dies here before running a test. So: try twice as configured, then point apt straight at
-# archive.ubuntu.com / security.ubuntu.com and try twice more. Exits non-zero only if all fail.
+# job dies here before running a test, after apt has spent minutes retrying. So: if the mirror's
+# name doesn't resolve, go straight to archive.ubuntu.com; otherwise try as configured once and
+# fall back on failure. Each attempt is capped so the job's own timeout is never the one to fire.
 set -uo pipefail
 
 attempt() {
   echo "::group::playwright install-deps chromium ($1)"
-  timeout 600 npx playwright install-deps chromium
+  timeout 240 npx playwright install-deps chromium
   local status=$?
   echo "::endgroup::"
   return $status
@@ -27,14 +28,15 @@ use_canonical_mirrors() {
   done
 }
 
-for n in 1 2; do
-  attempt "runner mirrors, try $n" && exit 0
-  sleep 10
-done
+if getent hosts azure.archive.ubuntu.com >/dev/null; then
+  attempt "runner mirrors" && exit 0
+else
+  echo "azure.archive.ubuntu.com doesn't resolve"
+fi
 use_canonical_mirrors
 for n in 1 2; do
   attempt "archive.ubuntu.com, try $n" && exit 0
-  sleep 20
+  sleep 15
 done
 echo "::error::Could not install Chromium system packages from any apt mirror"
 exit 1
