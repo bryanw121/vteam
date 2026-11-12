@@ -2909,6 +2909,16 @@ export type Database = {
       is_app_admin: { Args: never; Returns: boolean }
       is_club_owner: { Args: { p_club_id: string }; Returns: boolean }
       is_conversation_member: { Args: { conv_id: string }; Returns: boolean }
+      job_health: {
+        Args: never
+        Returns: {
+          check_name: string
+          detail: string
+          failures_24h: number
+          last_ok_at: string
+          ok: boolean
+        }[]
+      }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       mark_conversation_read: {
         Args: { p_conversation_id: string }
