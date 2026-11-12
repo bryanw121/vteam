@@ -256,6 +256,14 @@ select props->>'source' as source, count(*) as started from app_events where nam
 select name, count(*) from app_events where name in ('tour_completed', 'tour_skipped') group by 1;
 ```
 
+### Job health
+The background work players notice when it breaks (points, event reminders, the Schelagg imports, the nightly prune, push webhook calls) runs inside the database on timers, and a failure shows nowhere in the app. `public.job_health()` (SECURITY DEFINER, executable by anon, aggregates only: no error text, ids or user data) reports every pg_cron job's last successful run and failures in 24h, the newest Schelagg rows, attendees `award_event_points()` should have paid over an hour ago and didn't, and failed `net._http_response` calls. `scripts/job-health.mjs` judges the rows against `EXPECTATIONS` (per job: how long it may go without a success) and `.github/workflows/job-health.yml` runs it on live and beta every 3 hours, so a failure emails the owner with a table in the job summary (feeds are shown only: `feed-freshness.yml` already pages for them). **A new cron job needs an entry in `EXPECTATIONS`**: CI's Web build runs the script on beta with `--expectations-only` and fails until it has one. Read the error message of a failing job:
+```sql
+select jobname, status, return_message, start_time
+from cron.job_run_details join cron.job using (jobid)
+order by start_time desc limit 20;
+```
+
 ### Messages: toasts, not alerts
 `Alert.alert` does nothing in react-native-web, and most players are on the web. Tell someone something with `toast` from `lib/toast` (#228): `toast.show({ title?, message, variant: 'error' | 'warning' | 'success' | 'info', action?: { label, onPress } })`, or `toast.error("Couldn't join", e, retryAction?)` for a failed write (it says "Check your connection" for network errors and `GENERIC_ERROR_MESSAGE` otherwise, never a raw database message). It is module-level like `lib/query`, so hooks and mutation handlers call it directly; `ToastHost` (in `app/(app)/_layout.tsx` and `app/(auth)/_layout.tsx`) draws one toast at a time (a new one replaces it), with theme colours (`toast*Bg` tokens), role alert and a dismiss button. `notifyInfo` / `notifyError` (`utils/notify`) are thin wrappers over it. A choice still goes through `confirmDestructive` / `ConfirmDialog`. `__tests__/noSilentAlerts.test.ts` fails when a new file imports `Alert`; its `NOT_YET_CONVERTED` list only shrinks.
 
