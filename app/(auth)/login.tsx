@@ -3,9 +3,9 @@ import { View, TouchableOpacity, Animated, Modal } from 'react-native'
 import { Text, TextInput } from '../../components/ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
-import * as Linking from 'expo-linking'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { supabase } from '../../lib/supabase'
+import { obfuscateEmail, sendPasswordReset } from '../../lib/passwordReset'
 import { signInWithGoogle, signInWithApple, sendEmailOtp, verifyEmailOtp } from '../../lib/socialAuth'
 import { isUnknownEmailOtpError } from '../../utils/authErrors'
 import { signInWithUsername } from '../../lib/usernameAuth'
@@ -21,13 +21,6 @@ import { Spinner } from '../../components/ui/Spinner'
 import { JoinContextCard } from '../../components/auth/JoinContextCard'
 import { useUrlParam } from '../../hooks/useUrlParam'
 import { VIEW } from '../../utils/urlViews'
-
-function obfuscateEmail(email: string): string {
-  const [local, domain] = email.split('@')
-  if (!domain) return email
-  const visible = local.slice(0, 3)
-  return `${visible}****@${domain}`
-}
 
 export default function Login() {
   const router = useRouter()
@@ -98,10 +91,9 @@ export default function Login() {
     setResetError('')
     setResetLoading(true)
     try {
-      const redirectTo = Linking.createURL('/(auth)/reset-password')
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+      const error = await sendPasswordReset(email)
       if (error) {
-        setResetError(error.message)
+        setResetError(error)
       } else {
         setResetSent(obfuscateEmail(email))
       }

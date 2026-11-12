@@ -196,6 +196,23 @@ test.describe('signed in as the e2e account', () => {
     expect(profile.data ?? []).toEqual([])
   })
 
+  test('cannot rename itself; other columns of its own row still update (#223)', async () => {
+    const mine = await q(() => me.from('profiles').select('username, first_name').eq('id', myId).single(), 'my profile')
+    const { username, first_name } = mine.data as unknown as { username: string; first_name: string | null }
+
+    const rename = await q(() => me.from('profiles').update({ username: `${username}_x` }).eq('id', myId).select('username'), 'rename myself')
+    if (!rename.error) {
+      // The guard is missing: put the shared account's name back before failing.
+      await me.from('profiles').update({ username }).eq('id', myId)
+    }
+    expect(rename.error?.code, 'profiles_guard_username rejects a username change').toBe('42501')
+
+    // Writes the current value back, so nothing changes either way.
+    const other = await q(() => me.from('profiles').update({ first_name }).eq('id', myId).select('id'), 'update my first name')
+    expect(other.error).toBeNull()
+    expect(other.data).toHaveLength(1)
+  })
+
   test('reads only its own friend rows and cannot write them directly (#15)', async () => {
     const probe = await q(() => me.from('friendships').select('user_id, friend_id, is_best_friend'), 'my friendships')
     test.skip(probe.error?.code === 'PGRST205', 'friends migration not applied on beta yet')
