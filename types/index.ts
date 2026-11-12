@@ -131,9 +131,19 @@ export type NotificationData = {
   badge_type?: string
   /** late_dropout: the player who left; friend_request / friend_accepted: the other person. */
   user_id?: string
+  /** cheers_received groups (#194): distinct givers (first 10), their usernames, how many in all, count per cheer type. */
+  givers?: string[]
+  giver_names?: string[]
+  giver_count?: number
+  cheer_counts?: Record<string, number>
+  /** event_material_change groups (#194): what changed (title, time, location, spots, length). */
+  changed?: string[]
   /** friend_request / friend_accepted: the request. */
   request_id?: string
 }
+
+/** A row in the inbox. Rows written before #194 can be collapsed client-side; `groupIds` then lists every row it stands for. */
+export type NotificationItem = Notification & { groupIds?: string[] }
 
 /** The `data` of a push as the app receives it (send-notification-push / send-chat-push). */
 export type PushData = {
