@@ -108,7 +108,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           # One line: the action runs each script line in its own shell.
-          script: adb install -r apk/app-release.apk && mkdir -p test-results/android && maestro test e2e/android/flows -e EVENT_ID="$EVENT_ID" --format junit --output test-results/android/report.xml --test-output-dir test-results/android
+          script: adb install -r apk/app-release.apk && mkdir -p test-results/android && maestro test e2e/android/flows -e EVENT_ID="$EVENT_ID" --format junit --output test-results/android/report.xml --test-output-dir test-results/android || (adb logcat -d > test-results/android/logcat.txt; grep -E "ReactNativeJS|FATAL|AndroidRuntime" test-results/android/logcat.txt | tail -80; exit 1)
       - name: Delete the event fixture
         if: always()
         run: node e2e/android/fixture.mjs delete || true
