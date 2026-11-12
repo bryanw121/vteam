@@ -462,7 +462,7 @@ export default function ChatRoomScreen() {
           }}>
             <Ionicons name="return-down-back" size={16} color={theme.colors.primary} />
             <View style={{ flex: 1, borderLeftWidth: 2, borderLeftColor: theme.colors.primary, paddingLeft: 8 }}>
-              <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primary, fontWeight: theme.font.weight.semibold }}>
+              <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText, fontWeight: theme.font.weight.semibold }}>
                 Replying to {replyTo.profiles ? displayName(replyTo.profiles) : 'message'}
               </Text>
               <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }} numberOfLines={1}>
@@ -488,7 +488,7 @@ export default function ChatRoomScreen() {
           }}>
             <Ionicons name="pencil-outline" size={16} color={theme.colors.primary} />
             <View style={{ flex: 1, borderLeftWidth: 2, borderLeftColor: theme.colors.primary, paddingLeft: 8 }}>
-              <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primary, fontWeight: theme.font.weight.semibold }}>
+              <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText, fontWeight: theme.font.weight.semibold }}>
                 Editing message
               </Text>
               <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }} numberOfLines={1}>

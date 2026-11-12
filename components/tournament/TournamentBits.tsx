@@ -16,7 +16,7 @@ export function AutoAvatar({ avatarUrl, border, size }: { avatarUrl?: string | n
 
 export function TourneyStatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
-    published:   { bg: theme.colors.primary + '22', color: theme.colors.primary, label: 'Registration Open' },
+    published:   { bg: theme.colors.primary + '22', color: theme.colors.primaryText, label: 'Registration Open' },
     in_progress: { bg: theme.colors.hot + '22',     color: theme.colors.hot,     label: '● In Progress' },
     completed:   { bg: theme.colors.cool + '22',    color: theme.colors.cool,    label: 'Completed' },
     draft:       { bg: theme.colors.border,          color: theme.colors.subtext, label: 'Draft' },
