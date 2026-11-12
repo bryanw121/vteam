@@ -105,7 +105,7 @@ export function TeamCard({ team, isOrganizer, viewerId, myTeam, registrationOpen
           onPress={() => actions.onAssign(team)}
           style={{ marginTop: 10, paddingVertical: 9, borderRadius: 10, backgroundColor: theme.colors.primary + '18', alignItems: 'center' }}
         >
-          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.primary }}>Assign to Team →</Text>
+          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.primaryText }}>Assign to Team →</Text>
         </TouchableOpacity>
       )}
 

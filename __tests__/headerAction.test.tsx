@@ -119,7 +119,7 @@ describe('Share sends an https link (#130)', () => {
   it('no longer builds links with expo-linking', () => {
     const src = readFileSync(resolve(__dirname, '../components/event/EventHeaderActions.tsx'), 'utf8')
     expect(src).not.toMatch(/createURL|window\.location\.href/)
-    expect(src).toMatch(/shareUrl\(routes\.event\(eventId\)\)/)
+    expect(src).toMatch(/shareUrl\(routes\.event\(eventId[,)]/)
   })
 })
 
@@ -138,7 +138,7 @@ describe('guards against reintroducing sub-44pt header controls', () => {
   })
 
   it('the event page still confirms before deleting', () => {
-    const page = readFileSync(resolve(__dirname, '../app/(app)/event/[id].tsx'), 'utf8')
+    const page = readFileSync(resolve(__dirname, '../components/event/EventDetailScreen.tsx'), 'utf8')
     expect(page).toMatch(/onDelete=\{\(\) => setDeleteConfirmVisible\(true\)\}/)
     expect(page).toMatch(/visible=\{deleteConfirmVisible\}/)
   })

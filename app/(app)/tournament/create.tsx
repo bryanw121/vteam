@@ -1,12 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react'
-import {
-  View,
-  ScrollView,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-} from 'react-native'
+import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native'
 import { Text, TextInput } from '../../../components/ui/Text'
 import { useRouter, Stack } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -18,6 +11,10 @@ import { routes } from '../../../utils/routes'
 import { DatePickerField } from '../../../components/DatePickerField'
 import { notifyError, notifyInfo } from '../../../utils/notify'
 import type { TournamentDraft, TournamentFormat, TournamentBracketType, Club } from '../../../types'
+import { TIEBREAKER_LABELS } from '../../../constants/tournamentCopy'
+import { DEFAULT_TIEBREAKERS } from '../../../lib/tournamentStandings'
+import { IconButton } from '../../../components/ui'
+import { Spinner } from '../../../components/ui/Spinner'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -46,6 +43,8 @@ const DEFAULT_DRAFT: TournamentDraft = {
   winByMargin: 2,
   pointCap: null,
   setsToWin: 2,
+  tiebreakers: [...DEFAULT_TIEBREAKERS],
+  thirdPlaceMatch: false,
 }
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
@@ -524,8 +523,42 @@ function StepRules({ draft, update }: { draft: TournamentDraft; update: (p: Part
           </View>
         )}
       </View>
+
+      <SectionLabel icon="podium-outline" label="Tie Rules" />
+      <View style={[shared.card, { marginBottom: 16 }]}>
+        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginBottom: 8 }}>
+          Teams rank by wins. When they're level, these break the tie, top first. Teams level on all of them share the place.
+        </Text>
+        {draft.tiebreakers.map((key, i) => (
+          <View key={key} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 2 }}>
+            <Text style={{ width: 22, fontFamily: theme.fonts.display, fontSize: theme.font.size.md, color: theme.colors.subtext }}>{i + 1}</Text>
+            <Text style={{ flex: 1, fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>{TIEBREAKER_LABELS[key]}</Text>
+            <IconButton icon="chevron-up" size={44} label={`Move ${TIEBREAKER_LABELS[key]} up`} onPress={() => update({ tiebreakers: moveItem(draft.tiebreakers, i, -1) })} />
+            <IconButton icon="chevron-down" size={44} label={`Move ${TIEBREAKER_LABELS[key]} down`} onPress={() => update({ tiebreakers: moveItem(draft.tiebreakers, i, 1) })} />
+          </View>
+        ))}
+        {(draft.format === 'pool_bracket' || draft.format === 'bracket') && draft.bracketType === 'single' && (
+          <View style={{ marginTop: 12 }}>
+            <Toggle
+              value={draft.thirdPlaceMatch}
+              onChange={v => update({ thirdPlaceMatch: v })}
+              label="Play a third-place match"
+              sub="Off: both semifinal losers share third place"
+            />
+          </View>
+        )}
+      </View>
     </ScrollView>
   )
+}
+
+/** A copy with item `i` moved one step up (-1) or down (1). */
+function moveItem<T>(items: readonly T[], i: number, by: -1 | 1): T[] {
+  const j = i + by
+  if (j < 0 || j >= items.length) return [...items]
+  const next = [...items]
+  ;[next[i], next[j]] = [next[j], next[i]]
+  return next
 }
 
 // ─── Step 5: Preview ──────────────────────────────────────────────────────────
@@ -617,6 +650,7 @@ function StepPreview({ draft, clubs, onSaveDraft, onPublish, saving }: {
         <PreviewRow icon="flag-outline"         label="Win a set"       value={`${draft.winningScore} pts (win by ${draft.winByMargin})`} />
         <PreviewRow icon="star-outline"         label="Deciding set"    value={`${draft.decidingSetScore} pts`} />
         <PreviewRow icon="trophy-outline"       label="Match format"    value={`Best of ${draft.setsToWin * 2 - 1}`} />
+        <PreviewRow icon="podium-outline"       label="Tiebreakers"     value={draft.tiebreakers.map(k => TIEBREAKER_LABELS[k]).join(' → ')} />
         {draft.pointCap !== null && (
           <PreviewRow icon="close-circle-outline" label="Point cap"     value={`${draft.pointCap} pts`} />
         )}
@@ -630,7 +664,7 @@ function StepPreview({ draft, clubs, onSaveDraft, onPublish, saving }: {
           style={{ backgroundColor: theme.colors.primary, borderRadius: 14, padding: 16, alignItems: 'center' }}
         >
           {saving
-            ? <ActivityIndicator color={theme.colors.onPrimary} />
+            ? <Spinner color={theme.colors.onPrimary} />
             : <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.onPrimary }}>Publish Tournament</Text>
           }
         </TouchableOpacity>
@@ -704,6 +738,9 @@ async function saveTournament(draft: TournamentDraft, status: 'draft' | 'publish
       win_by_margin:       draft.winByMargin,
       point_cap:           draft.pointCap,
       sets_to_win:         draft.setsToWin,
+      // Only sent when changed, so creating still works on a database without these columns.
+      ...(draft.tiebreakers.join() !== DEFAULT_TIEBREAKERS.join() ? { tiebreakers: draft.tiebreakers } : {}),
+      ...(draft.thirdPlaceMatch && draft.bracketType === 'single' ? { third_place_match: true } : {}),
     })
 
   if (rErr) {

@@ -1,514 +1,491 @@
 {
-  "chat-club": {
+  "admin-metrics": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 7,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 12,
-      "document-title": 1
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-events": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-live": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-people": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-person": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-retention": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "chat-club": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
     }
   },
   "chat-conversation": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 11,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 16,
-      "document-title": 1
+      "color-contrast": 2
     }
   },
   "chat-list": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 9,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 14,
-      "document-title": 1
+      "color-contrast": 2
     }
   },
   "club-create": {
     "mobile": {
-      "color-contrast": 8,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 13,
-      "document-title": 1
+      "color-contrast": 2
     }
   },
   "club-detail": {
-    "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 8,
-      "document-title": 1
-    },
+    "mobile": {},
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 14,
-      "document-title": 1
+      "color-contrast": 1
     }
   },
   "club-detail-guest": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 7,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 12,
-      "document-title": 1
+      "color-contrast": 2
     }
   },
   "clubs-list": {
-    "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 2,
-      "document-title": 1
-    },
+    "mobile": {},
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 7,
-      "document-title": 1
+      "color-contrast": 1
     }
   },
   "event-cheers": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 10,
-      "document-title": 1
+      "color-contrast": 2
     },
     "desktop": {
-      "aria-progressbar-name": 3,
-      "color-contrast": 15,
-      "document-title": 1
+      "color-contrast": 3
     }
   },
   "event-details": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 20,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 2,
-      "color-contrast": 23,
-      "document-title": 1
+      "color-contrast": 2
+    }
+  },
+  "event-details-noshow": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
     }
   },
   "event-discussion": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 16,
-      "document-title": 1,
-      "label": 1
+      "color-contrast": 2
     },
     "desktop": {
-      "aria-progressbar-name": 3,
-      "color-contrast": 21,
-      "document-title": 1,
-      "label": 1
+      "color-contrast": 3
     }
   },
   "event-guest": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 19,
-      "document-title": 1
+      "color-contrast": 3
     },
     "desktop": {
-      "aria-progressbar-name": 2,
-      "color-contrast": 23,
-      "document-title": 1
+      "color-contrast": 4
+    }
+  },
+  "event-join-intent-sheet": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 6
+    }
+  },
+  "event-leave-sheet": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 5
     }
   },
   "event-paid-bottom": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 20,
-      "document-title": 1
+      "color-contrast": 4
     },
     "desktop": {
-      "aria-progressbar-name": 2,
-      "color-contrast": 20,
-      "document-title": 1
+      "color-contrast": 4
     }
   },
   "event-people": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 20,
-      "document-title": 1
+      "color-contrast": 2
     },
     "desktop": {
-      "aria-progressbar-name": 2,
-      "color-contrast": 25,
-      "document-title": 1
+      "color-contrast": 3
+    }
+  },
+  "event-people-balanced": {
+    "mobile": {
+      "color-contrast": 2
+    },
+    "desktop": {
+      "color-contrast": 3
     }
   },
   "events-feed": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 33,
-      "document-title": 1
+      "color-contrast": 18
     },
     "desktop": {
-      "aria-progressbar-name": 2,
-      "color-contrast": 49,
-      "document-title": 1
+      "color-contrast": 9
     }
   },
   "events-feed-guest": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 24,
-      "document-title": 1
+      "color-contrast": 17
     },
     "desktop": {
-      "aria-progressbar-name": 2,
-      "color-contrast": 44,
-      "document-title": 1
+      "color-contrast": 9
+    }
+  },
+  "events-feed-link": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
+  "events-feed-tournaments": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 6
     }
   },
   "host-create": {
-    "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 10,
-      "document-title": 1,
-      "label": 2,
-      "select-name": 3
-    },
+    "mobile": {},
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 15,
-      "document-title": 1,
-      "label": 2,
-      "select-name": 3
+      "color-contrast": 1
     }
   },
   "host-edit": {
-    "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 10,
-      "document-title": 1,
-      "select-name": 3
-    },
+    "mobile": {},
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 15,
-      "document-title": 1,
-      "select-name": 3
+      "color-contrast": 1
+    }
+  },
+  "leagues": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
     }
   },
   "login": {
-    "mobile": {
-      "color-contrast": 10,
-      "document-title": 1
-    },
-    "desktop": {
-      "color-contrast": 11,
-      "document-title": 1
-    }
+    "mobile": {},
+    "desktop": {}
   },
   "notifications": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 12,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 17,
-      "document-title": 1
+      "color-contrast": 2
     }
   },
   "privacy": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "profile-edit-link": {
     "mobile": {
-      "color-contrast": 5,
-      "document-title": 1
+      "color-contrast": 4
     },
     "desktop": {
-      "color-contrast": 7,
-      "document-title": 1
+      "color-contrast": 2
     }
   },
   "profile-other": {
-    "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 4,
-      "document-title": 1
-    },
+    "mobile": {},
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 9,
-      "document-title": 1
+      "color-contrast": 1
     }
   },
   "profile-own": {
-    "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 4,
-      "document-title": 1
-    },
+    "mobile": {},
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 9,
-      "document-title": 1
+      "color-contrast": 1
     }
   },
   "profile-own-guest": {
-    "mobile": {
-      "color-contrast": 3,
-      "document-title": 1
-    },
+    "mobile": {},
     "desktop": {
-      "color-contrast": 8,
-      "document-title": 1
+      "color-contrast": 1
     }
   },
   "register": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "register-join-context": {
     "mobile": {
-      "color-contrast": 13,
-      "document-title": 1
+      "color-contrast": 2
     },
     "desktop": {
-      "color-contrast": 13,
-      "document-title": 1
+      "color-contrast": 2
     }
   },
   "reset-password": {
-    "mobile": {
-      "color-contrast": 3,
-      "document-title": 1
-    },
+    "mobile": {},
+    "desktop": {}
+  },
+  "scorekeeper": {
+    "mobile": {},
     "desktop": {
-      "color-contrast": 3,
-      "document-title": 1
+      "color-contrast": 1
+    }
+  },
+  "scorekeeper-new": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
     }
   },
   "settings-account": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 3,
-      "document-title": 1
+      "color-contrast": 2
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 8,
-      "document-title": 1
+      "color-contrast": 2
+    }
+  },
+  "settings-badge-link": {
+    "mobile": {
+      "color-contrast": 14
+    },
+    "desktop": {
+      "color-contrast": 16
     }
   },
   "settings-badges": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "aria-required-attr": 4,
-      "color-contrast": 13,
-      "document-title": 1
+      "color-contrast": 11
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "aria-required-attr": 4,
-      "color-contrast": 18,
-      "document-title": 1
+      "color-contrast": 11
     }
   },
   "settings-cheers": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 8,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 13,
-      "document-title": 1
+      "color-contrast": 1
     }
   },
   "settings-display": {
     "mobile": {
-      "color-contrast": 9,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 14,
-      "document-title": 1
+      "color-contrast": 1
+    }
+  },
+  "settings-experimental": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
     }
   },
   "settings-feedback": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 9,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 14,
-      "document-title": 1
+      "color-contrast": 1
+    }
+  },
+  "settings-feedback-errors": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 6
+    }
+  },
+  "settings-hidden": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
     }
   },
   "settings-history": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 5,
-      "document-title": 1
+      "color-contrast": 5
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 10,
-      "document-title": 1
+      "color-contrast": 5
     }
   },
   "settings-hosted": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 4,
-      "document-title": 1
+      "color-contrast": 4
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 9,
-      "document-title": 1
+      "color-contrast": 4
     }
   },
   "settings-notifications": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 6,
-      "document-title": 1,
-      "label": 24
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 11,
-      "document-title": 1,
-      "label": 24
+      "color-contrast": 1
     }
   },
   "settings-silenced": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 4,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 9,
-      "document-title": 1
+      "color-contrast": 1
     }
   },
   "terms": {
-    "mobile": {
-      "color-contrast": 3,
-      "document-title": 1
-    },
-    "desktop": {
-      "color-contrast": 3,
-      "document-title": 1
-    }
+    "mobile": {},
+    "desktop": {}
   },
   "tournament-create": {
     "mobile": {
-      "color-contrast": 12,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 17,
-      "document-title": 1
+      "color-contrast": 2
     }
   },
   "tournament-discussion": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 11,
-      "document-title": 1,
-      "label": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 16,
-      "document-title": 1,
-      "label": 1
+      "color-contrast": 3
     }
   },
   "tournament-overview": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 15,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 22,
-      "document-title": 1
+      "color-contrast": 3
     }
   },
   "tournament-results": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 21,
-      "document-title": 1
+      "color-contrast": 1
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 24,
-      "document-title": 1
+      "color-contrast": 3
     }
   },
   "tournament-schedule": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 17,
-      "document-title": 1
+      "color-contrast": 6
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 24,
-      "document-title": 1
+      "color-contrast": 8
+    }
+  },
+  "tournament-schedule-link": {
+    "mobile": {
+      "color-contrast": 8
+    },
+    "desktop": {
+      "color-contrast": 10
     }
   },
   "tournament-teams": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 14,
-      "document-title": 1
+      "color-contrast": 6
     },
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 20,
-      "document-title": 1
+      "color-contrast": 8
     }
   },
   "tournaments-list": {
-    "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 8,
-      "document-title": 1
-    },
+    "mobile": {},
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 13,
-      "document-title": 1
+      "color-contrast": 1
     }
   },
   "tournaments-list-past": {
-    "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 4,
-      "document-title": 1
-    },
+    "mobile": {},
     "desktop": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 9,
-      "document-title": 1
+      "color-contrast": 1
+    }
+  },
+  "welcome-city": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "welcome-level": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "welcome-position": {
+    "desktop": {
+      "color-contrast": 1
     }
   }
 }

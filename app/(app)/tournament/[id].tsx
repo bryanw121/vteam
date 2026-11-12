@@ -13,11 +13,14 @@ import { useTournamentData } from '../../../hooks/tournament/useTournamentData'
 import { RefreshControl } from '../../../components/RefreshControl'
 import { generateSchedule, nextStageStart, scheduleBracket } from '../../../lib/tournamentSchedule'
 import { generateBracket } from '../../../lib/tournamentBracket'
-import { avoidPoolRematches, computeStandings, seedsFromPools } from '../../../lib/tournamentStandings'
+import { avoidPoolRematches, computeStandings, DEFAULT_TIEBREAKERS, seedsFromPools } from '../../../lib/tournamentStandings'
 import { poolTables as buildPoolTables, resultWrites, tournamentPodium } from '../../../lib/tournamentResults'
 import { profileDisplayName } from '../../../utils'
 import { routes } from '../../../utils/routes'
 import { ConfirmDialog, ScreenHeader, ScreenState } from '../../../components/ui'
+import { ShareLinkButton } from '../../../components/ShareLinkButton'
+import { useUrlParam } from '../../../hooks/useUrlParam'
+import { VIEW } from '../../../utils/urlViews'
 import { DiscussionTab } from '../../../components/tournament/DiscussionTab'
 import { MatchResultSheet } from '../../../components/tournament/MatchResultSheet'
 import { ResultsTab } from '../../../components/tournament/ResultsTab'
@@ -44,7 +47,10 @@ export default function TournamentDetailScreen() {
   const { userId } = useSession()
   const requireSignIn = useRequireSignIn()
 
-  const [activeTab, setActiveTab] = useState<TournamentTabName>('Overview')
+  // The tab is in the URL (`?tab=schedule`) so a shared link opens it.
+  const [tabIndex, setTabIndex] = useUrlParam('tab', VIEW.tournament.tab)
+  const activeTab: TournamentTabName = TOURNAMENT_TABS[tabIndex] ?? 'Overview'
+  const setActiveTab = (tab: TournamentTabName) => setTabIndex(Math.max(0, TOURNAMENT_TABS.indexOf(tab)))
   // Matches and pools are only needed once the Schedule or Results tab has been opened.
   const wantsMatches = activeTab === 'Schedule' || activeTab === 'Results'
   const [scheduleOpened, setScheduleOpened] = useState(false)
@@ -112,12 +118,13 @@ export default function TournamentDetailScreen() {
   const matches = useMemo(() => matchesQ.data ?? [], [matchesQ.data])
   const pools = useMemo(() => poolsQ.data ?? [], [poolsQ.data])
   const teamName = useCallback((tid: string | null) => teams.find(t => t.id === tid)?.name ?? 'TBD', [teams])
+  const tiebreakers = rules?.tiebreakers ?? DEFAULT_TIEBREAKERS
   const results = useMemo(() => {
     if (!tournament) return null
     const registeredIds = teams.filter(t => t.status === 'registered').map(t => t.id)
     const poolStage = matches.filter(m => m.stage === 'pool_play')
-    const tables = tournament.format === 'pool_play' || tournament.format === 'pool_bracket' ? buildPoolTables(pools, poolStage) : []
-    const overall = tournament.format === 'round_robin' ? computeStandings(registeredIds, matches) : null
+    const tables = tournament.format === 'pool_play' || tournament.format === 'pool_bracket' ? buildPoolTables(pools, poolStage, tiebreakers) : []
+    const overall = tournament.format === 'round_robin' ? computeStandings(registeredIds, matches, tiebreakers) : null
     const bracketRows = matches.filter(m => m.stage === 'bracket')
     const bracketPlayed = bracketRows.some(m => !!m.winner_id)
 
@@ -133,12 +140,12 @@ export default function TournamentDetailScreen() {
     return {
       tables,
       overall,
-      podium: tournamentPodium(matches, tournament, registeredIds),
+      podium: tournamentPodium(matches, tournament, registeredIds, tiebreakers),
       seedPreview,
       poolMatchesLeft: poolStage.filter(m => !m.winner_id).length,
       bracketExists: bracketRows.length > 0,
     }
-  }, [tournament, teams, matches, pools, isCreator])
+  }, [tournament, teams, matches, pools, isCreator, tiebreakers])
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(routes.app()))
 
@@ -193,6 +200,7 @@ export default function TournamentDetailScreen() {
       seeds: Object.fromEntries(registeredTeams.map(t => [t.id, t.seed])),
       refs: tournament.has_refs,
       bracketType: tournament.bracket_type ?? 'single',
+      thirdPlace: !!rules?.third_place_match,
       config,
     })
     return !!(await actions.replaceSchedule.mutate(schedule))
@@ -200,14 +208,14 @@ export default function TournamentDetailScreen() {
 
   async function seedBracket() {
     if (!tournament || !results?.seedPreview) return
-    const rows = generateBracket(results.seedPreview.map(s => s.teamId), tournament.bracket_type ?? 'single')
+    const rows = generateBracket(results.seedPreview.map(s => s.teamId), tournament.bracket_type ?? 'single', !!rules?.third_place_match)
     const start = nextStageStart(matches.filter(m => m.stage === 'pool_play').map(m => m.scheduled_at), config, new Date(tournament.start_date))
     await actions.seedBracket.mutate(scheduleBracket(rows, start, config))
   }
 
   async function submitResult(v: { winnerId: string; sets: SetScore[]; forfeit: boolean }): Promise<boolean> {
     if (!tournament || !resultMatch) return false
-    const writes = resultWrites({ match: resultMatch, winnerId: v.winnerId, matches, tournament, teamIds: registeredTeams.map(t => t.id) })
+    const writes = resultWrites({ match: resultMatch, winnerId: v.winnerId, matches, tournament, teamIds: registeredTeams.map(t => t.id), tiebreakers })
     if (writes.blocked) {
       notifyInfo('Result not saved', writes.blocked)
       return false
@@ -215,7 +223,7 @@ export default function TournamentDetailScreen() {
     const done = await actions.recordResult.mutate({ matchId: resultMatch.id, ...v, writes })
     if (done) {
       setResultMatch(null)
-      if (writes.nextStatus === 'completed') notifyInfo('Tournament complete', 'Final results are in. The podium is on the Results tab.')
+      if (writes.nextStatus === 'completed') notifyInfo('Tournament complete', 'Final results are in. Trophies are on the winners\' profiles and the podium is on the Results tab.')
     }
     return !!done
   }
@@ -285,7 +293,20 @@ export default function TournamentDetailScreen() {
       >
         {tournament && (
           <>
-            <TournamentHero tournament={tournament} registeredTeamCount={registeredTeams.length} onBack={goBack} />
+            <TournamentHero
+              tournament={tournament}
+              registeredTeamCount={registeredTeams.length}
+              onBack={goBack}
+              actions={(
+                <ShareLinkButton
+                  path={routes.tournament(tournament.id, { tab: tabIndex })}
+                  title={`${tournament.title} on vteam`}
+                  screen="tournament"
+                  filtered={tabIndex > 0}
+                  testID="tournament-share-button"
+                />
+              )}
+            />
 
             {/* Tab bar: scrolls sideways when five labels don't fit (narrow phones), spreads out otherwise. */}
             <View style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.border, backgroundColor: theme.colors.background }}>
@@ -430,6 +451,7 @@ export default function TournamentDetailScreen() {
               visible={showRegister}
               onDismiss={() => setShowRegister(false)}
               tournament={tournament}
+              full={tournament.max_teams !== null && registeredTeams.length >= tournament.max_teams}
               busy={actions.register.isPending}
               onSubmit={submitRegister}
             />

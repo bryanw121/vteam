@@ -32,8 +32,8 @@ export const BADGE_TIER_COLORS: Record<number, string> = {
   1: '#CD7F32', // bronze
   2: '#A8A9AD', // silver
   3: '#FFD700', // gold
-  4: '#B0C4DE', // platinum
-  5: '#B9F2FF', // diamond
+  4: '#008E91', // platinum / Elite: teal distinguishes it from silver
+  5: '#A59AF8', // diamond / Legend: lavender
 }
 
 /** Color used for single-level achievement badges (beta, tournament director, etc.) */
@@ -280,6 +280,24 @@ export const PROFILE_BORDERS: ProfileBorderDef[] = [
     ringColors: ['#6C47FF', '#FFD700', '#B9F2FF'],
     description: 'Reach Legend (100 events attended)',
     unlockedBy: [{ badgeType: 'event_attendee', minTier: 5 }],
+  },
+  {
+    type: 'storm',
+    label: 'Stormcaller',
+    color: '#73E8FF',
+    gradientColors: ['#D1F8FF', '#57D8FF', '#9A7CFF'] as const,
+    ringColors: ['#D1F8FF', '#57D8FF', '#9A7CFF'],
+    description: 'Reach The Coach (30 communication cheers)',
+    unlockedBy: [{ badgeType: 'communication_cheer', minTier: 3 }],
+  },
+  {
+    type: 'aether',
+    label: 'Aether',
+    color: '#B58CFF',
+    gradientColors: ['#F0D9FF', '#B58CFF', '#6F47E9'] as const,
+    ringColors: ['#F0D9FF', '#B58CFF', '#6F47E9'],
+    description: 'Reach Maestro (30 setting cheers)',
+    unlockedBy: [{ badgeType: 'set_cheer', minTier: 3 }],
   },
 ]
 

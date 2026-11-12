@@ -1,10 +1,10 @@
 import React from 'react'
-import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native'
+import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { Text } from '../ui/Text'
 import type { RefreshControlProps } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../../constants'
-import { FORMAT_LABELS } from '../../constants/tournamentCopy'
+import { FORMAT_LABELS, TIEBREAKER_LABELS } from '../../constants/tournamentCopy'
 import { formatCommentTime, formatPriceAmount } from '../../utils'
 import { Button } from '../Button'
 import type {
@@ -14,6 +14,7 @@ import type { PendingInvite } from '../../types'
 import { MiniButton } from './TournamentBits'
 import { ts } from './tournamentStyles'
 import { VenmoPayButton } from '../VenmoPayButton'
+import { Spinner } from '../ui/Spinner'
 
 type Props = {
   /** Pull-to-refresh for the whole tournament page. */
@@ -62,8 +63,8 @@ export function OverviewTab(p: Props) {
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
               <Ionicons name="checkmark-circle" size={14} color={theme.colors.primary} />
-              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.primary }}>
-                {myTeam.status === 'free_agent' ? 'Registered as Free Agent' : 'Registered'}
+              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.primaryText }}>
+                {myTeam.status === 'free_agent' ? 'Registered as Free Agent' : myTeam.status === 'waitlisted' ? 'On the waitlist' : 'Registered'}
               </Text>
             </View>
             <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.lgm, letterSpacing: -0.3, color: theme.colors.text }}>{myTeam.name}</Text>
@@ -80,7 +81,7 @@ export function OverviewTab(p: Props) {
             </TouchableOpacity>
             <TouchableOpacity onPress={p.onWithdraw} disabled={p.withdrawing}>
               {p.withdrawing
-                ? <ActivityIndicator size="small" color={theme.colors.error} />
+                ? <Spinner size="small" color={theme.colors.error} />
                 : <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.error }}>Withdraw</Text>}
             </TouchableOpacity>
           </View>
@@ -90,6 +91,11 @@ export function OverviewTab(p: Props) {
       {/* Registration CTA (organizers can enter a team of their own too) */}
       {!myTeam && p.registrationOpen && (
         <Button label="Register Team" testID="register-team" onPress={p.onRegister} style={{ marginBottom: 12 }} />
+      )}
+      {!isCreator && !myTeam && !p.registrationOpen && tournament.status === 'published' && (
+        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext, marginBottom: 12, textAlign: 'center' }}>
+          Registration is closed: the deadline has passed.
+        </Text>
       )}
 
       {/* Pay via Venmo — non-creators, when there is a fee and a handle */}
@@ -239,10 +245,14 @@ export function OverviewTab(p: Props) {
             { label: 'Win by',       value: `${rules.win_by_margin}` },
             { label: 'Sets to win',  value: String(rules.sets_to_win) },
             { label: 'Point cap',    value: rules.point_cap ? String(rules.point_cap) : 'None' },
+            { label: 'Ties broken by', value: rules.tiebreakers.map(k => TIEBREAKER_LABELS[k]).join(', ') },
+            ...(tournament.bracket_type === 'single' && tournament.format !== 'round_robin' && tournament.format !== 'pool_play'
+              ? [{ label: 'Third place', value: rules.third_place_match ? 'Playoff match' : 'Shared by semifinal losers' }]
+              : []),
           ].map((row, i, arr) => (
             <View key={row.label} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 9, paddingHorizontal: 4, borderBottomWidth: i < arr.length - 1 ? 1 : 0, borderBottomColor: theme.colors.borderSoft }}>
               <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext }}>{row.label}</Text>
-              <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.smd, color: theme.colors.text }}>{row.value}</Text>
+              <Text style={{ flexShrink: 1, textAlign: 'right', marginLeft: 12, fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.smd, color: theme.colors.text }}>{row.value}</Text>
             </View>
           ))}
         </View>

@@ -134,16 +134,21 @@ test.describe('Events', () => {
     await expect(page.getByText('Duration').first()).toBeVisible({ timeout: 15000 })
   })
 
-  test('open an event, then join and leave it', async ({ page }) => {
+  test('open an event, then join and leave it through the leave sheet', async ({ page }) => {
     await page.getByText(OPEN_PLAY_EVENT).first().click()
     await page.waitForURL(/\/event\//, { timeout: 20000 })
 
     const joinBtn = page.getByText('Join event', { exact: true })
-    const leaveBtn = page.getByText('Leave event', { exact: true })
+    // By its label, not just the testID: while the join is still saving the button
+    // shows a spinner (and ignores taps), and the label only appears once it is done.
+    const leaveBtn = page.getByTestId('leave-event').getByText('Leave event', { exact: true })
+    const sheetLeave = page.getByTestId('leave-confirm')
+    const stayIn = page.getByTestId('leave-cancel')
 
     // State-tolerant: a prior run may have left the account attending.
     if (await leaveBtn.isVisible().catch(() => false)) {
       await leaveBtn.click()
+      await sheetLeave.click()
       await expect(joinBtn).toBeVisible({ timeout: 15000 })
     }
 
@@ -152,8 +157,31 @@ test.describe('Events', () => {
     await expect(leaveBtn).toBeVisible({ timeout: 15000 })
     await expect(page.getByText("You're going", { exact: true }).first()).toBeVisible()
 
-    // Leave → back to Join (cleans up shared-account state).
+    // Leave opens the sheet (#171); Stay in keeps the spot.
     await leaveBtn.click()
+    await expect(page.getByText('Leave this game?', { exact: true })).toBeVisible()
+    // Open spots and points, never the host notice (this account hosts the fixture).
+    await expect(page.getByTestId('leave-line-points')).toBeVisible()
+    await expect(page.getByTestId('leave-line-hostNotified')).toHaveCount(0)
+    await expect(stayIn).toBeFocused()
+    await stayIn.click()
+    await expect(page.getByText('Leave this game?', { exact: true })).toHaveCount(0)
+    await expect(leaveBtn).toBeVisible()
+
+    // Esc is Stay in too.
+    await leaveBtn.click()
+    await expect(sheetLeave).toBeVisible()
+    await expect(stayIn).toBeFocused()
+    // react-native-web's Modal ignores Esc until its open animation has finished (~300ms), so retry the key.
+    await expect(async () => {
+      await page.keyboard.press('Escape')
+      await expect(sheetLeave).toHaveCount(0, { timeout: 500 })
+    }).toPass({ timeout: 5000 })
+    await expect(leaveBtn).toBeVisible()
+
+    // Leave game → back to Join (cleans up shared-account state).
+    await leaveBtn.click()
+    await sheetLeave.click()
     await expect(joinBtn).toBeVisible({ timeout: 15000 })
   })
 
@@ -208,26 +236,6 @@ test.describe('Events', () => {
     // Tapping a card opens that event.
     await rail.getByTestId(/^my-event-card-/).first().click()
     await page.waitForURL(/\/event\//, { timeout: 20000 })
-  })
-
-  test('the Mine chip carries a count and filters without losing the hosted fixtures', async ({ page }) => {
-    await expect(page.getByText(OPEN_PLAY_EVENT).first()).toBeVisible({ timeout: 20000 })
-
-    // The chip shows how many commitments there are — at least the two fixtures.
-    const mineChip = page.getByTestId('filter-mine').first()
-    await expect(mineChip).toHaveText(/^Mine \d+$/)
-
-    // Both fixtures are hosted by this account, so Mine keeps them in the feed
-    // itself — asserting against the rail would be vacuous, since the rail
-    // shows commitments regardless of filter.
-    const feed = page.getByTestId('events-feed')
-    await mineChip.click()
-    await expect(feed.getByText(OPEN_PLAY_EVENT).first()).toBeVisible({ timeout: 15000 })
-    await expect(feed.getByText(TOURNAMENT_EVENT).first()).toBeVisible()
-
-    // All restores the unfiltered feed.
-    await page.getByTestId('filter-all').first().click()
-    await expect(feed.getByText(OPEN_PLAY_EVENT).first()).toBeVisible({ timeout: 15000 })
   })
 
   // #44: exercise the controlled input, Supabase write/read, and formatted

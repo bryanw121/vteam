@@ -154,10 +154,15 @@ test.describe('Tournament flow', () => {
     await expect(page.getByText(TOURNAMENT_TITLE, { exact: true }).first()).toBeVisible({ timeout: 15_000 })
   })
 
-  // TODO(#7): enable once the trophies migration (draft PR, `tournament_trophies` +
-  // `complete_tournament`) is applied to beta: the champion's roster should show
-  // a gold trophy on their profile.
-  test.skip('trophies land on the winners\' profiles', async () => {})
+  // Our team (seed 1 by registration order, team A in the final) won 2-0, so
+  // the e2e account holds a gold trophy for this tournament.
+  test('trophies land on the winners\' profiles', async ({ page }) => {
+    test.skip(!tournamentUrl, 'needs the finished tournament')
+    const caseBlock = page.getByTestId('trophy-case').filter({ visible: true }).first()
+    await gotoReady(page, `${BASE_URL}/profile`, caseBlock)
+    await expect(caseBlock.getByText(TOURNAMENT_TITLE).first()).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('trophy-count-1').filter({ visible: true }).first()).not.toHaveText('—')
+  })
 
   // TODO(#7): enable once the registration-rules migration is applied to beta:
   // registering after the deadline is refused by the server, not just hidden.

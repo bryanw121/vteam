@@ -117,6 +117,20 @@ async function sendMessageAndWait(page: Page, messageText: string) {
   }).toPass({ timeout: 30_000, intervals: [0, 1000, 2000, 3000] })
 }
 
+/** The chat tab badge (sidebar on desktop, tab bar on mobile): its number, or 0 when none is shown. */
+async function badgeCount(page: Page) {
+  const badge = page.getByTestId('chat-unread-badge').filter({ visible: true })
+  if (await badge.count() === 0) return 0
+  const text = (await badge.first().innerText()).trim()
+  return text === '99+' ? 100 : Number(text)
+}
+
+/** Sum of the unread pips on the Chat list's rows. */
+async function listUnreadTotal(page: Page) {
+  const pips = await page.getByTestId('conversation-unread').filter({ visible: true }).allInnerTexts()
+  return pips.reduce((n, t) => n + (t.trim() === '99+' ? 100 : Number(t.trim())), 0)
+}
+
 // ---------------------------------------------------------------------------
 // Suite
 // ---------------------------------------------------------------------------
@@ -139,6 +153,29 @@ test.describe('Chat', () => {
     // Keep negative assertions from passing vacuously on the login screen.
     await expect(chatHeader(page)).toBeVisible({ timeout: 20_000 })
     console.log(`→ ready: ${testInfo.title}`)
+  })
+
+  // ── 0. Tab badge (#146) ────────────────────────────────────────────────────
+
+  test('the tab badge matches the list, and after opening the DM it stays put across a recount and a reload', async ({ page }) => {
+    // The badge starts 1.5s after sign-in; give it time, then it must agree with the rows.
+    await expect.poll(async () => (await badgeCount(page)) - (await listUnreadTotal(page)), { timeout: 15_000 }).toBe(0)
+
+    // Opening the seed DM marks it read (debounced 1s), then the list is recounted once the read is saved.
+    await gotoConversation(page)
+    await page.waitForTimeout(2500)
+    await page.goto(`${BASE_URL}/chat`)
+    await expect(chatHeader(page)).toBeVisible({ timeout: 20_000 })
+    await page.waitForTimeout(4000)
+    const settled = await badgeCount(page)
+    expect(settled).toBe(await listUnreadTotal(page))
+
+    // No ghost: the same count after a reload (and once the badge's delayed first fetch has landed).
+    await page.reload()
+    await expect(chatHeader(page)).toBeVisible({ timeout: 20_000 })
+    await page.waitForTimeout(4000)
+    expect(await badgeCount(page)).toBe(settled)
+    expect(await listUnreadTotal(page)).toBe(settled)
   })
 
   // ── 1. Chat list ───────────────────────────────────────────────────────────
@@ -166,7 +203,8 @@ test.describe('Chat', () => {
     await page.getByRole('button', { name: 'New message' }).click()
     await page.waitForTimeout(1000)
     await expect(page.getByRole('textbox')).toBeVisible()
-    await expect(page.getByText('Cancel')).toBeVisible()
+    // Exact: the seed DM's preview can contain "cancel" (another spec's e2e-cancel-edit message).
+    await expect(page.getByText('Cancel', { exact: true })).toBeVisible()
   })
 
   test('compose search returns matching users', async ({ page }) => {
@@ -250,6 +288,8 @@ test.describe('Chat', () => {
   test('long conversation: opens at the newest, keeps a bounded DOM, loads older on scroll-up without a jump', async ({ page }) => {
     // The seed DM has hundreds of messages; a page is 40.
     await gotoConversation(page)
+    // The list is its own chunk on web (#193): wait for its rows, then let it settle.
+    await page.locator('[data-testid="chat-message-list"] [data-index]').first().waitFor({ timeout: 20_000 })
     await page.waitForTimeout(1500)
     const opened = await listState(page)
     expect(opened).not.toBeNull()

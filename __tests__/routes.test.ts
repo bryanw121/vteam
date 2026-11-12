@@ -65,6 +65,7 @@ describe('routes', () => {
     expect(routes.settings('notifications')).toBe('/settings/notifications')
     expect(routes.settings('badges')).toBe('/settings/badges')
     expect(routes.settings('ad-free')).toBe('/settings/ad-free')
+    expect(routes.settings('hidden')).toBe('/settings/hidden')
   })
 
   it('builds group routes', () => {

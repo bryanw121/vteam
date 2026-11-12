@@ -4,6 +4,7 @@ import { Text } from './ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { badgeTierLabel, BADGE_CATEGORY_GRADIENTS, type BadgeDef } from '../constants/badges'
+import { BADGE_ARTWORK } from '../constants/badgeArtwork'
 import { theme } from '../constants/theme'
 import { useBadgeArt } from '../hooks/useBadgeArt'
 
@@ -30,19 +31,22 @@ export function BadgeIcon({ def, tier, size = 'sm', showLabel = false, slotNumbe
   const fs       = FRAME[size]
   const iconSize = ICON[size]
   const gap      = GAP[size]
-  const isTiered = def.tiers.length > 1
   const r        = fs / 2
 
   const [topColor, bottomColor] = BADGE_CATEGORY_GRADIENTS[def.type] ?? ['#888', '#444']
   const label = earned ? badgeTierLabel(def, tier!) : def.tiers[0].label
 
-  // Resolve image URI: generated art for the earned tier (badge_art, #10), then
-  // the per-tier image in code, then a single imageUri, else the gradient icon.
+  // Resolve the image: generated art for the earned tier (badge_art, #10), then the
+  // bundled artwork (constants/badgeArtwork), then a definition URL, else the gradient icon.
   const art = useBadgeArt()
   const generatedUri = earned ? art[def.type]?.[tier!] : undefined
-  const resolvedImageUri = generatedUri || (earned && def.tierImageUris?.[tier!]) || def.imageUri
-  // Tiered image badges (e.g. spike) render larger since they're detailed artwork
-  const imageScale = generatedUri || def.tierImageUris ? 1.4 : 1.2
+  const resolvedImageUri = (earned && def.tierImageUris?.[tier!]) || def.imageUri
+  const bundledArtwork = BADGE_ARTWORK[def.type]?.[earned ? tier! : def.tiers[0].tier]
+  const resolvedImageSource = generatedUri
+    ? { uri: generatedUri }
+    : bundledArtwork ?? (resolvedImageUri ? { uri: resolvedImageUri } : undefined)
+  // The bundled PNGs share a padded canvas; keep the art inside the label gap.
+  const imageScale = generatedUri ? 1.4 : bundledArtwork ? 1.15 : def.tierImageUris ? 1.4 : 1.2
 
   return (
     <View style={{ alignItems: 'center', gap }}>
@@ -50,10 +54,12 @@ export function BadgeIcon({ def, tier, size = 'sm', showLabel = false, slotNumbe
       {/* ── Icon area ── */}
       <View style={{ width: fs, height: fs, alignItems: 'center', justifyContent: 'center' }}>
 
-        {resolvedImageUri ? (
+        {resolvedImageSource ? (
           // Image badge — renders larger as a free-form sticker using image transparency
           <Image
-            source={{ uri: resolvedImageUri }}
+            source={resolvedImageSource}
+            testID={`badge-artwork-${def.type}`}
+            accessibilityLabel={earned ? label : `${label} (locked)`}
             style={{ width: fs * imageScale, height: fs * imageScale, opacity: earned ? 1 : 0.25 }}
             resizeMode="contain"
           />

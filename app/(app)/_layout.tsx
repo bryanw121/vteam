@@ -11,8 +11,12 @@ import { SentryErrorBoundary } from '../../components/SentryErrorBoundary'
 import { ChatUnreadProvider, useChatUnread } from '../../hooks/useChatUnread'
 import { useIsNarrowWeb } from '../../hooks/useIsNarrowWeb'
 import { useRequireSignIn } from '../../hooks/useRequireSignIn'
-import { routes } from '../../utils/routes'
+import { usePlayerSetupGate } from '../../hooks/usePlayerSetupGate'
+import { routes, toRoute } from '../../utils/routes'
+import { queryString } from '../../utils/urlState'
+import { tabParams } from '../../utils/tabViews'
 import { TourProvider } from '../../contexts/tour'
+import { ToastHost } from '../../components/ToastHost'
 import { TourTarget } from '../../components/tour/TourTarget'
 import { TOUR_TARGETS } from '../../constants'
 
@@ -47,6 +51,8 @@ export default function AppLayout() {
       {/* Tours draw their overlay above the sidebar and every screen. */}
       <TourProvider>
         <AppLayoutInner />
+        {/* lib/toast messages, above the sidebar and every screen (#228). */}
+        <ToastHost />
       </TourProvider>
     </ChatUnreadProvider>
   )
@@ -57,6 +63,7 @@ function AppLayoutInner() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const chatUnread = useChatUnread()
+  usePlayerSetupGate(pathname)
 
   useEffect(() => {
     if (Platform.OS === 'web') return
@@ -68,7 +75,8 @@ function AppLayoutInner() {
   const requireSignIn = useRequireSignIn()
 
   function goToTab(index: number) {
-    router.replace(TABS[index].path)
+    // Back to the tab with the filters it last had (utils/tabViews).
+    router.replace(toRoute(TABS[index].path + queryString(tabParams(TABS[index].key))))
   }
 
   // Anyone may open the menu ("Book a court" is public); creating on vteam asks guests to sign in (goCreate).
@@ -120,12 +128,12 @@ function AppLayoutInner() {
                   <Text style={{
                     fontSize: theme.font.size.xl,
                     fontWeight: theme.font.weight.bold,
-                    color: theme.colors.primary,
+                    color: theme.colors.primaryText,
                   }}>
                     vteam
                   </Text>
                   <View style={{ backgroundColor: theme.colors.primary + '22', borderWidth: 1, borderColor: theme.colors.primary + '66', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
-                    <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primary, letterSpacing: 1 }}>BETA</Text>
+                    <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, letterSpacing: 1 }}>BETA</Text>
                   </View>
                 </View>
               )}
@@ -166,7 +174,7 @@ function AppLayoutInner() {
                       color={active ? theme.colors.primary : theme.colors.subtext}
                     />
                     {badge > 0 && (
-                      <View style={{
+                      <View testID="chat-unread-badge" style={{
                         position: 'absolute', top: -5, right: -8,
                         minWidth: 18, height: 18, borderRadius: 9,
                         backgroundColor: theme.colors.hot,
@@ -206,6 +214,7 @@ function AppLayoutInner() {
               }}
             >
               <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: 'Back' }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
               <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back, presentation: 'modal', ...(Platform.OS === 'web' ? { animationEnabled: false } : {}) }} />
               <Stack.Screen name="event/[id]" options={{ headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back }} />
               <Stack.Screen name="profile/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
@@ -290,6 +299,7 @@ function AppLayoutInner() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: 'Back' }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
       <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back, presentation: 'modal' }} />
       <Stack.Screen name="event/[id]" options={{ headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back }} />
       <Stack.Screen name="profile/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />

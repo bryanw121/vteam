@@ -34,8 +34,10 @@ export const shared = StyleSheet.create({
   subheading:   { fontFamily: theme.fonts.displaySemiBold, fontSize: font.size.lg,  color: colors.text },
   body:         { fontFamily: theme.fonts.body,           fontSize: font.size.md,  color: colors.text, lineHeight: font.lineHeight.normal },
   caption:      { fontFamily: theme.fonts.body,           fontSize: font.size.sm,  color: colors.subtext },
+  /** A section heading inside a settings subpage (e.g. Friends: Requests / Friends / Sent). */
+  subpageSectionTitle: { fontFamily: theme.fonts.display, fontSize: font.size.lg, color: colors.text, marginTop: theme.spacing.lg, marginBottom: theme.spacing.sm },
   label:        { fontFamily: theme.fonts.bodyMedium,     fontSize: font.size.sm,  color: colors.subtext, marginBottom: spacing.xs },
-  primaryText:  { fontFamily: theme.fonts.bodyMedium,     fontSize: font.size.md,  color: colors.primary },
+  primaryText:  { fontFamily: theme.fonts.bodyMedium,     fontSize: font.size.md,  color: colors.primaryText },
   errorText:    { fontFamily: theme.fonts.body,           fontSize: font.size.sm,  color: colors.error, marginTop: spacing.xs },
 
   // ─── Inputs ───────────────────────────────────────────────
@@ -61,7 +63,7 @@ export const shared = StyleSheet.create({
   buttonDanger:       { backgroundColor: colors.error },
   buttonDisabled:     { opacity: 0.5 },
   buttonLabelPrimary: { fontFamily: theme.fonts.bodySemiBold, color: colors.white,   fontSize: font.size.md },
-  buttonLabelSecondary: { fontFamily: theme.fonts.bodySemiBold, color: colors.primary, fontSize: font.size.md },
+  buttonLabelSecondary: { fontFamily: theme.fonts.bodySemiBold, color: colors.primaryText, fontSize: font.size.md },
 
   // ─── Badges ───────────────────────────────────────────────
   badge:     { backgroundColor: colors.primary, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
@@ -78,10 +80,26 @@ export const shared = StyleSheet.create({
     maxWidth: 400,
     ...shadow.md,
   },
-  authTitle:    { fontSize: font.size.xxl, fontWeight: font.weight.bold, color: colors.primary, marginBottom: spacing.xs, textAlign: 'center' },
+  authTitle:    { fontSize: font.size.xxl, fontWeight: font.weight.bold, color: colors.primaryText, marginBottom: spacing.xs, textAlign: 'center' },
   authSubtitle: { fontSize: font.size.md, color: colors.subtext, marginBottom: spacing.xl, textAlign: 'center' },
   authLink:     { marginTop: spacing.md, alignItems: 'center' },
-  authLinkText: { color: colors.primary, fontSize: font.size.md },
+  authLinkText: { color: colors.primaryText, fontSize: font.size.md },
+  // Join intent (#229): the game a guest was joining, on the sign-up / sign-in card.
+  joinContextCard: {
+    borderWidth: 1, borderColor: colors.timeBorder, backgroundColor: colors.time,
+    borderRadius: theme.radius.md, padding: spacing.md, gap: spacing.xs, marginBottom: spacing.md,
+  },
+  joinContextEyebrow: { fontFamily: theme.fonts.bodyMedium, fontSize: font.size.xs, color: colors.timeInk, letterSpacing: 0.5 },
+  joinContextTitle: { fontFamily: theme.fonts.bodyMedium, fontSize: font.size.md, color: colors.text },
+  joinContextMeta: { fontFamily: theme.fonts.body, fontSize: font.size.sm, color: colors.timeText },
+  authModeSwitch: {
+    flexDirection: 'row', borderWidth: 1, borderColor: colors.border, borderRadius: theme.radius.md,
+    padding: 3, marginBottom: spacing.md,
+  },
+  authModeOption: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.sm },
+  authModeOptionActive: { backgroundColor: colors.primarySoft },
+  authModeText: { fontFamily: theme.fonts.bodyMedium, fontSize: font.size.sm, color: colors.subtextStrong },
+  authModeTextActive: { color: colors.text },
   authLinkSubtle: { color: colors.subtext, fontSize: font.size.md },
 
   // ─── Divider ──────────────────────────────────────────────
@@ -112,7 +130,7 @@ export const shared = StyleSheet.create({
   },
   stepperBtn:         { width: 56, height: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   stepperBtnDisabled: { opacity: 0.3 },
-  stepperBtnText:     { fontSize: font.size.xl, color: colors.primary, fontWeight: font.weight.medium },
+  stepperBtnText:     { fontSize: font.size.xl, color: colors.primaryText, fontWeight: font.weight.medium },
   stepperValue:       { flex: 1, textAlign: 'center', fontSize: font.size.md, fontWeight: font.weight.medium, color: colors.text },
 
   // ─── Attendee row (event detail) ──────────────────────────
@@ -126,7 +144,7 @@ export const shared = StyleSheet.create({
 
   // ─── Tags ─────────────────────────────────────────────────
   tag:     { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.full, backgroundColor: colors.primary + '18', borderWidth: 1, borderColor: colors.primary + '40' },
-  tagText: { fontSize: font.size.xs, fontWeight: font.weight.medium, color: colors.primary },
+  tagText: { fontSize: font.size.xs, fontWeight: font.weight.medium, color: colors.primaryText },
 
   // ─── Floating actions ─────────────────────────────────────
   floatingButtonWrap: {
@@ -184,7 +202,40 @@ export const shared = StyleSheet.create({
   // ─── Team / player grid (shared by the event People & Cheers tabs) ───────
   playerGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   playerCell: { width: Platform.OS === 'web' ? '33.33%' : '50%', padding: 3 },
+  // Player setup after sign-up (#156).
+  welcomeBody: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl, gap: spacing.sm },
+  welcomeTitle: { fontFamily: fonts.display, fontSize: font.heading.lg, fontWeight: font.weight.bold, color: colors.text },
+  welcomeLead: { fontSize: font.size.md, color: colors.subtextStrong, marginBottom: spacing.md, lineHeight: font.lineHeight.normal },
+  welcomeOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  welcomeOption: {
+    minHeight: 44, justifyContent: 'center', borderRadius: radius.full, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.card, paddingHorizontal: spacing.md,
+  },
+  welcomeOptionOn: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  welcomeOptionLabel: { fontSize: font.size.md, color: colors.text },
+  welcomeHint: { fontSize: font.size.sm, color: colors.subtextStrong },
+  welcomeOptionLabelOn: { fontWeight: font.weight.semibold, color: colors.timeInk },
+  welcomeLevelRow: {
+    minHeight: 56, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: 2, justifyContent: 'center',
+  },
+  welcomeLiveTag: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.cool, borderWidth: 1, borderColor: colors.cool,
+    borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
+  welcomeSkip: { minHeight: 44, minWidth: 44, alignItems: 'flex-end', justifyContent: 'center' },
+  welcomeSkipText: { fontSize: font.size.md, color: colors.subtextStrong, fontWeight: font.weight.semibold },
+  welcomeFooter: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.md },
+  welcomeDots: { flexDirection: 'row', justifyContent: 'center', gap: spacing.xs },
+  welcomeDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.border },
+  welcomeDotOn: { width: 20, backgroundColor: colors.primary },
   teamHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
+  // Team header chips (#149): average tier and setter count.
+  teamSummaryChip: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.timeInk,
+    backgroundColor: colors.primarySoft, borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
+  teamSummaryChipSetter: { color: colors.cool, backgroundColor: colors.card },
   teamDot: { width: 8, height: 8, borderRadius: 4 },
   teamHeading: { fontSize: font.size.sm, fontWeight: font.weight.semibold },
   /** One bordered player/guest row (drag card in People, cheer card in Cheers). */
@@ -232,6 +283,37 @@ export const shared = StyleSheet.create({
     color: theme.colors.timeInk, letterSpacing: -0.2,
   },
   timePillLabelLg: { fontSize: theme.font.size.lgm },
+  // Weather on outdoor games (#165): card chip next to the TimePill, event page row.
+  forecastChip: {
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start',
+    paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full,
+    borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.card,
+  },
+  forecastChipRain: { backgroundColor: theme.colors.accent + '1A', borderColor: theme.colors.accent + '66' },
+  forecastChipHeat: { backgroundColor: theme.colors.warm + '1F', borderColor: theme.colors.warm + '73' },
+  forecastChipLabel: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong },
+  forecastChipLabelRain: { color: theme.colors.accent },
+  forecastChipLabelHeat: { color: theme.colors.warm },
+  forecastCells: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: theme.spacing.sm },
+  forecastCell: {
+    minWidth: 56, flexGrow: 0, alignItems: 'center', paddingVertical: 6, paddingHorizontal: 8,
+    borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.background,
+  },
+  forecastCellInGame: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primary },
+  forecastCellTime: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
+  forecastCellTemp: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lgs, color: theme.colors.text },
+  forecastCellPop: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
+  /** Heading over a group of outside leagues / tournaments (ProgramSection). */
+  programSectionTitle: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.xs,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: theme.colors.subtext,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+  },
+  programSectionTitleHot: { color: theme.colors.warning },
   externalCard: {
     backgroundColor: theme.colors.card,
     borderRadius: 20,
@@ -261,6 +343,45 @@ export const shared = StyleSheet.create({
     fontSize: theme.font.heading.xl,
     lineHeight: 30,
     letterSpacing: -1.2,
+  },
+  /** A tournament's date block: month, every day it's on, and their weekdays. */
+  programDateBlock: {
+    width: 68,
+    flexShrink: 0,
+    alignSelf: 'flex-start',
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    backgroundColor: theme.colors.time,
+    borderWidth: 1,
+    borderColor: theme.colors.timeBorder,
+  },
+  programDateMonth: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: font.size.xs,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: theme.colors.timeInk,
+  },
+  programDateDays: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.heading.sm,
+    lineHeight: 26,
+    letterSpacing: -0.6,
+    color: theme.colors.timeInk,
+  },
+  programDateWeekdays: {
+    fontFamily: theme.fonts.body,
+    fontSize: font.size.xs,
+    color: theme.colors.timeInk,
+  },
+  /** "In 5 days · Sat, Nov 14 – Sun, Nov 15": the line that says when, on list cards. */
+  programWhen: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: font.size.sm,
+    color: theme.colors.text,
   },
   externalBody: {
     flex: 1,
@@ -400,6 +521,7 @@ export const shared = StyleSheet.create({
   buttonLabelSm:      { fontSize: font.size.smd },
 
   // ── Chip (feed filter chips) ──────────────────────────────
+  chipTouch: { minHeight: 44, justifyContent: 'center' },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 7,
@@ -418,7 +540,7 @@ export const shared = StyleSheet.create({
     color: colors.subtextStrong,
   },
   chipLabelActive:     { color: colors.onPrimary },
-  chipLabelActiveTint: { color: colors.primary },
+  chipLabelActiveTint: { color: colors.primaryText },
 
   // ── IconButton (notifications bell, etc.) ─────────────────
   iconButton: {
@@ -469,12 +591,12 @@ export const shared = StyleSheet.create({
   },
   screenHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingBottom: spacing.xs },
   screenHeaderBack:  { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start', marginLeft: spacing.lg, marginTop: spacing.sm },
-  screenHeaderBackLabel: { fontFamily: theme.fonts.body, fontSize: font.size.sm, color: colors.primary },
+  screenHeaderBackLabel: { fontFamily: theme.fonts.body, fontSize: font.size.sm, color: colors.primaryText },
 
   // ── EmptyState / ScreenState ──────────────────────────────
   emptyState:       { alignItems: 'center', paddingTop: spacing.xxl, paddingHorizontal: spacing.lg, gap: spacing.sm },
   emptyStateBody:   { textAlign: 'center', maxWidth: 320 },
-  emptyStateAction: { fontSize: font.size.sm, color: colors.primary, fontWeight: font.weight.medium },
+  emptyStateAction: { fontSize: font.size.sm, color: colors.primaryText, fontWeight: font.weight.medium },
   // EventDetailSkeleton: placeholders in the event page's final layout
   skeletonBlock: { backgroundColor: theme.colors.card, borderRadius: 16 },
   /** "Load earlier comments" at the top of a discussion: full-width, 44pt touch target. */
@@ -483,7 +605,7 @@ export const shared = StyleSheet.create({
     paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.xs,
     ...(Platform.OS === 'web' ? ({ cursor: 'pointer', touchAction: 'manipulation' } as object) : null),
   },
-  loadEarlierLabel: { fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primary },
+  loadEarlierLabel: { fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText },
   /** Host form while a cold edit link loads: one field-shaped block. */
   skeletonField: { height: 48, borderRadius: 12, backgroundColor: theme.colors.card },
   skeletonLabel: { width: 96, height: 10, borderRadius: 5, backgroundColor: theme.colors.card, marginBottom: 8 },
@@ -572,6 +694,27 @@ export const shared = StyleSheet.create({
   sheetOptionActive:      { backgroundColor: colors.background },
   sheetOptionText:        { fontSize: font.size.md, fontWeight: font.weight.medium, color: colors.text },
   sheetOptionDestructive: { color: colors.error },
+  /** Consequential but reversible (roster: Mark as no-show). */
+  sheetOptionCaution:     { color: colors.warm },
+  sheetOptionSubtitle:    { fontSize: font.size.sm, color: colors.subtext, marginTop: 2 },
+  /** Roster card of a player the host flagged as a no-show (#151). */
+  playerCardNoShow:       { borderColor: colors.error + '99', backgroundColor: colors.error + '0F' },
+  noShowBadge: {
+    alignSelf: 'flex-start', marginTop: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.full,
+    backgroundColor: colors.error + '1A', borderWidth: 1, borderColor: colors.error + '40',
+  },
+  noShowBadgeText:        { fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.error },
+  /** One-line note above the roster (host, during the no-show window). */
+  rosterNote: {
+    padding: spacing.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.timeBorder,
+    backgroundColor: colors.primarySoft, marginBottom: spacing.sm,
+  },
+  rosterNoteText:         { fontSize: font.size.sm, color: colors.subtextStrong },
+  /** The flagged player's own card on Details. */
+  noShowCard: {
+    borderRadius: radius.lg, borderWidth: 1, borderColor: colors.warm + '66', backgroundColor: colors.warm + '12',
+    padding: spacing.md, marginBottom: spacing.md, gap: spacing.sm,
+  },
   /** Glyph-only corner trigger on a roster card (⋯): the icon stays small, the hit area is 44pt. */
   rowMenuTrigger: {
     minWidth: 44,
@@ -617,7 +760,7 @@ export const shared = StyleSheet.create({
   oneTimeBannerBody: { color: theme.colors.subtext, fontSize: theme.font.size.sm, fontFamily: theme.fonts.body, lineHeight: 18 },
   /** The banner's link (e.g. "Check out our tour"): text-styled, but a full 44pt touch target. */
   oneTimeBannerAction: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', marginTop: -theme.spacing.xs, marginBottom: -theme.spacing.sm },
-  oneTimeBannerActionText: { color: theme.colors.primary, fontSize: theme.font.size.smd, fontFamily: theme.fonts.bodySemiBold, textDecorationLine: 'underline' },
+  oneTimeBannerActionText: { color: theme.colors.primaryText, fontSize: theme.font.size.smd, fontFamily: theme.fonts.bodySemiBold, textDecorationLine: 'underline' },
 
   // ── Guided tour overlay (components/tour/TourOverlay) ─────
   tourRoot: { ...StyleSheet.absoluteFillObject, zIndex: 1000, elevation: 1000 },
@@ -834,7 +977,7 @@ export const shared = StyleSheet.create({
     minHeight: 44,
     ...(Platform.OS === 'web' ? ({ cursor: 'pointer', touchAction: 'manipulation' } as object) : null),
   },
-  bookFollowUpText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primary },
+  bookFollowUpText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primaryText },
   bookFootnote: { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, lineHeight: 16, color: theme.colors.subtext },
 
   // ── ScreenContainer ───────────────────────────────────────
@@ -849,11 +992,11 @@ export const shared = StyleSheet.create({
   legalBold:        { fontFamily: fonts.bodySemiBold },
   legalPlaceholder: { fontFamily: fonts.bodyMedium, color: colors.warning, backgroundColor: colors.warning + '22' },
   legalListItem:    { flexDirection: 'row', gap: spacing.sm, paddingLeft: spacing.xs },
-  legalBullet:      { fontFamily: fonts.body, fontSize: font.size.lgs, lineHeight: 23, color: colors.primary },
+  legalBullet:      { fontFamily: fonts.body, fontSize: font.size.lgs, lineHeight: 23, color: colors.primaryText },
   legalTableRow:    { backgroundColor: colors.card, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, padding: spacing.md, gap: spacing.xs },
   legalTableLabel:  { fontFamily: fonts.bodyMedium, fontSize: font.size.sm, color: colors.subtext, textTransform: 'uppercase', letterSpacing: 0.5 },
   agreementLine:    { fontFamily: fonts.body, fontSize: font.size.xs, lineHeight: 16, color: colors.subtext, textAlign: 'center', marginTop: spacing.md },
-  agreementLink:    { color: colors.primary, textDecorationLine: 'underline' },
+  agreementLink:    { color: colors.primaryText, textDecorationLine: 'underline' },
 
   // Settings → Display (text size)
   settingsOptionRow: {
@@ -868,4 +1011,15 @@ export const shared = StyleSheet.create({
     borderRadius: 18, paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
   },
   settingsPreviewBubbleText: { fontFamily: fonts.body, fontSize: font.size.md, color: colors.onPrimary },
+
+  // ── Leave sheet (components/event/LeaveSheet, #171) ────────
+  leaveSubtitle: { fontFamily: fonts.body, fontSize: font.size.sm, color: colors.subtextStrong, marginTop: -spacing.sm, marginBottom: spacing.md },
+  leaveLines: { gap: spacing.md, marginBottom: spacing.md },
+  leaveLine: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  leaveLineIcon: { marginTop: 1 },
+  leaveLineText: { flex: 1, fontFamily: fonts.body, fontSize: font.size.md, lineHeight: 20, color: colors.subtextStrong },
+  leaveLineStrong: { fontFamily: fonts.bodySemiBold, fontWeight: '600', color: colors.text },
+  leaveReasonLabel: { fontFamily: fonts.body, fontSize: font.size.sm, color: colors.subtextStrong, marginBottom: spacing.xs },
+  leaveNote: { marginTop: spacing.sm, marginBottom: spacing.md, fontSize: font.size.base, minHeight: 44 },
+  leaveActions: { gap: spacing.sm },
 })

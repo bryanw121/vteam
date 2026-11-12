@@ -1,5 +1,5 @@
 import React from 'react'
-import { ActivityIndicator, ScrollView, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { Text } from '../ui/Text'
 import type { RefreshControlProps } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -11,6 +11,7 @@ import type { Podium, PoolStandings, StandingRow, Tournament, TournamentMatchRow
 import { BracketView } from './BracketView'
 import { StandingsTable } from './StandingsTable'
 import { ts } from './tournamentStyles'
+import { Spinner } from '../ui/Spinner'
 
 type Props = {
   refreshControl?: React.ReactElement<RefreshControlProps>
@@ -68,7 +69,7 @@ function PodiumCard({ podium, teamName }: { podium: Podium; teamName: Props['tea
 /** Results: podium, bracket, and standings, plus the organizer's "seed the bracket from pools" step. */
 export function ResultsTab(p: Props) {
   if (p.loading && p.matches.length === 0) {
-    return <View style={{ paddingVertical: 32 }}><ActivityIndicator color={theme.colors.primary} /></View>
+    return <View style={{ paddingVertical: 32 }}><Spinner color={theme.colors.primary} /></View>
   }
   if (p.error && p.matches.length === 0) {
     return (

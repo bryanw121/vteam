@@ -1,5 +1,6 @@
+import { __resetPendingAction, clearPendingAction, peekPendingAction } from '../utils/pendingAction'
 import React from 'react'
-import { Alert } from 'react-native'
+import { toast } from '../lib/toast'
 import { act, render } from '@testing-library/react-native'
 import { __resetQueryCache, invalidate } from '../lib/query'
 import { eventKeys } from '../hooks/event/keys'
@@ -28,6 +29,12 @@ jest.mock('../lib/supabase', () => {
   const methods = ['select', 'eq', 'neq', 'insert', 'update', 'delete', 'order', 'in', 'or', 'limit', 'single', 'maybeSingle']
   return {
     supabase: {
+      // RPCs are recorded as table `rpc:<name>` with one `rpc` op holding the args.
+      rpc: (fn: string, args: unknown) => {
+        const call = { table: `rpc:${fn}`, ops: [['rpc', [args]]] as [string, unknown[]][] }
+        mockCalls.push(call)
+        return Promise.resolve().then(() => mockRespond(call))
+      },
       from: (table: string) => {
         const call = { table, ops: [] as [string, unknown[]][] }
         mockCalls.push(call)
@@ -51,7 +58,8 @@ const mockRequireSignIn = jest.fn(() => mockUserId !== null)
 jest.mock('../contexts/session', () => ({
   useSession: () => ({ userId: mockUserId, isGuest: mockUserId === null, loading: false, session: null }),
 }))
-jest.mock('../hooks/useRequireSignIn', () => ({ useRequireSignIn: () => mockRequireSignIn }))
+const mockGoToSignIn = jest.fn()
+jest.mock('../hooks/useRequireSignIn', () => ({ useRequireSignIn: () => mockRequireSignIn, useGoToSignIn: () => mockGoToSignIn }))
 jest.mock('../lib/sentry', () => ({ Sentry: { addBreadcrumb: jest.fn(), captureException: jest.fn() } }))
 // lib/query's useFocusRefetch needs a navigator; nothing here focuses.
 jest.mock('expo-router', () => ({ useFocusEffect: () => {} }))
@@ -130,15 +138,18 @@ const status = () => computeEventStatus({
   isHostOrCohost: false,
 })
 
-let alertSpy: jest.SpyInstance
+let toastSpy: jest.SpyInstance
 beforeEach(() => {
   __resetQueryCache()
+  __resetPendingAction()
+  clearPendingAction()
+  mockGoToSignIn.mockClear()
   mockCalls.length = 0
   mockUserId = 'me'
   mockRespond = router()
-  alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+  toastSpy = jest.spyOn(toast, 'show')
 })
-afterEach(() => alertSpy.mockRestore())
+afterEach(() => toastSpy.mockRestore())
 
 // ─── useEventData ────────────────────────────────────────────────────────────
 
@@ -176,7 +187,8 @@ describe('useEventData', () => {
     mockUserId = null
     render(<Harness />)
     await settle()
-    expect(mockCalls.map(c => c.table).sort()).toEqual(['event_cohosts', 'event_comments', 'event_guests', 'events'])
+    // Signed-out visitors read +1s from the name-free view, never event_guests.
+    expect(mockCalls.map(c => c.table).sort()).toEqual(['event_cohosts', 'event_comments', 'event_guests_attending', 'events'])
   })
 
   it('an edit elsewhere (invalidate of the event root) refetches every piece in place, without a spinner', async () => {
@@ -202,6 +214,45 @@ describe('useEventData', () => {
 })
 
 // ─── useEventAttendance ──────────────────────────────────────────────────────
+
+describe('useEventAttendance — no-show flag (#151)', () => {
+  const amyRow = { ...attendeeRow('attending', { ...ME_PROFILE, id: 'amy', username: 'amy' }), user_id: 'amy', no_show: false }
+
+  it('flags at once through set_no_show, and keeps it when the call succeeds', async () => {
+    const rpc = deferred<Res>()
+    mockRespond = router({
+      'events:select': () => ({ data: eventRow([amyRow]), error: null }),
+      'rpc:set_no_show:select': () => rpc.promise,
+    })
+    render(<Harness />)
+    await settle()
+
+    let saved: boolean | undefined
+    act(() => { void api.attendance.setNoShow('amy', true).then(v => { saved = v }) })
+    expect(api.data.roster.attendingRows[0]).toMatchObject({ user_id: 'amy', no_show: true, no_show_marked_by: 'me' })
+    expect(callsTo('rpc:set_no_show')[0].ops[0][1]).toEqual([{ p_event_id: 'e1', p_user_id: 'amy', p_value: true }])
+
+    rpc.resolve({ data: null, error: null })
+    await settle()
+    expect(saved).toBe(true)
+    expect(api.data.roster.attendingRows[0].no_show).toBe(true)
+  })
+
+  it('puts the row back and says why when the database refuses', async () => {
+    mockRespond = router({
+      'events:select': () => ({ data: eventRow([amyRow]), error: null }),
+      'rpc:set_no_show:select': () => ({ data: null, error: { message: 'No-shows can be marked from the start of the event until 2 hours after it ends' } }),
+    })
+    render(<Harness />)
+    await settle()
+
+    let saved: boolean | undefined
+    await act(async () => { saved = await api.attendance.setNoShow('amy', true) })
+    expect(saved).toBe(false)
+    expect(api.data.roster.attendingRows[0].no_show).toBe(false)
+    expect(toastSpy).toHaveBeenCalledWith(expect.objectContaining({ title: "Couldn't update the no-show", message: expect.stringContaining('2 hours after it ends') }))
+  })
+})
 
 describe('useEventAttendance — join', () => {
   it('flips to attending immediately, then swaps in the server row (works before the viewer profile loads — audit #10)', async () => {
@@ -241,7 +292,7 @@ describe('useEventAttendance — join', () => {
     await act(async () => { await api.attendance.join() })
     expect(status().isAttending).toBe(false)
     expect(api.data.roster.rows).toHaveLength(0)
-    expect(alertSpy).toHaveBeenCalledWith('Error', GENERIC_ERROR_MESSAGE)
+    expect(toastSpy).toHaveBeenCalledWith(expect.objectContaining({ title: "Couldn't join", message: GENERIC_ERROR_MESSAGE, action: expect.objectContaining({ label: 'Retry' }) }))
   })
 
   it('reads back a waitlisted status when the last spot went first', async () => {
@@ -254,7 +305,7 @@ describe('useEventAttendance — join', () => {
     expect(status().isWaitlisted).toBe(true)
     expect(status().waitlistPosition).toBe(1)
     expect(api.data.roster.waitlistProfiles.map(p => p.id)).toEqual(['me'])
-    expect(alertSpy).toHaveBeenCalledWith('Event just filled up', expect.stringContaining('waitlist'))
+    expect(toastSpy).toHaveBeenCalledWith(expect.objectContaining({ title: 'Event just filled up', message: expect.stringContaining('waitlist'), variant: 'warning' }))
   })
 
   it('ignores a second tap while the first join is in flight', async () => {
@@ -269,13 +320,15 @@ describe('useEventAttendance — join', () => {
     await settle()
   })
 
-  it('sends a guest to sign in instead of writing', async () => {
+  it('sends a guest to sign up instead of writing, remembering the join (#229)', async () => {
     mockUserId = null
     render(<Harness />)
     await settle()
     await act(async () => { await api.attendance.join() })
-    expect(mockRequireSignIn).toHaveBeenCalled()
+    expect(mockGoToSignIn).toHaveBeenCalledWith('register')
     expect(callsTo('event_attendees', 'insert')).toHaveLength(0)
+    const saved = peekPendingAction()
+    expect(saved).toMatchObject({ kind: 'join', eventId: api.data.event?.id, title: api.data.event?.title })
   })
 
   it('leave is optimistic and restores the row if the delete fails', async () => {
@@ -326,7 +379,7 @@ describe('useEventComments', () => {
     await act(async () => { await api.comments.post('hi', false, []).catch(() => { rejected = true }) })
     expect(rejected).toBe(true)
     expect(api.comments.comments).toHaveLength(0)
-    expect(alertSpy).toHaveBeenCalledWith('Error', 'Could not post comment. Please try again.')
+    expect(toastSpy).toHaveBeenCalledWith(expect.objectContaining({ title: "Couldn't post your comment" }))
   })
 
   it('replaces an edited comment in place', async () => {
@@ -406,11 +459,11 @@ describe('useEventCheers — revoke double tap', () => {
     act(() => { cheers.toggleCheer('b', 'mvp') })
     await settle()
     expect(callsTo('cheers', 'delete')).toHaveLength(1)
-    expect(alertSpy).not.toHaveBeenCalled()
+    expect(toastSpy).not.toHaveBeenCalled()
 
     await act(async () => { held.resolve({ data: null, error: null }) })
     await settle()
-    expect(alertSpy).not.toHaveBeenCalled()
+    expect(toastSpy).not.toHaveBeenCalled()
   })
 })
 
@@ -443,7 +496,7 @@ describe('forgetDeletedEvent', () => {
   it('is what the event page runs after a successful delete', () => {
     const { readFileSync } = require('fs')
     const { join } = require('path')
-    const screen: string = readFileSync(join(__dirname, '..', 'app/(app)/event/[id].tsx'), 'utf8')
+    const screen: string = readFileSync(join(__dirname, '..', 'components/event/EventDetailScreen.tsx'), 'utf8')
     const del = screen.slice(screen.indexOf('const deleteEvent = useMutation('))
     const onSuccess = del.slice(del.indexOf('onSuccess'), del.indexOf('onError'))
     expect(onSuccess).toMatch(/forgetDeletedEvent\(id\)/)

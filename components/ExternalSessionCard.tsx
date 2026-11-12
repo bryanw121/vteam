@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { ActivityIndicator, TouchableOpacity, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { shared, theme, SURFACE_ACCENTS, SURFACE_LABELS } from '../constants'
@@ -8,9 +8,16 @@ import type { ExternalSession, SessionLinkDecision, SessionLinkNotice } from '..
 import { formatSessionTimeRange, signupHost } from '../utils/feedItems'
 import { describeNewTime } from '../lib/schelagg'
 import { useOutsideSessionLink } from '../hooks/useOutsideSessionLink'
+import { useToday } from '../hooks/useToday'
+import { sessionConfirmation } from '../utils/externalFreshness'
 import { ConfirmDialog } from './ui'
+import { Spinner } from './ui/Spinner'
 
-type Props = { session: ExternalSession }
+type Props = {
+  session: ExternalSession
+  /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
+  menuInset?: boolean
+}
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -67,7 +74,7 @@ function findingLabel(finding: Exclude<SessionLinkDecision, { action: 'open' }>)
  * Before opening, useOutsideSessionLink asks Schelagg whether the venue still
  * lists it (≤1.5s), and asks first if it was cancelled, moved or dropped.
  */
-function ExternalSessionCardInner({ session }: Props) {
+function ExternalSessionCardInner({ session, menuInset = false }: Props) {
   const start = new Date(session.starts_at)
   const surface = session.surface ? { label: SURFACE_LABELS[session.surface], color: SURFACE_ACCENTS[session.surface] } : null
   const accent = surface?.color ?? theme.colors.subtext
@@ -81,6 +88,8 @@ function ExternalSessionCardInner({ session }: Props) {
   const link = useOutsideSessionLink(session)
   const copy = link.notice ? noticeCopy(link.notice, host) : null
   const finding = link.finding ? findingLabel(link.finding) : null
+  // Not confirmed at the source lately (Schelagg kept its last good copy): say so before anyone drives out.
+  const confirmation = sessionConfirmation(session, useToday())
 
   return (
     <>
@@ -91,7 +100,7 @@ function ExternalSessionCardInner({ session }: Props) {
       style={shared.externalCard}
       accessibilityRole="link"
       accessibilityState={{ busy: link.checking }}
-      accessibilityLabel={`${session.title} at ${session.venue}. ${finding ? `${finding}. ` : ''}${signupLabel ?? ''}`}
+      accessibilityLabel={`${session.title} at ${session.venue}. ${finding ? `${finding}. ` : confirmation.note ? `${confirmation.note}. ` : ''}${signupLabel ?? ''}`}
       testID="external-session-card"
     >
       <View style={[shared.externalDateBlock, { backgroundColor: accent + '22' }]}>
@@ -100,7 +109,7 @@ function ExternalSessionCardInner({ session }: Props) {
       </View>
 
       <View style={shared.externalBody}>
-        <Text style={shared.externalKicker} numberOfLines={1}>
+        <Text style={[shared.externalKicker, menuInset && { paddingRight: 36 }]} numberOfLines={1}>
           {[surface?.label, session.session_type].filter(Boolean).join(' · ')}
         </Text>
         <View style={{ marginBottom: 4 }}>
@@ -111,6 +120,9 @@ function ExternalSessionCardInner({ session }: Props) {
           {session.city ? `${session.venue} · ${session.city}` : session.venue}
         </Text>
         {meta ? <Text style={shared.externalMeta} numberOfLines={1}>{meta}</Text> : null}
+        {!finding && confirmation.note ? (
+          <Text style={shared.externalFinding} numberOfLines={2} testID="external-session-unconfirmed">{confirmation.note}</Text>
+        ) : null}
         {finding ? (
           <Text
             style={[shared.externalFinding, link.finding?.kind !== 'changed' && shared.externalFindingCanceled]}
@@ -124,7 +136,7 @@ function ExternalSessionCardInner({ session }: Props) {
           <View style={shared.externalSignup}>
             <Text style={shared.externalSignupLabel}>{link.checking ? 'Checking with the venue…' : signupLabel}</Text>
             {link.checking
-              ? <ActivityIndicator size="small" color={theme.colors.text} testID="external-session-checking" />
+              ? <Spinner size="small" color={theme.colors.text} testID="external-session-checking" />
               : <Ionicons name="open-outline" size={13} color={theme.colors.text} />}
           </View>
         )}

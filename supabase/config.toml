@@ -31,6 +31,16 @@ verify_jwt = true
 [functions.send-feedback-email]
 verify_jwt = true
 
+# Called by signed-OUT clients (username + password sign-in), so there is no
+# user JWT to verify. The function returns only a session or a generic error.
+[functions.login-with-username]
+verify_jwt = false
+
+# Called by signed-in clients (Settings > Account > Delete account); the gateway
+# verifies the user JWT and the function reads the user id from it.
+[functions.delete-account]
+verify_jwt = true
+
 # Admin-only (#10): called by scripts/generate-badge-art.mjs with an admin's
 # session. The gateway verifies the JWT; the function checks admin itself.
 [functions.generate-badge-art]

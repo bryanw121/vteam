@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { usePathname, useRouter } from 'expo-router'
 import { useSession } from '../contexts/session'
-import { setPostSignInRedirect } from '../utils/authGate'
+import { returnPath, setPostSignInRedirect } from '../utils/authGate'
 import { routes } from '../utils/routes'
 
 /**
@@ -15,7 +15,7 @@ export function useGoToSignIn() {
   const router = useRouter()
   const pathname = usePathname()
   return useCallback((screen: 'login' | 'register' = 'login', returnTo?: string) => {
-    setPostSignInRedirect(returnTo ?? pathname)
+    setPostSignInRedirect(returnTo ?? returnPath(pathname))
     router.replace(screen === 'login' ? routes.login() : routes.register())
   }, [router, pathname])
 }

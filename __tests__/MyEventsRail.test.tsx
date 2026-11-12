@@ -34,7 +34,7 @@ describe('MyEventsRail', () => {
   const noop = () => {}
 
   it('renders nothing at all when the viewer is registered for nothing', () => {
-    render(<MyEventsRail items={[]} onPressEvent={noop} onSeeAll={noop} nowMs={NOW} />)
+    render(<MyEventsRail items={[]} onPressEvent={noop} nowMs={NOW} />)
     // No header, no empty-state card, no zero count — the pre-rail screen.
     expect(screen.queryByTestId('my-events-rail')).toBeNull()
   })
@@ -44,7 +44,7 @@ describe('MyEventsRail', () => {
       <MyEventsRail
         items={[item('a', 'attending'), item('b', 'waitlisted')]}
         onPressEvent={noop}
-        onSeeAll={noop}
+       
         nowMs={NOW}
       />,
     )
@@ -54,7 +54,7 @@ describe('MyEventsRail', () => {
 
   it('caps the rail at 3 cards but counts them all in the header', () => {
     const items = ['a', 'b', 'c', 'd', 'e'].map(id => item(id, 'attending'))
-    render(<MyEventsRail items={items} onPressEvent={noop} onSeeAll={noop} nowMs={NOW} />)
+    render(<MyEventsRail items={items} onPressEvent={noop} nowMs={NOW} />)
     expect(screen.getByTestId('my-event-card-c')).toBeTruthy()
     expect(screen.queryByTestId('my-event-card-d')).toBeNull()
     expect(screen.getByText("YOU'RE GOING · 5")).toBeTruthy()
@@ -62,23 +62,26 @@ describe('MyEventsRail', () => {
 
   it('hides "See all" when everything already fits', () => {
     render(
-      <MyEventsRail items={[item('a', 'attending')]} onPressEvent={noop} onSeeAll={noop} nowMs={NOW} />,
+      <MyEventsRail items={[item('a', 'attending')]} onPressEvent={noop} nowMs={NOW} />,
     )
     expect(screen.queryByTestId('my-events-see-all')).toBeNull()
   })
 
-  it('shows "See all" once there are more than 3 and fires the callback', () => {
-    const onSeeAll = jest.fn()
+  it('shows "See all" once there are more than 3, opens the whole list in place, and folds it back', () => {
     const items = ['a', 'b', 'c', 'd'].map(id => item(id, 'attending'))
-    render(<MyEventsRail items={items} onPressEvent={noop} onSeeAll={onSeeAll} nowMs={NOW} />)
+    render(<MyEventsRail items={items} onPressEvent={noop} nowMs={NOW} />)
+    expect(screen.queryByTestId('my-event-card-d')).toBeNull()
     fireEvent.press(screen.getByTestId('my-events-see-all'))
-    expect(onSeeAll).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('my-event-card-d')).toBeTruthy()
+    expect(screen.getByText('Show less')).toBeTruthy()
+    fireEvent.press(screen.getByTestId('my-events-see-all'))
+    expect(screen.queryByTestId('my-event-card-d')).toBeNull()
   })
 
   it('opens the event when a card is pressed', () => {
     const onPressEvent = jest.fn()
     render(
-      <MyEventsRail items={[item('a', 'attending')]} onPressEvent={onPressEvent} onSeeAll={noop} nowMs={NOW} />,
+      <MyEventsRail items={[item('a', 'attending')]} onPressEvent={onPressEvent} nowMs={NOW} />,
     )
     fireEvent.press(screen.getByTestId('my-event-card-a'))
     expect(onPressEvent).toHaveBeenCalledWith('a')
@@ -89,7 +92,7 @@ describe('MyEventsRail', () => {
       <MyEventsRail
         items={[item('a', 'waitlisted', { waitlistPosition: 2 })]}
         onPressEvent={noop}
-        onSeeAll={noop}
+       
         nowMs={NOW}
       />,
     )
@@ -98,7 +101,7 @@ describe('MyEventsRail', () => {
 
   it('falls back to WAITLISTED before the position is known', () => {
     render(
-      <MyEventsRail items={[item('a', 'waitlisted')]} onPressEvent={noop} onSeeAll={noop} nowMs={NOW} />,
+      <MyEventsRail items={[item('a', 'waitlisted')]} onPressEvent={noop} nowMs={NOW} />,
     )
     expect(screen.getByText('WAITLISTED')).toBeTruthy()
   })
@@ -108,7 +111,7 @@ describe('MyEventsRail', () => {
       <MyEventsRail
         items={[item('a', 'requested'), item('b', 'hosting')]}
         onPressEvent={noop}
-        onSeeAll={noop}
+       
         nowMs={NOW}
       />,
     )
@@ -118,20 +121,25 @@ describe('MyEventsRail', () => {
 })
 
 describe('railTimeLabel', () => {
+  // The rail speaks the device's clock, so build times in the device's zone:
+  // these hold whatever TZ the suite runs in. "Now" is Thu Aug 20, 1 PM local.
+  const local = (d: number, h: number, m = 0) => new Date(2026, 7, d, h, m).toISOString()
+  const LOCAL_NOW = new Date(2026, 7, 20, 13, 0).getTime()
+
   it('says TONIGHT for an event later today', () => {
-    expect(railTimeLabel('2026-08-20T23:00:00', 120, NOW)).toMatch(/^TONIGHT /)
+    expect(railTimeLabel(local(20, 22), 120, LOCAL_NOW)).toBe('TONIGHT 10:00 PM')
   })
 
   it('says TOMORROW for the next day', () => {
-    expect(railTimeLabel('2026-08-21T19:00:00', 120, NOW)).toMatch(/^TOMORROW /)
+    expect(railTimeLabel(local(21, 19), 120, LOCAL_NOW)).toBe('TOMORROW 7:00 PM')
   })
 
   it('shows a weekday and date further out', () => {
-    expect(railTimeLabel('2026-08-29T19:00:00', 120, NOW)).toMatch(/^SAT AUG 29$/)
+    expect(railTimeLabel(local(29, 19), 120, LOCAL_NOW)).toMatch(/^SAT AUG 29$/)
   })
 
   it('shows NOW and the end time once the event has started', () => {
     // Started 30 min ago, runs 120 → ends 90 min from now.
-    expect(railTimeLabel('2026-08-20T17:30:00', 120, NOW)).toMatch(/^NOW · ends /)
+    expect(railTimeLabel(local(20, 12, 30), 120, LOCAL_NOW)).toBe('NOW · ends 2:30 PM')
   })
 })

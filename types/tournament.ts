@@ -154,7 +154,7 @@ export type TournamentPoolWithTeams = { id: string; name: string; display_order:
 export type TournamentResultWrites = {
   advances: { matchId: string; column: 'team_a_id' | 'team_b_id'; teamId: string }[]
   nextStatus: TournamentStatus | null
-  /** The final podium when this result completes the tournament, else null. */
+  /** The final podium whenever the tournament is decided after this result (trophies follow it), else null. */
   podium: Podium | null
   /** Why the result can't be recorded as is, or null. */
   blocked: string | null
@@ -164,4 +164,14 @@ export type TournamentResultWrites = {
 export type TournamentListItem = Pick<Tournament, 'id' | 'title' | 'location' | 'start_date' | 'status' | 'format' | 'club_id' | 'max_teams'> & {
   club_name: string | null
   team_count: number
+}
+
+/** A trophy on a player's profile (tournament_trophies). */
+export type UserTrophy = {
+  id: string
+  tournament_id: string
+  place: 1 | 2 | 3
+  tournament_title: string
+  tournament_date: string
+  team_name: string
 }

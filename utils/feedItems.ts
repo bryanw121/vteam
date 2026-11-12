@@ -1,4 +1,5 @@
-import type { EventWithDetails, ExternalSession, Tag } from '../types'
+import type { EventWithDetails, ExternalProgram, ExternalSession, Tag } from '../types'
+import { parseEventDate } from './eventDate'
 
 /**
  * The Events feed renders one list of `EventWithDetails`. Tournaments and
@@ -74,6 +75,38 @@ export function normalizeExternalSessions(rows: ExternalSession[] | null): Event
   }))
 }
 
+/**
+ * Outside tournaments (Schelagg's programs feed) as feed items on their first day: all day, local
+ * noon so the day's key is the same in every US zone, tagged Tournament so the Tournament filter
+ * includes them. `_program` tells the feed to render ExternalProgramCard (a link out, no RSVP).
+ */
+export function normalizeProgramTournaments(rows: readonly ExternalProgram[]): EventWithDetails[] {
+  return rows.filter(p => p.kind === 'tournament' && p.starts_on).map(p => {
+    const [y, m, d] = p.starts_on!.split('-').map(Number)
+    const at = new Date(y, m - 1, d, 12).toISOString()
+    return {
+      id:               `program:${p.id}`,
+      created_by:       '',
+      club_id:          null,
+      title:            p.title,
+      description:      null,
+      location:         [p.venue, p.city].filter(Boolean).join(' · ') || null,
+      event_date:       at,
+      duration_minutes: 0,
+      max_attendees:    null,
+      created_at:       at,
+      price:            null,
+      cancelled_at:     null,
+      profiles:         null as unknown as EventWithDetails['profiles'],
+      clubs:            null,
+      surface:          p.surface,
+      event_tags:       [TOURNAMENT_TAG],
+      ...EMPTY_COUNTS,
+      _program:         p,
+    } as EventWithDetails
+  })
+}
+
 function clock(d: Date, withMeridiem: boolean): string {
   const h = d.getHours() % 12 || 12
   const m = d.getMinutes()
@@ -97,4 +130,14 @@ export function signupHost(url: string): string {
   } catch {
     return 'their site'
   }
+}
+
+/**
+ * Whether a feed item has finished by `nowMs`, so the feed can drop it.
+ * Its end is `event_date + duration_minutes`. Items without a duration (tournaments, outside
+ * sessions with no posted end) have no known end: they stay for the rest of their day.
+ */
+export function isFeedItemOver(event: Pick<EventWithDetails, 'event_date' | 'duration_minutes'>, nowMs: number): boolean {
+  if (!event.duration_minutes || event.duration_minutes <= 0) return false
+  return parseEventDate(event.event_date).getTime() + event.duration_minutes * 60_000 <= nowMs
 }

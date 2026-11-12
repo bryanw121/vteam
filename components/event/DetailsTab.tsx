@@ -1,5 +1,5 @@
-import React from 'react'
-import { Platform, View, TouchableOpacity, Alert } from 'react-native'
+import React, { useMemo } from 'react'
+import { Platform, View, TouchableOpacity } from 'react-native'
 import { Text } from '../ui/Text'
 import { RefreshControl } from '../RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -9,11 +9,20 @@ import { ProfileAvatar } from '../ProfileAvatar'
 import { DocScrollView } from '../DocScrollView'
 import { LinkedText } from '../LinkedText'
 import { VenmoPayButton } from '../VenmoPayButton'
+import { FriendsGoingLine } from '../FriendsGoingLine'
+import { useFriends } from '../../hooks/useFriends'
+import { attendeeRowsWithProfiles } from '../../hooks/event/derive'
+import { friendsGoingFromAttendees } from '../../utils/friends'
 import { PaidToggle } from './PaidToggle'
+import { Button } from '../Button'
+import { NO_SHOW_MESSAGE_HOST, NO_SHOW_PLAYER_BODY, NO_SHOW_PLAYER_TITLE } from '../../constants/copy'
+import { ForecastRow } from './ForecastRow'
 import { shared, theme, LOCATIONS } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
 import type { EventData, EventPaymentsApi } from '../../types'
 import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, profileAvatarSmallUri } from '../../utils'
+import { profilePrefetchProps } from '../../hooks/useUserProfile'
+import { toast } from '../../lib/toast'
 
 function formatEndTime(startIso: string, durationMinutes: number): string {
   const normalized = /[Z+]/.test(startIso) ? startIso : startIso + 'Z'
@@ -51,7 +60,7 @@ async function addToCalendar(title: string, startIso: string, durationMinutes: n
 
   const { status } = await Calendar.requestCalendarPermissionsAsync()
   if (status !== 'granted') {
-    Alert.alert('Permission required', 'Please allow calendar access in Settings to add this event.')
+    toast.show({ title: 'Calendar access needed', message: 'Allow calendar access in Settings to add this event.', variant: 'warning' })
     return
   }
 
@@ -62,7 +71,7 @@ async function addToCalendar(title: string, startIso: string, durationMinutes: n
     calendars.find(c => c.allowsModifications)
 
   if (!defaultCal) {
-    Alert.alert('No calendar found', 'Could not find a writable calendar on this device.')
+    toast.show({ title: 'No calendar found', message: "Couldn't find a calendar on this device to add it to.", variant: 'warning' })
     return
   }
 
@@ -74,7 +83,7 @@ async function addToCalendar(title: string, startIso: string, durationMinutes: n
     ...(address ? { location: address } : {}),
   })
 
-  Alert.alert('Added to calendar', `"${title}" has been added to your calendar.`)
+  toast.show({ title: 'Added to calendar', message: `"${title}" is on your calendar.`, variant: 'success' })
 }
 
 function HostRow({
@@ -119,6 +128,8 @@ type Props = {
   onManageCohosts: () => void
   /** "I've paid" toggle; null when the viewer can't set one (free event, not on the roster, the creator). */
   payments: EventPaymentsApi | null
+  /** The host flagged the viewer as a no-show (#151): show them why they get no points. */
+  noShow?: boolean
 }
 
 export function DetailsTab({
@@ -133,9 +144,15 @@ export function DetailsTab({
   onMessageHost,
   onManageCohosts,
   payments,
+  noShow = false,
 }: Props) {
   const { refreshing, refresh: onRefresh, cohosts, userId } = data
   const totalAttending = eventStatus.count
+  const { data: myFriends } = useFriends()
+  const friendsGoing = useMemo(
+    () => friendsGoingFromAttendees(event.id, attendeeRowsWithProfiles(event), myFriends.friends),
+    [event, myFriends.friends],
+  )
   return (
     <DocScrollView
       docScroll={docScrollActive}
@@ -143,6 +160,19 @@ export function DetailsTab({
       contentContainerStyle={[shared.scrollContent, { paddingBottom: descFooterHeight + Math.max(bottomInset, theme.spacing.md) }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
     >
+
+      {/* ── The viewer was marked as a no-show (#151) ── */}
+      {noShow && (
+        <View testID="no-show-card" style={shared.noShowCard}>
+          <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.base, color: theme.colors.text }}>
+            {NO_SHOW_PLAYER_TITLE}
+          </Text>
+          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.subtextStrong, lineHeight: 20 }}>{NO_SHOW_PLAYER_BODY}</Text>
+          {event.created_by !== userId && (
+            <Button label={NO_SHOW_MESSAGE_HOST} variant="primary" onPress={() => onMessageHost(event.created_by)} testID="no-show-message-host" />
+          )}
+        </View>
+      )}
 
       {/* ── Quick-stats strip ── */}
       {(() => {
@@ -191,7 +221,7 @@ export function DetailsTab({
                   border={h.border}
                   label={h.label}
                   isMe={h.isMe}
-                  onPress={() => onOpenProfile(h.id)}
+                  onPress={() => onOpenProfile(h.id)} {...profilePrefetchProps(h.id)}
                   onMessage={() => onMessageHost(h.id)}
                 />
               </View>
@@ -256,6 +286,7 @@ export function DetailsTab({
             </View>
           )}
         </View>
+        <FriendsGoingLine going={friendsGoing} testID="event-friends-going" />
       </View>
 
       {/* ── Info rows ── */}
@@ -297,7 +328,7 @@ export function DetailsTab({
               accessibilityRole="button"
               style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
             >
-              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.medium }}>
+              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
                 Add to calendar
               </Text>
               <Ionicons name="arrow-forward" size={12} color={theme.colors.primary} />
@@ -332,7 +363,7 @@ export function DetailsTab({
                     accessibilityRole="link"
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: theme.spacing.xs }}
                   >
-                    <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.medium }}>
+                    <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
                       Show in Maps
                     </Text>
                     <Ionicons name="arrow-forward" size={12} color={theme.colors.primary} />
@@ -342,6 +373,9 @@ export function DetailsTab({
             </>
           )
         })() : null}
+
+        {/* Forecast row: sand / grass events with coordinates (#165) */}
+        <ForecastRow event={event} />
 
         {/* Difficulty row */}
         {(() => {
@@ -363,7 +397,7 @@ export function DetailsTab({
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                     {diffTags.map(et => (
                       <View key={et.tag_id} style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: theme.radius.full, backgroundColor: theme.colors.primary + '14', borderWidth: 1, borderColor: theme.colors.primary + '30' }}>
-                        <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }}>
+                        <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }}>
                           {et.tags.name}
                         </Text>
                       </View>
@@ -434,7 +468,7 @@ export function DetailsTab({
           style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}
         >
           <Ionicons name="person-add-outline" size={14} color={theme.colors.primary} />
-          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.medium }}>
+          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
             Manage Co-hosts{cohosts.length > 0 ? ` (${cohosts.length})` : ''}
           </Text>
         </TouchableOpacity>

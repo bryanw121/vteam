@@ -12,12 +12,17 @@ import { shared, theme, COURTS_DAYS, SURFACE_OPTIONS } from '../../constants'
 import { useCourtAvailability } from '../../hooks/useCourtAvailability'
 import { useRequireSignIn } from '../../hooks/useRequireSignIn'
 import { openExternalUrl } from '../../lib/openExternalUrl'
+import { track } from '../../lib/analytics'
+import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import {
   austinNow, courtsAgeMs, dayOptions, dayParts, facilityDays, formatAge, gridSpan, isCourtsOld, pickDay, venueCalendarUrl,
 } from '../../utils/courts'
 import { signupHost } from '../../utils/feedItems'
 import { routes } from '../../utils/routes'
 import type { AustinNow, FacilityDay, SurfaceFilter } from '../../types'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { parseIsoDay } from '../../utils/urlState'
+import { VIEW } from '../../utils/urlViews'
 
 /**
  * Book a court: when Austin's rentable courts are free over the next week
@@ -38,9 +43,12 @@ export default function BookCourtScreen() {
   }, [])
 
   const days = useMemo(() => dayOptions(now.iso, COURTS_DAYS), [now.iso])
-  const [selectedDay, setSelectedDay] = useState<string | null>(null)
+  // The day and surface are in the URL (`/book?day=2026-11-15&surface=sand`); a day that's no longer offered falls back to the first.
+  const [dayParam, setDayParam] = useUrlParam('day', VIEW.book.day)
+  const selectedDay = parseIsoDay(dayParam)
+  const setSelectedDay = (day: string) => setDayParam(day)
   const dayIso = pickDay(selectedDay, days)
-  const [surface, setSurface] = useState<SurfaceFilter>('any')
+  const [surface, setSurface] = useUrlParam('surface', VIEW.book.surface)
 
   const surfaces = useMemo(() => {
     const present = new Set(data?.venues.flatMap(v => v.facilities.map(f => f.surface)) ?? [])
@@ -74,6 +82,7 @@ export default function BookCourtScreen() {
 
   function book(day: FacilityDay) {
     // Open the venue's calendar on the day being viewed when its platform supports it.
+    track(ANALYTICS_EVENTS.outsideLinkOpened, { kind: 'court', org: day.venue.id })
     void openExternalUrl(venueCalendarUrl(day.venue, dayIso))
   }
 
@@ -156,7 +165,10 @@ export default function BookCourtScreen() {
                 </Text>
                 {e.calendar ? (
                   <TouchableOpacity
-                    onPress={() => void openExternalUrl(e.calendar!)}
+                    onPress={() => {
+                      track(ANALYTICS_EVENTS.outsideLinkOpened, { kind: 'court', org: e.venue ?? 'unknown' })
+                      void openExternalUrl(e.calendar!)
+                    }}
                     accessibilityRole="link"
                     style={shared.bookFollowUp}
                   >

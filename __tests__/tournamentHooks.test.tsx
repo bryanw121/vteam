@@ -338,8 +338,29 @@ describe('useTournamentActions', () => {
       'tournament_sets:insert',
       'tournament_matches:update',
       'tournament_matches:update',
-      'tournaments:update',
+      'complete_tournament:',
     ])
+    const rpc = mockFake.requests.find(r => r.name === 'complete_tournament')
+    expect(JSON.parse(rpc?.ops[0] ?? '{}')).toEqual({
+      p_tournament_id: 't1',
+      p_podium: [{ team_id: 'a', place: 1 }, { team_id: 'b', place: 2 }],
+    })
+    expect(mockNotify).not.toHaveBeenCalled()
+  })
+
+  it('finishing before the trophies migration is live falls back to just the status', async () => {
+    mockFake.fixtures = { tournament_matches: [{ id: 'x' }], tournaments: [{ id: 't1' }], tournament_sets: [] }
+    mockFake.rpcResult = { data: null, error: { message: 'Could not find the function', code: 'PGRST202' } as { message: string } }
+    const { result } = renderHook(() => useTournamentActions('t1', 'org'))
+    let outcome: unknown
+    await act(async () => {
+      outcome = await runToEnd(result.current.recordResult.mutate({
+        matchId: 'm1', winnerId: 'a', forfeit: true, sets: [],
+        writes: { advances: [], nextStatus: 'completed', podium: { first: 'a', second: 'b', thirds: [] }, blocked: null },
+      }))
+    })
+    expect(outcome).toBe(true)
+    expect(mockFake.requests.map(r => r.name).slice(-2)).toEqual(['complete_tournament', 'tournaments'])
     expect(mockNotify).not.toHaveBeenCalled()
   })
 

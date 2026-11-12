@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ActivityIndicator, ScrollView, View, TouchableOpacity, Switch, Modal, StyleSheet, Platform } from 'react-native'
+import { ScrollView, View, TouchableOpacity, Switch, Modal, StyleSheet, Platform } from 'react-native'
 import { Text, TextInput } from '../../components/ui/Text'
 import { RefreshControl } from '../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -22,6 +22,7 @@ import { useTags } from '../../hooks/useTags'
 import { cleanDate, diffTagIds, isSurface, normalizePriceText, parsePrice, sanitizePriceInput } from '../../utils'
 import { defaultRecurrenceEndDate, generateEventDates } from '../../utils/recurrence'
 import type { CreateEventForm, EventEditSource, EventWithDetails, OwnedClubOption, Tag, UserEventTemplate } from '../../types'
+import { Spinner } from '../../components/ui/Spinner'
 
 const EMPTY_TAGS: Tag[] = []
 const EMPTY_CLUBS: OwnedClubOption[] = []
@@ -918,6 +919,7 @@ export default function HostEventScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={hostStyles.fieldLabel}>Repeat</Text>
               <Switch
+                accessibilityLabel="Repeat this event"
                 value={recurrence.enabled}
                 onValueChange={v => setRecurrence(prev => ({ ...prev, enabled: v }))}
                 trackColor={{ false: theme.colors.border, true: theme.colors.primary + '80' }}
@@ -971,7 +973,7 @@ export default function HostEventScreen() {
                   <DatePickerField value={recurrence.endDate} onChange={d => setRecurrence(prev => ({ ...prev, endDate: d }))} />
                 </View>
                 {eventCount > 0 && (
-                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.primary }}>
+                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.primaryText }}>
                     {eventCount} event{eventCount !== 1 ? 's' : ''} will be created
                   </Text>
                 )}
@@ -1012,6 +1014,7 @@ export default function HostEventScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={hostStyles.fieldLabel}>Save as template</Text>
               <Switch
+                accessibilityLabel="Save as template"
                 value={saveAsTemplate}
                 onValueChange={setSaveAsTemplate}
                 trackColor={{ false: theme.colors.border, true: theme.colors.primary + '80' }}
@@ -1043,7 +1046,7 @@ export default function HostEventScreen() {
           }}
         >
           {loading
-            ? <ActivityIndicator color={theme.colors.background} />
+            ? <Spinner color={theme.colors.background} />
             : <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lgs, letterSpacing: 0.2, color: theme.colors.background }}>
                 {isEdit ? 'Save changes' : (eventCount > 1 ? `Publish ${eventCount} events` : 'Publish event')}
               </Text>

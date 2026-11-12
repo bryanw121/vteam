@@ -3,6 +3,8 @@
  * Created in beforeAll / removed in afterAll so the shared DB doesn't need
  * permanent pilot-visible seed events.
  */
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { e2eCredentials, E2E_TITLE_PREFIX, STALE_FIXTURE_HOURS, SUPABASE_ANON_KEY, SUPABASE_URL } from './env'
 import { withNetworkRetry } from './retry'
@@ -23,29 +25,90 @@ function daysFromNow(days: number, hour = 19): string {
   return d.toISOString()
 }
 
-/** A Node-side Supabase client signed in as the e2e account (retries network flakes). */
-export function signInE2eClient(): Promise<{ supabase: SupabaseClient; userId: string }> {
-  return withNetworkRetry(signInOnce, { label: 'e2e sign-in' })
+/**
+ * A Node-side Supabase client signed in as the e2e account (retries network flakes).
+ *
+ * login-with-username allows 30 attempts per username per 15 minutes (#102),
+ * and several PRs' CI runs share the account, so this signs in as rarely as it
+ * can, reusing a session in this order:
+ *  1. The browser session auth.setup.ts saved for this shard.
+ *  2. A session this process signed in for itself (one sign-in per process).
+ *  3. Else a new sign-in.
+ *
+ * Sessions are shared, so the clients handed out never touch them on the
+ * server: they never refresh a token (a session is reused only while its
+ * access token has TOKEN_MIN_LIFE_S left), and their signOut() only drops the
+ * client's in-memory session. supabase-js's own signOut, even with
+ * scope 'local', ends the session on the server, which would sign out the
+ * browser specs and every other client sharing it.
+ */
+export async function signInE2eClient(): Promise<{ supabase: SupabaseClient; userId: string }> {
+  for (const tokens of [readSavedBrowserSession(), cachedTokens ? await cachedTokens.catch(() => null) : null]) {
+    if (!tokens || !hasLifeLeft(tokens)) continue
+    const reused = await clientFromTokens(tokens).catch(() => null)
+    if (reused) return reused
+  }
+  cachedTokens = withNetworkRetry(fetchTokens, { label: 'e2e sign-in' })
+  cachedTokens.catch(() => { cachedTokens = null })
+  return clientFromTokens(await cachedTokens)
 }
 
-async function signInOnce(): Promise<{ supabase: SupabaseClient; userId: string }> {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-  const { username, password } = e2eCredentials()
-  const { data: email, error: rpcError } = await supabase.rpc('get_email_by_username', {
-    p_username: username,
-  })
-  if (rpcError || !email) {
-    throw new Error(`Could not resolve email for ${username}: ${rpcError?.message ?? 'not found'}`)
-  }
+type E2eTokens = { access_token: string; refresh_token: string; expires_at: number }
+let cachedTokens: Promise<E2eTokens> | null = null
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email as string,
-    password,
+/** auth.setup.ts writes the signed-in browser storage here (playwright.config.ts reads the same path). */
+const SAVED_BROWSER_SESSION = path.join(process.cwd(), 'playwright/.auth/user.json')
+/** Reuse a session only while its access token has at least this long left, so no spec outlives it. */
+const TOKEN_MIN_LIFE_S = 15 * 60
+
+const hasLifeLeft = (t: E2eTokens) => t.expires_at - Date.now() / 1000 > TOKEN_MIN_LIFE_S
+
+/** The session auth.setup.ts saved for this shard, or null (guest project, or setup did not run). */
+function readSavedBrowserSession(): E2eTokens | null {
+  try {
+    const state = JSON.parse(readFileSync(SAVED_BROWSER_SESSION, 'utf8')) as {
+      origins?: { localStorage?: { name: string; value: string }[] }[]
+    }
+    for (const origin of state.origins ?? []) {
+      for (const entry of origin.localStorage ?? []) {
+        if (!/^sb-.*-auth-token$/.test(entry.name)) continue
+        const s = JSON.parse(entry.value) as Partial<E2eTokens>
+        if (s.access_token && s.refresh_token && typeof s.expires_at === 'number') {
+          return { access_token: s.access_token, refresh_token: s.refresh_token, expires_at: s.expires_at }
+        }
+      }
+    }
+  } catch { /* no saved session */ }
+  return null
+}
+
+async function fetchTokens(): Promise<E2eTokens> {
+  const { username, password } = e2eCredentials()
+  // Same server-side username sign-in the app uses: clients cannot resolve a
+  // username to an email (get_email_by_username is service-role only).
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/login-with-username`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
   })
+  const body = await res.json().catch(() => null) as { access_token?: string; refresh_token?: string; expires_at?: number; expires_in?: number; error?: string } | null
+  if (!res.ok || !body?.access_token || !body.refresh_token) {
+    throw new Error(`E2E sign-in failed for ${username}: ${res.status} ${body?.error ?? 'no session'}`)
+  }
+  const expiresAt = body.expires_at ?? Math.floor(Date.now() / 1000) + (body.expires_in ?? 3600)
+  return { access_token: body.access_token, refresh_token: body.refresh_token, expires_at: expiresAt }
+}
+
+async function clientFromTokens(tokens: E2eTokens): Promise<{ supabase: SupabaseClient; userId: string }> {
+  // In memory only, never refreshed: the session belongs to more than this client.
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
+  // With an access token that has life left, setSession only verifies it (getUser); it does not refresh.
+  const { data, error } = await supabase.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token })
   if (error || !data.user) {
     throw new Error(`E2E sign-in failed: ${error?.message ?? 'no user'}`)
   }
-
+  // Specs sign their client out when done; keep that from ending the shared session on the server.
+  supabase.auth.signOut = (async () => ({ error: null })) as typeof supabase.auth.signOut
   return { supabase, userId: data.user.id }
 }
 

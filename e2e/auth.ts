@@ -6,7 +6,7 @@ const MAX_LOGIN_ATTEMPTS = 3
 
 function isAuthRequest(urlString: string): boolean {
   const url = new URL(urlString)
-  return url.pathname.startsWith('/auth/v1/') || url.pathname.includes('/rpc/get_email_by_username')
+  return url.pathname.startsWith('/auth/v1/') || url.pathname.includes('/functions/v1/login-with-username')
 }
 
 function responseLabel(response: Response): string | null {
@@ -38,6 +38,16 @@ export async function loginForE2E(page: Page): Promise<void> {
   }
   page.on('response', onResponse)
   page.on('requestfailed', onRequestFailed)
+  // The shared account has no position, level or city, so the app would open
+  // player setup (#156) after sign-in. Every spec reuses this storage, so mark
+  // setup as done on this "device" (the account itself stays untouched).
+  await page.addInitScript(() => {
+    try {
+      const key = 'vteam.seenBanners'
+      const seen: string[] = JSON.parse(window.localStorage.getItem(key) || '[]')
+      if (!seen.includes('player-setup-v1')) window.localStorage.setItem(key, JSON.stringify([...seen, 'player-setup-v1']))
+    } catch { /* storage blocked */ }
+  })
 
   let lastError = 'unknown error'
   try {

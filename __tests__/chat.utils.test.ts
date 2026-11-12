@@ -149,7 +149,7 @@ describe('nextFirstItemIndex (web virtualized list, #3)', () => {
 describe('web chat list wiring (#3)', () => {
   const { readFileSync } = require('fs') as typeof import('fs')
   const { resolve } = require('path') as typeof import('path')
-  const web = readFileSync(resolve(__dirname, '../components/ChatMessageList.web.tsx'), 'utf8')
+  const web = readFileSync(resolve(__dirname, '../components/ChatMessageListWeb.tsx'), 'utf8')
   const screen = readFileSync(resolve(__dirname, '../app/(app)/chat/[id].tsx'), 'utf8')
 
   it('virtualizes with react-virtuoso, opening at the end and loading older on startReached', () => {
@@ -164,5 +164,29 @@ describe('web chat list wiring (#3)', () => {
     expect(screen).not.toMatch(/useLayoutEffect/)
     expect(screen).not.toMatch(/ascendingMessages\.map/)
     expect(screen).toMatch(/<ChatMessageList/)
+  })
+})
+
+describe('chatImageRef', () => {
+  const { chatImageRef } = require('../utils/chatUtils') as typeof import('../utils/chatUtils')
+  it('reads a stored object path', () => {
+    expect(chatImageRef('u1/123-abc.jpg')).toEqual({ kind: 'path', path: 'u1/123-abc.jpg' })
+  })
+  it('turns a legacy public URL into its object path', () => {
+    expect(chatImageRef('https://ref.supabase.co/storage/v1/object/public/chat-images/u1/1.png'))
+      .toEqual({ kind: 'path', path: 'u1/1.png' })
+  })
+  it('turns an expired signed URL into its object path', () => {
+    expect(chatImageRef('https://ref.supabase.co/storage/v1/object/sign/chat-images/u1/1.png?token=x'))
+      .toEqual({ kind: 'path', path: 'u1/1.png' })
+  })
+  it('passes local and other URIs through', () => {
+    expect(chatImageRef('blob:http://localhost/abc')).toEqual({ kind: 'direct', uri: 'blob:http://localhost/abc' })
+    expect(chatImageRef('file:///tmp/x.jpg')).toEqual({ kind: 'direct', uri: 'file:///tmp/x.jpg' })
+    expect(chatImageRef('https://example.com/x.jpg')).toEqual({ kind: 'direct', uri: 'https://example.com/x.jpg' })
+  })
+  it('is null for no image', () => {
+    expect(chatImageRef(null)).toBeNull()
+    expect(chatImageRef('')).toBeNull()
   })
 })

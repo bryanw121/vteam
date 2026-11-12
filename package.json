@@ -9,8 +9,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "TZ=America/Chicago jest",
-    "test:timezones": "for tz in America/Chicago America/Denver Europe/Berlin Asia/Tokyo UTC; do echo \"── TZ=$tz ──\"; TZ=$tz jest __tests__/calendarDates.test.ts || exit 1; done",
+    "test": "jest",
+    "test:timezones": "node scripts/test-timezones.mjs",
+    "test:tz": "for tz in UTC Asia/Tokyo America/Los_Angeles; do echo \"\u2500\u2500 TZ=$tz \u2500\u2500\"; TZ=$tz jest --silent || exit 1; done",
     "e2e:sweep": "node e2e/sweep.mjs",
     "docs:update": "node scripts/generate-architecture-doc.mjs",
     "docs:check": "node scripts/generate-architecture-doc.mjs --check",
@@ -30,6 +31,7 @@
     "setupFiles": [
       "./jest.setup.js"
     ],
+    "globalSetup": "./jest.globalSetup.js",
     "collectCoverageFrom": [
       "{app,components,contexts,hooks,lib,utils,constants}/**/*.{ts,tsx}",
       "!**/*.d.ts"
@@ -65,15 +67,18 @@
     "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.21",
     "expo-device": "^55.0.14",
+    "expo-file-system": "~19.0.21",
     "expo-image": "~3.0.11",
     "expo-image-picker": "~17.0.10",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.11",
     "expo-notifications": "^55.0.18",
+    "expo-print": "~15.0.8",
     "expo-router": "~6.0.23",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "expo-web-browser": "~15.0.10",
+    "pdf-lib": "^1.17.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",

@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { Alert } from 'react-native'
 import { supabase } from '../../lib/supabase'
 import { useMutation } from '../../lib/query'
 import { COHOST_SELECT, GENERIC_ERROR_MESSAGE, PROFILE_BRIEF } from '../../constants'
@@ -8,6 +7,7 @@ import { buildMemberSearchFilter } from '../../utils'
 import { eventKeys, patchQuery } from './keys'
 import { reportEventError } from './telemetry'
 import type { EventData } from '../../types'
+import { toast } from '../../lib/toast'
 
 export const MAX_COHOSTS = 3
 
@@ -80,7 +80,7 @@ export function useCohosts(data: EventData) {
       },
       onError: e => {
         reportEventError(id, userId, 'addCohost', e)
-        Alert.alert('Error', GENERIC_ERROR_MESSAGE)
+        toast.error("Couldn't add the co-host", e)
       },
     },
   )
@@ -99,7 +99,7 @@ export function useCohosts(data: EventData) {
       onError: e => {
         setRemovingId(null)
         reportEventError(id, userId, 'removeCohost', e)
-        Alert.alert('Error', GENERIC_ERROR_MESSAGE)
+        toast.error("Couldn't remove the co-host", e)
       },
     },
   )

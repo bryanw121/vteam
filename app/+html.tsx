@@ -1,8 +1,11 @@
 import { ScrollViewStyleReset } from 'expo-router/html'
 import { theme } from '../constants/theme'
+import { APP_NAME } from '../constants/copy'
+import { buildFeedPrefetchScript } from '../utils/feedPrefetchScript'
 
 // Read at build time (static export inlines EXPO_PUBLIC_*). Empty in tests.
 const SUPABASE_ORIGIN = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').replace(/\/+$/, '')
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
 /** Family names match theme.font.* (the names expo-font registers on native). */
 const WEB_FONT_FACES = `@font-face { font-family: 'Inter_400Regular'; src: url('/fonts/inter-latin-400-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_500Medium'; src: url('/fonts/inter-latin-500-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_600SemiBold'; src: url('/fonts/inter-latin-600-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_700Bold'; src: url('/fonts/inter-latin-700-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_400Regular'; src: url('/fonts/space-grotesk-latin-400-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_500Medium'; src: url('/fonts/space-grotesk-latin-500-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_600SemiBold'; src: url('/fonts/space-grotesk-latin-600-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_700Bold'; src: url('/fonts/space-grotesk-latin-700-normal.woff2') format('woff2'); font-display: swap; }`
@@ -15,11 +18,13 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         {/*
           viewport-fit=cover: extends layout under notch/home bar so safe-area-inset-* env vars populate on iOS.
-          maximum-scale=1: prevents pinch/double-tap zoom for a native app feel.
+          Pinch zoom stays allowed (WCAG 1.4.4, #136): no maximum-scale / user-scalable=no.
+          Double-tap zoom is off through touch-action: manipulation (below), and
+          inputs are at least 16px, so iOS doesn't zoom on focus either.
         */}
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content"
+          content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
         />
         {/* Tint browser chrome (iOS status bar area, Chrome toolbar) to match the app background */}
         <meta name="theme-color" content={theme.colors.background} />
@@ -29,7 +34,8 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="vteam" />
+        <meta name="apple-mobile-web-app-title" content={APP_NAME} />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <ScrollViewStyleReset />
         {/*
           Start the Supabase connection (DNS + TLS) while the app bundle downloads,
@@ -37,6 +43,21 @@ export default function Root({ children }: { children: React.ReactNode }) {
         */}
         {SUPABASE_ORIGIN ? <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" /> : null}
         {SUPABASE_ORIGIN ? <link rel="dns-prefetch" href={SUPABASE_ORIGIN} /> : null}
+        {/*
+          The app restores scroll itself (utils/scrollMemory, DocScrollView memoryKey). Left on
+          'auto', the browser first jumps to its own remembered offset on Back, then the app moves
+          it again: a visible flicker. Set before the app loads so the first Back is already right.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: "try{if('scrollRestoration' in history)history.scrollRestoration='manual'}catch(e){}" }} />
+        {/*
+          Start the Events feed request now (#184), before the app bundle has
+          downloaded: on a cold server the wait overlaps the download. Only on
+          `/`; useMonthEvents adopts it if span and viewer match (lib/feedPrefetch.web).
+        */}
+        {SUPABASE_ORIGIN && SUPABASE_ANON_KEY ? (
+          // @ts-ignore
+          <script dangerouslySetInnerHTML={{ __html: buildFeedPrefetchScript(SUPABASE_ORIGIN, SUPABASE_ANON_KEY) }} />
+        ) : null}
         {/*
           Web fonts: small self-hosted latin woff2 files (public/fonts, SIL OFL)
           registered under the same family names the native app loads with
@@ -62,11 +83,11 @@ export default function Root({ children }: { children: React.ReactNode }) {
           body { overscroll-behavior-y: contain; }
 
           /*
-            Suppress double-tap-to-zoom on interactive elements.
-            RN Web handles Touchable* automatically, but HTML elements (e.g.
-            in DatePickerField.web) need this explicitly.
+            Suppress double-tap-to-zoom everywhere (pinch zoom still works).
+            On the root as well as HTML controls: RN Web pressables are divs,
+            and the viewport no longer blocks zoom outright (#136).
           */
-          button, a, input, select, textarea, label { touch-action: manipulation; }
+          html, body, #root, button, a, input, select, textarea, label { touch-action: manipulation; }
 
           /*
             ── Document-scroll mode (mobile web, Events tab) ──

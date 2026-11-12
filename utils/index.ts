@@ -178,6 +178,17 @@ export function localDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+/**
+ * Feed day header: "Today", "Tomorrow" or "Fri, Nov 13", relative to `todayKey`
+ * (the viewer's local date key, from useToday) rather than the clock at load.
+ */
+export function dayLabel(dateKey: string, todayKey: string): string {
+  if (dateKey === todayKey) return 'Today'
+  const [y, m, d] = todayKey.split('-').map(Number)
+  if (dateKey === localDateKey(new Date(y, m - 1, d + 1))) return 'Tomorrow'
+  return new Date(dateKey + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+}
+
 /** Calendar key for an event, in the viewer's timezone. */
 export function eventLocalDateKey(iso: string): string {
   return localDateKey(parseEventDate(iso))
@@ -473,7 +484,7 @@ export function isSurface(value: unknown): value is Surface {
 }
 
 /** A feed item's surface: the host's choice for club events, the venue's for outside sessions. */
-export function surfaceOf(event: { surface?: string | null; _external?: { surface?: string | null } | null }): Surface | null {
-  const s = event._external ? event._external.surface : event.surface
+export function surfaceOf(event: { surface?: string | null; _external?: { surface?: string | null } | null; _program?: { surface?: string | null } | null }): Surface | null {
+  const s = event._external ? event._external.surface : event._program ? event._program.surface : event.surface
   return isSurface(s) ? s : null
 }

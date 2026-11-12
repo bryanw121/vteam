@@ -22,6 +22,16 @@ describe('PROFILE_BORDERS drive the swatches', () => {
     expect(isBorderUnlocked(bronze, [{ badge_type: 'event_attendee', tier: 3 }])).toBe(true)
     expect(isBorderUnlocked(bronze, [{ badge_type: 'event_attendee', tier: 2 }])).toBe(false)
   })
+
+  it('unlocks the elemental borders only at the top skill tier', () => {
+    const storm = PROFILE_BORDERS.find(b => b.type === 'storm')!
+    const aether = PROFILE_BORDERS.find(b => b.type === 'aether')!
+
+    expect(isBorderUnlocked(storm, [{ badge_type: 'communication_cheer', tier: 3 }])).toBe(true)
+    expect(isBorderUnlocked(storm, [{ badge_type: 'communication_cheer', tier: 2 }])).toBe(false)
+    expect(isBorderUnlocked(aether, [{ badge_type: 'set_cheer', tier: 3 }])).toBe(true)
+    expect(isBorderUnlocked(aether, [{ badge_type: 'set_cheer', tier: 2 }])).toBe(false)
+  })
 })
 
 describe('pickerItemsFor (badge slot sheet)', () => {

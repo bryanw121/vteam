@@ -67,12 +67,16 @@ describe('event reminders migration', () => {
     return [...block.slice(0, block.indexOf(');')).matchAll(/'([a-z_]+)'/g)].map(m => m[1])
   }
 
-  it('widens the type constraint to exactly NOTIFICATION_TYPES', () => {
-    expect(typesIn(up, 0).sort()).toEqual([...NOTIFICATION_TYPES].sort())
+  // Friends (#15, migration 20261028203837_friends) was applied after this one and adds its own two types.
+  const LATER_TYPES: readonly string[] = ['friend_request', 'friend_accepted']
+  const typesBefore = NOTIFICATION_TYPES.filter(t => !LATER_TYPES.includes(t))
+
+  it('widens the type constraint to exactly NOTIFICATION_TYPES of the time', () => {
+    expect(typesIn(up, 0).sort()).toEqual([...typesBefore].sort())
   })
 
   it('restores the previous list on the way down', () => {
-    expect(typesIn(down, 0).sort()).toEqual(NOTIFICATION_TYPES.filter(t => t !== 'event_reminder' && t !== 'late_dropout').sort())
+    expect(typesIn(down, 0).sort()).toEqual(typesBefore.filter(t => t !== 'event_reminder' && t !== 'late_dropout').sort())
   })
 
   it('allows the same lead times as the settings chips', () => {

@@ -82,13 +82,17 @@ export function tabIndexFromPath(path: string): number {
  *   from anywhere on Settings screens (`fullScreenGestureEnabled`), and swipe
  *   down to close the Host modal. Every Stack's `gestureEnabled` reads this.
  *   Android's system back button/gesture is the OS's and always works.
- * Web never had either: narrow web renders the pager statically, and the
+ * - `calendar`: swipe left/right on the Events week strip to change week
+ *   (turned off Nov 2026, everywhere including mobile web: the ‹ › arrows
+ *   beside the days do it).
+ * Web never had `tabs` or `back`: narrow web renders the pager statically, and the
  * browser's own swipe-back can't be turned off by a page.
  * `__tests__/swipeNavigation.test.ts` keeps every layout reading these flags.
  */
 export const SWIPE_NAVIGATION = {
   tabs: false,
   back: false,
+  calendar: false,
 } as const
 
 export type CreateMenuOption = {

@@ -16,41 +16,45 @@ import {
 } from '@expo-google-fonts/inter'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import Head from 'expo-router/head'
+import { GestureRoot } from '../components/GestureRoot'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { SessionProvider, useSession } from '../contexts/session'
 import { TextScaleProvider } from '../contexts/textScale'
 import { isAppPath, routes, toRoute } from '../utils/routes'
-import { isProtectedPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
-import { supabase } from '../lib/supabase'
-import { theme, SWIPE_NAVIGATION } from '../constants'
+import { isProtectedPath, returnPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
+import { recoveryLinkAtStart } from '../lib/supabase'
+import { APP_NAME, theme, SWIPE_NAVIGATION } from '../constants'
 import { initSentry, Sentry } from '../lib/sentry'
 import { SentryErrorBoundary } from '../components/SentryErrorBoundary'
 import { registerPushToken, subscribeToPushTaps } from '../utils/pushNotifications'
 import { useMinVersion } from '../hooks/useMinVersion'
 import { useCacheUserScope } from '../hooks/useCacheUserScope'
+import { useMyProfile } from '../hooks/useMyProfile'
 import { UpdateRequiredScreen } from '../components/UpdateRequiredScreen'
+import { startQuerySnapshot } from '../lib/querySnapshot'
+import { noteScreen, screenPattern, setUsageUser, startUsageTracking } from '../lib/analytics'
 
 initSentry()
+// Last visit's profile / settings / chat list into the cache before the first render (web).
+startQuerySnapshot()
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const AVATARS_BUCKET = 'avatars'
 
-async function prefetchUserAvatar() {
-  try {
-    const { data: { session } } = await supabase.auth.getSession()
-    const userId = session?.user?.id
-    if (!userId) return
-    const { data } = await supabase
-      .from('profiles')
-      .select('avatar_url')
-      .eq('id', userId)
-      .single()
-    const path = data?.avatar_url
+/**
+ * Warms the signed-in user's avatar so the header and Profile don't pop it in.
+ * The path comes from the own-profile query every screen shares (#224: this
+ * used to be a second `profiles` read on every open). Its own component, so a
+ * profile change re-renders only this, not the navigator.
+ */
+function AvatarPrefetch() {
+  const path = useMyProfile().profile?.avatar_url
+  useEffect(() => {
     if (!path || /^https?:\/\//i.test(path)) return
-    const url = `${SUPABASE_URL}/storage/v1/object/public/${AVATARS_BUCKET}/${path}`
-    await Image.prefetch(url)
-  } catch {}
+    Image.prefetch(`${SUPABASE_URL}/storage/v1/object/public/${AVATARS_BUCKET}/${path}`).catch(() => {})
+  }, [path])
+  return null
 }
 
 /** Fade-out only — the splash stays up exactly as long as fonts + auth take to load. */
@@ -134,7 +138,6 @@ function RootNavigator() {
   // Per-user setup whenever someone signs in (cold start with a session included).
   useEffect(() => {
     if (!userId) return
-    void prefetchUserAvatar()
     void registerPushToken()
   }, [userId])
 
@@ -150,10 +153,32 @@ function RootNavigator() {
     })
   }, [navReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Usage metrics: sessions and heartbeats once the signed-in user is known; a new session when
+  // the account changes; the screen type for every route outside the tab pager (the tabs
+  // layout records which tab is on show there).
+  useEffect(() => {
+    if (!navReady) return
+    startUsageTracking(userId)
+    setUsageUser(userId)
+  }, [navReady, userId])
+  useEffect(() => {
+    if (!navReady || (segments as string[]).includes('(main)')) return
+    noteScreen(screenPattern(segments as string[]))
+  }, [navReady, segments])
+
   // Keep Sentry user context in sync with auth state
   useEffect(() => {
     Sentry.setUser(userId ? { id: userId } : null)
   }, [userId])
+
+  // A reset link that Auth sent to the Site URL instead of /reset-password
+  // still ends on the form (#223). Once per page load.
+  const recoveryRoutedRef = useRef(false)
+  useEffect(() => {
+    if (!navReady || recoveryRoutedRef.current || !recoveryLinkAtStart) return
+    recoveryRoutedRef.current = true
+    if ((segments as string[])[1] !== 'reset-password') router.replace(routes.resetPassword())
+  }, [navReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Guests may browse; only account-only routes bounce to login. Signed-in users
   // leave the auth screens (except reset-password, where the recovery link
@@ -172,7 +197,7 @@ function RootNavigator() {
         // rather than parking the next sign-in on that page.
         router.replace(routes.app())
       } else {
-        setPostSignInRedirect(pathname)
+        setPostSignInRedirect(returnPath(pathname))
         router.replace(routes.login())
       }
     } else if (userId && inAuthGroup && !onResetPassword) {
@@ -183,7 +208,18 @@ function RootNavigator() {
   return (
     <SentryErrorBoundary>
     <SafeAreaProvider>
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureRoot style={{ flex: 1 }}>
+      {/*
+        Browser tab title. Outside the hydration gate on purpose: the static
+        export renders it into every page's <title> (Expo Router's head manager
+        otherwise leaves an empty one, which tabs show as "Untitled"), and the
+        client renders the same string, so there is nothing to mismatch.
+      */}
+      {Platform.OS === 'web' && (
+        <Head>
+          <title>{APP_NAME}</title>
+        </Head>
+      )}
       {hydrated && (
         <Stack
           screenOptions={{
@@ -197,8 +233,10 @@ function RootNavigator() {
           <Stack.Screen name="(app)" options={{ headerShown: false }} />
           <Stack.Screen name="terms" options={{ headerShown: false, title: 'Terms and Conditions' }} />
           <Stack.Screen name="privacy" options={{ headerShown: false, title: 'Privacy Policy' }} />
+          <Stack.Screen name="delete-account" options={{ headerShown: false, title: 'Delete your account' }} />
         </Stack>
       )}
+      {hydrated && userId && <AvatarPrefetch />}
 
       {updateRequirement && !splashVisible && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -211,7 +249,7 @@ function RootNavigator() {
           <AppSplash opacity={splashOpacity} />
         </View>
       )}
-    </GestureHandlerRootView>
+    </GestureRoot>
     </SafeAreaProvider>
     </SentryErrorBoundary>
   )

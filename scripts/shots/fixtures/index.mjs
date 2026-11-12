@@ -112,9 +112,9 @@ export function buildFixtures(now) {
   // Attendance: who's in, in join order. `n` attending from ALL (skipping the host), then waitlist.
   const event_attendees = []
   const roster = (key, users, { waitlist = [], teams = false, pending = [] } = {}) => {
-    users.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'attending', joined_at: t.ago(60 * 24 * 3 - i * 37), team_number: teams ? (i % 2) + 1 : null, team_pinned: false, denial_reason: null }))
-    waitlist.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'waitlisted', joined_at: t.ago(60 * 5 - i * 11), team_number: null, team_pinned: false, denial_reason: null }))
-    pending.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'pending', joined_at: t.ago(60 * 2 - i * 7), team_number: null, team_pinned: false, denial_reason: null }))
+    users.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'attending', joined_at: t.ago(60 * 24 * 3 - i * 37), team_number: teams ? (i % 2) + 1 : null, team_pinned: false, denial_reason: null, no_show: false, no_show_marked_at: null, no_show_marked_by: null }))
+    waitlist.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'waitlisted', joined_at: t.ago(60 * 5 - i * 11), team_number: null, team_pinned: false, denial_reason: null, no_show: false, no_show_marked_at: null, no_show_marked_by: null }))
+    pending.forEach((u, i) => event_attendees.push({ event_id: E[key], user_id: u, status: 'pending', joined_at: t.ago(60 * 2 - i * 7), team_number: null, team_pinned: false, denial_reason: null, no_show: false, no_show_marked_at: null, no_show_marked_by: null }))
   }
   const others = exclude => ALL.filter(u => !exclude.includes(u))
   roster('sundaySand', [ME, ...others([ME]).slice(0, 10)], { teams: true })
@@ -130,11 +130,15 @@ export function buildFixtures(now) {
   roster('nextWeekIndoor', [P.jordanr])
   roster('pastSand', [ME, P.jordanr, P.priyap, P.marcusw, P.sofiag, P.liamo, P.emmat, P.zoeyl], { teams: true })
   roster('pastIndoor', [P.jordanr, ME, P.aishak, P.danielk, P.noahb, P.hannahs])
+  // No-show flag (#151): Jordan marked Maya as a no-show at the last indoor gym (the event-details-noshow screen).
+  Object.assign(event_attendees.find(a => a.event_id === E.pastIndoor && a.user_id === ME), { no_show: true, no_show_marked_at: t.iso(-5, 21, 30), no_show_marked_by: P.jordanr })
   roster('pastHosted', [ME, P.priyap, P.marcusw, P.emmat, P.ethanp, P.zoeyl])
 
   const event_guests = [
     { id: id('e2000000', 1), event_id: E.sundaySand, added_by: P.jordanr, first_name: 'Chris', last_name: 'Reyes', status: 'attending', joined_at: t.ago(60 * 20), team_number: 2, team_pinned: false },
   ]
+  // "I've paid" (#6): the viewer marked the Friday game paid (the leave sheet's paid line, #171).
+  const event_payments = [{ event_id: E.fridayNight, user_id: ME, paid_at: t.ago(60 * 20) }]
   const event_cohosts = [
     { event_id: E.sundaySand, user_id: P.priyap, added_by: ME, added_at: t.iso(-5) },
   ]
@@ -169,6 +173,18 @@ export function buildFixtures(now) {
     ext(4, { title: 'Reverse Co-ed 4s', venue: 'Volleyworld Austin', surface: 'indoor', session_type: 'open play', price: '$12', starts_at: t.iso(5, 19, 0), ends_at: t.iso(5, 22, 0), signup_url: 'https://example.com/volleyworld' }),
   ]
 
+  // Outside leagues and tournaments (Schelagg's programs feed).
+  const day = (n) => t.iso(n, 12, 0).slice(0, 10)
+  const prog = (n, f) => ({ id: `shots-program-${n}`, kind: 'league', surface: 'indoor', region: 'austin', state: 'TX', series: null, org: 'ACES', venue: 'Austin Sports Center', city: 'Austin', address: null, format: null, divisions: [], weekdays: [], registration_opens: null, waitlist_on: null, price_note: null, price_changes_on: null, status: 'open', signup_url: 'https://example.com/signup', source_url: 'https://example.com/signup', checked_at: t.ago(60 * 4), ...f })
+  const external_programs = [
+    prog(1, { title: 'Tuesday Co-ed Sand 4s · Winter', surface: 'sand', venue: 'ATX Beach', starts_on: day(9), ends_on: day(65), weekdays: ['Tuesday'], registration_deadline: day(4), team_price: '$400–500', individual_price: '$105', price_note: 'Early bird', price_changes_on: day(1) }),
+    prog(2, { title: 'Sunday Indoor Volleyball', org: 'Austin Sports & Social Club', venue: 'South Austin Rec Center', starts_on: day(14), ends_on: day(84), weekdays: ['Sunday'], registration_deadline: day(5), team_price: '$689', individual_price: '$99' }),
+    prog(3, { title: 'Coed 4s Sand · Mondays', org: 'Meanwhile Brewing', surface: 'sand', venue: 'Meanwhile Brewing Co', starts_on: day(70), ends_on: day(119), weekdays: ['Monday'], registration_deadline: day(36), team_price: '$700' }),
+    prog(4, { kind: 'tournament', title: 'Turkey Spikes BYO4s Sand Tourney', surface: 'sand', venue: 'ATX Beach', starts_on: day(6), ends_on: day(6), registration_deadline: day(5), team_price: '$160', individual_price: '$45' }),
+    prog(5, { kind: 'tournament', title: 'Holiday Spikes Indoor (BB/B)', starts_on: day(27), ends_on: day(27), registration_deadline: day(26), team_price: '$315–415', individual_price: '$50' }),
+    prog(6, { kind: 'tournament', series: 'nagva', org: 'NAGVA', region: null, title: 'Battle of the Alamo 2026', venue: 'Mission Concepcion Sports Complex', city: 'San Antonio', starts_on: day(40), ends_on: day(41), registration_deadline: null, waitlist_on: day(38), team_price: '$650', divisions: [{ name: 'A1', cap: 12, confirmed: 7 }, { name: 'BB', cap: 24, confirmed: 20 }] }),
+  ]
+
   // ─── Tournaments ───────────────────────────────────────────────────────────
   const TU = IDS.tournament
   const tournament = (tid, f) => ({
@@ -182,7 +198,7 @@ export function buildFixtures(now) {
     tournament(TU.past, { title: 'Fall Doubles Cup', start_date: t.iso(-13, 9, 0), status: 'completed', schedule_published: true, schedule_generated_at: t.iso(-15), published_at: t.iso(-30), created_at: t.iso(-35), description: 'Our fall doubles championship.' }),
     tournament(TU.open, { title: 'Indoor 6s Shootout', club_id: C.indoor, created_by: P.jordanr, location: 'Austin Sports Center', start_date: t.iso(17, 10, 0), format: 'round_robin', bracket_type: null, max_teams: 6, min_roster_size: 6, max_roster_size: 9, price: 120, venmo_handle: 'jordan-reyes', num_courts: 2, match_duration_minutes: 60, skill_levels: ['b', 'bb'] }),
   ]
-  const tournament_rules = [TU.upcoming, TU.past, TU.open].map(tid => ({ tournament_id: tid, sets_to_win: tid === TU.open ? 2 : 1, winning_score: tid === TU.open ? 25 : 21, deciding_set_score: 15, win_by_margin: 2, point_cap: null, starting_score: 0 }))
+  const tournament_rules = [TU.upcoming, TU.past, TU.open].map(tid => ({ tournament_id: tid, sets_to_win: tid === TU.open ? 2 : 1, winning_score: tid === TU.open ? 25 : 21, deciding_set_score: 15, win_by_margin: 2, point_cap: null, starting_score: 0, tiebreakers: ['head_to_head', 'set_ratio', 'point_diff', 'points_for'], third_place_match: false }))
   const tournament_prizes = [
     { id: id('d2000000', 1), tournament_id: TU.upcoming, place_label: '1st', description: 'Trophy + $160', amount: '$160', display_order: 1, created_at: t.iso(-14) },
     { id: id('d2000000', 2), tournament_id: TU.upcoming, place_label: '2nd', description: 'Trophy + $80', amount: '$80', display_order: 2, created_at: t.iso(-14) },
@@ -326,13 +342,20 @@ export function buildFixtures(now) {
     { id: id('f4000000', 5), user_id: P.jordanr, badge_type: 'spike_cheer', tier: 2, awarded_at: t.iso(-6), display_order: 1, display_tier: null },
     { id: id('f4000000', 6), user_id: P.jordanr, badge_type: 'event_host', tier: 3, awarded_at: t.iso(-60), display_order: 2, display_tier: null },
   ]
-  const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, updated_at: t.iso(-3) }]
+  // Hidden in feed: ACES (hides one outside session, so the feed shows "1 hidden · Show"),
+  // a type no fixture event has, and one event that isn't in the feed.
+  const hidden_feed = [
+    { kind: 'venue', key: 'aces volleyball', label: 'ACES Volleyball' },
+    { kind: 'type', key: 'tag:league', label: 'League' },
+    { kind: 'item', key: 'shots-hidden-event', label: 'Thursday Night Sixes', until: t.iso(5, 19, 0) },
+  ]
+  const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, hidden_feed, updated_at: t.iso(-3) }]
   const chat_silences = [{ user_id: ME, silenced_user_id: P.hannahs, created_at: t.iso(-8) }]
 
   return {
     profiles: profiles(t),
     tags, major_cities, clubs, club_members, club_posts, club_post_likes, club_post_comments,
-    events, event_tags, event_attendees, event_guests, event_cohosts, event_comments, cheers, user_event_templates, external_sessions,
+    events, event_tags, event_attendees, event_guests, event_payments, event_cohosts, event_comments, cheers, user_event_templates, external_sessions, external_programs,
     tournaments, tournament_rules, tournament_prizes, tournament_teams, tournament_team_members, tournament_pools, tournament_pool_teams,
     tournament_matches, tournament_sets, tournament_comments, tournament_team_invitations: [], tournament_team_join_requests: [],
     conversations, conversation_members, messages, message_reactions,

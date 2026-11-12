@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { View, ScrollView, TouchableOpacity } from 'react-native'
 import { Text } from '../ui/Text'
 import { RefreshControl } from '../RefreshControl'
 import { Image } from 'expo-image'
@@ -9,6 +9,7 @@ import { shared, theme, CHEER_TYPES, CHEERS_MAX_PER_EVENT, TEAM_COLORS, TEAM_COL
 import type { Profile, CheerType, Cheer, IoniconName, PendingCheer, TeamAssignment } from '../../types'
 import { profileAvatarSmallUri, profileDisplayName, profileInitial } from '../../utils'
 import type { EventCheersApi, EventData, EventTeamsApi } from '../../types'
+import { Spinner } from '../ui/Spinner'
 
 type CheerPersonCardProps = {
   profile: Profile
@@ -114,7 +115,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
           contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.xl }}
           refreshControl={refresh}
         >
-          <ActivityIndicator color={theme.colors.primary} />
+          <Spinner color={theme.colors.primary} />
         </ScrollView>
       ) : selectedCheerType === null ? (
         /* Step 1: Pick a cheer type */
@@ -171,7 +172,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
                     {kt.label}
                   </Text>
                   {totalCount > 0 && (
-                    <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primary }}>
+                    <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText }}>
                       {totalCount} selected
                     </Text>
                   )}
@@ -193,7 +194,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
               borderColor: theme.colors.primary + '40',
             }}>
               <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} />
-              <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }}>
+              <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }}>
                 Cheers sent!
               </Text>
             </View>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Alert } from 'react-native'
+import { toast } from '../lib/toast'
 import { act, render } from '@testing-library/react-native'
 import { __resetQueryCache, getQueryData, invalidate, setQueryData, useQuery } from '../lib/query'
 import { eventKeys } from '../hooks/event/keys'
@@ -144,6 +144,20 @@ describe('useMonthEvents', () => {
     // The last month came back empty → nothing further to scroll into.
     expect(feed.reachedEnd).toBe(true)
     expect(feed.loading).toBe(false)
+  })
+
+  it('leaves out items that have already ended, but keeps upcoming ones and items with no known end', async () => {
+    const at = (ms: number) => new Date(ms).toISOString().slice(0, 19) // event_date: UTC without a zone
+    const now = Date.now()
+    const ended = eventRow('ended', THIS_MONTH, { event_date: at(now - 3 * 3600_000), duration_minutes: 60 })
+    const later = eventRow('later', THIS_MONTH, { event_date: at(now + 3600_000), duration_minutes: 60 })
+    const noEnd = eventRow('no-end', THIS_MONTH, { event_date: at(now + 7200_000), duration_minutes: 0 })
+    mockResponses.events = { data: [ended, later, noEnd], error: null }
+    render(<Probe />)
+    const months = [...new Set([ended, later, noEnd].map(e => e.event_date.slice(0, 7)))].sort()
+    act(() => feed.loadMonthSpan(months[0], addMonths(months[months.length - 1], 1)))
+    await flush()
+    expect(feed.events.map(e => e.id)).toEqual(['later', 'no-end'])
   })
 
   it('scopes my_attendance to the signed-in user', async () => {
@@ -404,7 +418,7 @@ describe('useFeedRsvp', () => {
     await loadedFeed()
     let release!: (r: Result) => void
     mockResponses.event_attendees = () => new Promise<Result>(res => { release = res })
-    jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+    jest.spyOn(toast, 'show')
 
     let done!: Promise<void>
     act(() => { done = rsvp.rsvp({ eventId: 'a', action: 'join', userId: 'me' }) })
@@ -424,7 +438,7 @@ describe('useFeedRsvp', () => {
     const insert = mockCalls.find(c => c.table === 'event_attendees')!
     expect(insert.ops.map(([op]) => op)).toEqual(['insert', 'select', 'single'])
     expect(insert.ops[1]).toEqual(['select', ['status']])
-    expect(Alert.alert).not.toHaveBeenCalled()
+    expect(toast.show).not.toHaveBeenCalled()
     expect(rsvp.pendingEventIds.size).toBe(0)
     expect(eventQueries()).toHaveLength(2)
     expect(feed.events[0].event_attendees_attending).toEqual([{ count: 4 }])
@@ -435,11 +449,11 @@ describe('useFeedRsvp', () => {
     mockResponses.event_attendees = { data: { status: 'waitlisted' }, error: null }
     // Hold the refetch so the patched cache state is observable.
     mockResponses.events = () => new Promise<Result>(() => {})
-    jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+    jest.spyOn(toast, 'show')
 
     await act(async () => { await rsvp.rsvp({ eventId: 'a', action: 'join', userId: 'me' }) })
 
-    expect(Alert.alert).toHaveBeenCalledWith(EVENT_JUST_FILLED_TITLE, EVENT_JUST_FILLED_BODY)
+    expect(toast.show).toHaveBeenCalledWith(expect.objectContaining({ title: EVENT_JUST_FILLED_TITLE, message: EVENT_JUST_FILLED_BODY }))
     expect(EVENT_JUST_FILLED_TITLE).toBe('Event just filled up')
     expect(feed.events[0].my_attendance).toEqual([{ user_id: 'me', status: 'waitlisted' }])
     expect(feed.events[0].event_attendees_attending).toEqual([{ count: 3 }])
@@ -450,11 +464,11 @@ describe('useFeedRsvp', () => {
     const before = getQueryData<EventWithDetails[]>(feedMonthKey(NEXT_MONTH))
     mockResponses.event_attendees = { data: null, error: { message: 'denied' } }
     mockResponses.events = () => new Promise<Result>(() => {})
-    jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+    jest.spyOn(toast, 'show')
 
     await act(async () => { await rsvp.rsvp({ eventId: 'a', action: 'join', userId: 'me' }) })
 
-    expect(Alert.alert).toHaveBeenCalledWith('Error', 'Something went wrong. Please try again.')
+    expect(toast.show).toHaveBeenCalledWith(expect.objectContaining({ title: "Couldn't join", message: 'Something went wrong. Please try again.', variant: 'error' }))
     expect(feed.events[0].my_attendance).toEqual([])
     expect(feed.events[0].event_attendees_attending).toEqual([{ count: 3 }])
     expect(getQueryData<EventWithDetails[]>(feedMonthKey(NEXT_MONTH))?.[0]).toEqual(before?.[0])
@@ -501,7 +515,7 @@ describe('useFeedRsvp', () => {
     const releases: Array<(r: Result) => void> = []
     mockResponses.event_attendees = () => new Promise<Result>(res => { releases.push(res) })
     mockResponses.events = () => new Promise<Result>(() => {})
-    jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+    jest.spyOn(toast, 'show')
 
     let doneA!: Promise<void>
     let doneB!: Promise<void>
@@ -521,7 +535,7 @@ describe('useFeedRsvp', () => {
     expect(feed.events.find(e => e.id === 'a')?.my_attendance).toEqual([])
     expect(feed.events.find(e => e.id === 'b')?.my_attendance).toEqual([{ user_id: 'me', status: 'attending' }])
     expect(eventQueries().length).toBe(eventsBefore)
-    expect(Alert.alert).toHaveBeenCalledWith('Error', GENERIC_ERROR_MESSAGE)
+    expect(toast.show).toHaveBeenCalledWith(expect.objectContaining({ title: "Couldn't join", message: GENERIC_ERROR_MESSAGE }))
 
     await act(async () => { releases[1]({ data: { status: 'attending' }, error: null }); await doneB })
     await flush()
@@ -529,7 +543,7 @@ describe('useFeedRsvp', () => {
     expect(eventQueries().length).toBe(eventsBefore + 1)
   })
 
-  it('alerts through window.alert on web (Alert.alert is a no-op there)', async () => {
+  it('a failed join says so on web too, with Retry (#228: Alert.alert is a no-op there)', async () => {
     await loadedFeed()
     mockResponses.event_attendees = { data: null, error: { message: 'denied' } }
     mockResponses.events = () => new Promise<Result>(() => {})
@@ -543,7 +557,13 @@ describe('useFeedRsvp', () => {
     } finally {
       Platform.OS = realOS
     }
-    expect(webAlert).toHaveBeenCalledWith(`Error\n\n${GENERIC_ERROR_MESSAGE}`)
+    expect(webAlert).not.toHaveBeenCalled()
+    const shown = toast.current()
+    expect(shown).toMatchObject({ title: "Couldn't join", message: GENERIC_ERROR_MESSAGE, variant: 'error' })
+    expect(shown?.action?.label).toBe('Retry')
+    mockResponses.event_attendees = { data: { status: 'attending' }, error: null }
+    await act(async () => { shown?.action?.onPress(); await new Promise(r => setTimeout(r, 0)) })
+    expect(mockCalls.filter(c => c.table === 'event_attendees')).toHaveLength(2)
   })
 })
 

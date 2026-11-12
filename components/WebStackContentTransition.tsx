@@ -3,9 +3,9 @@ import { Platform, TouchableOpacity, View, useWindowDimensions, StyleSheet } fro
 import { Text } from './ui/Text'
 import { Slot, usePathname, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated'
 import { BREAKPOINTS, theme } from '../constants'
 import { routes, type RouteString } from '../utils/routes'
+import { useReducedMotion } from '../hooks/useReducedMotion'
 
 /** Every subpage that shows this back row lives under the Profile tab. */
 function getBackPath(_pathname: string): RouteString {
@@ -13,7 +13,8 @@ function getBackPath(_pathname: string): RouteString {
 }
 
 /**
- * Web: native-stack uses instant show/hide. Keyed fade gives a short transition when
+ * Web: native-stack uses instant show/hide. A keyed CSS fade-in (not Reanimated, which would
+ * put it in the web entry chunk, #193) gives a short transition when
  * opening routes from the profile tab (and between subpages). Native uses the real stack animation.
  *
  * On desktop web (≥ BREAKPOINTS.sidebar) the tab navigator has headerShown:false, so we render an
@@ -23,6 +24,7 @@ export function WebStackContentTransition() {
   const pathname = usePathname()
   const router = useRouter()
   const { width } = useWindowDimensions()
+  const reducedMotion = useReducedMotion()
   const isDesktopWeb = Platform.OS === 'web' && width >= BREAKPOINTS.sidebar
 
   if (Platform.OS !== 'web') {
@@ -30,12 +32,7 @@ export function WebStackContentTransition() {
   }
 
   return (
-    <Animated.View
-      key={pathname}
-      entering={FadeIn.duration(240)}
-      exiting={FadeOut.duration(180)}
-      style={{ flex: 1, backgroundColor: theme.colors.background }}
-    >
+    <View key={pathname} style={[{ flex: 1, backgroundColor: theme.colors.background }, reducedMotion ? null : FADE_IN]}>
       {isDesktopWeb && (
         <View style={styles.backRow}>
           <TouchableOpacity
@@ -50,9 +47,16 @@ export function WebStackContentTransition() {
         </View>
       )}
       <Slot />
-    </Animated.View>
+    </View>
   )
 }
+
+/** 240 ms fade-in on mount (react-native-web keyframes); skipped under reduced motion. */
+const FADE_IN = {
+  animationKeyframes: [{ from: { opacity: 0 }, to: { opacity: 1 } }],
+  animationDuration: '240ms',
+  animationTimingFunction: 'ease-out',
+} as object
 
 const styles = StyleSheet.create({
   backRow: {
@@ -69,7 +73,7 @@ const styles = StyleSheet.create({
   },
   backLabel: {
     fontSize: theme.font.size.md,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     fontWeight: theme.font.weight.medium,
   },
 })

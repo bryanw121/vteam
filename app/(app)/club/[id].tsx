@@ -1,16 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import {
-  View,
-  ScrollView,
-  ActivityIndicator,
-  TouchableOpacity,
-  Image,
-  Alert,
-  Modal,
-  Pressable,
-  Platform,
-  StyleSheet,
-} from 'react-native'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { View, ScrollView, TouchableOpacity, Image, Modal, Pressable, Platform, StyleSheet } from 'react-native'
+import { toast } from '../../../lib/toast'
 import { Text, TextInput } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -35,6 +25,7 @@ import { clubLocationFromPicker, pickerFromClubLocation } from '../../../utils/c
 import { ClubPostCard, ClubPostComposerModal } from '../../../components/ClubPostCard'
 import { ScreenState } from '../../../components/ui'
 import type { ClubDetailData, ClubWithDetails, LocationValue, MajorCity, Profile } from '../../../types'
+import { Spinner } from '../../../components/ui/Spinner'
 
 const COVER_HEIGHT = 200
 const AVATAR_SIZE = 80
@@ -83,6 +74,9 @@ export default function ClubDetailScreen() {
   const [coverUri, setCoverUri] = useState<string | null>(null)
   const [editMode, setEditMode] = useState(false)
   const [editName, setEditName] = useState('')
+  // Edit form errors, under each field (#228: alerts here did nothing on the web).
+  const [editErrors, setEditErrors] = useState<{ name?: string; metro?: string }>({})
+  const editNameRef = useRef<TextInput>(null)
   const [editDescription, setEditDescription] = useState('')
   const [editMajorCity, setEditMajorCity] = useState<MajorCity | null>(null)
   const [editLocation, setEditLocation] = useState<LocationValue | null>(null)
@@ -163,7 +157,7 @@ export default function ClubDetailScreen() {
         setQueryData<ClubDetailData>(key, { ...before, club: { ...before.club, club_members: members } })
         return () => setQueryData<ClubDetailData>(key, before)
       },
-      onError: error => Alert.alert('Error', error.message),
+      onError: (error, action) => { toast.error(action === 'join' ? "Couldn't join the club" : "Couldn't leave the club", error) },
       // Membership gates the updates feed and the Clubs tab's "Joined" list.
       invalidates: [queryKey('club', id), 'clubs'],
     },
@@ -181,14 +175,14 @@ export default function ClubDetailScreen() {
   }
 
   async function handleSaveEdit() {
-    if (!club || !editName.trim()) {
-      Alert.alert('Name required', 'Please enter a club name.')
-      return
+    if (!club) return
+    const found = {
+      name: editName.trim() ? undefined : 'Enter a club name.',
+      metro: editMajorCity ? undefined : 'Choose a city from the list.',
     }
-    if (!editMajorCity) {
-      Alert.alert('Metro area required', 'Choose a city from the list.')
-      return
-    }
+    setEditErrors(found)
+    if (found.name) { editNameRef.current?.focus(); return }
+    if (found.metro || !editMajorCity) return
     setSaving(true)
     const { error } = await supabase
       .from('clubs')
@@ -200,7 +194,7 @@ export default function ClubDetailScreen() {
       })
       .eq('id', club.id)
     setSaving(false)
-    if (error) Alert.alert('Error', error.message)
+    if (error) toast.error("Couldn't save the club", error)
     else { setEditMode(false); clubChanged() }
   }
 
@@ -216,12 +210,12 @@ export default function ClubDetailScreen() {
       .from(CLUB_AVATARS_BUCKET)
       .upload(path, file, { contentType: mimeType })
     if (uploadError) {
-      Alert.alert('Upload failed', uploadError.message)
+      toast.error("Couldn't upload the photo", uploadError)
       return
     }
     const column = kind === 'avatar' ? 'avatar_url' : 'cover_url'
     const { error: updateError } = await supabase.from('clubs').update({ [column]: path }).eq('id', club.id)
-    if (updateError) Alert.alert('Error', updateError.message)
+    if (updateError) toast.error("Couldn't save the photo", updateError)
     else clubChanged()
   }
 
@@ -251,7 +245,7 @@ export default function ClubDetailScreen() {
     void (async () => {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
       if (!permission.granted) {
-        Alert.alert('Permission required', 'Please allow access to your photo library.')
+        toast.show({ title: 'Photo access needed', message: 'Allow access to your photo library.', variant: 'warning' })
         return
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -278,7 +272,7 @@ export default function ClubDetailScreen() {
     const { error } = await supabase.from('clubs').delete().eq('id', club.id)
     setDeleting(false)
     if (error) {
-      Alert.alert('Error', error.message)
+      toast.error("Couldn't delete the club", error)
       return
     }
     setShowDeleteModal(false)
@@ -397,7 +391,7 @@ export default function ClubDetailScreen() {
                   disabled={uploadingCover}
                 >
                   {uploadingCover
-                    ? <ActivityIndicator size="small" color={theme.colors.white} />
+                    ? <Spinner size="small" color={theme.colors.white} />
                     : <Ionicons name="camera-outline" size={14} color={theme.colors.white} />
                   }
                   <Text style={{ color: theme.colors.white, fontSize: theme.font.size.xs, fontWeight: theme.font.weight.semibold }}>
@@ -417,7 +411,7 @@ export default function ClubDetailScreen() {
                 <View style={styles.avatarRing}>
                   <View style={styles.avatar}>
                     {uploadingAvatar ? (
-                      <ActivityIndicator color={theme.colors.primary} />
+                      <Spinner color={theme.colors.primary} />
                     ) : avatarUri ? (
                       <Image source={{ uri: avatarUri }} style={{ width: AVATAR_SIZE, height: AVATAR_SIZE }} resizeMode="cover" />
                     ) : (
@@ -483,11 +477,11 @@ export default function ClubDetailScreen() {
             <View style={{ paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.md }}>
               {member ? (
                 <TouchableOpacity onPress={handleLeave} disabled={membership.isPending} style={[shared.buttonBase, shared.buttonSecondary, membership.isPending && shared.buttonDisabled]}>
-                  {membership.isPending ? <ActivityIndicator color={theme.colors.primary} /> : <Text style={shared.buttonLabelSecondary}>Leave club</Text>}
+                  {membership.isPending ? <Spinner color={theme.colors.primary} /> : <Text style={shared.buttonLabelSecondary}>Leave club</Text>}
                 </TouchableOpacity>
               ) : club.membership_type === 'open' ? (
                 <TouchableOpacity onPress={handleJoin} disabled={membership.isPending} style={[shared.buttonBase, shared.buttonPrimary, membership.isPending && shared.buttonDisabled]}>
-                  {membership.isPending ? <ActivityIndicator color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Join club</Text>}
+                  {membership.isPending ? <Spinner color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Join club</Text>}
                 </TouchableOpacity>
               ) : (
                 <View style={[shared.buttonBase, { backgroundColor: theme.colors.border }]}>
@@ -504,12 +498,16 @@ export default function ClubDetailScreen() {
               <View>
                 <Text style={shared.label}>Name</Text>
                 <TextInput
+                  ref={editNameRef}
                   value={editName}
-                  onChangeText={setEditName}
-                  style={shared.input}
+                  onChangeText={v => { setEditName(v); setEditErrors(e => ({ ...e, name: undefined })) }}
+                  style={[shared.input, editErrors.name ? { borderColor: theme.colors.error } : null]}
                   placeholder="Club name"
                   placeholderTextColor={theme.colors.subtext}
+                  accessibilityLabel="Club name"
+                  testID="club-edit-name"
                 />
+                {editErrors.name ? <Text style={[shared.errorText, shared.mt_sm]}>{editErrors.name}</Text> : null}
               </View>
               <View>
                 <Text style={shared.label}>Description</Text>
@@ -524,13 +522,16 @@ export default function ClubDetailScreen() {
                 />
               </View>
               <ClubLocationField value={editLocation} onChange={setEditLocation} userId={userId} />
-              <MajorCityAutocomplete label="Metro area" value={editMajorCity} onChange={setEditMajorCity} />
+              <View>
+                <MajorCityAutocomplete label="Metro area" value={editMajorCity} onChange={c => { setEditMajorCity(c); setEditErrors(e => ({ ...e, metro: undefined })) }} />
+                {editErrors.metro ? <Text style={shared.errorText}>{editErrors.metro}</Text> : null}
+              </View>
               <TouchableOpacity
                 onPress={handleSaveEdit}
                 disabled={saving}
                 style={[shared.buttonBase, shared.buttonPrimary, saving && shared.buttonDisabled]}
               >
-                {saving ? <ActivityIndicator color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Save changes</Text>}
+                {saving ? <Spinner color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Save changes</Text>}
               </TouchableOpacity>
             </View>
           )}
@@ -565,7 +566,7 @@ export default function ClubDetailScreen() {
                     <Text style={{
                       fontSize: theme.font.size.sm,
                       fontWeight: theme.font.weight.semibold,
-                      color: theme.colors.primary,
+                      color: theme.colors.primaryText,
                     }}>
                       New post
                     </Text>
@@ -573,7 +574,7 @@ export default function ClubDetailScreen() {
                 )}
               </View>
               {postsQuery.isLoading ? (
-                <ActivityIndicator color={theme.colors.primary} style={{ marginVertical: theme.spacing.lg }} />
+                <Spinner color={theme.colors.primary} style={{ marginVertical: theme.spacing.lg }} />
               ) : clubPosts.length === 0 ? (
                 <View style={[shared.card, {
                   marginHorizontal: theme.spacing.md,
@@ -588,7 +589,7 @@ export default function ClubDetailScreen() {
                       <Text style={{
                         fontSize: theme.font.size.sm,
                         fontWeight: theme.font.weight.semibold,
-                        color: theme.colors.primary,
+                        color: theme.colors.primaryText,
                       }}>
                         Share the first post
                       </Text>
@@ -679,7 +680,7 @@ export default function ClubDetailScreen() {
                 disabled={deleting}
                 style={[shared.buttonBase, { flex: 1, backgroundColor: theme.colors.error, borderRadius: theme.radius.md, alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.sm }]}
               >
-                {deleting ? <ActivityIndicator color={theme.colors.white} /> : <Text style={{ color: theme.colors.white, fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold }}>Delete</Text>}
+                {deleting ? <Spinner color={theme.colors.white} /> : <Text style={{ color: theme.colors.white, fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold }}>Delete</Text>}
               </TouchableOpacity>
             </View>
           </Pressable>
@@ -731,7 +732,7 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontSize: theme.font.size.xxl,
     fontWeight: theme.font.weight.bold,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
   },
   avatarCameraBtn: {
     position: 'absolute',
@@ -807,7 +808,7 @@ const styles = StyleSheet.create({
   memberInitialText: {
     fontSize: theme.font.size.md,
     fontWeight: theme.font.weight.semibold,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
   },
   ownerBadge: {
     paddingHorizontal: theme.spacing.xs,

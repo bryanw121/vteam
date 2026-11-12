@@ -7,11 +7,46 @@
 | `check-push-receipts` | pg_cron every 30 min (migration `20261024120500_push_receipts.sql`) | service-role bearer or `x-webhook-secret` | `false` |
 | `places-proxy` | the app, via `supabase.functions.invoke('places-proxy')` | user JWT checked by the gateway | `true` |
 | `send-feedback-email` | the app, after inserting `feedback_submissions` (`lib/feedback.ts`) | user JWT checked by the gateway; the function emails only a fresh row the caller owns | `true` |
+| `login-with-username` | the signed-out app, via `supabase.functions.invoke('login-with-username')` | none (it is a sign-in); rate limited per username and IP | `false` |
+| `delete-account` | the app (Settings → Account → Delete account, `hooks/useAccountDeletion.ts`) | user JWT checked by the gateway and again with `auth.getUser`; recent sign-in required | `true` |
 | `generate-badge-art` | an admin, via `scripts/generate-badge-art.mjs` | user JWT checked by the gateway; the function checks the caller is an admin | `true` |
 
 `verify_jwt` is declared in [`../config.toml`](../config.toml) and applied on deploy.
-Shared code lives in `_shared/` (`supabase.ts`: service-role client, Expo constants;
-`webhook.ts`: request authentication). Imports of local files need the `.ts` extension.
+Shared code lives in `_shared/` (`supabase.ts`: service-role client and `defaultDeps`;
+`expo.ts`: Expo endpoints and batch sizes; `webhook.ts`: request authentication).
+Imports of local files need the `.ts` extension.
+
+## Layout and tests
+
+Each function is two files:
+
+- `<name>/handler.ts` exports `createHandler(deps)`, the whole request handler. It
+  reaches the outside world only through `deps` (`_shared/deps.ts`): `fetch`,
+  `getClient` (the service-role client), `env` (secrets) and `now`. It never imports
+  `_shared/supabase.ts`, so it loads with no network.
+- `<name>/index.ts` is only `Deno.serve(createHandler(defaultDeps))`
+  (`places-proxy` uses `platformDeps`, which has no database client, so it never
+  loads supabase-js).
+
+`<name>/handler.test.ts` runs the handler with `_shared/testing.ts`: `fakeSupabase()`
+records every `from(table)` chain and answers scripted rows or errors per
+`<table>.<op>`, `stubFetch()` answers scripted Expo / Resend / Google responses and
+throws on any other URL, and `testDeps()` puts them together with fixed secrets and
+a fixed clock. Add a case there with every behaviour change; when a handler starts
+calling a new supabase-js method, add it to `DbQuery` in `_shared/deps.ts` and to the
+fake.
+
+From this directory, with [Deno](https://deno.com) 2.9:
+
+```bash
+deno task lint
+deno task check          # type-checks index.ts too: fetches supabase-js from esm.sh, --frozen against deno.lock
+deno task test --allow-env   # no network permission: the tests never leave the process
+```
+
+CI runs the same three in the **Edge functions** job of `.github/workflows/ci.yml`.
+`__tests__/edgeFunctions.test.ts` (Jest) keeps static guards on the wiring: auth
+before the database, the pinned supabase-js, `config.toml`, and the handler/index split.
 
 ## Webhook authentication
 
@@ -50,7 +85,8 @@ it is best effort only; a durable guarantee would need a column on `messages`.
 Pushes every `notifications` row (event reminders, cancellations, waitlist,
 cheers, join requests, late dropouts, and any type added later) to the
 recipient's devices, unless they turned push off for that type
-(`profiles.notification_prefs.push.<type> = false`). The push carries the row's
+(`user_settings.notification_prefs.push.<type> = false`; the legacy
+`profiles.notification_prefs` only when `user_settings` has none). The push carries the row's
 `data.deep_link`, which the app opens on tap. `chat_mention` rows are skipped:
 `send-chat-push` already pushed the message. Same chunking, dead-token cleanup
 and `push_receipts` bookkeeping as `send-chat-push`, and the same best-effort,
@@ -113,6 +149,32 @@ Until the domain is verified, Resend only accepts `onboarding@resend.dev` as the
 and only delivers to the Resend account's own address, so `FEEDBACK_FROM="vteam <onboarding@resend.dev>"`
 works for a first test if that account uses the destination address.
 
+## `login-with-username`
+
+Resolves a username to an email server-side and signs in through Supabase Auth's
+password grant, returning only a session or a generic "Incorrect username or
+password". It limits attempts itself (`public.check_rate_limit`, 15-minute windows): 100
+attempts per IP, and 30 failed attempts per username. The username counter is
+read before every attempt (so a correct password is refused too once it is
+used up) but only incremented on a failure (unknown username or wrong password
+alike), so successful sign-ins, such as CI signing the e2e account in, never
+use it up.
+
+**IP forwarding (needed in production).** Every username sign-in reaches Supabase
+Auth from this function, so Auth's own per-IP limit would otherwise treat all
+users as one IP. To make Auth count each user's IP:
+
+1. Settings → API Keys → *Publishable and secret API keys*: create the keys if the
+   project has none. Supabase then provides `SUPABASE_SECRET_KEYS` to functions
+   (the function uses the key named `default`).
+2. Authentication → Rate Limits → **IP Address Forwarding**: enable it (or the
+   management API: `PATCH /v1/projects/<ref>/config/auth` with
+   `{"security_sb_forwarded_for_enabled": true}`).
+
+With both, the function sends the password grant with the secret key and
+`Sb-Forwarded-For: <caller IP>`. Without a secret key it falls back to the anon key
+(no forwarding) and logs a warning.
+
 ## Deploying
 
 From the repo root, logged in with `supabase login` and linked with
@@ -124,9 +186,14 @@ supabase functions deploy send-notification-push
 supabase functions deploy check-push-receipts
 supabase functions deploy places-proxy
 supabase functions deploy send-feedback-email
+supabase functions deploy login-with-username
+supabase functions deploy delete-account
 # or all at once:
 supabase functions deploy
 ```
+
+Deploys are still manual (an approved deploy workflow is planned in #172). Deploy
+from an up-to-date `main`: the daily drift check compares live with `main`.
 
 Deploy applies `verify_jwt` from `config.toml`. After the first deploy from this
 config, check Dashboard → Edge Functions that the three push functions show JWT
@@ -139,6 +206,18 @@ curl -i -X POST "https://<ref>.supabase.co/functions/v1/check-push-receipts"
 curl -i -X POST "https://<ref>.supabase.co/functions/v1/check-push-receipts" \
   -H "Authorization: Bearer $SERVICE_ROLE_KEY"
 ```
+
+## Drift check
+
+`scripts/functions-drift.mjs` runs daily in `.github/workflows/schema-drift.yml`
+(job "Live edge functions vs repo"). It lists live's functions through the
+Management API and fails, naming the command to run, when a function in this folder
+is not deployed, when live has one that isn't here, when the last commit touching a
+function's folder or `_shared/` (tests and READMEs excluded) is newer than its live
+deploy, when live's `verify_jwt` differs from `config.toml`, or when a function is
+not `ACTIVE`. It only reads. It needs a Supabase personal access token in the
+`SUPABASE_ACCESS_TOKEN` repository secret; until that exists it prints a notice and
+passes. `node --test scripts/functions-drift.test.mjs` covers the comparison.
 
 ## `generate-badge-art`
 

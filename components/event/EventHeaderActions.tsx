@@ -7,6 +7,8 @@ import { theme } from '../../constants'
 import { routes } from '../../utils/routes'
 import { shareUrl } from '../../constants/share'
 import { eventShareMessage } from '../../utils/eventShare'
+import { track } from '../../lib/analytics'
+import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import { Button } from '../Button'
 import { IconButton } from '../ui'
 import { AnchorOptionsMenu } from '../AnchorOptionsMenu'
@@ -26,6 +28,8 @@ type Props = {
   onDelete: () => void
   /** Owner only: adds "Manage co-hosts" to the overflow. */
   onManageCohosts?: () => void
+  /** The tab on show: People (1) and Discussion (2) are shared with the link (`?tab=people`); the rest share the plain event link. */
+  tab?: number
 }
 
 const IS_WEB = Platform.OS === 'web'
@@ -56,7 +60,7 @@ function ShareMenuItem({ icon, label, onPress, active }: { icon: IoniconName; la
  * dropdown (copy link / Web Share); on native floating over the banner, where
  * share opens the OS share sheet. Every surface shares the same https link.
  */
-export function EventHeaderActions({ eventId, title, eventDate, canManage, deleting, onBack, onEdit, onDelete, onManageCohosts }: Props) {
+export function EventHeaderActions({ eventId, tab = 0, title, eventDate, canManage, deleting, onBack, onEdit, onDelete, onManageCohosts }: Props) {
   const insets = useSafeAreaInsets()
   const [menuOpen, setMenuOpen] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
@@ -65,7 +69,7 @@ export function EventHeaderActions({ eventId, title, eventDate, canManage, delet
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => { if (copiedTimer.current) clearTimeout(copiedTimer.current) }, [])
   /** Always an https link to the web app (#130), never `vteam://` or the current URL's `?from=`. */
-  const link = shareUrl(routes.event(eventId))
+  const link = shareUrl(routes.event(eventId, tab === 1 || tab === 2 ? { tab } : {}))
 
   async function handleShare() {
     if (IS_WEB) {
@@ -76,10 +80,12 @@ export function EventHeaderActions({ eventId, title, eventDate, canManage, delet
     // beside `message`, so the link isn't repeated in the text. Android only
     // sends `message`, so there the link goes on its own line.
     const message = eventShareMessage(title, eventDate)
+    track(ANALYTICS_EVENTS.shareTapped, { surface: 'event', method: 'share_sheet' })
     await Share.share(Platform.OS === 'ios' ? { message, url: link } : { message: `${message}\n${link}` })
   }
 
   async function handleCopyLink() {
+    track(ANALYTICS_EVENTS.shareTapped, { surface: 'event', method: 'copy_link' })
     await navigator.clipboard.writeText(link)
     setLinkCopied(true)
     if (copiedTimer.current) clearTimeout(copiedTimer.current)
@@ -87,6 +93,7 @@ export function EventHeaderActions({ eventId, title, eventDate, canManage, delet
   }
 
   async function handleWebShare() {
+    track(ANALYTICS_EVENTS.shareTapped, { surface: 'event', method: 'web_share' })
     await navigator.share({ title: title ?? 'Event', text: eventShareMessage(title, eventDate), url: link })
     setMenuOpen(false)
   }

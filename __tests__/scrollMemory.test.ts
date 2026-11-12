@@ -66,11 +66,27 @@ describe('restoreWhenReady', () => {
     expect(f.run()).toBe(0) // stopped once it took
   })
 
+  it('calls onDone once, when the offset took or the frames ran out', () => {
+    const f = frames()
+    let y = 0
+    const done = jest.fn()
+    restoreWhenReady({ y: 500, ready: () => true, apply: to => { y = to }, current: () => y, nextFrame: f.nextFrame, onDone: done })
+    f.run()
+    expect(done).toHaveBeenCalledTimes(1)
+
+    const g = frames()
+    const gaveUp = jest.fn()
+    restoreWhenReady({ y: 500, ready: () => false, apply: () => {}, current: () => 0, frames: 3, nextFrame: g.nextFrame, onDone: gaveUp })
+    g.run()
+    expect(gaveUp).toHaveBeenCalledTimes(1)
+  })
+
   it('gives up after the frame budget', () => {
     const f = frames()
     const apply = jest.fn()
     restoreWhenReady({ y: 500, ready: () => false, apply, current: () => 0, frames: 5, nextFrame: f.nextFrame })
-    expect(f.run()).toBe(5)
+    // Five tries: one right away, four on later frames.
+    expect(f.run()).toBe(4)
     expect(apply).not.toHaveBeenCalled()
   })
 })
