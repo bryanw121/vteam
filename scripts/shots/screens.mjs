@@ -126,6 +126,7 @@ export const SCREENS = {
   'settings-hidden': { route: '/settings/hidden', ready: 'ACES Volleyball', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hidden.tsx', 'hooks/useHiddenFeed.ts', 'utils/hiddenFeed.ts', 'hooks/useUserSettings.ts'] },
   'settings-silenced': { route: '/settings/silenced', ready: 'Hannah', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/silenced.tsx', 'hooks/useSilencedUsers.ts'] },
   'admin-metrics': { route: '/settings/metrics', ready: 'Daily active people', sources: METRICS },
+  'admin-metrics-events': { route: '/settings/metrics', ready: 'Outside sign-ups', actions: [{ scroll: 2250 }, { wait: 400 }], sources: METRICS },
   'admin-metrics-live': { route: '/settings/metrics?tab=live', ready: 'By platform', sources: METRICS },
   'admin-metrics-people': { route: '/settings/metrics?tab=people', ready: 'Sessions 30d', sources: METRICS },
   'admin-metrics-retention': { route: '/settings/metrics?tab=retention', ready: 'Guests who signed up', sources: METRICS },

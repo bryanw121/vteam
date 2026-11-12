@@ -417,6 +417,7 @@ test.describe('admin usage metrics (#232 part 2)', () => {
   // app_online_samples and app_online_daily, so this is what keeps usage data admin-only.
   const calls: [string, Record<string, unknown>][] = [
     ['admin_metrics_overview', { p_from: '2026-11-01', p_to: '2026-11-07' }],
+    ['admin_metrics_events', { p_from: '2026-11-01', p_to: '2026-11-07' }],
     ['admin_online_now', {}],
     ['admin_retention', { p_weeks: 4 }],
     ['admin_users', { p_search: '', p_sort: 'last_seen', p_limit: 5, p_offset: 0 }],
