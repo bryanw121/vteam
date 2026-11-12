@@ -27,8 +27,13 @@ async function openAccountSettings(page: Page) {
   await expect(page).toHaveURL(/\/settings\/account$/)
 }
 
+// A phone without `defaultBrowserType`: Playwright refuses that option inside a
+// describe group (it forces a new worker), and this file also runs a desktop group.
+const { defaultBrowserType, ...PHONE } = devices['Pixel 7']
+void defaultBrowserType
+
 test.describe('Scroll position after going back', () => {
-  test.use({ ...devices['Pixel 7'] })
+  test.use(PHONE)
 
   test('browser back (the iPhone swipe) returns to the same place on Profile', async ({ page }) => {
     const y = await openProfileScrolledDown(page)
@@ -83,7 +88,7 @@ test.describe('Events keeps its place after going back (#254)', () => {
   })
 
   test.describe('phone', () => {
-    test.use({ ...devices['Pixel 7'] })
+    test.use(PHONE)
 
     test('browser Back never paints the top of Events before the remembered offset', async ({ page }) => {
       await page.goto(`${BASE_URL}/`)
