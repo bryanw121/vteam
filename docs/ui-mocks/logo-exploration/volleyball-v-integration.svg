@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="950" viewBox="0 0 1920 950" role="img" aria-labelledby="title desc">
+  <title id="title">Vteam volleyball marks with a visible V integrated as panel seams</title>
+  <desc id="desc">Three volleyball logo directions where the V is formed by curved panel boundaries instead of a separate letter.</desc>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#28114d"/><stop offset="1" stop-color="#150a2b"/></linearGradient>
+    <linearGradient id="ball" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8b52f6"/><stop offset="1" stop-color="#5420c8"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#05010e" flood-opacity=".32"/></filter>
+  </defs>
+  <rect width="1920" height="950" fill="#10081f"/>
+  <text x="64" y="72" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="37" font-weight="700" letter-spacing="1.4">VTEAM · V AS A VOLLEYBALL SEAM</text>
+  <text x="64" y="114" fill="#cfc4e6" font-family="Arial, Helvetica, sans-serif" font-size="23">Three visible V treatments, each carried by the ball’s curved panel construction.</text>
+
+  <!-- 01 Center-panel V -->
+  <g transform="translate(64 162)">
+    <rect width="550" height="690" rx="54" fill="url(#tile)"/>
+    <g transform="translate(-5 30)" filter="url(#shadow)">
+      <circle cx="280" cy="282" r="194" fill="url(#ball)"/>
+      <circle cx="280" cy="282" r="194" fill="none" stroke="#c0a5ff" stroke-width="12"/>
+      <!-- top cap and wrap panel make the form read as a ball -->
+      <path d="M105 244 C151 133 374 91 462 209 C407 187 326 194 264 229 C218 255 181 274 136 282 C128 268 118 255 105 244Z" fill="#fff"/>
+      <path d="M119 293 C176 303 225 336 250 395 C222 405 188 402 150 385 C131 358 120 326 119 293Z" fill="#d9ceff"/>
+      <path d="M441 238 C477 274 487 327 475 375 C450 410 425 434 390 455 C416 375 405 314 365 279 C392 262 417 248 441 238Z" fill="#fff"/>
+      <!-- The V is a front sewn panel: curved arms, rounded point -->
+      <path d="M143 282 C202 293 247 333 280 466 C313 333 358 293 417 282 C381 334 351 405 319 486 C310 508 299 521 280 526 C261 521 250 508 241 486 C209 405 179 334 143 282Z" fill="#fff"/>
+      <path d="M140 282 C199 297 244 335 280 466 C316 335 361 297 420 282" fill="none" stroke="#3c126f" stroke-width="12" stroke-linecap="round"/>
+      <path d="M150 239 C210 212 344 210 412 238" fill="none" stroke="#3c126f" stroke-width="18" stroke-linecap="round"/>
+    </g>
+    <text x="275" y="611" text-anchor="middle" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700">01 · CENTER-PANEL V</text>
+    <text x="275" y="644" text-anchor="middle" fill="#cfc4e6" font-family="Arial, Helvetica, sans-serif" font-size="17">White V carried by the front panel</text>
+  </g>
+
+  <!-- 02 Negative-space V -->
+  <g transform="translate(685 162)">
+    <rect width="550" height="690" rx="54" fill="#f8f5ff"/>
+    <g transform="translate(-5 30)" filter="url(#shadow)">
+      <circle cx="280" cy="282" r="194" fill="#fff"/>
+      <circle cx="280" cy="282" r="194" fill="none" stroke="#35156c" stroke-width="14"/>
+      <!-- upper and side volleyball panels -->
+      <path d="M110 238 C158 134 361 102 452 207 C406 190 335 197 274 230 C222 259 176 272 132 275 C126 262 118 249 110 238Z" fill="#7740e8"/>
+      <path d="M105 286 C161 300 203 329 231 374 L211 438 C162 418 126 374 113 326Z" fill="#d5c5ff"/>
+      <path d="M455 223 C483 270 485 325 464 380 C435 414 403 437 365 451 C398 371 389 317 354 278 C390 252 423 235 455 223Z" fill="#7740e8"/>
+      <path d="M151 246 C207 219 338 217 407 245" fill="none" stroke="#35156c" stroke-width="19" stroke-linecap="round"/>
+      <!-- dark V is the actual pair of lower seam channels -->
+      <path d="M145 287 C207 307 248 351 280 489 C312 351 353 307 415 287" fill="none" stroke="#5420c8" stroke-width="37" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M145 287 C207 307 248 351 280 489 C312 351 353 307 415 287" fill="none" stroke="#35156c" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M108 390 C162 429 204 445 238 445" fill="none" stroke="#35156c" stroke-width="18" stroke-linecap="round"/>
+    </g>
+    <text x="275" y="611" text-anchor="middle" fill="#251143" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700">02 · NEGATIVE-SPACE V</text>
+    <text x="275" y="644" text-anchor="middle" fill="#685680" font-family="Arial, Helvetica, sans-serif" font-size="17">Violet seam channels define the V</text>
+  </g>
+
+  <!-- 03 Ribbon V -->
+  <g transform="translate(1306 162)">
+    <rect width="550" height="690" rx="54" fill="url(#tile)"/>
+    <g transform="translate(-5 30)" filter="url(#shadow)">
+      <circle cx="280" cy="282" r="194" fill="#fff"/>
+      <circle cx="280" cy="282" r="194" fill="none" stroke="#a37bff" stroke-width="12"/>
+      <!-- conventional curved top and side panels -->
+      <path d="M111 236 C174 128 367 103 451 208 C404 189 338 198 281 227 C225 255 172 274 130 278 C126 263 119 248 111 236Z" fill="#d9ceff"/>
+      <path d="M119 282 C168 295 210 324 236 362 C204 379 171 381 137 368 C126 341 120 313 119 282Z" fill="#7740e8"/>
+      <path d="M449 224 C478 268 486 320 470 369 C447 406 414 435 374 452 C404 373 395 316 359 278 C392 254 422 235 449 224Z" fill="#d9ceff"/>
+      <path d="M147 243 C214 218 341 218 410 244" fill="none" stroke="#5720c8" stroke-width="19" stroke-linecap="round"/>
+      <!-- lavender V ribbon becomes a stitched front panel -->
+      <path d="M143 285 C199 304 241 349 280 489 C319 349 361 304 417 285" fill="none" stroke="#7440e8" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M143 285 C199 304 241 349 280 489 C319 349 361 304 417 285" fill="none" stroke="#fff" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M143 285 C199 304 241 349 280 489 C319 349 361 304 417 285" fill="none" stroke="#7440e8" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M128 390 C168 424 205 441 239 441" fill="none" stroke="#5720c8" stroke-width="18" stroke-linecap="round"/>
+    </g>
+    <text x="275" y="611" text-anchor="middle" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="700">03 · RIBBON V</text>
+    <text x="275" y="644" text-anchor="middle" fill="#cfc4e6" font-family="Arial, Helvetica, sans-serif" font-size="17">A branded V ribbon inside the ball</text>
+  </g>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Vteam unified volleyball logo</title>
+  <desc id="desc">A violet rounded-square app tile with a white volleyball and a violet V formed by evenly spaced seams.</desc>
+  <rect width="1024" height="1024" fill="#F4F0FF"/>
+  <rect x="128" y="128" width="768" height="768" rx="150" fill="#6F20F4"/>
+  <defs>
+    <clipPath id="ball">
+      <circle cx="512" cy="512" r="304"/>
+    </clipPath>
+  </defs>
+  <circle cx="512" cy="512" r="304" fill="#FFFFFF"/>
+  <g clip-path="url(#ball)" fill="none" stroke="#6F20F4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Parallel top seams use the same curve translated down by 66px. -->
+    <path d="M 232 424 Q 512 244 792 424" stroke-width="30"/>
+    <path d="M 232 490 Q 512 310 792 490" stroke-width="30"/>
+    <!-- The V has the same stroke width and a 66px rhythm to the seam system. -->
+    <path d="M 270 492 L 512 770 L 754 492" stroke-width="66"/>
+  </g>
+</svg>
