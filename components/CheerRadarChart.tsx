@@ -1,8 +1,10 @@
 import React from 'react'
-import { View, Text } from 'react-native'
+import { View } from 'react-native'
+import { Text, useScaledFontSize } from './ui/Text'
 import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme, CHEER_TYPES } from '../constants'
+import { TIGHT_TEXT_SCALE } from '../constants/textSize'
 import type { CheerCounts, CheerType, IoniconName } from '../types'
 
 const CHART_SIZE = 280
@@ -33,6 +35,8 @@ type Props = { counts: CheerCounts }
 
 export function CheerRadarChart({ counts }: Props) {
   const values = CHEER_TYPES.map(kt => counts[kt.type] ?? 0)
+  // Labels sit at fixed points around a fixed-size chart, so they grow only a little.
+  const svgLabelSize = useScaledFontSize(theme.font.size.xs, TIGHT_TEXT_SCALE)
   const maxCount = Math.max(...values, 1)
   const normalized = values.map(v => v / maxCount)
 
@@ -67,6 +71,18 @@ export function CheerRadarChart({ counts }: Props) {
           return <Circle key={i} cx={x} cy={y} r={3.5} fill={theme.colors.primary} />
         })}
 
+        {/* Ring values: each ring is a share of the top count; label the whole-number ones beside the top spoke. */}
+        {[0.25, 0.5, 0.75, 1].map(level => {
+          const value = maxCount * level
+          if (!Number.isInteger(value) || value === 0) return null
+          return (
+            <SvgText key={`r${level}`} x={CX + 4} y={CY - level * R} alignmentBaseline="middle"
+              fontSize={svgLabelSize} fontFamily={theme.fonts.body} fill={theme.colors.subtext}>
+              {String(value)}
+            </SvgText>
+          )
+        })}
+
         {/* Labels */}
         {CHEER_TYPES.map((kt, i) => {
           const angle = angleAt(i)
@@ -75,7 +91,7 @@ export function CheerRadarChart({ counts }: Props) {
           const anchor = cos > 0.15 ? 'start' : cos < -0.15 ? 'end' : 'middle'
           return (
             <SvgText key={kt.type} x={x} y={y} textAnchor={anchor} alignmentBaseline="middle"
-              fontSize={10} fontWeight="600" fill={theme.colors.subtext}>
+              fontSize={svgLabelSize} fontFamily={theme.fonts.bodySemiBold} fill={theme.colors.subtext}>
               {CHART_LABEL_OVERRIDES[kt.label] ?? kt.label}
             </SvgText>
           )
@@ -107,7 +123,7 @@ export function CheerRadarChart({ counts }: Props) {
               <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }}>
                 {kt.label}
               </Text>
-              <Text style={{ fontSize: theme.font.size.xs, fontWeight: theme.font.weight.bold, color: theme.colors.primary }}>
+              <Text style={{ fontSize: theme.font.size.xs, fontWeight: theme.font.weight.bold, color: theme.colors.primaryText }}>
                 {kt.count}
               </Text>
             </View>

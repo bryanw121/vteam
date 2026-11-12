@@ -1,18 +1,25 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
-import { Platform, View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, RefreshControl } from 'react-native'
+import React, { useState, useRef, useCallback, useMemo } from 'react'
+import { Platform, View, TouchableOpacity, StyleSheet } from 'react-native'
+import { Text } from '../ui/Text'
+import { RefreshControl } from '../RefreshControl'
 import { GestureDetector, Gesture, TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler'
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Button } from '../Button'
 import { ProfileAvatar } from '../ProfileAvatar'
 import { DocScrollView } from '../DocScrollView'
-import { IconButton } from '../ui'
+import { Chip, IconButton } from '../ui'
 import { RosterActionsSheet } from './RosterActionsSheet'
-import { shared, theme, TEAM_COLORS, TEAM_COLOR_NAMES } from '../../constants'
+import { shared, theme, TEAM_COLORS, TEAM_COLOR_NAMES, SKILL_LEVEL_LABELS } from '../../constants'
+import { NO_SHOW_BADGE, NO_SHOW_HOST_NOTE, TEAM_MODE_COPY } from '../../constants/copy'
 import type { EventWithDetails, Profile, AttendanceStatus, EventGuest, RosterAction, RosterActionContext, RosterMenu } from '../../types'
-import { profileDisplayName, resolveProfileAvatarUriSmall, hostRosterSkillAndPositionsLine } from '../../utils'
+import { profileDisplayName, profileAvatarSmallUri, hostRosterSkillAndPositionsLine } from '../../utils'
 import { guestRowActions, hasRosterMenu, memberRowActions } from '../../utils/rosterActions'
-import type { EventAttendanceApi, EventData, EventTeamsApi, TeamDragApi } from '../../types'
+import { guestFullName, guestInitials, guestShortName } from '../../utils/guests'
+import { attendeesPaid, noShowUserIds, noShowWindow, rosterHasLevels, teamSummary } from '../../hooks/event/derive'
+import type { BalancePlayer, EventAttendanceApi, EventData, EventPaymentsApi, EventTeamsApi, TeamDragApi } from '../../types'
+import { Spinner } from '../ui/Spinner'
+import { profilePrefetchProps } from '../../hooks/useUserProfile'
 
 // ─── Draggable cards (People tab only) ───────────────────────────────────────
 
@@ -31,20 +38,16 @@ type DraggableCardProps = {
    * instead of the bare ✕, so Remove lives inside it rather than competing with it.
    */
   onOpenMenu?: () => void
+  /** Hosts on a paid event: whether this player marked "I've paid". Undefined hides the badge. */
+  paid?: boolean
+  /** Hosts and co-hosts: the player was flagged as a no-show (#151). */
+  noShow?: boolean
 }
 
-function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStart, onDragMove, onDragEnd, onRemove, onTogglePin, onOpenMenu }: DraggableCardProps) {
+function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStart, onDragMove, onDragEnd, onRemove, onTogglePin, onOpenMenu, paid, noShow }: DraggableCardProps) {
   const scale = useSharedValue(1)
   const opacity = useSharedValue(1)
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
-  useEffect(() => {
-    if (!profile.avatar_url) return
-    let cancelled = false
-    resolveProfileAvatarUriSmall(profile.avatar_url).then(({ uri }) => {
-      if (!cancelled) setAvatarUri(uri)
-    })
-    return () => { cancelled = true }
-  }, [profile.avatar_url])
+  const avatarUri = profileAvatarSmallUri(profile.avatar_url)
 
   // Stable wrappers so the gesture closure never captures stale callbacks
   const cbRef = useRef({ onDragStart, onDragMove, onDragEnd, onTogglePin })
@@ -98,12 +101,14 @@ function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStar
 
   // X stays outside the pan gesture so taps work; shell keeps the original single-card look.
   return (
-    <View style={shared.playerCardShell}>
+    <View style={[shared.playerCardShell, noShow && shared.playerCardNoShow]}>
       <GestureDetector gesture={panGesture}>
         <Animated.View style={[{ flex: 1, minWidth: 0 }, animStyle]}>
           <GestureDetector gesture={tapGesture}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-              <ProfileAvatar uri={avatarUri} border={profile.selected_border ?? null} size={34} />
+              <View style={noShow ? { opacity: 0.45 } : undefined}>
+                <ProfileAvatar uri={avatarUri} border={profile.selected_border ?? null} size={34} />
+              </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={shared.playerCardName} numberOfLines={1}>{profileDisplayName(profile)}</Text>
                 {isOwner ? (
@@ -111,6 +116,17 @@ function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStar
                     {hostRosterSkillAndPositionsLine(profile)}
                   </Text>
                 ) : null}
+                {noShow && (
+                  <View testID="roster-no-show-badge" accessibilityLabel="Marked as a no-show" style={shared.noShowBadge}>
+                    <Text style={shared.noShowBadgeText} numberOfLines={1}>{NO_SHOW_BADGE}</Text>
+                  </View>
+                )}
+                {paid && (
+                  <View testID="roster-paid-badge" accessibilityLabel="Marked paid" style={styles.paidBadge}>
+                    <Ionicons name="checkmark" size={11} color={theme.colors.success} />
+                    <Text style={styles.paidBadgeText}>Paid</Text>
+                  </View>
+                )}
               </View>
               {isOwner && isPinned && teamColor && (
                 <Ionicons name="lock-closed" size={13} color={theme.colors.subtext} />
@@ -124,6 +140,7 @@ function DraggablePlayerCard({ profile, teamColor, isPinned, isOwner, onDragStar
         onRemove={isOwner ? onRemove : undefined}
         menuLabel={`Actions for ${profileDisplayName(profile)}`}
         removeLabel={`Remove ${profileDisplayName(profile)}`}
+        testID={`roster-menu-${profile.id}`}
       />
     </View>
   )
@@ -171,7 +188,7 @@ function DraggableGuestCard({ guest, adderUsername, teamColor, isPinned, isOwner
   [isOwner])
 
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }], opacity: opacity.value }))
-  const initials = guest.first_name.charAt(0).toUpperCase() + guest.last_name.charAt(0).toUpperCase()
+  const initials = guestInitials(guest)
 
   return (
     <View style={shared.playerCardShell}>
@@ -183,7 +200,7 @@ function DraggableGuestCard({ guest, adderUsername, teamColor, isPinned, isOwner
                 <Text style={[shared.playerCardAvatarInitial, { color: teamColor ?? theme.colors.subtext }]}>{initials}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={shared.playerCardName} numberOfLines={1}>{guest.first_name} {guest.last_name.charAt(0)}.</Text>
+                <Text style={shared.playerCardName} numberOfLines={1}>{guestShortName(guest)}</Text>
                 <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext, lineHeight: 14 }} numberOfLines={1}>{adderUsername}'s +1</Text>
               </View>
               {isOwner && isPinned && teamColor && (
@@ -196,8 +213,8 @@ function DraggableGuestCard({ guest, adderUsername, teamColor, isPinned, isOwner
       <CardCornerControl
         onOpenMenu={onOpenMenu}
         onRemove={isOwner ? onRemove : undefined}
-        menuLabel={`Actions for guest ${guest.first_name} ${guest.last_name}`}
-        removeLabel={`Remove guest ${guest.first_name} ${guest.last_name}`}
+        menuLabel={`Actions for guest ${guestFullName(guest)}`}
+        removeLabel={`Remove guest ${guestFullName(guest)}`}
       />
     </View>
   )
@@ -208,6 +225,7 @@ type CardCornerControlProps = {
   onRemove?: () => void
   menuLabel: string
   removeLabel: string
+  testID?: string
 }
 
 /**
@@ -216,7 +234,7 @@ type CardCornerControlProps = {
  * presses register; web uses a responder View (a GH touchable there loses to
  * the card's gestures), native a gesture-handler touchable. 44pt hit area.
  */
-function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel }: CardCornerControlProps) {
+function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel, testID }: CardCornerControlProps) {
   const activate = onOpenMenu ?? onRemove
   if (!activate) return null
   const label = onOpenMenu ? menuLabel : removeLabel
@@ -228,6 +246,7 @@ function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel }: Car
       style={[onOpenMenu ? shared.rowMenuTrigger : styles.removeBtn, styles.removeBtnHit]}
       accessibilityRole="button"
       accessibilityLabel={label}
+      testID={testID}
     >
       {glyph}
     </View>
@@ -238,6 +257,7 @@ function CardCornerControl({ onOpenMenu, onRemove, menuLabel, removeLabel }: Car
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={label}
+      testID={testID}
     >
       {glyph}
     </GHTouchableOpacity>
@@ -266,6 +286,8 @@ type Props = {
   onMessage?: (userId: string) => void
   /** Users the viewer has silenced: the roster never offers to message them. */
   silencedUserIds: ReadonlySet<string>
+  /** Hosts/co-hosts on a paid event: who marked "I've paid". Null hides payment UI. */
+  payments: EventPaymentsApi | null
 }
 
 export function PeopleTab({
@@ -284,13 +306,19 @@ export function PeopleTab({
   onDeny,
   onMessage,
   silencedUserIds,
+  payments,
 }: Props) {
-  const { refreshing, refresh: onRefresh } = data
+  const { refreshing } = data
+  const onRefresh = () => Promise.all([data.refresh(), payments?.refetch()])
+  const paidCount = payments ? attendeesPaid(data.roster.attendees, payments.paidUserIds) : 0
   const { attendees, attendingGuests: guests, adderUsernames, requestedProfiles, waitlistProfiles, waitlistGuests } = data.roster
   const {
-    assignments, numTeams, setNumTeams, hasTeams, savingTeams,
+    assignments, numTeams, setNumTeams, hasTeams, savingTeams, mode: teamMode, setMode: setTeamMode, balancePlayers,
     togglePin: onTogglePin, resetTeams: onResetTeams, randomizeTeams: onRandomizeTeams, saveTeams: onSaveTeams,
   } = teams
+  // Team header chips (#149): average tier when enough players have one, and setters.
+  const balanceById = useMemo(() => new Map(balancePlayers.map(p => [p.id, p])), [balancePlayers])
+  const showAverages = useMemo(() => rosterHasLevels(balancePlayers), [balancePlayers])
   const { hoveredTeamKey, teamZoneRefs, onDragStart, onDragMove, onDragEnd } = drag
   const { processingRequest, approveRequest: onApproveRequest, approveFromWaitlist: onApproveFromWaitlist } = attendance
 
@@ -306,8 +334,17 @@ export function PeopleTab({
   const openMenu = (title: string, actions: RosterAction[]) =>
     hasRosterMenu(actions) ? () => setRowMenu({ title, actions }) : undefined
   const removeAttendee = (profile: Profile) => (eventStatus.isOwner ? () => onRemoveAttendee(profile) : undefined)
+
+  // ── No-show flag (#151): hosts and co-hosts, from the start until end + 2h ──
+  const noShowWin = noShowWindow(event)
+  const canFlagNoShows = isHostOrCohost && noShowWin.open
+  const noShows = isHostOrCohost ? noShowUserIds(data.roster.attendingRows) : new Set<string>()
+  const pointsAt = new Date(noShowWin.closesAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const noShowAction = (profile: Profile) => canFlagNoShows
+    ? { flagged: noShows.has(profile.id), until: pointsAt, onToggle: () => { void attendance.setNoShow(profile.id, !noShows.has(profile.id)) } }
+    : undefined
   const removeGuest = (g: EventGuest) => (eventStatus.isOwner ? () => onRemoveGuest(g) : undefined)
-  const guestName = (g: EventGuest) => `${g.first_name} ${g.last_name}`
+  const guestName = (g: EventGuest) => guestFullName(g)
 
   /** ⋯ for the flat request / waitlist rows (roster cards use CardCornerControl). */
   function rowMenuButton(title: string, actions: RosterAction[]) {
@@ -331,14 +368,16 @@ export function PeopleTab({
         onDragEnd={onDragEnd}
         onRemove={() => onRemoveAttendee(profile)}
         onTogglePin={() => onTogglePin(profile.id)}
-        onOpenMenu={openMenu(profileDisplayName(profile), memberRowActions(profile, actionCtx, removeAttendee(profile)))}
+        onOpenMenu={openMenu(profileDisplayName(profile), memberRowActions(profile, actionCtx, removeAttendee(profile), noShowAction(profile)))}
+        paid={payments ? payments.paidUserIds.has(profile.id) : undefined}
+        noShow={noShows.has(profile.id)}
       />
     )
     if (eventStatus.isOwner) {
       return <View key={profile.id} style={[shared.playerCell, isMobileWeb && { width: '50%' }]}>{card}</View>
     }
     return (
-      <TouchableOpacity key={profile.id} style={[shared.playerCell, isMobileWeb && { width: '50%' }]} onPress={() => onOpenProfile(profile.id)}>
+      <TouchableOpacity key={profile.id} style={[shared.playerCell, isMobileWeb && { width: '50%' }]} onPress={() => onOpenProfile(profile.id)} {...profilePrefetchProps(profile.id)}>
         {card}
       </TouchableOpacity>
     )
@@ -375,6 +414,11 @@ export function PeopleTab({
       contentContainerStyle={shared.scrollContent}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
     >
+      {canFlagNoShows && attendees.length > 0 && (
+        <View testID="roster-no-show-note" style={shared.rosterNote}>
+          <Text style={shared.rosterNoteText}>{NO_SHOW_HOST_NOTE(noShows.size, pointsAt)}</Text>
+        </View>
+      )}
       {/* Going + Teams */}
       <View style={[shared.rowBetween, shared.mb_sm]}>
         <Text style={shared.subheading}>Going</Text>
@@ -403,6 +447,27 @@ export function PeopleTab({
           )}
         </View>
       </View>
+
+      {eventStatus.isOwner && attendees.length > 0 && (
+        <View
+          role="radiogroup"
+          aria-label={TEAM_MODE_COPY.groupLabel}
+          style={[shared.row, { gap: theme.spacing.sm, marginBottom: theme.spacing.sm }]}
+        >
+          <Chip role="radio" label={TEAM_MODE_COPY.random} active={teamMode === 'random'} onPress={() => setTeamMode('random')} testID="team-mode-random" />
+          <Chip role="radio" label={TEAM_MODE_COPY.balanced} active={teamMode === 'balanced'} onPress={() => setTeamMode('balanced')} testID="team-mode-balanced" />
+        </View>
+      )}
+
+      {payments && attendees.length > 0 && (
+        <View testID="roster-paid-summary" style={[shared.row, { gap: 6, marginBottom: theme.spacing.sm }]}>
+          <Ionicons name="cash-outline" size={14} color={theme.colors.subtext} />
+          <Text style={shared.caption}>
+            {paidCount} of {attendees.length} marked paid
+            {guests.length > 0 ? ' · +1 guests are covered by whoever added them' : ''}
+          </Text>
+        </View>
+      )}
 
       {attendees.length === 0 && guests.length === 0
         ? <Text style={shared.caption}>no one yet — be the first!</Text>
@@ -437,6 +502,22 @@ export function PeopleTab({
                       <View style={shared.teamHeader}>
                         <View style={[shared.teamDot, { backgroundColor: teamColor }]} />
                         <Text style={[shared.teamHeading, { color: teamColor }]}>{TEAM_COLOR_NAMES[(teamNum - 1) % TEAM_COLOR_NAMES.length]} Team</Text>
+                        {(() => {
+                          const summary = teamSummary(
+                            [...teamPlayers, ...teamGuests].map(x => balanceById.get(x.id)).filter((x): x is BalancePlayer => !!x),
+                            showAverages,
+                          )
+                          return (
+                            <View style={[shared.row, { gap: theme.spacing.xs, marginLeft: 'auto' }]} testID={`team-summary-${teamNum}`}>
+                              {summary.avgLevel && (
+                                <Text style={shared.teamSummaryChip}>{TEAM_MODE_COPY.average(SKILL_LEVEL_LABELS[summary.avgLevel])}</Text>
+                              )}
+                              {summary.setters > 0 && (
+                                <Text style={[shared.teamSummaryChip, shared.teamSummaryChipSetter]}>{TEAM_MODE_COPY.setters(summary.setters)}</Text>
+                              )}
+                            </View>
+                          )
+                        })()}
                       </View>
                       {teamPlayers.length === 0 && teamGuests.length === 0
                         ? <Text style={[shared.caption, { paddingHorizontal: theme.spacing.xs, paddingBottom: theme.spacing.xs }]}>No players</Text>
@@ -478,7 +559,7 @@ export function PeopleTab({
               <Button label="Reset" onPress={onResetTeams} variant="secondary" />
             </View>
             <View style={{ flex: 1 }}>
-              <Button label="Randomize" onPress={onRandomizeTeams} variant="secondary" />
+              <Button label={teamMode === 'balanced' ? TEAM_MODE_COPY.balanceButton : TEAM_MODE_COPY.randomButton} onPress={onRandomizeTeams} variant="secondary" testID="team-shuffle" />
             </View>
             <View style={{ flex: 1 }}>
               <Button label="Save" onPress={onSaveTeams} loading={savingTeams} />
@@ -498,7 +579,7 @@ export function PeopleTab({
           <View style={{ gap: theme.spacing.xs }}>
             {requestedProfiles.map(profile => (
               <View key={profile.id} style={[shared.card, { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }]}>
-                <TouchableOpacity style={{ flex: 1, minWidth: 0 }} onPress={() => onOpenProfile(profile.id)}>
+                <TouchableOpacity style={{ flex: 1, minWidth: 0 }} onPress={() => onOpenProfile(profile.id)} {...profilePrefetchProps(profile.id)}>
                   <Text style={shared.body}>{profileDisplayName(profile)}</Text>
                   <Text style={[shared.caption, { marginTop: 2 }]} numberOfLines={2}>
                     {hostRosterSkillAndPositionsLine(profile)}
@@ -510,7 +591,7 @@ export function PeopleTab({
                   style={{ paddingVertical: theme.spacing.xs, paddingHorizontal: theme.spacing.sm, backgroundColor: theme.colors.success, borderRadius: theme.radius.md }}
                 >
                   {processingRequest === profile.id
-                    ? <ActivityIndicator size="small" color={theme.colors.white} />
+                    ? <Spinner size="small" color={theme.colors.white} />
                     : <Text style={{ color: theme.colors.white, fontSize: theme.font.size.sm, fontWeight: theme.font.weight.medium }}>Approve</Text>
                   }
                 </TouchableOpacity>
@@ -542,7 +623,7 @@ export function PeopleTab({
             <View style={{ gap: theme.spacing.xs }}>
               {waitlistProfiles.map((profile, idx) => (
                 <View key={profile.id} style={[shared.card, { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }]}>
-                  <Text style={[shared.caption, { minWidth: 20, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }]}>#{idx + 1}</Text>
+                  <Text style={[shared.caption, { minWidth: 20, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }]}>#{idx + 1}</Text>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={shared.body}>{profileDisplayName(profile)}</Text>
                     {eventStatus.isOwner ? (
@@ -564,8 +645,8 @@ export function PeopleTab({
               ))}
               {waitlistGuests.map((g, idx) => (
                 <View key={g.id} style={[shared.card, { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }]}>
-                  <Text style={[shared.caption, { minWidth: 20, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }]}>#{waitlistProfiles.length + idx + 1}</Text>
-                  <Text style={[shared.body, { flex: 1 }]}>{g.first_name} {g.last_name}</Text>
+                  <Text style={[shared.caption, { minWidth: 20, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }]}>#{waitlistProfiles.length + idx + 1}</Text>
+                  <Text style={[shared.body, { flex: 1 }]}>{guestFullName(g)}</Text>
                   <View style={shared.tag}><Text style={shared.tagText}>Guest</Text></View>
                   {(() => {
                     const actions = guestRowActions(g, adderUsernames[g.added_by], actionCtx, removeGuest(g))
@@ -594,6 +675,24 @@ export function PeopleTab({
 }
 
 const styles = StyleSheet.create({
+  paidBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 3,
+    gap: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.success + '1A',
+    borderWidth: 1,
+    borderColor: theme.colors.success + '40',
+  },
+  paidBadgeText: {
+    fontSize: theme.font.size.xs,
+    fontWeight: theme.font.weight.semibold,
+    color: theme.colors.success,
+  },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -612,7 +711,7 @@ const styles = StyleSheet.create({
   stepBtnDisabled: { opacity: 0.35 },
   stepBtnText: {
     fontSize: theme.font.size.lg,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     lineHeight: 22,
   },
   stepLabel: {

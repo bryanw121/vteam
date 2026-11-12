@@ -3,13 +3,14 @@
  * Run: npx playwright test e2e/chat.spec.ts
  *
  * Test account: E2E_USERNAME / E2E_PASSWORD (see .env.example)
- * Seed conversation: the e2e account's DM with @jexyissexy (id: 1e473b01-c06a-48b0-9308-21b3f593f603).
+ * Seed conversation: the e2e account's DM with @e2ebuddy (id: 1e473b01-c06a-48b0-9308-21b3f593f603).
  * It must belong to the E2E_USERNAME account: the compose test expects picking
- * @jexyissexy to open exactly this conversation.
+ * @e2ebuddy to open exactly this conversation.
  */
 
 import { test, expect, Page } from '@playwright/test'
 import { E2E_BASE_URL as BASE_URL } from './env'
+import { gotoReady } from './retry'
 
 const CONVO_ID = '1e473b01-c06a-48b0-9308-21b3f593f603'
 const CONVO_URL = `${BASE_URL}/chat/${CONVO_ID}`
@@ -38,10 +39,10 @@ async function dismissErrorOverlays(page: Page) {
  * the DM bad-word detector, and the modal blocks all further interaction.
  */
 async function gotoConversation(page: Page) {
-  await page.goto(CONVO_URL)
   // Wait for the composer to mount (screen ready) rather than a fixed sleep —
-  // the dev server + a long message history can take a while
-  await page.getByRole('textbox', { name: 'Message' }).waitFor({ timeout: 30000 }).catch(() => {})
+  // the dev server + a long message history can take a while. A load that hit
+  // a Supabase "Failed to fetch" is reloaded once (e2e/retry.ts).
+  await gotoReady(page, CONVO_URL, page.getByRole('textbox', { name: 'Message' }), { timeout: 30000 }).catch(() => {})
   await page.waitForTimeout(1500)
   const modal = page.getByText('This player may be unsportsmanlike', { exact: false })
   if (await modal.isVisible().catch(() => false)) {
@@ -58,6 +59,26 @@ async function gotoConversation(page: Page) {
  */
 function chatHeader(page: Page) {
   return page.getByText('Chat', { exact: true }).nth(1)
+}
+
+/**
+ * The virtualized web message list (react-virtuoso, #3): how far it is from
+ * the bottom, and how many message rows are actually in the DOM.
+ */
+async function listState(page: Page) {
+  return page.evaluate(() => {
+    const el = document.querySelector<HTMLElement>('[data-testid="chat-message-list"]')
+    if (!el) return null
+    return {
+      fromBottom: el.scrollHeight - el.scrollTop - el.clientHeight,
+      scrollTop: el.scrollTop,
+      scrollHeight: el.scrollHeight,
+      rows: el.querySelectorAll('[data-index]').length,
+      // data-index counts from the oldest LOADED message, so it shifts by a page when one is prepended.
+      minIndex: Math.min(...Array.from(el.querySelectorAll('[data-index]')).map(r => Number(r.getAttribute('data-index')))),
+      maxIndex: Math.max(...Array.from(el.querySelectorAll('[data-index]')).map(r => Number(r.getAttribute('data-index')))),
+    }
+  })
 }
 
 /** Right-click a message bubble and open the context menu. */
@@ -96,6 +117,20 @@ async function sendMessageAndWait(page: Page, messageText: string) {
   }).toPass({ timeout: 30_000, intervals: [0, 1000, 2000, 3000] })
 }
 
+/** The chat tab badge (sidebar on desktop, tab bar on mobile): its number, or 0 when none is shown. */
+async function badgeCount(page: Page) {
+  const badge = page.getByTestId('chat-unread-badge').filter({ visible: true })
+  if (await badge.count() === 0) return 0
+  const text = (await badge.first().innerText()).trim()
+  return text === '99+' ? 100 : Number(text)
+}
+
+/** Sum of the unread pips on the Chat list's rows. */
+async function listUnreadTotal(page: Page) {
+  const pips = await page.getByTestId('conversation-unread').filter({ visible: true }).allInnerTexts()
+  return pips.reduce((n, t) => n + (t.trim() === '99+' ? 100 : Number(t.trim())), 0)
+}
+
 // ---------------------------------------------------------------------------
 // Suite
 // ---------------------------------------------------------------------------
@@ -118,6 +153,29 @@ test.describe('Chat', () => {
     // Keep negative assertions from passing vacuously on the login screen.
     await expect(chatHeader(page)).toBeVisible({ timeout: 20_000 })
     console.log(`→ ready: ${testInfo.title}`)
+  })
+
+  // ── 0. Tab badge (#146) ────────────────────────────────────────────────────
+
+  test('the tab badge matches the list, and after opening the DM it stays put across a recount and a reload', async ({ page }) => {
+    // The badge starts 1.5s after sign-in; give it time, then it must agree with the rows.
+    await expect.poll(async () => (await badgeCount(page)) - (await listUnreadTotal(page)), { timeout: 15_000 }).toBe(0)
+
+    // Opening the seed DM marks it read (debounced 1s), then the list is recounted once the read is saved.
+    await gotoConversation(page)
+    await page.waitForTimeout(2500)
+    await page.goto(`${BASE_URL}/chat`)
+    await expect(chatHeader(page)).toBeVisible({ timeout: 20_000 })
+    await page.waitForTimeout(4000)
+    const settled = await badgeCount(page)
+    expect(settled).toBe(await listUnreadTotal(page))
+
+    // No ghost: the same count after a reload (and once the badge's delayed first fetch has landed).
+    await page.reload()
+    await expect(chatHeader(page)).toBeVisible({ timeout: 20_000 })
+    await page.waitForTimeout(4000)
+    expect(await badgeCount(page)).toBe(settled)
+    expect(await listUnreadTotal(page)).toBe(settled)
   })
 
   // ── 1. Chat list ───────────────────────────────────────────────────────────
@@ -145,27 +203,28 @@ test.describe('Chat', () => {
     await page.getByRole('button', { name: 'New message' }).click()
     await page.waitForTimeout(1000)
     await expect(page.getByRole('textbox')).toBeVisible()
-    await expect(page.getByText('Cancel')).toBeVisible()
+    // Exact: the seed DM's preview can contain "cancel" (another spec's e2e-cancel-edit message).
+    await expect(page.getByText('Cancel', { exact: true })).toBeVisible()
   })
 
   test('compose search returns matching users', async ({ page }) => {
     await page.getByRole('button', { name: 'New message' }).click()
     await page.waitForTimeout(500)
-    await page.getByRole('textbox').fill('jexy')
+    await page.getByRole('textbox').fill('e2ebud')
     await page.waitForTimeout(1500)
-    await expect(page.getByText('@jexyissexy')).toBeVisible()
+    await expect(page.getByText('@e2ebuddy')).toBeVisible()
   })
 
   test('selecting a user from compose opens the conversation', async ({ page }) => {
     await page.getByRole('button', { name: 'New message' }).click()
     await page.waitForTimeout(500)
-    await page.getByRole('textbox').fill('jexy')
+    await page.getByRole('textbox').fill('e2ebud')
     await page.waitForTimeout(1500)
     // Target the @username, not the display name: a member can rename
     // themselves at any time, and this test previously hard-coded a first/last
     // name that has since changed. The username is the stable identifier, and
     // it's what the sibling search test asserts on.
-    await page.getByText('@jexyissexy').first().click({ force: true })
+    await page.getByText('@e2ebuddy').first().click({ force: true })
     await page.waitForTimeout(1500)
     expect(page.url()).toBe(CONVO_URL)
   })
@@ -220,12 +279,47 @@ test.describe('Chat', () => {
     const input = page.getByRole('textbox', { name: 'Message' })
     await expect(input).toBeVisible()
 
-    // Verify scroll position: the page should be at (or very near) the bottom
-    const atBottom = await page.evaluate(() => {
-      const el = document.documentElement
-      return el.scrollHeight - el.scrollTop - el.clientHeight < 100
-    })
-    expect(atBottom).toBe(true)
+    // The message list itself (not the page) opens at its very end.
+    const state = await listState(page)
+    expect(state).not.toBeNull()
+    expect(state!.fromBottom).toBeLessThan(120)
+  })
+
+  test('long conversation: opens at the newest, keeps a bounded DOM, loads older on scroll-up without a jump', async ({ page }) => {
+    // The seed DM has hundreds of messages; a page is 40.
+    await gotoConversation(page)
+    // The list is its own chunk on web (#193): wait for its rows, then let it settle.
+    await page.locator('[data-testid="chat-message-list"] [data-index]').first().waitFor({ timeout: 20_000 })
+    await page.waitForTimeout(1500)
+    const opened = await listState(page)
+    expect(opened).not.toBeNull()
+    expect(opened!.fromBottom).toBeLessThan(120)
+    // Virtualized: far fewer rows in the DOM than the 40 loaded.
+    expect(opened!.rows).toBeGreaterThan(0)
+    expect(opened!.rows).toBeLessThan(40)
+
+    // Scroll up to the top, but stop wheeling as soon as an older page has
+    // landed: every further wheel would re-pin the view to the new top and,
+    // looped, page in the whole history (the seed DM grows every run).
+    const list = page.getByTestId('chat-message-list')
+    await list.hover()
+    const before = opened!
+    await expect(async () => {
+      let s = (await listState(page))!
+      if (s.scrollHeight <= before.scrollHeight + 500 && s.scrollTop > 5) {
+        await page.mouse.wheel(0, -100000)
+        await page.waitForTimeout(400)
+        s = (await listState(page))!
+      }
+      // The older page was prepended ABOVE the reader: content grew, and the
+      // reader moved down with it instead of being left at scrollTop 0.
+      expect(s.scrollHeight).toBeGreaterThan(before.scrollHeight + 500)
+      expect(s.scrollTop).toBeGreaterThan(500)
+    }).toPass({ timeout: 20000 })
+
+    // Still virtualized after more history loaded.
+    const after = (await listState(page))!
+    expect(after.rows).toBeLessThan(40)
   })
 
   test('messages render in chronological order (oldest at top, newest at bottom)', async ({ page }) => {
@@ -277,11 +371,8 @@ test.describe('Chat', () => {
     await page.keyboard.press('Enter')
     await page.waitForTimeout(1500)
 
-    const atBottom = await page.evaluate(() => {
-      const el = document.documentElement
-      return el.scrollHeight - el.scrollTop - el.clientHeight < 100
-    })
-    expect(atBottom).toBe(true)
+    const state = await listState(page)
+    expect(state!.fromBottom).toBeLessThan(120)
     await expect(page.getByText(unique)).toBeVisible()
   })
 

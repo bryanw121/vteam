@@ -1,14 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
-import { Animated, Image, Platform, Pressable, View, Text, TouchableOpacity } from 'react-native'
+import { Animated, Image, Platform, Pressable, View, TouchableOpacity } from 'react-native'
+import { Text } from '../../components/ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Stack, useRouter, usePathname } from 'expo-router'
-import { theme, BADGE_DEFINITIONS, BREAKPOINTS, TABS, CREATE_MENU, tabIndexFromPath } from '../../constants'
+import { theme, BADGE_DEFINITIONS, BREAKPOINTS, TABS, TIGHT_TEXT_SCALE, tabIndexFromPath, SWIPE_NAVIGATION } from '../../constants'
+import type { CreateMenuOption } from '../../constants'
+import { CreateMenuList } from '../../components/CreateMenuList'
 import { WebNavContext } from '../../contexts/webNav'
 import { SentryErrorBoundary } from '../../components/SentryErrorBoundary'
 import { ChatUnreadProvider, useChatUnread } from '../../hooks/useChatUnread'
 import { useIsNarrowWeb } from '../../hooks/useIsNarrowWeb'
 import { useRequireSignIn } from '../../hooks/useRequireSignIn'
-import { routes, type RouteString } from '../../utils/routes'
+import { usePlayerSetupGate } from '../../hooks/usePlayerSetupGate'
+import { routes, toRoute } from '../../utils/routes'
+import { queryString } from '../../utils/urlState'
+import { tabParams } from '../../utils/tabViews'
+import { TourProvider } from '../../contexts/tour'
+import { ToastHost } from '../../components/ToastHost'
+import { TourTarget } from '../../components/tour/TourTarget'
+import { TOUR_TARGETS } from '../../constants'
 
 // Collect every badge image URL defined in code and prefetch them so the
 // badges screen renders instantly without a network loading flash.
@@ -38,7 +48,12 @@ export default function AppLayout() {
   // the sidebar (web) and the mobile tab bar (both read it via useChatUnread).
   return (
     <ChatUnreadProvider>
-      <AppLayoutInner />
+      {/* Tours draw their overlay above the sidebar and every screen. */}
+      <TourProvider>
+        <AppLayoutInner />
+        {/* lib/toast messages, above the sidebar and every screen (#228). */}
+        <ToastHost />
+      </TourProvider>
     </ChatUnreadProvider>
   )
 }
@@ -48,6 +63,7 @@ function AppLayoutInner() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const chatUnread = useChatUnread()
+  usePlayerSetupGate(pathname)
 
   useEffect(() => {
     if (Platform.OS === 'web') return
@@ -59,11 +75,12 @@ function AppLayoutInner() {
   const requireSignIn = useRequireSignIn()
 
   function goToTab(index: number) {
-    router.replace(TABS[index].path)
+    // Back to the tab with the filters it last had (utils/tabViews).
+    router.replace(toRoute(TABS[index].path + queryString(tabParams(TABS[index].key))))
   }
 
+  // Anyone may open the menu ("Book a court" is public); creating on vteam asks guests to sign in (goCreate).
   function openFab() {
-    if (!requireSignIn()) return
     setFabOpen(true)
     Animated.spring(fabAnim, { toValue: 1, useNativeDriver: true, tension: 120, friction: 8 }).start()
   }
@@ -72,9 +89,10 @@ function AppLayoutInner() {
     Animated.timing(fabAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => setFabOpen(false))
   }
 
-  function goHost(path: RouteString) {
+  function goCreate(option: CreateMenuOption) {
     closeFab()
-    setTimeout(() => router.push(path), 160)
+    if (option.requiresAuth && !requireSignIn()) return
+    setTimeout(() => router.push(option.path), 160)
   }
 
   const sidebarActive = tabIndexFromPath(pathname)
@@ -110,12 +128,12 @@ function AppLayoutInner() {
                   <Text style={{
                     fontSize: theme.font.size.xl,
                     fontWeight: theme.font.weight.bold,
-                    color: theme.colors.primary,
+                    color: theme.colors.primaryText,
                   }}>
                     vteam
                   </Text>
                   <View style={{ backgroundColor: theme.colors.primary + '22', borderWidth: 1, borderColor: theme.colors.primary + '66', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: theme.colors.primary, letterSpacing: 1 }}>BETA</Text>
+                    <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, letterSpacing: 1 }}>BETA</Text>
                   </View>
                 </View>
               )}
@@ -132,8 +150,8 @@ function AppLayoutInner() {
               const active = sidebarActive === i
               const badge = tab.key === 'chat' && chatUnread > 0 ? chatUnread : 0
               return (
+                <TourTarget key={tab.key} id={TOUR_TARGETS.tab(tab.key)}>
                 <TouchableOpacity
-                  key={tab.key}
                   onPress={() => goToTab(i)}
                   style={{
                     flexDirection: 'row',
@@ -156,14 +174,14 @@ function AppLayoutInner() {
                       color={active ? theme.colors.primary : theme.colors.subtext}
                     />
                     {badge > 0 && (
-                      <View style={{
+                      <View testID="chat-unread-badge" style={{
                         position: 'absolute', top: -5, right: -8,
-                        minWidth: 16, height: 16, borderRadius: 8,
+                        minWidth: 18, height: 18, borderRadius: 9,
                         backgroundColor: theme.colors.hot,
                         alignItems: 'center', justifyContent: 'center',
                         paddingHorizontal: 3,
                       }}>
-                        <Text style={{ fontSize: 8, fontWeight: '800', color: theme.colors.white, lineHeight: 11 }}>
+                        <Text maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={{ fontSize: theme.font.size.xs, fontWeight: '800', color: theme.colors.white, lineHeight: 13 }}>
                           {badge > 99 ? '99+' : badge}
                         </Text>
                       </View>
@@ -179,6 +197,7 @@ function AppLayoutInner() {
                     </Text>
                   )}
                 </TouchableOpacity>
+                </TourTarget>
               )
             })}
           </View>
@@ -190,18 +209,20 @@ function AppLayoutInner() {
                 headerStyle: { backgroundColor: theme.colors.background },
                 headerTintColor: theme.colors.primary,
                 headerShadowVisible: false,
-                gestureEnabled: true,
+                gestureEnabled: SWIPE_NAVIGATION.back,
                 contentStyle: { backgroundColor: theme.colors.background },
               }}
             >
               <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: 'Back' }} />
-              <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: true, presentation: 'modal', ...(Platform.OS === 'web' ? { animationEnabled: false } : {}) }} />
-              <Stack.Screen name="event/[id]" options={{ headerBackTitle: 'Events', gestureEnabled: true }} />
-              <Stack.Screen name="profile/[id]" options={{ headerShown: false, gestureEnabled: true }} />
-              <Stack.Screen name="club/[id]" options={{ headerShown: false, gestureEnabled: true }} />
-              <Stack.Screen name="club/create" options={{ title: 'Create club', headerBackTitle: 'Clubs', gestureEnabled: true }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+              <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back, presentation: 'modal', ...(Platform.OS === 'web' ? { animationEnabled: false } : {}) }} />
+              <Stack.Screen name="event/[id]" options={{ headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back }} />
+              <Stack.Screen name="profile/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+              <Stack.Screen name="club/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+              <Stack.Screen name="club/create" options={{ title: 'Create club', headerBackTitle: 'Clubs', gestureEnabled: SWIPE_NAVIGATION.back }} />
               <Stack.Screen name="notifications" options={{ title: 'Notifications', headerBackTitle: 'Back' }} />
-              <Stack.Screen name="chat/[id]" options={{ headerShown: false, gestureEnabled: true }} />
+              <Stack.Screen name="chat/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+              <Stack.Screen name="book" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
             </Stack>
 
             {/* FAB backdrop */}
@@ -219,46 +240,26 @@ function AppLayoutInner() {
                   position: 'absolute',
                   bottom: 32 + 52 + theme.spacing.sm,
                   right: 32,
-                  gap: theme.spacing.sm,
                   alignItems: 'flex-end',
                   opacity: fabAnim,
                   transform: [{ translateY: fabAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }],
                 }}
               >
-                {CREATE_MENU.map(opt => (
-                  <TouchableOpacity
-                    key={opt.label}
-                    onPress={() => goHost(opt.path)}
-                    style={{
-                      backgroundColor: theme.colors.card,
-                      borderRadius: theme.radius.full,
-                      paddingVertical: theme.spacing.sm,
-                      paddingHorizontal: theme.spacing.lg,
-                      borderWidth: 1,
-                      borderColor: theme.colors.border,
-                      shadowColor: theme.colors.black,
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.12,
-                      shadowRadius: 4,
-                    }}
-                  >
-                    <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.medium, color: theme.colors.text }}>
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                <CreateMenuList variant="panel" onSelect={goCreate} />
               </Animated.View>
             )}
 
             {/* FAB button. Wide web shows it on Events only; the mobile tab bar shows its
                 create button on every tab. Long-standing difference, kept as is. */}
             {pathname === routes.events() && (
+              <TourTarget id={TOUR_TARGETS.create} style={{ position: 'absolute', bottom: 32, right: 32 }}>
               <TouchableOpacity
                 onPress={fabOpen ? closeFab : openFab}
+                accessibilityRole="button"
+                accessibilityLabel={fabOpen ? 'Close create menu' : 'Create'}
+                accessibilityState={{ expanded: fabOpen }}
+                testID="create-menu-button"
                 style={{
-                  position: 'absolute',
-                  bottom: 32,
-                  right: 32,
                   width: 52,
                   height: 52,
                   borderRadius: 26,
@@ -275,6 +276,7 @@ function AppLayoutInner() {
                   <Ionicons name="add" size={28} color={theme.colors.white} />
                 </Animated.View>
               </TouchableOpacity>
+              </TourTarget>
             )}
           </View>
 
@@ -292,18 +294,20 @@ function AppLayoutInner() {
         headerStyle: { backgroundColor: theme.colors.background },
         headerTintColor: theme.colors.primary,
         headerShadowVisible: false,
-        gestureEnabled: true,
+        gestureEnabled: SWIPE_NAVIGATION.back,
         contentStyle: { backgroundColor: theme.colors.background },
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: 'Back' }} />
-      <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: true, presentation: 'modal' }} />
-      <Stack.Screen name="event/[id]" options={{ headerBackTitle: 'Events', gestureEnabled: true }} />
-      <Stack.Screen name="profile/[id]" options={{ headerShown: false, gestureEnabled: true }} />
-      <Stack.Screen name="club/[id]" options={{ headerShown: false, gestureEnabled: true }} />
-      <Stack.Screen name="club/create" options={{ title: 'Create club', headerBackTitle: 'Clubs', gestureEnabled: true }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+      <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back, presentation: 'modal' }} />
+      <Stack.Screen name="event/[id]" options={{ headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back }} />
+      <Stack.Screen name="profile/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+      <Stack.Screen name="club/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+      <Stack.Screen name="club/create" options={{ title: 'Create club', headerBackTitle: 'Clubs', gestureEnabled: SWIPE_NAVIGATION.back }} />
       <Stack.Screen name="notifications" options={{ title: 'Notifications', headerBackTitle: 'Back' }} />
-      <Stack.Screen name="chat/[id]" options={{ headerShown: false, gestureEnabled: true }} />
+      <Stack.Screen name="chat/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+      <Stack.Screen name="book" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
     </Stack>
     </SentryErrorBoundary>
   )

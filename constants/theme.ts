@@ -4,6 +4,7 @@ export const theme = {
     primary:      '#7C4DFF',   // slightly brighter violet — pops on dark bg
     primaryDark:  '#5A2BFF',
     primarySoft:  '#2A1F6B',   // dark violet tint for soft chip bgs
+    primaryText:  '#A68BFF',   // violet for text and small icons on background/card (>= 4.5:1; primary itself is 3.9:1)
     // Accent — electric sky blue
     accent:       '#3DC9F5',
     accentInk:    '#002A36',
@@ -17,7 +18,9 @@ export const theme = {
     fabMenuBackdropDim: 'rgba(19, 17, 31, 0.42)',
     // Text
     text:         '#EDEAFF',   // near-white with violet tint
-    subtext:      '#7A7699',   // muted lavender-grey
+    subtext:      '#8885A4',   // muted lavender-grey (>= 4.5:1 on card and background)
+    /** Secondary text that must stay readable: at least 4.5:1 on `card` and `background`, even inside a row dimmed to 72% (a read notification). */
+    subtextStrong: '#B5B1D4',
     // Borders
     border:       '#2C2848',   // dark purple border
     borderSoft:   '#211D3A',   // very subtle
@@ -29,17 +32,31 @@ export const theme = {
     error:        '#FF5555',
     warning:      '#FFA040',
     success:      '#00D26A',
+    // Toast surfaces (#228): dark tints of each status colour, so light text reads on them (>= 4.5:1).
+    toastErrorBg:   '#3A1620',
+    toastWarningBg: '#3A2710',
+    toastSuccessBg: '#0F2E22',
+    toastInfoBg:    '#251C4E',
     white:        '#FFFFFF',
+    sheetInk:     '#0D2480',   // pen ink on the official scoresheet (officialPdf.ts INK)
     black:        '#000000',
     /** Label/icon colour on `primary`, `error` and other saturated fills. */
     onPrimary:    '#FFFFFF',
     /** Scrim behind dialogs and bottom sheets. */
     overlay:      'rgba(0,0,0,0.5)',    // shared.modalOverlay (host, feedback)
     overlayLight: 'rgba(0,0,0,0.45)',   // event detail's confirm dialogs / ConfirmDialog
+    /** Dims everything but the highlighted target during a guided tour. */
+    tourScrim:    'rgba(8,6,18,0.74)',
     // Podium / trophy medals
     medalGold:    '#FFD54F',
     medalSilver:  '#B0BEC5',
     medalBronze:  '#D7A86E',
+    // Event start time (TimePill, join bar): a soft lavender pill, distinct from the
+    // cyan day chip and on-brand without shouting.
+    time:         '#2A1F6B',   // pill background
+    timeBorder:   '#3E2F94',   // pill outline
+    timeInk:      '#D6C9FF',   // pill icon + label
+    timeText:     '#C4B2FF',   // time stated as text on a card ("You're signing up for …")
     // Misc
     announcementHighlight: '#2A1F6B',
   },
@@ -68,15 +85,46 @@ export const theme = {
   },
   font: {
     size: {
-      xxs: 10,
+      // xs is the floor: nothing in the app renders below 11 (iOS Caption 2, Material Label Small)
       xs:  11,
       sm:  12,
       smd: 13,
       md:  14,
       lgs: 15,
+      /** Inputs on web: below 16 iOS Safari zooms the page on focus. */
+      base: 16,
+      lgm: 17,
       lg:  18,
       xl:  24,
       xxl: 32,
+    },
+    /** Display type (Space Grotesk titles, big numbers). */
+    heading: {
+      sm:     20,
+      md:     22,
+      lg:     26,
+      xl:     28,
+      xxl:    34,
+      hero:   44,
+      splash: 48,
+    },
+    /** Emoji used as pictures (empty states, medals, pickers). */
+    emoji: {
+      xs:    18,
+      sm:    20,
+      md:    22,
+      lg:    24,
+      xl:    28,
+      xxl:   36,
+      hero:  48,
+      giant: 64,
+    },
+    /** Faint decorative glyphs behind card content (clipped by their card). */
+    watermark: {
+      sm: 80,
+      md: 110,
+      lg: 120,
+      xl: 140,
     },
     weight: {
       regular:  '400' as const,

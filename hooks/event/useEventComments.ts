@@ -1,23 +1,23 @@
 import { useState } from 'react'
-import { Alert } from 'react-native'
 import { supabase } from '../../lib/supabase'
 import { useMutation } from '../../lib/query'
 import { useRequireSignIn } from '../useRequireSignIn'
 import { COMMENT_SELECT, GENERIC_ERROR_MESSAGE } from '../../constants'
-import type { EventCommentPostVars as PostVars, EventCommentWithAuthor } from '../../types'
+import type { EventCommentPostVars as PostVars, EventCommentWithAuthor, EventCommentsPage } from '../../types'
 import { eventKeys, patchQuery } from './keys'
 import { reportEventError } from './telemetry'
 import type { EventData } from '../../types'
+import { toast } from '../../lib/toast'
 
 export const EVENT_COMMENT_MAX_LEN = 2000
 
 function upsertComment(id: string, row: EventCommentWithAuthor) {
-  patchQuery<EventCommentWithAuthor[]>(eventKeys.comments(id), rows => {
-    const idx = rows.findIndex(c => c.id === row.id)
-    if (idx === -1) return [...rows, row]
-    const next = [...rows]
-    next[idx] = row
-    return next
+  patchQuery<EventCommentsPage>(eventKeys.comments(id), page => {
+    const idx = page.rows.findIndex(c => c.id === row.id)
+    if (idx === -1) return { ...page, rows: [...page.rows, row] }
+    const rows = [...page.rows]
+    rows[idx] = row
+    return { ...page, rows }
   })
 }
 
@@ -56,7 +56,7 @@ export function useEventComments(data: EventData, opts: { isHostOrCohost: boolea
       onSuccess: row => upsertComment(id, row),
       onError: e => {
         reportEventError(id, userId, 'postComment', e)
-        Alert.alert('Error', 'Could not post comment. Please try again.')
+        toast.error("Couldn't post your comment", e)
       },
     },
   )
@@ -77,7 +77,7 @@ export function useEventComments(data: EventData, opts: { isHostOrCohost: boolea
       onError: (e, vars) => {
         const isDelete = vars.patch.deleted_at !== undefined
         reportEventError(id, userId, isDelete ? 'deleteComment' : 'editComment', e)
-        Alert.alert('Error', isDelete ? GENERIC_ERROR_MESSAGE : 'Could not edit comment.')
+        toast.error(isDelete ? "Couldn't delete the comment" : "Couldn't edit the comment", e)
       },
     },
   )
@@ -86,7 +86,7 @@ export function useEventComments(data: EventData, opts: { isHostOrCohost: boolea
     // Guests can browse the event; acting on it needs an account.
     if (!userId) { requireSignIn(); return }
     if (body.length > EVENT_COMMENT_MAX_LEN) {
-      Alert.alert('Comment too long', `Please keep comments under ${EVENT_COMMENT_MAX_LEN} characters.`)
+      toast.show({ title: 'Comment too long', message: `Please keep comments under ${EVENT_COMMENT_MAX_LEN} characters.`, variant: 'warning' })
       throw new Error('comment_too_long')
     }
     if (editing) {
@@ -109,6 +109,9 @@ export function useEventComments(data: EventData, opts: { isHostOrCohost: boolea
   return {
     comments: data.comments,
     loading: data.commentsLoading,
+    hasEarlier: data.hasEarlierComments,
+    loadingEarlier: data.loadingEarlierComments,
+    loadEarlier: data.loadEarlierComments,
     replyTo,
     setReplyTo,
     editing,

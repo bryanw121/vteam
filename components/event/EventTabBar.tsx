@@ -1,6 +1,7 @@
 import React from 'react'
-import { Platform, Text, TouchableOpacity, View } from 'react-native'
-import { theme } from '../../constants'
+import { Platform, TouchableOpacity, View } from 'react-native'
+import { Text } from '../ui/Text'
+import { COMPACT_TEXT_SCALE, theme } from '../../constants'
 
 export const EVENT_TABS = ['Details', 'People', 'Discussion', 'Cheers'] as const
 
@@ -28,7 +29,8 @@ export function EventTabBar({ activeTab, peopleCount, onSelect }: Props) {
               Platform.OS === 'web' && ({ outlineStyle: 'none' } as any),
             ]}
           >
-            <Text style={{
+            {/* Four equal cells on a 320px phone: the labels grow only a little with the text size. */}
+            <Text numberOfLines={1} maxFontSizeMultiplier={COMPACT_TEXT_SCALE} style={{
               fontFamily: active ? theme.fonts.bodySemiBold : theme.fonts.body,
               fontSize: theme.font.size.sm,
               color: active ? theme.colors.text : theme.colors.subtext,
@@ -37,7 +39,7 @@ export function EventTabBar({ activeTab, peopleCount, onSelect }: Props) {
             </Text>
             {badge > 0 && (
               <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, backgroundColor: active ? theme.colors.primary : theme.colors.border }}>
-                <Text style={{ fontFamily: theme.fonts.bodyBold, fontSize: 9, color: active ? theme.colors.white : theme.colors.subtext }}>{badge}</Text>
+                <Text maxFontSizeMultiplier={COMPACT_TEXT_SCALE} style={{ fontFamily: theme.fonts.bodyBold, fontSize: theme.font.size.xs, color: active ? theme.colors.white : theme.colors.subtext }}>{badge}</Text>
               </View>
             )}
             {active && (

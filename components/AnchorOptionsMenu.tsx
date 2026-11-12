@@ -5,9 +5,9 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native'
+import { Text } from './ui/Text'
 import { theme } from '../constants/theme'
 import type { AnchorMenuOption, AnchorRect } from '../types'
 

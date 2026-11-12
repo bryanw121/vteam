@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { KeyboardAvoidingView, Modal, Platform, Text, TouchableOpacity, View } from 'react-native'
+import { KeyboardAvoidingView, Modal, Platform, Pressable, View } from 'react-native'
+import { Text } from './Text'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { shared, theme } from '../../constants'
 import type { BottomSheetProps } from '../../types'
@@ -31,14 +32,21 @@ export function BottomSheet({ visible, onDismiss, title, children, onClosed }: B
       onDismiss={Platform.OS === 'ios' ? () => onClosedRef.current?.() : undefined}
     >
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={shared.sheetRoot}>
-        <TouchableOpacity
+        <Pressable
           style={{ flex: 1 }}
-          activeOpacity={1}
           onPress={onDismiss}
+          accessibilityRole="button"
           accessibilityLabel="Dismiss"
+          // Esc / back already dismiss; keep keyboard Tab on the sheet's own controls.
+          tabIndex={-1}
           testID="bottom-sheet-backdrop"
         />
-        <View style={[shared.sheetCard, { paddingBottom: insets.bottom + theme.spacing.lg }]} testID="bottom-sheet">
+        <View
+          style={[shared.sheetCard, { paddingBottom: insets.bottom + theme.spacing.lg }]}
+          testID="bottom-sheet"
+          role={title ? 'dialog' : undefined}
+          aria-label={title || undefined}
+        >
           <View style={shared.sheetHandle} />
           {!!title && <Text style={shared.sheetTitle} accessibilityRole="header">{title}</Text>}
           {children}

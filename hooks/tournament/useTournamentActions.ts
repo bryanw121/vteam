@@ -1,7 +1,10 @@
 import { useCallback } from 'react'
 import { TOURNAMENT_ERROR_TITLE as T } from '../../constants/tournamentCopy'
-import { invalidate, useMutation, type MutationOptions } from '../../lib/query'
-import type { GeneratedSchedule } from '../../types'
+import { getQueryData, invalidate, queryKey, setQueryData, useMutation, type MutationOptions } from '../../lib/query'
+import { patchCommentRow } from '../../utils/commentPages'
+import type {
+  GeneratedSchedule, SetScore, TimedBracketMatch, TournamentCommentWithAuthor, TournamentCommentsPage, TournamentResultWrites,
+} from '../../types'
 import * as api from './api'
 import { tournamentKeys } from './api'
 import { notifyError, notifyInfo } from '../../utils/notify'
@@ -10,6 +13,17 @@ import { notifyError, notifyInfo } from '../../utils/notify'
  * `useMutation` that resolves to `true` on success, so callers can tell success from
  * failure (both would otherwise be `undefined` for a void write).
  */
+/**
+ * Apply an edit / soft delete to the cached row before the refetch: the
+ * refetch only re-reads the newest page and keeps older loaded pages as they
+ * were, so an edit to an older comment would otherwise not show.
+ */
+function patchCachedComment(tournamentId: string, commentId: string, patch: Partial<TournamentCommentWithAuthor>): void {
+  const key = tournamentKeys.comments(tournamentId)
+  const page = getQueryData<TournamentCommentsPage>(key)
+  if (page) setQueryData<TournamentCommentsPage>(key, patchCommentRow(page, commentId, patch))
+}
+
 function useAction<V>(fn: (v: V) => Promise<unknown>, opts?: MutationOptions<V, true>) {
   return useMutation<V, true>(async v => { await fn(v); return true }, opts)
 }
@@ -107,9 +121,32 @@ export function useTournamentActions(id: string, userId: string | null) {
     { invalidates: [tournamentKeys.core(id)], onError: e => notifyError(T.publish, e) },
   )
 
+  const schedule = [tournamentKeys.core(id), tournamentKeys.matches(id), tournamentKeys.pools(id)]
+
   const replaceSchedule = useAction(
-    (schedule: GeneratedSchedule) => api.replaceSchedule(id, schedule),
-    { invalidates: [tournamentKeys.core(id), tournamentKeys.matches(id)], onError: e => notifyError(T.schedule, e) },
+    (generated: GeneratedSchedule) => api.replaceSchedule(id, generated),
+    { invalidates: schedule, onError: e => notifyError(T.schedule, e) },
+  )
+
+  const seedBracket = useAction(
+    (rows: TimedBracketMatch[]) => api.seedBracket(id, rows),
+    { invalidates: [tournamentKeys.matches(id)], onError: e => notifyError(T.bracket, e) },
+  )
+
+  const recordResult = useAction(
+    (v: { matchId: string; winnerId: string; sets: SetScore[]; forfeit: boolean; writes: TournamentResultWrites }) =>
+      api.recordResult({ tournamentId: id, ...v }),
+    // Status may change (in progress / completed), so the core row and the list refetch too,
+    // and finishing writes trophies onto profiles.
+    {
+      invalidates: [tournamentKeys.core(id), tournamentKeys.matches(id), queryKey('tournaments'), queryKey('trophies')],
+      onError: e => notifyError(T.result, e),
+    },
+  )
+
+  const saveSeeds = useAction(
+    (seeds: { teamId: string; seed: number | null }[]) => api.saveSeeds(seeds),
+    { invalidates: [tournamentKeys.teams(id)], onError: e => notifyError(T.team, e) },
   )
 
   const saveMatch = useAction(
@@ -128,7 +165,10 @@ export function useTournamentActions(id: string, userId: string | null) {
   )
 
   const deleteComment = useAction(
-    (commentId: string) => api.deleteComment(commentId),
+    async (commentId: string) => {
+      await api.deleteComment(commentId)
+      patchCachedComment(id, commentId, { deleted_at: new Date().toISOString() })
+    },
     { invalidates: [tournamentKeys.comments(id)], onError: e => notifyError(T.comment, e) },
   )
 
@@ -149,8 +189,10 @@ export function useTournamentActions(id: string, userId: string | null) {
   }): Promise<void> => {
     if (!userId) return
     try {
-      if (v.editingId) await api.editComment(v.editingId, v.body)
-      else await api.insertComment({
+      if (v.editingId) {
+        await api.editComment(v.editingId, v.body)
+        patchCachedComment(id, v.editingId, { body: v.body, edited_at: new Date().toISOString() })
+      } else await api.insertComment({
         tournamentId: id, userId, body: v.body,
         isAnnouncement: v.isAnnouncement, mentions: v.mentionIds, parentId: v.replyToId,
       })
@@ -164,7 +206,7 @@ export function useTournamentActions(id: string, userId: string | null) {
   return {
     register, withdraw, acceptInvite, declineInvite, sendInvite, sendJoinRequest,
     approveJoinRequest, declineJoinRequest, approveTeam, markPaid, removeTeam, movePlayer, assignFreeAgent,
-    publishTournament, publishSchedule, replaceSchedule, saveMatch, addPrize, deletePrize,
+    publishTournament, publishSchedule, replaceSchedule, seedBracket, recordResult, saveSeeds, saveMatch, addPrize, deletePrize,
     deleteComment, postAnnouncement, postComment,
   }
 }

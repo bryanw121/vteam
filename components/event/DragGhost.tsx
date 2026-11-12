@@ -1,5 +1,6 @@
 import React from 'react'
-import { Platform, StyleSheet, Text, View } from 'react-native'
+import { Platform, StyleSheet, View } from 'react-native'
+import { Text } from '../ui/Text'
 import Animated from 'react-native-reanimated'
 import { shared, theme, TEAM_COLORS } from '../../constants'
 import type { Profile, TeamAssignment } from '../../types'

@@ -1,4 +1,5 @@
-import { Text, TouchableOpacity, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
+import { Text } from './Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { shared, theme } from '../../constants'
@@ -30,7 +31,7 @@ export function ScreenHeader({ kicker, title, titleDot, right, onBack, backLabel
           {!!kicker && <Text style={shared.screenHeaderKicker}>{kicker}</Text>}
           <Text style={shared.screenHeaderTitle} accessibilityRole="header" numberOfLines={1}>
             {title}
-            {titleDot && <Text style={{ color: theme.colors.primary }}>.</Text>}
+            {titleDot && <Text style={{ color: theme.colors.primaryText }}>.</Text>}
           </Text>
         </View>
         {!!right && <View style={shared.screenHeaderRight}>{right}</View>}

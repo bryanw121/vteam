@@ -11,6 +11,8 @@ jest.mock('@react-native-async-storage/async-storage', () => {
   return { __esModule: true, default: { getItem: jest.fn(async (k: string) => store[k] ?? null), setItem: jest.fn(async (k: string, v: string) => { store[k] = v }) } }
 })
 jest.mock('@expo/vector-icons/Ionicons', () => () => null)
+const mockStartTour = jest.fn()
+jest.mock('../contexts/tour', () => ({ useTour: () => ({ start: mockStartTour, stop: jest.fn(), active: false }) }))
 
 import { OneTimeBanner } from '../components/ui/OneTimeBanner'
 import { __resetSeenBanners } from '../utils/seenBanners'
@@ -44,5 +46,12 @@ describe('OneTimeBanner', () => {
   it('a new id shows again', async () => {
     render(<OneTimeBanner banner={{ ...banner, id: 'fresh-v2' }} />)
     expect(await screen.findByText('Hello there')).toBeTruthy()
+  })
+
+  it('runs its action (start a tour) and hides', async () => {
+    render(<OneTimeBanner banner={{ ...banner, id: 'action-v1', action: { label: 'Check out our tour', type: 'startTour', tourId: 'intro' } }} />)
+    fireEvent.press(await screen.findByText('Check out our tour'))
+    expect(mockStartTour).toHaveBeenCalledWith('intro', 'banner')
+    expect(screen.queryByText('Hello there')).toBeNull()
   })
 })

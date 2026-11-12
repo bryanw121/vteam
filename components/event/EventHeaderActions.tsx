@@ -1,10 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Platform, Pressable, Share, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '../ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import * as Linking from 'expo-linking'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { theme } from '../../constants'
 import { routes } from '../../utils/routes'
+import { shareUrl } from '../../constants/share'
+import { eventShareMessage } from '../../utils/eventShare'
+import { track } from '../../lib/analytics'
+import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import { Button } from '../Button'
 import { IconButton } from '../ui'
 import { AnchorOptionsMenu } from '../AnchorOptionsMenu'
@@ -13,6 +17,8 @@ import type { AnchorMenuOption, AnchorRect, IoniconName } from '../../types'
 type Props = {
   eventId: string
   title: string | undefined
+  /** `events.event_date`, for the share text ("Sat, Oct 31, 4:00 PM"). */
+  eventDate?: string
   /** Host or co-host: show Edit + the ⋯ overflow (Delete). */
   canManage: boolean
   deleting: boolean
@@ -22,6 +28,8 @@ type Props = {
   onDelete: () => void
   /** Owner only: adds "Manage co-hosts" to the overflow. */
   onManageCohosts?: () => void
+  /** The tab on show: People (1) and Discussion (2) are shared with the link (`?tab=people`); the rest share the plain event link. */
+  tab?: number
 }
 
 const IS_WEB = Platform.OS === 'web'
@@ -50,9 +58,9 @@ function ShareMenuItem({ icon, label, onPress, active }: { icon: IoniconName; la
  *
  * One component, two placements: on web an in-flow header row with a share
  * dropdown (copy link / Web Share); on native floating over the banner, where
- * share opens the OS share sheet.
+ * share opens the OS share sheet. Every surface shares the same https link.
  */
-export function EventHeaderActions({ eventId, title, canManage, deleting, onBack, onEdit, onDelete, onManageCohosts }: Props) {
+export function EventHeaderActions({ eventId, tab = 0, title, eventDate, canManage, deleting, onBack, onEdit, onDelete, onManageCohosts }: Props) {
   const insets = useSafeAreaInsets()
   const [menuOpen, setMenuOpen] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
@@ -60,25 +68,33 @@ export function EventHeaderActions({ eventId, title, canManage, deleting, onBack
   const overflowRef = useRef<View>(null)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => { if (copiedTimer.current) clearTimeout(copiedTimer.current) }, [])
+  /** Always an https link to the web app (#130), never `vteam://` or the current URL's `?from=`. */
+  const link = shareUrl(routes.event(eventId, tab === 1 || tab === 2 ? { tab } : {}))
 
   async function handleShare() {
     if (IS_WEB) {
       setMenuOpen(v => !v)
       return
     }
-    const url = Linking.createURL(routes.event(eventId))
-    await Share.share({ message: `Check out "${title ?? 'Event'}" on vteam:\n${url}`, url })
+    // iOS sends `url` as its own item (Messages turns it into the preview card)
+    // beside `message`, so the link isn't repeated in the text. Android only
+    // sends `message`, so there the link goes on its own line.
+    const message = eventShareMessage(title, eventDate)
+    track(ANALYTICS_EVENTS.shareTapped, { surface: 'event', method: 'share_sheet' })
+    await Share.share(Platform.OS === 'ios' ? { message, url: link } : { message: `${message}\n${link}` })
   }
 
   async function handleCopyLink() {
-    await navigator.clipboard.writeText(window.location.href)
+    track(ANALYTICS_EVENTS.shareTapped, { surface: 'event', method: 'copy_link' })
+    await navigator.clipboard.writeText(link)
     setLinkCopied(true)
     if (copiedTimer.current) clearTimeout(copiedTimer.current)
     copiedTimer.current = setTimeout(() => setLinkCopied(false), 2000)
   }
 
   async function handleWebShare() {
-    await navigator.share({ title: title ?? 'Event', url: window.location.href })
+    track(ANALYTICS_EVENTS.shareTapped, { surface: 'event', method: 'web_share' })
+    await navigator.share({ title: title ?? 'Event', text: eventShareMessage(title, eventDate), url: link })
     setMenuOpen(false)
   }
 

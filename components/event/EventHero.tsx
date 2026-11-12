@@ -1,11 +1,13 @@
 import React from 'react'
-import { Platform, Text, View } from 'react-native'
+import { Platform, View } from 'react-native'
+import { Text } from '../ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { theme, LOCATIONS } from '../../constants'
+import { TimePill } from '../ui'
 import type { EventWithDetails } from '../../types'
 import { formatDuration } from '../../utils'
-import { eventDateMs } from '../../hooks/event'
+import { eventDateMs } from '../../hooks/event/derive'
 
 type Props = { event: EventWithDetails }
 
@@ -38,29 +40,30 @@ export function EventHero({ event }: Props) {
           pointerEvents="none"
         />
         {/* Date + type chips */}
-        <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-          <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, backgroundColor: theme.colors.accent }}>
-            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 11, color: theme.colors.accentInk }}>
-              {dayStr} · {timeStr}
+        <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <TimePill label={timeStr} size="lg" testID="event-hero-time" />
+          <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, backgroundColor: theme.colors.accent, justifyContent: 'center' }}>
+            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.accentInk }}>
+              {dayStr}
             </Text>
           </View>
           {typeTags.map(et => (
             <View key={et.tag_id} style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' }}>
-              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 11, color: 'rgba(255,255,255,0.9)' }}>
+              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: 'rgba(255,255,255,0.9)' }}>
                 {et.tags.name}
               </Text>
             </View>
           ))}
         </View>
         {/* Title */}
-        <Text testID="event-hero-title" style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 28, letterSpacing: -0.8, color: theme.colors.white, lineHeight: 32 }}>
+        <Text testID="event-hero-title" style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.heading.xl, letterSpacing: -0.8, color: theme.colors.white, lineHeight: 32 }}>
           {event.title}
         </Text>
         {/* Location + duration */}
         {(locationLabel || dur) && (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 }}>
             <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.75)" />
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: 12.5, color: 'rgba(255,255,255,0.85)' }}>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: 'rgba(255,255,255,0.85)' }}>
               {[locationLabel, dur].filter(Boolean).join(' · ')}
             </Text>
           </View>

@@ -1,5 +1,6 @@
-import React, { memo, useMemo } from 'react'
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native'
+import React, { memo, useMemo, useState } from 'react'
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { Text } from './ui/Text'
 import { theme } from '../constants'
 import { parseEventDate } from '../utils'
 import { MY_EVENTS_RAIL_CAP } from '../hooks/useMyUpcomingEvents'
@@ -112,7 +113,6 @@ const RailCard = memo(function RailCard({ item, nowMs, onPress }: CardProps) {
 export type MyEventsRailProps = {
   items: MyUpcomingEvent[]
   onPressEvent: (eventId: string) => void
-  onSeeAll: () => void
   /** Pinned by tests; defaults to wall-clock. */
   nowMs?: number
 }
@@ -120,11 +120,13 @@ export type MyEventsRailProps = {
 export const MyEventsRail = memo(function MyEventsRail({
   items,
   onPressEvent,
-  onSeeAll,
   nowMs,
 }: MyEventsRailProps) {
   const now = nowMs ?? Date.now()
-  const visible = useMemo(() => items.slice(0, MY_EVENTS_RAIL_CAP), [items])
+  // "See all" opens the whole list right here in the rail (it's a horizontal scroller), "Show less" folds it back.
+  const [expanded, setExpanded] = useState(false)
+  const capped = items.length > MY_EVENTS_RAIL_CAP
+  const visible = useMemo(() => (expanded ? items : items.slice(0, MY_EVENTS_RAIL_CAP)), [items, expanded])
 
   // Nothing registered → render nothing at all. No header, no empty-state box,
   // no zero badge. A brand-new member sees exactly the pre-rail screen.
@@ -137,16 +139,17 @@ export const MyEventsRail = memo(function MyEventsRail({
           <View style={styles.dot} />
           <Text style={styles.headerLabel}>YOU'RE GOING · {items.length}</Text>
         </View>
-        {items.length > visible.length && (
+        {capped && (
           <Pressable
             testID="my-events-see-all"
             accessibilityRole="button"
-            accessibilityLabel="See all events you're going to"
-            onPress={onSeeAll}
+            accessibilityLabel={expanded ? 'Show fewer events you\'re going to' : 'See all events you\'re going to'}
+            accessibilityState={{ expanded }}
+            onPress={() => setExpanded(e => !e)}
             hitSlop={12}
             style={styles.seeAll}
           >
-            <Text style={styles.seeAllText}>See all</Text>
+            <Text style={styles.seeAllText}>{expanded ? 'Show less' : 'See all'}</Text>
           </Pressable>
         )}
       </View>
@@ -193,7 +196,7 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: theme.font.size.sm,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
   },
   scrollContent: { gap: theme.spacing.sm, paddingRight: theme.spacing.xs },
   card: {

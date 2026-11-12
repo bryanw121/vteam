@@ -1,5 +1,6 @@
 import React from 'react'
-import { View, Text, TouchableOpacity, Pressable, Modal, StyleSheet, Dimensions } from 'react-native'
+import { View, TouchableOpacity, Pressable, Modal, StyleSheet, Dimensions } from 'react-native'
+import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../constants/theme'
 import { REACTION_EMOJIS } from './MessageBubble'
@@ -62,7 +63,7 @@ export function ReactionPicker({
                   alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontSize: 22 }}>{emoji}</Text>
+                <Text style={{ fontSize: theme.font.emoji.md }}>{emoji}</Text>
               </TouchableOpacity>
             ))}
           </View>

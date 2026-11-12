@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
-import { View, Text, TouchableOpacity, Alert, TextInput, ActivityIndicator } from 'react-native'
+import { View, TouchableOpacity } from 'react-native'
+import { Text, TextInput } from '../../components/ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { supabase } from '../../lib/supabase'
@@ -10,6 +11,11 @@ import { GoogleLogo } from '../../components/GoogleLogo'
 import { shared, theme } from '../../constants'
 import { routes, toRoute } from '../../utils/routes'
 import { takeGuestReturnPath } from '../../utils/authGate'
+import { AgreementLine } from '../../components/legal/AgreementLine'
+import { TERMS_VERSION } from '../../constants/legal'
+import { Spinner } from '../../components/ui/Spinner'
+import { JoinContextCard } from '../../components/auth/JoinContextCard'
+import { toast } from '../../lib/toast'
 
 export default function Register() {
   const router = useRouter()
@@ -57,11 +63,12 @@ export default function Register() {
       const normalizedUsername = username.toLowerCase().trim()
       const normalizedEmail = email.toLowerCase().trim()
 
-      // Check username availability
+      // Check username availability. Usernames are stored lower-case, so an exact
+      // match is enough (ilike treated `_` as a wildcard: `a_b` looked taken if `axb` existed).
       const { data: existingUsername } = await supabase
         .from('profiles')
         .select('id')
-        .ilike('username', normalizedUsername)
+        .eq('username', normalizedUsername)
         .maybeSingle()
 
       if (existingUsername) {
@@ -72,7 +79,8 @@ export default function Register() {
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
-        options: { data: { username: normalizedUsername, first_name: trimmedFirst, last_name: trimmedLast } },
+        // terms_version: the Terms shown by the agreement line under the button (passive clickwrap).
+        options: { data: { username: normalizedUsername, first_name: trimmedFirst, last_name: trimmedLast, terms_version: TERMS_VERSION } },
       })
 
       if (error) {
@@ -99,7 +107,11 @@ export default function Register() {
           .eq('id', data.user.id)
       }
 
-      Alert.alert('Success', 'Account created!')
+      // With a session (email confirmation off) the root layout already takes
+      // them back where they came from (#229: the game they were joining).
+      if (data.session) return
+      // A toast, not Alert.alert: that does nothing on the web (#228). The (auth) layout hosts toasts, so it shows over sign-in.
+      toast.show({ title: 'Account created', message: 'Check your email to confirm it, then sign in.', variant: 'success', duration: 8000 })
       router.replace(routes.login())
     } finally {
       setLoading(false)
@@ -112,10 +124,11 @@ export default function Register() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <Text style={shared.authTitle}>vteam</Text>
           <View style={{ backgroundColor: 'rgba(124,77,255,0.15)', borderWidth: 1, borderColor: 'rgba(124,77,255,0.4)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 2 }}>
-            <Text style={{ fontSize: 10, fontWeight: '700', color: theme.colors.primary, letterSpacing: 1 }}>BETA</Text>
+            <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, letterSpacing: 1 }}>BETA</Text>
           </View>
         </View>
         <Text style={shared.authSubtitle}>create your account</Text>
+        <JoinContextCard screen="register" />
 
         {/* ── Social sign-up ── */}
         {socialError ? (
@@ -136,7 +149,7 @@ export default function Register() {
             }}
           >
             {socialLoading ? (
-              <ActivityIndicator size="small" color={theme.colors.subtext} />
+              <Spinner size="small" color={theme.colors.subtext} />
             ) : (
               <GoogleLogo size={18} />
             )}
@@ -218,6 +231,12 @@ export default function Register() {
         />
 
         <Button label="Create account" onPress={handleRegister} loading={loading} disabled={!firstName || !lastName || !username || !email || !password} />
+        {/* Covers every way to sign up on this screen (Google above, email here). */}
+        <AgreementLine
+          action="continuing or creating an account"
+          onOpenTerms={() => router.push(routes.terms())}
+          onOpenPrivacy={() => router.push(routes.privacy())}
+        />
         <TouchableOpacity style={shared.authLink} onPress={() => router.push(routes.login())}>
           <Text style={shared.authLinkText}>already have an account? sign in</Text>
         </TouchableOpacity>

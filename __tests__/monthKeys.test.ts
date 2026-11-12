@@ -6,6 +6,7 @@ import {
   monthKeyFromIso,
   monthStartIso,
   shouldRefreshEventsOnFocus,
+  weekMonthLabel,
 } from '../utils/monthKeys'
 
 describe('monthKeys', () => {
@@ -49,5 +50,20 @@ describe('monthKeys', () => {
     expect(shouldRefreshEventsOnFocus(null, 1_000)).toBe(false)
     expect(shouldRefreshEventsOnFocus(1_000, 1_200)).toBe(false)
     expect(shouldRefreshEventsOnFocus(1_000, 1_400)).toBe(true)
+  })
+})
+
+describe('weekMonthLabel', () => {
+  it('names the month when the week is inside one month', () => {
+    expect(weekMonthLabel(new Date(2026, 10, 8))).toBe('November 2026')
+  })
+  it('a week that runs into a new month takes the new month', () => {
+    expect(weekMonthLabel(new Date(2026, 10, 29))).toBe('December 2026')
+  })
+  it('a week that runs into a new year takes the new month and year', () => {
+    expect(weekMonthLabel(new Date(2026, 11, 27))).toBe('January 2027')
+  })
+  it('a week ending on the last day of the month is one month', () => {
+    expect(weekMonthLabel(new Date(2026, 9, 25))).toBe('October 2026')
   })
 })

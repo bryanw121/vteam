@@ -1,9 +1,6 @@
 import { StyleSheet } from 'react-native'
 import { theme } from '../../constants'
 
-/** Venmo's brand blue for the "Pay via Venmo" button: a third-party colour, so not a theme token. */
-export const VENMO_BLUE = '#008CFF'
-
 /** Styles shared by the tournament tab components (kept local to the feature). */
 export const ts = StyleSheet.create({
   scrollContent: { padding: 16, paddingBottom: 40 },
@@ -17,15 +14,15 @@ export const ts = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: theme.fonts.bodySemiBold,
-    fontSize: 11,
+    fontSize: theme.font.size.xs,
     color: theme.colors.subtext,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  muted13: { fontSize: 13, color: theme.colors.subtext },
+  muted13: { fontSize: theme.font.size.smd, color: theme.colors.subtext },
   centeredEmpty: { alignItems: 'center', paddingVertical: 60 },
-  emptyCaption: { fontSize: 14, color: theme.colors.subtext, marginTop: 12, textAlign: 'center' },
+  emptyCaption: { fontSize: theme.font.size.md, color: theme.colors.subtext, marginTop: 12, textAlign: 'center' },
   miniButton: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  miniButtonLabel: { fontSize: 12 },
+  miniButtonLabel: { fontSize: theme.font.size.sm },
 })

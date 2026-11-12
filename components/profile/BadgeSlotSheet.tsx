@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Pressable, ScrollView, Text, View } from 'react-native'
+import { Pressable, ScrollView, View } from 'react-native'
+import { Text } from '../ui/Text'
 import { BADGE_DEFINITIONS, shared, theme } from '../../constants'
 import type { BadgeDef } from '../../constants'
 import { BadgeIcon } from '../BadgeIcon'

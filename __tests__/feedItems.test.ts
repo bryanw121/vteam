@@ -1,4 +1,4 @@
-import { formatSessionTimeRange, normalizeExternalSessions, normalizeTournaments, signupHost } from '../utils/feedItems'
+import { formatSessionTimeRange, isFeedItemOver, normalizeExternalSessions, normalizeTournaments, signupHost } from '../utils/feedItems'
 import type { ExternalSession } from '../types'
 
 const session: ExternalSession = {
@@ -75,5 +75,22 @@ describe('signupHost', () => {
   it('strips www and falls back on bad urls', () => {
     expect(signupHost('https://www.reclub.co/m/x')).toBe('reclub.co')
     expect(signupHost('not a url')).toBe('their site')
+  })
+})
+
+describe('isFeedItemOver', () => {
+  const now = Date.parse('2026-11-02T02:40:00Z') // 8:40pm CST, Nov 1
+  it('drops an item once its end has passed', () => {
+    // 1:00am CST Nov 1, one hour long: long over.
+    expect(isFeedItemOver({ event_date: '2026-11-01T07:00:00', duration_minutes: 60 }, now)).toBe(true)
+    // Ends exactly now: over.
+    expect(isFeedItemOver({ event_date: '2026-11-02T01:40:00', duration_minutes: 60 }, now)).toBe(true)
+  })
+  it('keeps an item that is still running or hasn\'t started', () => {
+    expect(isFeedItemOver({ event_date: '2026-11-02T01:00:00', duration_minutes: 120 }, now)).toBe(false) // 7–9pm
+    expect(isFeedItemOver({ event_date: '2026-11-02T03:00:00+00:00', duration_minutes: 60 }, now)).toBe(false)
+  })
+  it('keeps items with no known end (tournaments, sessions without an end) for the rest of their day', () => {
+    expect(isFeedItemOver({ event_date: '2026-11-01T15:00:00', duration_minutes: 0 }, now)).toBe(false)
   })
 })

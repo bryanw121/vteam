@@ -1,5 +1,6 @@
 import React from 'react'
-import { Text, TouchableOpacity, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
+import { Text } from '../ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../../constants'
 import { SKILL_LEVEL_LABELS } from '../../constants/copy'
@@ -39,13 +40,14 @@ export function TeamCard({ team, isOrganizer, viewerId, myTeam, registrationOpen
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 5 }}>
-            <Text style={{ fontFamily: theme.fonts.display, fontSize: 15, color: theme.colors.text, letterSpacing: -0.2 }}>{team.name}</Text>
+            <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.lgs, color: theme.colors.text, letterSpacing: -0.2 }}>{team.name}</Text>
+            {team.seed !== null && !isFreeAgent && <StatusPill label={`Seed ${team.seed}`} color={theme.colors.accent} />}
             {isMyTeam && <StatusPill label="You" color={theme.colors.primary} />}
             {isFreeAgent && <StatusPill label="Free Agent" color={theme.colors.subtext} />}
             {team.is_paid && <StatusPill label="Paid" color={theme.colors.cool} />}
             {!team.is_approved && !isFreeAgent && <StatusPill label="Pending" color={theme.colors.warm} />}
           </View>
-          <Text style={{ fontFamily: theme.fonts.body, fontSize: 11, color: theme.colors.subtext }}>
+          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext }}>
             {team.members.length} player{team.members.length !== 1 ? 's' : ''}
           </Text>
         </View>
@@ -55,7 +57,7 @@ export function TeamCard({ team, isOrganizer, viewerId, myTeam, registrationOpen
             onPress={actions.onInvite}
             style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: theme.colors.background }}
           >
-            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 11.5, color: theme.colors.text }}>+ Invite</Text>
+            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.text }}>+ Invite</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -68,11 +70,11 @@ export function TeamCard({ team, isOrganizer, viewerId, myTeam, registrationOpen
           <View key={m.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 5, borderTopWidth: 1, borderTopColor: theme.colors.borderSoft }}>
             <AutoAvatar avatarUrl={p?.avatar_url} size={30} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: m.is_captain ? theme.fonts.bodySemiBold : theme.fonts.body, fontSize: 13, color: theme.colors.text }}>
+              <Text style={{ fontFamily: m.is_captain ? theme.fonts.bodySemiBold : theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.text }}>
                 {p ? profileDisplayName(p) : 'Player'}{m.is_captain ? ' · C' : ''}
               </Text>
               {skillLabel && (
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: 11, color: theme.colors.subtext }}>{skillLabel}</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext }}>{skillLabel}</Text>
               )}
             </View>
             {isOrganizer && (
@@ -103,7 +105,7 @@ export function TeamCard({ team, isOrganizer, viewerId, myTeam, registrationOpen
           onPress={() => actions.onAssign(team)}
           style={{ marginTop: 10, paddingVertical: 9, borderRadius: 10, backgroundColor: theme.colors.primary + '18', alignItems: 'center' }}
         >
-          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 13, color: theme.colors.primary }}>Assign to Team →</Text>
+          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.primaryText }}>Assign to Team →</Text>
         </TouchableOpacity>
       )}
 
@@ -113,7 +115,7 @@ export function TeamCard({ team, isOrganizer, viewerId, myTeam, registrationOpen
           onPress={() => actions.onRequestJoin(team)}
           style={{ marginTop: 10, paddingVertical: 9, borderRadius: 10, backgroundColor: theme.colors.border, alignItems: 'center' }}
         >
-          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 13, color: theme.colors.text }}>Request to Join</Text>
+          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.text }}>Request to Join</Text>
         </TouchableOpacity>
       )}
 
@@ -124,8 +126,8 @@ export function TeamCard({ team, isOrganizer, viewerId, myTeam, registrationOpen
           {myRequests.map(req => (
             <View key={req.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: 13, color: theme.colors.text }}>{req.requester ? profileDisplayName(req.requester) : 'Unknown'}</Text>
-                {req.requester?.skill_level && <Text style={{ fontSize: 11, color: theme.colors.subtext }}>{SKILL_LEVEL_LABELS[req.requester.skill_level] ?? req.requester.skill_level}</Text>}
+                <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.smd, color: theme.colors.text }}>{req.requester ? profileDisplayName(req.requester) : 'Unknown'}</Text>
+                {req.requester?.skill_level && <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }}>{SKILL_LEVEL_LABELS[req.requester.skill_level] ?? req.requester.skill_level}</Text>}
               </View>
               <MiniButton label="Accept" tone="accept" onPress={() => actions.onApproveRequest(req)} />
               <MiniButton label="Decline" tone="neutral" onPress={() => actions.onDeclineRequest(req.id)} />

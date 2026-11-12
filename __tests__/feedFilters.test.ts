@@ -6,7 +6,6 @@ import {
   loadFeedFilters,
   parseFeedFilters,
   saveFeedFilters,
-  usableFeedFilter,
 } from '../utils/feedFilters'
 
 const mockStore: Record<string, string> = {}
@@ -42,7 +41,7 @@ afterAll(() => { Platform.OS = realOS })
 describe('parseFeedFilters', () => {
   it('reads a valid saved pair', () => {
     expect(parseFeedFilters(JSON.stringify({ filter: 'tournament', surface: 'sand' }))).toEqual({ filter: 'tournament', surface: 'sand' })
-    expect(parseFeedFilters(JSON.stringify({ filter: 'mine', surface: 'any' }))).toEqual({ filter: 'mine', surface: 'any' })
+    expect(parseFeedFilters(JSON.stringify({ filter: 'open_play', surface: 'any' }))).toEqual({ filter: 'open_play', surface: 'any' })
   })
 
   it('drops values that no longer exist, field by field', () => {
@@ -57,11 +56,10 @@ describe('parseFeedFilters', () => {
   })
 })
 
-describe('usableFeedFilter', () => {
-  it('shows a remembered Mine only with an account', () => {
-    expect(usableFeedFilter('mine', false)).toBe('all')
-    expect(usableFeedFilter('mine', true)).toBe('mine')
-    expect(usableFeedFilter('not_full', false)).toBe('not_full')
+describe('removed chips', () => {
+  it('drops a saved Mine or Not Full to All', () => {
+    expect(parseFeedFilters(JSON.stringify({ filter: 'mine', surface: 'sand' }))).toEqual({ filter: 'all', surface: 'sand' })
+    expect(parseFeedFilters(JSON.stringify({ filter: 'not_full', surface: 'indoor' }))).toEqual({ filter: 'all', surface: 'indoor' })
   })
 })
 
@@ -72,8 +70,8 @@ describe('web (localStorage)', () => {
   })
 
   it('restores synchronously and round-trips a save', () => {
-    window.localStorage.setItem(KEY, JSON.stringify({ filter: 'not_full', surface: 'indoor' }))
-    expect(feedFiltersNow()).toEqual({ filter: 'not_full', surface: 'indoor' })
+    window.localStorage.setItem(KEY, JSON.stringify({ filter: 'open_play', surface: 'indoor' }))
+    expect(feedFiltersNow()).toEqual({ filter: 'open_play', surface: 'indoor' })
     saveFeedFilters({ filter: 'tournament', surface: 'any' })
     expect(JSON.parse(window.localStorage.getItem(KEY)!)).toEqual({ filter: 'tournament', surface: 'any' })
     __resetFeedFilters()
@@ -84,7 +82,7 @@ describe('web (localStorage)', () => {
     fakeLocalStorage.getItem.mockImplementationOnce(() => { throw new Error('blocked') })
     fakeLocalStorage.setItem.mockImplementationOnce(() => { throw new Error('quota') })
     expect(feedFiltersNow()).toEqual(DEFAULT_FEED_FILTERS)
-    expect(() => saveFeedFilters({ filter: 'mine', surface: 'sand' })).not.toThrow()
+    expect(() => saveFeedFilters({ filter: 'all', surface: 'sand' })).not.toThrow()
   })
 })
 

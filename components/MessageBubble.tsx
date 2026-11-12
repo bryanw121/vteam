@@ -1,11 +1,13 @@
 import React, { useMemo, useRef, useState } from 'react'
-import { View, Text, Image, Pressable, TouchableOpacity, Platform } from 'react-native'
+import { View, Image, Pressable, TouchableOpacity, Platform } from 'react-native'
+import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../constants/theme'
 import { AnchorOptionsMenu } from './AnchorOptionsMenu'
 import type { AnchorRect } from '../types'
 import type { MessageWithDetails } from '../types'
 import { profileAvatarSmallUri } from '../utils'
+import { useChatImageUrl } from '../hooks/useChatImageUrl'
 
 const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '🔥', '👏']
 
@@ -54,6 +56,8 @@ export function MessageBubble({
   const hiddenIncoming = !isOwn && contentSuppressed
   const hasText = !deleted && !hiddenIncoming && !!message.content
   const hasImage = !deleted && !hiddenIncoming && !!message.image_url
+  // chat-images is private: stored paths (and legacy public URLs) need a signed URL.
+  const imageUri = useChatImageUrl(hasImage ? message.image_url : null)
 
   // Group reactions by emoji
   const reactionGroups: Record<string, number> = {}
@@ -134,7 +138,7 @@ export function MessageBubble({
             opacity: 0.8,
           }}
         >
-          <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primary, fontWeight: theme.font.weight.semibold }}>
+          <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText, fontWeight: theme.font.weight.semibold }}>
             {replyContentSuppressed
               ? 'Message'
               : (message.reply_to.profiles ? displayName(message.reply_to.profiles) : 'Message')}
@@ -185,10 +189,10 @@ export function MessageBubble({
           ) : (
             <>
               {hasImage && (
-                <Pressable onPress={() => onImagePress?.(message.image_url!)}>
+                <Pressable onPress={() => { if (imageUri) onImagePress?.(imageUri) }} disabled={!imageUri}>
                   <Image
-                    source={{ uri: message.image_url! }}
-                    style={{ width: 220, height: 180, borderRadius: hasText ? 0 : 18 }}
+                    source={imageUri ? { uri: imageUri } : undefined}
+                    style={{ width: 220, height: 180, borderRadius: hasText ? 0 : 18, backgroundColor: theme.colors.background }}
                     resizeMode="cover"
                   />
                 </Pressable>
@@ -204,7 +208,7 @@ export function MessageBubble({
                 }}>
                   {message.content}
                   {message.edited_at && !unsent
-                    ? <Text style={{ fontSize: 10, color: isOwn ? 'rgba(255,255,255,0.6)' : theme.colors.subtext, fontStyle: 'italic' }}>{' (edited)'}</Text>
+                    ? <Text style={{ fontSize: theme.font.size.xs, color: isOwn ? 'rgba(255,255,255,0.6)' : theme.colors.subtext, fontStyle: 'italic' }}>{' (edited)'}</Text>
                     : null}
                 </Text>
               )}
@@ -236,9 +240,9 @@ export function MessageBubble({
                 shadowRadius: 2,
                 elevation: 2,
               }}>
-                <Text style={{ fontSize: 13 }}>{emoji}</Text>
+                <Text style={{ fontSize: theme.font.size.smd }}>{emoji}</Text>
                 {count > 1 && (
-                  <Text style={{ fontSize: 11, color: theme.colors.subtext }}>{count}</Text>
+                  <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }}>{count}</Text>
                 )}
               </View>
             ))}
@@ -249,7 +253,7 @@ export function MessageBubble({
       {/* Timestamp / sending / failed indicator */}
       <Text style={{
         fontFamily: failed ? theme.fonts.bodySemiBold : theme.fonts.body,
-        fontSize: failed ? theme.font.size.xs : 10,
+        fontSize: theme.font.size.xs,
         color: failed ? theme.colors.error : message._sending ? theme.colors.primary : theme.colors.subtext,
         marginTop: 2,
         marginHorizontal: 4,

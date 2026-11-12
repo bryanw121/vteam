@@ -6,7 +6,7 @@ import { resolveJoinAction } from '../hooks/event/derive'
 import { JoinFooter } from '../components/event/JoinFooter'
 import { APPROVAL_REQUIRED_NOTE } from '../constants'
 import { EVENT_LIST_EVENT_COLUMNS } from '../constants/events'
-import { EVENT_DETAIL_COLUMNS } from '../constants/selects'
+import { EVENT_DETAIL_COLUMNS, EVENT_EDIT_SELECT } from '../constants/selects'
 import type { AttendanceStatus, EventAttendanceApi, JoinAction, JoinActionState } from '../types'
 
 const base: JoinActionState = {
@@ -95,13 +95,16 @@ describe('JoinFooter', () => {
     cancelRequest: jest.fn(async () => {}),
     rerequest: jest.fn(async () => {}),
   })
-  const renderFooter = (eventStatus: AttendanceStatus, requiresApproval: boolean, attendance = api()) => ({
+  const renderFooter = (eventStatus: AttendanceStatus, requiresApproval: boolean, attendance = api(), onLeave = jest.fn()) => ({
     attendance,
+    onLeave,
     view: render(
       <JoinFooter
+        eventDate="2026-09-09T22:35:00"
         eventStatus={eventStatus}
         requiresApproval={requiresApproval}
         attendance={attendance as unknown as EventAttendanceApi}
+        onLeave={onLeave}
         onAddGuest={() => {}}
         docScrollActive={false}
         bottomInset={0}
@@ -125,6 +128,32 @@ describe('JoinFooter', () => {
     expect(attendance.join).toHaveBeenCalled()
   })
 
+  it('restates the start time above every sign-up button, and only there', () => {
+    const signup = /^You're signing up for \w{3}, \w{3} \d{1,2} · \d{1,2}:\d{2} (AM|PM)$/
+    expect(renderFooter(status(), false).view.getByText(signup)).toBeTruthy()
+    expect(renderFooter(status(), true).view.getByText(signup)).toBeTruthy()
+    expect(renderFooter(status({ isFull: true, spotsLeft: 0 }), false).view.getByText(signup)).toBeTruthy()
+    expect(renderFooter(status({ isAttending: true }), false).view.queryByText(signup)).toBeNull()
+  })
+
+  it('Leave event opens the leave sheet instead of leaving at once (#171)', () => {
+    const { view, attendance, onLeave } = renderFooter(status({ isAttending: true }), false)
+    fireEvent.press(view.getByTestId('leave-event'))
+    expect(onLeave).toHaveBeenCalledTimes(1)
+    expect(attendance.leave).not.toHaveBeenCalled()
+  })
+
+  it('leaving the waitlist and cancelling a request stay one tap', () => {
+    const waitlisted = renderFooter(status({ isWaitlisted: true, waitlistPosition: 2 }), false)
+    fireEvent.press(waitlisted.view.getByText('Leave Waitlist'))
+    expect(waitlisted.attendance.leaveWaitlist).toHaveBeenCalled()
+    expect(waitlisted.onLeave).not.toHaveBeenCalled()
+    const requested = renderFooter(status({ isRequested: true }), true)
+    fireEvent.press(requested.view.getByText('Cancel Request'))
+    expect(requested.attendance.cancelRequest).toHaveBeenCalled()
+    expect(requested.onLeave).not.toHaveBeenCalled()
+  })
+
   it('offers the waitlist on a full approval-gated event', () => {
     const { view } = renderFooter(status({ isFull: true, spotsLeft: 0 }), true)
     expect(view.getByText('Join Waitlist')).toBeTruthy()
@@ -133,7 +162,7 @@ describe('JoinFooter', () => {
 })
 
 describe('wiring: approval comes from the column, never from price', () => {
-  const eventPage = source('app/(app)/event/[id].tsx')
+  const eventPage = source('components/event/EventDetailScreen.tsx')
   const footer = source('components/event/JoinFooter.tsx')
 
   it('the event page reads requires_approval from the event row', () => {
@@ -161,7 +190,8 @@ describe('host form persists the approval choice', () => {
   })
 
   it('selects and hydrates it when editing', () => {
-    expect(host).toMatch(/EDIT_EVENT_SELECT =[\s\S]*?requires_approval/)
+    expect(EVENT_EDIT_SELECT).toMatch(/\brequires_approval\b/)
+    expect(host).toMatch(/\.select\(EVENT_EDIT_SELECT\)/)
     expect(host).toMatch(/requiresApproval: data\.requires_approval/)
   })
 

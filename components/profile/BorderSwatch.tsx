@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, View } from 'react-native'
+import { Text } from '../ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../../constants/theme'
@@ -55,8 +56,10 @@ export function BorderSwatch({ label, borderDef, selected, unlocked, onPress, si
     <Pressable
       onPress={onPress}
       disabled={blocked}
-      accessibilityRole="radio"
-      accessibilityState={{ selected, disabled: !unlocked }}
+      role="radio"
+      aria-checked={selected}
+      aria-disabled={!unlocked}
+      aria-label={unlocked ? label : `${label}, locked`}
       accessibilityHint={description}
       style={({ pressed }) => ({ alignItems: 'center', gap: theme.spacing.xs, opacity: pressed && unlocked ? 0.7 : 1 })}
     >
@@ -83,7 +86,7 @@ export function BorderSwatch({ label, borderDef, selected, unlocked, onPress, si
         {label}
       </Text>
       {!unlocked && description ? (
-        <Text style={{ fontSize: 9, color: theme.colors.subtext, textAlign: 'center', maxWidth: 72, opacity: 0.7 }} numberOfLines={2}>
+        <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext, textAlign: 'center', maxWidth: 72, opacity: 0.7 }} numberOfLines={2}>
           {description}
         </Text>
       ) : null}

@@ -9,10 +9,12 @@ import {
   EVENT_JUST_FILLED_TITLE,
   EXTERNAL_SESSION_SELECT,
   EXTERNAL_SESSION_MAX_AGE_MS,
-  GENERIC_ERROR_MESSAGE,
   STALE,
 } from '../constants'
 import { supabase } from '../lib/supabase'
+import { feedPrefetchAge, takeFeedPrefetch } from '../lib/feedPrefetch'
+import { track } from '../lib/analytics'
+import { ANALYTICS_EVENTS } from '../constants/analytics'
 import { getSessionUser } from '../lib/sessionUser'
 import {
   getQueryData,
@@ -25,13 +27,14 @@ import {
   type QueryResult,
 } from '../lib/query'
 import { useSession } from '../contexts/session'
-import { startOfToday } from '../utils'
+import { localDateKey, startOfToday } from '../utils'
+import { sessionConfirmation } from '../utils/externalFreshness'
 import { addMonths, bucketByMonthKey, enumerateMonths, monthEndIso, monthKeyFromIso, monthStartIso } from '../utils/monthKeys'
 import { readFeedSnapshot, SNAPSHOT_MONTHS, writeFeedSnapshot } from '../utils/feedSnapshot'
 import { fetchEventCardPreviews, previewsFromRows, withEventCardPreviews } from '../utils/eventCardPreviews'
 import { isFeedRpcUnavailable, parseFeedSpan } from '../utils/feedSpan'
-import { normalizeExternalSessions, normalizeTournaments } from '../utils/feedItems'
-import { notifyError, notifyInfo } from '../utils/notify'
+import { isFeedItemOver, normalizeExternalSessions, normalizeTournaments } from '../utils/feedItems'
+import { toast } from '../lib/toast'
 import { eventKeys } from './event/keys'
 import type { EventCardPreviews, EventWithDetails, ExternalSession, FeedRsvpResult, FeedRsvpVars, FeedSpanRows } from '../types'
 
@@ -93,9 +96,26 @@ export function __resetFeedState(): void {
  * if someone else turns out to be signed in, the owner check in the hook resets
  * the feed before their RSVP state could show.
  */
+/**
+ * feed_first_paint (#184): when the first feed rows were in hand, and from
+ * where. `ms` is since navigation start; `cold` marks a server that took over
+ * 1 s (prefetch: since the <head> request started). Once per page load.
+ */
+let firstPaintTracked = false
+function trackFirstPaint(source: 'snapshot' | 'prefetch' | 'fetch', startedAt?: number): void {
+  if (firstPaintTracked || typeof performance === 'undefined') return
+  firstPaintTracked = true
+  const ms = Math.round(performance.now())
+  const prefetchAt = feedPrefetchAge()
+  const serverMs = source === 'prefetch' && prefetchAt !== null ? Date.now() - prefetchAt
+    : startedAt !== undefined ? Date.now() - startedAt : null
+  track(ANALYTICS_EVENTS.feedFirstPaint, { ms, source, cold: serverMs !== null && serverMs > 1000 })
+}
+
 function seedFromSnapshot(): void {
   const snap = readFeedSnapshot()
   if (!snap) return
+  trackFirstPaint('snapshot')
   const months = Object.keys(snap.months).sort()
   months.forEach(m => setQueryData(feedMonthKey(m), snap.months[m]))
   invalidate(FEED_PREFIX, { refetchActive: false })
@@ -159,7 +179,8 @@ function bucketFeed(
   const combined = [
     ...withEventCardPreviews(events, previews),
     ...normalizeTournaments(tournaments),
-    ...normalizeExternalSessions(external),
+    // Outside sessions whose source hasn't been read for a week are left out (utils/externalFreshness).
+    ...normalizeExternalSessions((external ?? []).filter(s => sessionConfirmation(s, localDateKey(new Date())).state !== 'hidden')),
   ]
   combined.sort((a, b) => a.event_date.localeCompare(b.event_date))
   return bucketByMonthKey(combined, span)
@@ -170,7 +191,31 @@ function bucketFeed(
  * caller then runs the three queries); latches it off for the session when the
  * error says it will keep failing.
  */
+/**
+ * The request app/+html.tsx started from the page's <head> for this span and
+ * viewer (#184), if any: its rows, or null to fetch as usual (no match, too
+ * old, or it failed: a failed prefetch never shows an error).
+ */
+async function adoptFeedPrefetch(rangeStart: string, rangeEnd: string): Promise<unknown | null> {
+  const pending = takeFeedPrefetch(rangeStart, rangeEnd)
+  if (!pending) return null
+  try {
+    return await pending
+  } catch {
+    return null
+  }
+}
+
 async function fetchFeedSpanRpc(rangeStart: string, rangeEnd: string, externalSince: string): Promise<FeedSpanRows | null> {
+  const prefetched = await adoptFeedPrefetch(rangeStart, rangeEnd)
+  if (prefetched !== null) {
+    const rows = parseFeedSpan(prefetched)
+    if (rows) {
+      trackFirstPaint('prefetch')
+      return rows
+    }
+  }
+  const startedAt = Date.now()
   const { data, error } = await supabase.rpc('get_feed_span', {
     p_start: rangeStart,
     p_end: rangeEnd,
@@ -182,6 +227,7 @@ async function fetchFeedSpanRpc(rangeStart: string, rangeEnd: string, externalSi
     return null
   }
   const rows = parseFeedSpan(data)
+  if (rows) trackFirstPaint('fetch', startedAt)
   if (!rows) {
     feedRpcEnabled = false
     console.warn('[useMonthEvents] get_feed_span returned an unexpected shape, using separate queries')
@@ -461,15 +507,30 @@ export function useMonthEvents() {
     return () => sub.remove()
   }, [refetchStale])
 
+  // Ended items leave the feed: re-checked every minute, so a session drops off once it's over
+  // without a refetch. Items with no known end (tournaments) stay for the rest of their day.
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNowMs(Date.now()), 60_000)
+    return () => clearInterval(t)
+  }, [])
+
   const monthData = slots.map(s => s.data)
+  // The minute tick only changes the list when an item actually ends; otherwise the previous
+  // array is kept, so the feed doesn't re-render every minute.
+  const lastEvents = useRef<EventWithDetails[] | null>(null)
   const events = useMemo(() => {
     const today = startOfToday()
-    return monthData
+    const list = monthData
       .flatMap(d => d ?? [])
-      .filter(e => e.event_date >= today)
+      .filter(e => e.event_date >= today && !isFeedItemOver(e, nowMs))
       .sort((a, b) => a.event_date.localeCompare(b.event_date))
+    const prev = lastEvents.current
+    if (prev && prev.length === list.length && prev.every((e, i) => e === list[i])) return prev
+    lastEvents.current = list
+    return list
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, monthData)
+  }, [...monthData, nowMs])
 
   const loadedMonths = useMemo(
     () => months.filter((_, i) => monthData[i] !== undefined),
@@ -578,6 +639,8 @@ export function useFeedRsvp() {
   const pendingRef = useRef(new Set<string>())
   const [pendingEventIds, setPendingEventIds] = useState<ReadonlySet<string>>(() => new Set())
 
+  // Retry from the failure toast runs the same RSVP again.
+  const rsvpRef = useRef<(vars: FeedRsvpVars) => Promise<void>>(async () => {})
   const rsvp = useCallback(async (vars: FeedRsvpVars) => {
     const { eventId, action, userId } = vars
     if (pendingRef.current.has(eventId)) return
@@ -588,17 +651,18 @@ export function useFeedRsvp() {
     try {
       const result = await writeRsvp(vars)
       invalidate(eventKeys.root(eventId))
-      if (action === 'join' && result.status === 'waitlisted') notifyInfo(EVENT_JUST_FILLED_TITLE, EVENT_JUST_FILLED_BODY)
+      if (action === 'join' && result.status === 'waitlisted') toast.show({ title: EVENT_JUST_FILLED_TITLE, message: EVENT_JUST_FILLED_BODY, variant: 'warning' })
     } catch (e) {
       rollback()
       console.error('[useFeedRsvp]', e instanceof Error ? e.message : (e as { message?: string })?.message ?? e)
-      notifyError('Error', GENERIC_ERROR_MESSAGE)
+      toast.error(action === 'join' ? "Couldn't join" : "Couldn't leave", e, { label: 'Retry', onPress: () => { void rsvpRef.current(vars) } })
     } finally {
       pendingRef.current.delete(eventId)
       setPendingEventIds(new Set(pendingRef.current))
       if (pendingRef.current.size === 0) invalidate(FEED_PREFIX)
     }
   }, [])
+  rsvpRef.current = rsvp
 
   const isPending = useCallback((eventId: string) => pendingEventIds.has(eventId), [pendingEventIds])
 

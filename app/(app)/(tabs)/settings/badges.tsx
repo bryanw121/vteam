@@ -1,21 +1,16 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
+  Animated,
   Modal,
+  Platform,
   Pressable,
-  RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   useWindowDimensions,
   View,
 } from 'react-native'
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-} from 'react-native-reanimated'
+import { Text } from '../../../../components/ui/Text'
+import { RefreshControl } from '../../../../components/RefreshControl'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFocusRefetch } from '../../../../lib/query'
@@ -38,6 +33,8 @@ import {
 import { ScreenState } from '../../../../components/ui'
 import type { UserBadge } from '../../../../types'
 import type { ProfileBorderType, BadgeDef } from '../../../../constants'
+import { useUrlParam } from '../../../../hooks/useUrlParam'
+import { VIEW } from '../../../../utils/urlViews'
 
 export default function BadgesScreen() {
   useStackBackTitle('Badges')
@@ -53,31 +50,42 @@ export default function BadgesScreen() {
   const [detailDef, setDetailDef] = useState<BadgeDef | null>(null)
   const [detailMounted, setDetailMounted] = useState(false)
   const [listRefreshing, setListRefreshing] = useState(false)
-  const detailProgress = useSharedValue(0)
+  // Core Animated rather than Reanimated: keeps Reanimated out of the web
+  // entry chunk, where only the lazily loaded event screen needs it (#193).
+  const detailProgress = useRef(new Animated.Value(0)).current
+  const useNativeDriver = Platform.OS !== 'web'
 
-  const detailTranslateStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: (1 - detailProgress.value) * 400 }],
-  }))
-  const detailBackdropStyle = useAnimatedStyle(() => ({
-    opacity: detailProgress.value,
-  }))
+  const detailTranslateStyle = {
+    transform: [{ translateY: detailProgress.interpolate({ inputRange: [0, 1], outputRange: [400, 0] }) }],
+  }
+  const detailBackdropStyle = { opacity: detailProgress }
 
-  function openDetail(def: BadgeDef) {
+  // The open badge is in the URL (`?badge=spiker`), so a link (a "you earned" notification) can open it.
+  const [badgeParam, setBadgeParam] = useUrlParam('badge', VIEW.badges.badge)
+  useEffect(() => {
+    if (!badgeParam || detailDef?.type === badgeParam) return
+    const def = BADGE_DEFINITIONS.find(d => d.type === badgeParam)
+    if (def) openDetail(def, false)
+  }, [badgeParam]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function openDetail(def: BadgeDef, writeUrl = true) {
+    if (writeUrl) setBadgeParam(def.type)
     setDetailDef(def)
     setDetailMounted(true)
-    detailProgress.value = 0
-    detailProgress.value = withTiming(1, { duration: 280 })
+    detailProgress.setValue(0)
+    Animated.timing(detailProgress, { toValue: 1, duration: 280, useNativeDriver }).start()
   }
 
   function closeDetail() {
-    detailProgress.value = withTiming(0, { duration: 220 }, (finished) => {
-      'worklet'
+    setBadgeParam('')
+    Animated.timing(detailProgress, { toValue: 0, duration: 220, useNativeDriver }).start(({ finished }) => {
       if (finished) {
-        runOnJS(setDetailMounted)(false)
-        runOnJS(setDetailDef)(null)
+        setDetailMounted(false)
+        setDetailDef(null)
       }
     })
   }
+
 
   // Both lists refetch on focus only when stale (badges are written server-side, rarely).
   useFocusRefetch(userId ? badgesKey(userId) : null)
@@ -131,7 +139,7 @@ export default function BadgesScreen() {
             </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          <View testID="badges-grid" style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
             {BADGE_DEFINITIONS.map(def => {
               const badge = badges.find(b => b.badge_type === def.type)
               const isSelected = detailDef?.type === def.type
@@ -167,7 +175,7 @@ export default function BadgesScreen() {
             Unlock borders by earning attendance badges.
           </Text>
 
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.lg }}>
+          <View role="radiogroup" aria-label="Profile border" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.lg }}>
             <BorderSwatch
               label="None"
               size="lg"
@@ -231,7 +239,7 @@ type BadgeDetailPanelProps = {
   badge: UserBadge | null
   onClose: () => void
   bottomInset: number
-  animStyle: ReturnType<typeof useAnimatedStyle>
+  animStyle: { transform: { translateY: Animated.AnimatedInterpolation<number> }[] }
 }
 
 function BadgeDetailPanel({ def, badge, onClose, bottomInset, animStyle }: BadgeDetailPanelProps) {
@@ -338,7 +346,7 @@ function BadgeDetailPanel({ def, badge, onClose, bottomInset, animStyle }: Badge
                   )}
                 </View>
                 {earned && earnedTier === t.tier && (
-                  <Text style={{ fontSize: 10, color: topColor, fontWeight: theme.font.weight.semibold }}>
+                  <Text style={{ fontSize: theme.font.size.xs, color: topColor, fontWeight: theme.font.weight.semibold }}>
                     Current
                   </Text>
                 )}

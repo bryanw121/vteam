@@ -1,0 +1,491 @@
+{
+  "admin-metrics": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-events": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-live": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-people": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-person": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "admin-metrics-retention": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "chat-club": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "chat-conversation": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "chat-list": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "club-create": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "club-detail": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "club-detail-guest": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "clubs-list": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "event-cheers": {
+    "mobile": {
+      "color-contrast": 2
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "event-details": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "event-details-noshow": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "event-discussion": {
+    "mobile": {
+      "color-contrast": 2
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "event-guest": {
+    "mobile": {
+      "color-contrast": 3
+    },
+    "desktop": {
+      "color-contrast": 4
+    }
+  },
+  "event-join-intent-sheet": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 6
+    }
+  },
+  "event-leave-sheet": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 5
+    }
+  },
+  "event-paid-bottom": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 4
+    }
+  },
+  "event-people": {
+    "mobile": {
+      "color-contrast": 2
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "event-people-balanced": {
+    "mobile": {
+      "color-contrast": 2
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "events-feed": {
+    "mobile": {
+      "color-contrast": 18
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
+  "events-feed-guest": {
+    "mobile": {
+      "color-contrast": 17
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
+  "events-feed-link": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
+  "events-feed-tournaments": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 6
+    }
+  },
+  "host-create": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "host-edit": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "leagues": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "login": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "notifications": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "privacy": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "profile-edit-link": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "profile-other": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "profile-own": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "profile-own-guest": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "register": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "register-join-context": {
+    "mobile": {
+      "color-contrast": 2
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "reset-password": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "scorekeeper": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "scorekeeper-new": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-account": {
+    "mobile": {
+      "color-contrast": 2
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "settings-badge-link": {
+    "mobile": {
+      "color-contrast": 14
+    },
+    "desktop": {
+      "color-contrast": 16
+    }
+  },
+  "settings-badges": {
+    "mobile": {
+      "color-contrast": 11
+    },
+    "desktop": {
+      "color-contrast": 11
+    }
+  },
+  "settings-cheers": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-display": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-experimental": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-feedback": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-feedback-errors": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 6
+    }
+  },
+  "settings-hidden": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-history": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 5
+    }
+  },
+  "settings-hosted": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 4
+    }
+  },
+  "settings-notifications": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-silenced": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "terms": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "tournament-create": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "tournament-discussion": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "tournament-overview": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "tournament-results": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "tournament-schedule": {
+    "mobile": {
+      "color-contrast": 6
+    },
+    "desktop": {
+      "color-contrast": 8
+    }
+  },
+  "tournament-schedule-link": {
+    "mobile": {
+      "color-contrast": 8
+    },
+    "desktop": {
+      "color-contrast": 10
+    }
+  },
+  "tournament-teams": {
+    "mobile": {
+      "color-contrast": 6
+    },
+    "desktop": {
+      "color-contrast": 8
+    }
+  },
+  "tournaments-list": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "tournaments-list-past": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "welcome-city": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "welcome-level": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "welcome-position": {
+    "desktop": {
+      "color-contrast": 1
+    }
+  }
+}

@@ -57,11 +57,19 @@ describe('tabForPath / tabIndexFromPath', () => {
 })
 
 describe('CREATE_MENU', () => {
-  it('lists the create options with their routes', () => {
-    expect(CREATE_MENU.map(o => [o.label, o.path])).toEqual([
-      ['Open Play', '/host?maxAttendees=18'],
-      ['Tournament', '/tournament/create'],
-      ['From Template', '/host?mode=templates'],
+  it('groups booking at a venue apart from creating on vteam', () => {
+    expect(CREATE_MENU.map(s => [s.key, s.title])).toEqual([
+      ['venue', 'Book at a venue'],
+      ['vteam', 'Create on vteam'],
+    ])
+  })
+
+  it('lists the options with their routes; only creating on vteam needs an account', () => {
+    expect(CREATE_MENU.flatMap(s => s.options.map(o => [o.label, o.path, o.requiresAuth]))).toEqual([
+      ['Book a court', '/book', false],
+      ['Open Play', '/host?maxAttendees=18', true],
+      ['Tournament', '/tournament/create', true],
+      ['From Template', '/host?mode=templates', true],
     ])
   })
 })

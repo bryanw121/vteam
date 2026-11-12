@@ -1,5 +1,6 @@
 import React from 'react'
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '../ui/Text'
 import { theme } from '../../constants'
 
 type Props = {

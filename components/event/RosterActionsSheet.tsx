@@ -1,5 +1,6 @@
 import { useRef } from 'react'
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, View } from 'react-native'
+import { Text } from '../ui/Text'
 import type { PressableStateCallbackType } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { shared, theme } from '../../constants'
@@ -15,6 +16,7 @@ const ICONS: Record<RosterAction['key'], IoniconName> = {
   message: 'chatbubble-outline',
   'message-adder': 'chatbubble-outline',
   profile: 'person-outline',
+  'no-show': 'remove-circle-outline',
   remove: 'person-remove-outline',
 }
 
@@ -51,6 +53,8 @@ export function RosterActionsSheet({ menu, onDismiss }: Props) {
             onPress={() => choose(action)}
             accessibilityRole="button"
             accessibilityLabel={action.label}
+            accessibilityHint={action.subtitle}
+            testID={`roster-action-${action.key}`}
             style={(state: PressableStateCallbackType & { hovered?: boolean }) => [
               shared.sheetOption,
               (state.pressed || state.hovered) && shared.sheetOptionActive,
@@ -59,11 +63,14 @@ export function RosterActionsSheet({ menu, onDismiss }: Props) {
             <Ionicons
               name={ICONS[action.key]}
               size={18}
-              color={action.destructive ? theme.colors.error : theme.colors.subtext}
+              color={action.destructive ? theme.colors.error : action.caution ? theme.colors.warm : theme.colors.subtext}
             />
-            <Text style={[shared.sheetOptionText, action.destructive && shared.sheetOptionDestructive]}>
-              {action.label}
-            </Text>
+            <View style={{ flex: 1, paddingVertical: action.subtitle ? theme.spacing.xs : 0 }}>
+              <Text style={[shared.sheetOptionText, action.destructive && shared.sheetOptionDestructive, action.caution && shared.sheetOptionCaution]}>
+                {action.label}
+              </Text>
+              {action.subtitle ? <Text style={shared.sheetOptionSubtitle}>{action.subtitle}</Text> : null}
+            </View>
           </Pressable>
         ))}
       </View>

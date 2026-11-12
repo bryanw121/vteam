@@ -1,57 +1,153 @@
 import type { ComponentProps } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
+import { Text } from '../ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { shared, theme } from '../../constants'
+import { shared, theme, TIGHT_TEXT_SCALE } from '../../constants'
 import type { SettingsSection } from '../../utils/routes'
 
 type Props = {
   onOpen: (section: SettingsSection) => void
+  /** "Take the tour" row: restarts the intro tour. */
+  onTakeTour: () => void
+  onOpenTerms: () => void
+  onOpenPrivacy: () => void
+  /** Pending incoming friend requests, shown as a count on the Friends row. */
+  friendRequestCount?: number
+  /**
+   * Admins get an Admin metrics row, last: the admin check answers after the rest of Profile,
+   * and a group drawn above the others then pushed the whole menu down (a visible jump on refresh).
+   * Drawing it is cosmetic: every metrics read checks on the server.
+   */
+  showAdmin?: boolean
 }
 
-type MenuItem = {
-  title: string
-  icon: ComponentProps<typeof Ionicons>['name']
-  section: SettingsSection
-}
+type IconName = ComponentProps<typeof Ionicons>['name']
 
-const MENU_ITEMS: readonly MenuItem[] = [
-  { title: 'Account Settings', icon: 'settings-outline', section: 'account' },
-  { title: 'Silenced people', icon: 'eye-off-outline', section: 'silenced' },
-  { title: 'Notifications', icon: 'notifications-outline', section: 'notifications' },
-  { title: 'History', icon: 'time-outline', section: 'history' },
-  { title: 'Cheers', icon: 'star-outline', section: 'cheers' },
-  { title: 'Badges', icon: 'ribbon-outline', section: 'badges' },
-  { title: 'Submit Feedback', icon: 'chatbubble-ellipses-outline', section: 'feedback' },
+/** A row opens a settings screen (`section`) or runs one of the callbacks (`action`). */
+type MenuRow = { title: string; icon: IconName } & (
+  | { section: SettingsSection }
+  | { action: 'tour' | 'terms' | 'privacy' }
+)
+
+type MenuGroup = { title: string; rows: readonly MenuRow[] }
+
+/** The Profile tab's settings, grouped by what people come to do. */
+const MENU_GROUPS: readonly MenuGroup[] = [
+  {
+    title: 'Your activity',
+    rows: [
+      { title: 'Friends', icon: 'people-outline', section: 'friends' },
+      { title: 'History', icon: 'time-outline', section: 'history' },
+      { title: 'Cheers', icon: 'star-outline', section: 'cheers' },
+      { title: 'Badges', icon: 'ribbon-outline', section: 'badges' },
+    ],
+  },
+  {
+    title: 'Preferences',
+    rows: [
+      { title: 'Notifications', icon: 'notifications-outline', section: 'notifications' },
+      { title: 'Display', icon: 'text-outline', section: 'display' },
+      { title: 'Hidden in feed', icon: 'funnel-outline', section: 'hidden' },
+      { title: 'Silenced people', icon: 'eye-off-outline', section: 'silenced' },
+    ],
+  },
+  {
+    title: 'Account',
+    rows: [
+      { title: 'Account settings', icon: 'settings-outline', section: 'account' },
+      { title: 'Go ad-free', icon: 'sparkles-outline', section: 'ad-free' },
+    ],
+  },
+  {
+    title: 'Try new things',
+    rows: [
+      { title: 'Experimental features', icon: 'flask-outline', section: 'experimental' },
+    ],
+  },
+  {
+    title: 'Help and legal',
+    rows: [
+      { title: 'Take the tour', icon: 'compass-outline', action: 'tour' },
+      { title: 'Submit feedback', icon: 'chatbubble-ellipses-outline', section: 'feedback' },
+      { title: 'Terms and Conditions', icon: 'document-text-outline', action: 'terms' },
+      { title: 'Privacy Policy', icon: 'shield-checkmark-outline', action: 'privacy' },
+    ],
+  },
 ]
 
-/** The settings shortcuts under the profile hero. Navigation is the caller's (`onOpen`). */
-export function ProfileMenu({ onOpen }: Props) {
+/** Only for accounts in app_admins. */
+const ADMIN_GROUP: MenuGroup = {
+  title: 'Admin',
+  rows: [{ title: 'Admin metrics', icon: 'stats-chart-outline', section: 'metrics' }],
+}
+
+const rowKey = (row: MenuRow) => ('section' in row ? row.section : row.action)
+
+/** The settings shortcuts under the profile hero, in labelled groups. Navigation is the caller's (`onOpen`). */
+export function ProfileMenu({ onOpen, onTakeTour, onOpenTerms, onOpenPrivacy, friendRequestCount = 0, showAdmin = false }: Props) {
+  const actions = { tour: onTakeTour, terms: onOpenTerms, privacy: onOpenPrivacy }
+  const groups = showAdmin ? [...MENU_GROUPS, ADMIN_GROUP] : MENU_GROUPS
   return (
-    <View style={[shared.card, { gap: 0, marginTop: theme.spacing.lg, padding: 0, overflow: 'hidden' }]}>
-      {MENU_ITEMS.map((item, idx) => (
-        <Pressable
-          key={item.section}
-          onPress={() => onOpen(item.section)}
-          accessibilityRole="button"
-          accessibilityLabel={item.title}
-          style={({ pressed }) => [
-            styles.row,
-            idx < MENU_ITEMS.length - 1 && styles.rowBorder,
-            pressed && { backgroundColor: theme.colors.background },
-          ]}
-        >
-          <View style={styles.rowIcon}>
-            <Ionicons name={item.icon} size={18} color={theme.colors.primary} />
+    <View style={styles.groups}>
+      {groups.map(group => (
+        <View key={group.title}>
+          <Text style={styles.groupTitle} accessibilityRole="header">{group.title}</Text>
+          <View style={[shared.card, styles.card]}>
+            {group.rows.map((row, idx) => {
+              const key = rowKey(row)
+              return (
+                <Pressable
+                  key={key}
+                  onPress={'section' in row ? () => onOpen(row.section) : actions[row.action]}
+                  accessibilityRole="button"
+                  accessibilityLabel={row.title}
+                  testID={key === 'tour' ? 'take-tour' : `profile-menu-${key}`}
+                  style={({ pressed }) => [
+                    styles.row,
+                    idx < group.rows.length - 1 && styles.rowBorder,
+                    pressed && { backgroundColor: theme.colors.background },
+                  ]}
+                >
+                  <View style={styles.rowIcon}>
+                    <Ionicons name={row.icon} size={18} color={theme.colors.primary} />
+                  </View>
+                  <Text style={styles.rowTitle}>{row.title}</Text>
+                  {key === 'friends' && friendRequestCount > 0 && (
+                    <View style={styles.countPip} accessibilityLabel={`${friendRequestCount} friend ${friendRequestCount === 1 ? 'request' : 'requests'}`} testID="profile-menu-friends-count">
+                      <Text style={styles.countText} maxFontSizeMultiplier={TIGHT_TEXT_SCALE}>{friendRequestCount > 9 ? '9+' : friendRequestCount}</Text>
+                    </View>
+                  )}
+                  <Ionicons name="chevron-forward" size={16} color={theme.colors.subtext} />
+                </Pressable>
+              )
+            })}
           </View>
-          <Text style={styles.rowTitle}>{item.title}</Text>
-          <Ionicons name="chevron-forward" size={16} color={theme.colors.subtext} />
-        </Pressable>
+        </View>
       ))}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+  groups: {
+    marginTop: theme.spacing.lg,
+    gap: theme.spacing.lg,
+  },
+  groupTitle: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.font.size.xs,
+    fontWeight: '700',
+    color: theme.colors.subtext,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: theme.spacing.xs,
+    marginLeft: theme.spacing.xs,
+  },
+  card: {
+    gap: 0,
+    padding: 0,
+    overflow: 'hidden',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -71,6 +167,20 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary + '14',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  countPip: {
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
+    borderRadius: 11,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countText: {
+    fontFamily: theme.fonts.bodyBold,
+    fontSize: theme.font.size.xs,
+    color: theme.colors.white,
   },
   rowTitle: {
     flex: 1,

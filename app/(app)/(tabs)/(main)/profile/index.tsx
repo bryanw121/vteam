@@ -1,15 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, Platform, Pressable, RefreshControl, View } from 'react-native'
+import { Platform, Pressable, View } from 'react-native'
+import { RefreshControl } from '../../../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter } from 'expo-router'
 import { DocScrollView } from '../../../../../components/DocScrollView'
-import { Toast } from '../../../../../components/Toast'
+import { toast } from '../../../../../lib/toast'
 import { SignInPrompt } from '../../../../../components/SignInPrompt'
 import { ScreenState } from '../../../../../components/ui'
 import { ProfileHero } from '../../../../../components/profile/ProfileHero'
 import { ProfileMenu } from '../../../../../components/profile/ProfileMenu'
+import { useTour } from '../../../../../contexts/tour'
 import { EditProfileForm } from '../../../../../components/profile/EditProfileForm'
 import { RecentCheersPlaceholder, TrophyCase } from '../../../../../components/profile/TrophyCase'
+import { useUserTrophies } from '../../../../../hooks/useUserTrophies'
 import { useAvatarUploader } from '../../../../../components/profile/useAvatarUploader'
 import { PROFILE_TAB_INDEX, shared, theme } from '../../../../../constants'
 import { useSession } from '../../../../../contexts/session'
@@ -22,12 +25,21 @@ import {
   useMyProfile,
 } from '../../../../../hooks/useMyProfile'
 import { useFocusRefetch } from '../../../../../lib/query'
+import { useFriends } from '../../../../../hooks/useFriends'
+import { useSilencedUsers } from '../../../../../hooks/useSilencedUsers'
+import { visibleIncoming } from '../../../../../utils/friends'
+import { pointsBalanceKey, usePointsBalance } from '../../../../../hooks/usePoints'
 import { routes } from '../../../../../utils/routes'
-import type { Profile, ProfilePatch, ToastState, UserBadge } from '../../../../../types'
+import { useIsAdmin } from '../../../../../hooks/useAdminMetrics'
+import type { Profile, ProfilePatch, UserBadge } from '../../../../../types'
+import { useUrlParam } from '../../../../../hooks/useUrlParam'
+import { VIEW } from '../../../../../utils/urlViews'
+import { ShareLinkButton } from '../../../../../components/ShareLinkButton'
 
 type Props = {
   profile: Profile
   totalCheers: number
+  totalPoints: number
   badges: UserBadge[]
   saving: boolean
   updateProfile: (patch: ProfilePatch) => Promise<boolean>
@@ -35,17 +47,24 @@ type Props = {
   checkBadges: ReturnType<typeof useBadges>['checkBadges']
   refreshing: boolean
   onRefresh: () => void
+  /** Show the Admin metrics row (the server still checks every read). */
+  isAdmin: boolean
 }
 
 /** The loaded Profile tab: hero card, then either the settings menu or the edit form. */
-function MyProfileBody({ profile, totalCheers, badges, saving, updateProfile, setDisplaySlot, checkBadges, refreshing, onRefresh }: Props) {
+function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, updateProfile, setDisplaySlot, checkBadges, refreshing, onRefresh, isAdmin }: Props) {
   const router = useRouter()
+  const tour = useTour()
+  const { data: friends } = useFriends()
+  const { silencedUserIds } = useSilencedUsers()
+  const trophies = useUserTrophies(profile.id)
   const { setTabBarHidden, tabBarHeight, docScrollActive } = useTabsShell()
   const lastScrollY = useRef(0)
-  const [section, setSection] = useState<'menu' | 'edit'>('menu')
-  const [toast, setToast] = useState<ToastState | null>(null)
-
-  const showToast = useCallback((message: string) => setToast({ message, variant: 'error' }), [])
+  // The editor is in the URL (`/profile?edit=1`) so a refresh keeps it open and nudges can link to it.
+  const [editing, setEditing] = useUrlParam('edit', VIEW.profile.edit, { tab: 'profile' })
+  const section: 'menu' | 'edit' = editing ? 'edit' : 'menu'
+  const setSection = (next: 'menu' | 'edit') => setEditing(next === 'edit')
+  const showToast = useCallback((message: string) => { toast.show({ message, variant: 'error' }) }, [])
   const onAvatarSaved = useCallback((updated: Profile) => { void checkBadges(updated, true) }, [checkBadges])
   const uploader = useAvatarUploader({ profile, updateProfile, onSaved: onAvatarSaved, onToast: showToast })
 
@@ -68,11 +87,11 @@ function MyProfileBody({ profile, totalCheers, badges, saving, updateProfile, se
   async function handleSave(patch: ProfilePatch) {
     const saved = await updateProfile(patch)
     if (!saved) {
-      Alert.alert('Error', 'Could not save profile. Please try again.')
+      toast.error("Couldn't save your profile")
       return
     }
     void checkBadges({ ...profile, ...patch }, true)
-    Alert.alert('Saved', 'Your profile was updated.')
+    toast.show({ message: 'Your profile was updated.', variant: 'success' })
     setSection('menu')
   }
 
@@ -84,6 +103,7 @@ function MyProfileBody({ profile, totalCheers, badges, saving, updateProfile, se
     <View style={[shared.screen, { position: 'relative' }, docScrollActive && ({ flex: undefined } as object)]}>
       <DocScrollView
         docScroll={docScrollActive}
+        memoryKey={`tab:profile:${section}`}
         contentContainerStyle={[shared.scrollContent, { paddingBottom: tabBarHeight + 32 }]}
         onScroll={handleScroll}
         scrollEventThrottle={100}
@@ -99,20 +119,41 @@ function MyProfileBody({ profile, totalCheers, badges, saving, updateProfile, se
           </View>
         )}
 
+        {section === 'menu' && (
+          <View style={{ alignItems: 'flex-end', marginBottom: theme.spacing.xs }}>
+            {/* /profile opens the viewer's own profile, so share the public one. */}
+            <ShareLinkButton
+              path={routes.profileOf(profile.id)}
+              title={`${[profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'My profile'} on vteam`}
+              screen="profile"
+              testID="profile-share-button"
+            />
+          </View>
+        )}
+
         <ProfileHero
           profile={profile}
           uploader={uploader}
           mode={section}
           totalCheers={totalCheers}
+          totalPoints={totalPoints}
+          trophyCount={trophies.data?.length ?? 0}
           displayedBadges={displayedBadges}
           onEdit={() => setSection('edit')}
         />
 
         {section === 'menu' ? (
           <>
-            <TrophyCase />
+            <TrophyCase trophies={trophies.data ?? []} own />
             <RecentCheersPlaceholder />
-            <ProfileMenu onOpen={s => router.push(routes.settings(s))} />
+            <ProfileMenu
+              onOpen={s => router.push(routes.settings(s))}
+              onTakeTour={() => tour.start('intro', 'profile_menu')}
+              onOpenTerms={() => router.push(routes.terms())}
+              onOpenPrivacy={() => router.push(routes.privacy())}
+              friendRequestCount={visibleIncoming(friends.incoming, silencedUserIds).length}
+              showAdmin={isAdmin}
+            />
           </>
         ) : (
           <EditProfileForm
@@ -125,7 +166,6 @@ function MyProfileBody({ profile, totalCheers, badges, saving, updateProfile, se
           />
         )}
       </DocScrollView>
-      <Toast message={toast?.message ?? ''} variant={toast?.variant ?? 'error'} visible={!!toast} onHide={() => setToast(null)} />
     </View>
   )
 }
@@ -139,11 +179,14 @@ function MyProfileSignedIn() {
 
   const me = useMyProfile({ enabled: isActive })
   const cheers = useMyCheersCount({ enabled: isActive })
+  const points = usePointsBalance(userId, { enabled: isActive })
   const { badges, checkBadges, fetchBadges, setDisplaySlot } = useBadges({ enabled: isActive })
+  const { isAdmin } = useIsAdmin({ enabled: isActive })
 
   // Refetch on focus / foreground only while visible, and only when stale.
   useFocusRefetch(isActive && userId ? myProfileKey(userId) : null)
   useFocusRefetch(isActive && userId ? myCheersCountKey(userId) : null)
+  useFocusRefetch(isActive && userId ? pointsBalanceKey(userId) : null)
   useFocusRefetch(isActive && userId ? badgesKey(userId) : null)
 
   // Award any newly earned badges (throttled inside checkBadges).
@@ -156,7 +199,7 @@ function MyProfileSignedIn() {
   async function handleRefresh() {
     setRefreshing(true)
     try {
-      await Promise.all([me.refetch({ force: true }), cheers.refetch({ force: true }), fetchBadges(true)])
+      await Promise.all([me.refetch({ force: true }), cheers.refetch({ force: true }), points.refetch({ force: true }), fetchBadges(true)])
     } finally {
       setRefreshing(false)
     }
@@ -178,6 +221,7 @@ function MyProfileSignedIn() {
     <MyProfileBody
       profile={profile}
       totalCheers={cheers.data ?? 0}
+      totalPoints={points.data ?? 0}
       badges={badges}
       saving={me.isSaving}
       updateProfile={me.updateProfile}
@@ -185,6 +229,7 @@ function MyProfileSignedIn() {
       checkBadges={checkBadges}
       refreshing={refreshing}
       onRefresh={() => void handleRefresh()}
+      isAdmin={isAdmin}
     />
   )
 }
@@ -192,6 +237,7 @@ function MyProfileSignedIn() {
 /** Guests see a sign-in prompt; the signed-in screen (and its data hooks) only mounts with a session. */
 export default function MyProfile() {
   const { userId, loading } = useSession()
+  const tour = useTour()
   if (loading) return null
   if (!userId) {
     return (
@@ -199,6 +245,7 @@ export default function MyProfile() {
         icon="person-circle-outline"
         title="Your volleyball profile"
         body="Sign in or sign up to track the events you play, your cheers and your badges."
+        extra={{ label: 'Take the tour', onPress: () => tour.start('intro', 'profile_menu'), testID: 'take-tour' }}
       />
     )
   }

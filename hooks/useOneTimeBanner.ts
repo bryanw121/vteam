@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSession } from '../contexts/session'
 import { loadSeenBanners, markBannerSeenOnDevice } from '../utils/seenBanners'
 import { markBannerSeenOnAccount, useUserSettings } from './useUserSettings'
+import { track } from '../lib/analytics'
+import { ANALYTICS_EVENTS } from '../constants/analytics'
 import type { BannerDef } from '../types'
 
 /**
@@ -26,6 +28,7 @@ export function useOneTimeBanner(banner: BannerDef): { visible: boolean; dismiss
       decided.current = true
       if (seenOnDevice.has(banner.id) || settings?.seen_banners?.includes(banner.id)) return
       setVisible(true)
+      track(ANALYTICS_EVENTS.bannerShown, { banner: banner.id })
       markBannerSeenOnDevice(banner.id)
       if (userId) void markBannerSeenOnAccount(userId, banner.id)
     })

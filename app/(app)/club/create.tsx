@@ -1,5 +1,8 @@
-import React, { useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native'
+import React, { useRef, useState } from 'react'
+import { View, ScrollView, TouchableOpacity } from 'react-native'
+import { Text, TextInput } from '../../../components/ui/Text'
+import { toast } from '../../../lib/toast'
+import { useRequireSignIn } from '../../../hooks/useRequireSignIn'
 import { useRouter } from 'expo-router'
 import { supabase } from '../../../lib/supabase'
 import { invalidate } from '../../../lib/query'
@@ -7,35 +10,56 @@ import { routes } from '../../../utils/routes'
 import { Input } from '../../../components/Input'
 import { Button } from '../../../components/Button'
 import { MajorCityAutocomplete } from '../../../components/MajorCityAutocomplete'
+import { ClubLocationField } from '../../../components/ClubLocationField'
+import { useMajorCities } from '../../../hooks/useMajorCities'
+import { useSession } from '../../../contexts/session'
 import { shared, theme } from '../../../constants'
-import type { MajorCity, MembershipType } from '../../../types'
+import { clubLocationFromPicker, matchMajorCity } from '../../../utils/clubLocation'
+import type { LocationValue, MajorCity, MembershipType } from '../../../types'
 
 export default function CreateClubScreen() {
   const router = useRouter()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [majorCity, setMajorCity] = useState<MajorCity | null>(null)
+  const [location, setLocation] = useState<LocationValue | null>(null)
+  // The metro was filled in from the location (not picked by hand), so a new location may replace it.
+  const [metroFromLocation, setMetroFromLocation] = useState(false)
+  const cities = useMajorCities()
+  const { userId } = useSession()
   const [membershipType, setMembershipType] = useState<MembershipType>('open')
   const [submitting, setSubmitting] = useState(false)
+  // Shown under each field (#228: alerts here did nothing on the web).
+  const [errors, setErrors] = useState<{ name?: string; metro?: string }>({})
+  const nameRef = useRef<TextInput>(null)
+  const requireSignIn = useRequireSignIn()
+
+  /** Picking a place pre-fills the metro when it's a curated city, unless the host already chose one. */
+  function onLocationChange(next: LocationValue | null) {
+    setLocation(next?.display ? next : null)
+    if (majorCity && !metroFromLocation) return
+    const match = next?.display ? matchMajorCity(next.address, cities.data ?? []) : null
+    if (match) {
+      setMajorCity(match)
+      setMetroFromLocation(true)
+    } else if (metroFromLocation) {
+      setMajorCity(null)
+      setMetroFromLocation(false)
+    }
+  }
 
   async function handleCreate() {
     const trimmedName = name.trim()
-    if (!trimmedName) {
-      Alert.alert('Name required', 'Please enter a club name.')
-      return
+    const found = {
+      name: trimmedName ? undefined : 'Enter a club name.',
+      metro: majorCity ? undefined : 'Choose a city from the list so players can find your club.',
     }
-    if (!majorCity) {
-      Alert.alert('Metro area required', 'Choose a city from the list so players can find your club.')
-      return
-    }
+    setErrors(found)
+    if (found.name) { nameRef.current?.focus(); return }
+    if (found.metro || !majorCity) return
 
+    if (!userId) { requireSignIn(); return }
     setSubmitting(true)
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) {
-      setSubmitting(false)
-      Alert.alert('Sign in required', 'You need an account to create a club.')
-      return
-    }
 
     const { data, error } = await supabase
       .from('clubs')
@@ -43,8 +67,9 @@ export default function CreateClubScreen() {
         name: trimmedName,
         description: description.trim() || null,
         membership_type: membershipType,
-        created_by: session.user.id,
+        created_by: userId,
         major_city_id: majorCity.id,
+        ...clubLocationFromPicker(location),
       })
       .select('id')
       .single()
@@ -52,7 +77,7 @@ export default function CreateClubScreen() {
     setSubmitting(false)
 
     if (error) {
-      Alert.alert('Could not create club', error.message)
+      toast.error("Couldn't create the club", error)
       return
     }
 
@@ -74,13 +99,25 @@ export default function CreateClubScreen() {
           Anyone can browse clubs. Open clubs let players join with one tap; invite-only clubs are visible but joining is by invitation from an owner.
         </Text>
 
-        <Input label="Club name" value={name} onChangeText={setName} placeholder="e.g. Eastside Volleyball" autoCapitalize="words" />
+        <Input
+          ref={nameRef}
+          label="Club name"
+          value={name}
+          onChangeText={v => { setName(v); setErrors(e => ({ ...e, name: undefined })) }}
+          placeholder="e.g. Eastside Volleyball"
+          autoCapitalize="words"
+          error={errors.name}
+          testID="club-name"
+        />
+
+        <ClubLocationField value={location} onChange={onLocationChange} userId={userId} />
 
         <MajorCityAutocomplete
           label="Metro area"
           value={majorCity}
-          onChange={setMajorCity}
+          onChange={c => { setMajorCity(c); setMetroFromLocation(false); setErrors(e => ({ ...e, metro: undefined })) }}
         />
+        {errors.metro ? <Text style={[shared.errorText, { marginTop: -theme.spacing.sm, marginBottom: theme.spacing.md }]} testID="club-metro-error">{errors.metro}</Text> : null}
 
         <Input
           label="Description (optional)"

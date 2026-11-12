@@ -1,24 +1,26 @@
 import { useState, useRef } from 'react'
-import { View, Text, TouchableOpacity, TextInput, Animated, Modal, ActivityIndicator } from 'react-native'
+import { View, TouchableOpacity, Animated, Modal } from 'react-native'
+import { Text, TextInput } from '../../components/ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
-import * as Linking from 'expo-linking'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { supabase } from '../../lib/supabase'
+import { obfuscateEmail, sendPasswordReset } from '../../lib/passwordReset'
 import { signInWithGoogle, signInWithApple, sendEmailOtp, verifyEmailOtp } from '../../lib/socialAuth'
+import { isUnknownEmailOtpError } from '../../utils/authErrors'
+import { signInWithUsername } from '../../lib/usernameAuth'
 import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
 import { GoogleLogo } from '../../components/GoogleLogo'
 import { shared, theme } from '../../constants'
+import { INCORRECT_EMAIL_OR_PASSWORD } from '../../constants/copy'
 import { routes, toRoute } from '../../utils/routes'
 import { takeGuestReturnPath } from '../../utils/authGate'
-
-function obfuscateEmail(email: string): string {
-  const [local, domain] = email.split('@')
-  if (!domain) return email
-  const visible = local.slice(0, 3)
-  return `${visible}****@${domain}`
-}
+import { AgreementLine } from '../../components/legal/AgreementLine'
+import { Spinner } from '../../components/ui/Spinner'
+import { JoinContextCard } from '../../components/auth/JoinContextCard'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { VIEW } from '../../utils/urlViews'
 
 export default function Login() {
   const router = useRouter()
@@ -29,14 +31,18 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({})
-  const [forgotMode, setForgotMode] = useState(false)
+  // Forgot password and the emailed-code form are in the URL (`?mode=reset`, `?mode=code`), so other screens can link straight to them.
+  const [mode, setMode] = useUrlParam('mode', VIEW.login.mode)
+  const forgotMode = mode === 'reset'
+  const setForgotMode = (on: boolean) => setMode(on ? 'reset' : null)
   const [resetEmail, setResetEmail] = useState('')
   const [resetSent, setResetSent] = useState<string | null>(null)
   const [resetLoading, setResetLoading] = useState(false)
   const [resetError, setResetError] = useState('')
 
   // ── OTP (magic code) mode ──────────────────────────────────────────────────
-  const [otpMode, setOtpMode] = useState(false)
+  const otpMode = mode === 'code'
+  const setOtpMode = (on: boolean) => setMode(on ? 'code' : null)
   const [otpEmail, setOtpEmail] = useState('')
   const [otpCode, setOtpCode] = useState('')
   const [otpCodeSent, setOtpCodeSent] = useState(false)
@@ -85,10 +91,9 @@ export default function Login() {
     setResetError('')
     setResetLoading(true)
     try {
-      const redirectTo = Linking.createURL('/(auth)/reset-password')
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+      const error = await sendPasswordReset(email)
       if (error) {
-        setResetError(error.message)
+        setResetError(error)
       } else {
         setResetSent(obfuscateEmail(email))
       }
@@ -103,22 +108,16 @@ export default function Login() {
 
     try {
       const normalized = identifier.toLowerCase().trim()
-      const isEmail = normalized.includes('@')
-      let email = normalized
-
-      if (!isEmail) {
-        const { data: resolvedEmail } = await supabase
-          .rpc('get_email_by_username', { p_username: normalized })
-
-        if (!resolvedEmail) {
-          setErrors({ identifier: 'Username not found' })
-          return
-        }
-        email = resolvedEmail
+      if (!normalized.includes('@')) {
+        // Resolved server-side: the account's email never reaches this device,
+        // and an unknown username reads the same as a wrong password.
+        const message = await signInWithUsername(normalized, password)
+        if (message) setErrors({ password: message })
+        return
       }
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) setErrors({ password: 'Incorrect password' })
+      const { error } = await supabase.auth.signInWithPassword({ email: normalized, password })
+      if (error) setErrors({ password: error.status === 429 ? error.message : INCORRECT_EMAIL_OR_PASSWORD })
     } finally {
       setLoading(false)
     }
@@ -151,7 +150,12 @@ export default function Login() {
       setOtpCodeSent(true)
       setTimeout(() => otpCodeRef.current?.focus(), 200)
     } catch (e: any) {
-      setOtpError(e?.message ?? 'Failed to send code')
+      if (isUnknownEmailOtpError(e)) {
+        // Same screen as a sent code: the error would reveal that no account uses this email.
+        setOtpCodeSent(true)
+      } else {
+        setOtpError(e?.status === 429 ? 'Too many codes requested. Please wait a minute and try again.' : 'Could not send a code. Please try again.')
+      }
     } finally {
       setOtpLoading(false)
     }
@@ -193,7 +197,7 @@ export default function Login() {
             ...(ball.right !== undefined ? { right: `${ball.right}%` } : { left: `${ball.left ?? 0}%` }),
           }}
         >
-          <Animated.Text style={{ fontSize: 64, opacity: 0.55, transform: [{ scale: scales[i] }] }}>
+          <Animated.Text style={{ fontSize: theme.font.emoji.giant, opacity: 0.55, transform: [{ scale: scales[i] }] }}>
             🏐
           </Animated.Text>
         </TouchableOpacity>
@@ -206,10 +210,10 @@ export default function Login() {
           style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}
         >
           <View style={{ backgroundColor: theme.colors.card, borderRadius: 24, padding: 32, alignItems: 'center', gap: 12, maxWidth: 300 }}>
-            <Text style={{ fontSize: 48 }}>🏐🏆🏐</Text>
-            <Text style={{ fontSize: 22, fontWeight: 'bold', color: theme.colors.primary, textAlign: 'center' }}>You're a natural!</Text>
-            <Text style={{ fontSize: 15, color: '#666', textAlign: 'center' }}>10 spikes. The team needs you. Now go sign in.</Text>
-            <Text style={{ fontSize: 12, color: '#aaa', marginTop: 4 }}>tap to dismiss</Text>
+            <Text style={{ fontSize: theme.font.emoji.hero }}>🏐🏆🏐</Text>
+            <Text style={{ fontSize: theme.font.heading.md, fontWeight: 'bold', color: theme.colors.primaryText, textAlign: 'center' }}>You're a natural!</Text>
+            <Text style={{ fontSize: theme.font.size.lgs, color: '#666', textAlign: 'center' }}>10 spikes. The team needs you. Now go sign in.</Text>
+            <Text style={{ fontSize: theme.font.size.sm, color: '#aaa', marginTop: 4 }}>tap to dismiss</Text>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -218,7 +222,7 @@ export default function Login() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <Text style={shared.authTitle}>vteam</Text>
           <View style={{ backgroundColor: 'rgba(124,77,255,0.15)', borderWidth: 1, borderColor: 'rgba(124,77,255,0.4)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 2 }}>
-            <Text style={{ fontSize: 10, fontWeight: '700', color: theme.colors.primary, letterSpacing: 1 }}>BETA</Text>
+            <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, letterSpacing: 1 }}>BETA</Text>
           </View>
         </View>
 
@@ -254,7 +258,7 @@ export default function Login() {
         ) : otpMode ? (
           <>
             <Text style={shared.authSubtitle}>
-              {otpCodeSent ? `code sent to ${obfuscateEmail(otpEmail)}` : 'sign in with a one-time code'}
+              {otpCodeSent ? `if ${obfuscateEmail(otpEmail)} has an account, a code is on its way` : 'sign in with a one-time code'}
             </Text>
 
             {!otpCodeSent ? (
@@ -272,6 +276,11 @@ export default function Login() {
                   error={otpError}
                 />
                 <Button label="Send code" onPress={handleSendOtp} loading={otpLoading} disabled={!otpEmail} />
+                <AgreementLine
+                  action="continuing"
+                  onOpenTerms={() => router.push(routes.terms())}
+                  onOpenPrivacy={() => router.push(routes.privacy())}
+                />
               </>
             ) : (
               <>
@@ -303,6 +312,7 @@ export default function Login() {
         ) : (
           <>
             <Text style={shared.authSubtitle}>sign in to continue</Text>
+            <JoinContextCard screen="login" />
 
             <Input
               label="Email or username"
@@ -357,7 +367,7 @@ export default function Login() {
                 }}
               >
                 {socialLoading === 'google' ? (
-                  <ActivityIndicator size="small" color={theme.colors.subtext} />
+                  <Spinner size="small" color={theme.colors.subtext} />
                 ) : (
                   <GoogleLogo size={18} />
                 )}
@@ -381,6 +391,12 @@ export default function Login() {
                 </Text>
               </TouchableOpacity>
             </View>
+            {/* A first Google / Apple / email-code sign-in creates an account. */}
+            <AgreementLine
+              action="continuing"
+              onOpenTerms={() => router.push(routes.terms())}
+              onOpenPrivacy={() => router.push(routes.privacy())}
+            />
 
             <TouchableOpacity style={shared.authLink} onPress={() => { setForgotMode(true); setResetEmail(identifier.includes('@') ? identifier : '') }}>
               <Text style={shared.authLinkText}>Forgot password?</Text>

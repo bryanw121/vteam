@@ -1,4 +1,5 @@
-import { View, Text } from 'react-native'
+import { View } from 'react-native'
+import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { shared, theme } from '../constants'
 
@@ -134,6 +135,7 @@ export function DatePickerField({ value: date, onChange, placeholder }: Props) {
           {/* @ts-ignore */}
           <input
             type="date"
+            aria-label="Date"
             className="vteam-date-input"
             min={toDateInputValue(new Date())}
             value={date ? toDateInputValue(effective) : ''}
@@ -148,7 +150,7 @@ export function DatePickerField({ value: date, onChange, placeholder }: Props) {
           <div className="vteam-field-wrap" style={{ gap: 2 }}>
             <Ionicons name="time-outline" size={16} color={theme.colors.subtext} />
             {/* @ts-ignore */}
-            <select className="vteam-time-select" value={hours12} onChange={handleHourChange}>
+            <select className="vteam-time-select" aria-label="Hour" value={hours12} onChange={handleHourChange}>
               {HOURS12.map(h => (
                 // @ts-ignore
                 <option key={h} value={h}>{h}</option>
@@ -157,14 +159,14 @@ export function DatePickerField({ value: date, onChange, placeholder }: Props) {
             {/* @ts-ignore */}
             <span className="vteam-time-sep">:</span>
             {/* @ts-ignore */}
-            <select className="vteam-time-select" value={minutes} onChange={handleMinuteChange}>
+            <select className="vteam-time-select" aria-label="Minute" value={minutes} onChange={handleMinuteChange}>
               {MINUTES.map(m => (
                 // @ts-ignore
                 <option key={m} value={m}>{String(m).padStart(2, '0')}</option>
               ))}
             </select>
             {/* @ts-ignore */}
-            <select className="vteam-time-select" value={period} onChange={handlePeriodChange}>
+            <select className="vteam-time-select" aria-label="AM or PM" value={period} onChange={handlePeriodChange}>
               {/* @ts-ignore */}
               <option value="AM">AM</option>
               {/* @ts-ignore */}

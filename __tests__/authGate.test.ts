@@ -2,7 +2,7 @@ import { isProtectedPath, setPostSignInRedirect, takeGuestReturnPath, takePostSi
 
 describe('isProtectedPath', () => {
   it('lets guests browse events, clubs, event pages and profiles', () => {
-    for (const path of ['/', '/clubs', '/chat', '/profile', '/event/abc', '/club/abc', '/profile/abc', '/tournament/abc']) {
+    for (const path of ['/', '/clubs', '/chat', '/profile', '/event/abc', '/club/abc', '/profile/abc', '/tournament/abc', '/book', '/terms', '/privacy']) {
       expect(isProtectedPath(path)).toBe(false)
     }
   })

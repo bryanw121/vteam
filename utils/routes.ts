@@ -1,4 +1,7 @@
 import type { Href } from 'expo-router'
+import type { Surface } from '../types'
+import { withView } from './urlState'
+import { VIEW, type ViewOf } from './urlViews'
 
 /**
  * Typed route builders — the one place route strings are written and the one
@@ -36,9 +39,16 @@ export type SettingsSection =
   | 'history'
   | 'cheers'
   | 'silenced'
+  | 'friends'
+  | 'hidden'
   | 'notifications'
+  | 'display'
   | 'feedback'
   | 'badges'
+  | 'delete-account'
+  | 'ad-free'
+  | 'experimental'
+  | 'metrics'
 
 export type HostRouteOptions = {
   /** Event id to edit. */
@@ -47,17 +57,24 @@ export type HostRouteOptions = {
   maxAttendees?: number
   /** Open the host screen on the template picker. */
   mode?: 'templates'
+  /** Prefill the location (e.g. a venue name from Book a court). */
+  location?: string
+  /** Prefill the surface. */
+  surface?: Surface
 }
 
 export const routes = {
   // ── Tabs ────────────────────────────────────────────────────────────────
-  events: () => href('/'),
-  clubs: () => href('/clubs'),
+  /** Events tab; `view` puts filters and a day in the link (`/?type=tournament&day=2026-11-14`). */
+  events: (view: ViewOf<'feed'> = {}) => href(withView('/', VIEW.feed, view)),
+  clubs: (view: ViewOf<'clubs'> = {}) => href(withView('/clubs', VIEW.clubs, view)),
   chat: () => href('/chat'),
-  profile: () => href('/profile'),
+  /** Your own Profile tab; `{ edit: true }` opens the profile editor. */
+  profile: (view: ViewOf<'profile'> = {}) => href(withView('/profile', VIEW.profile, view)),
 
   // ── Detail screens ──────────────────────────────────────────────────────
-  event: (id: string) => href(`/event/${id}`),
+  /** Event page; `{ tab: 1 }` opens People (`?tab=people`). */
+  event: (id: string, view: ViewOf<'event'> = {}) => href(withView(`/event/${id}`, VIEW.event, view)),
   /** Event page that returns to `from` (a path, possibly with a query) on back. */
   eventFrom: (id: string, from: string) => href(`/event/${id}?from=${encodeURIComponent(from)}`),
   club: (id: string) => href(`/club/${id}`),
@@ -65,23 +82,59 @@ export const routes = {
   /** Another user's profile (your own is the Profile tab: `routes.profile()`). */
   profileOf: (id: string) => href(`/profile/${id}`),
   conversation: (id: string) => href(`/chat/${id}`),
-  tournament: (id: string) => href(`/tournament/${id}`),
+  tournament: (id: string, view: ViewOf<'tournament'> = {}) => href(withView(`/tournament/${id}`, VIEW.tournament, view)),
   tournamentCreate: () => href('/tournament/create'),
+  tournaments: (view: ViewOf<'tournaments'> = {}) => href(withView('/tournaments', VIEW.tournaments, view)),
+  /** Leagues around town open for sign-up (Schelagg's programs feed). Public. */
+  leagues: (view: ViewOf<'leagues'> = {}) => href(withView('/leagues', VIEW.leagues, view)),
 
   host: (opts: HostRouteOptions = {}) => {
     const query: string[] = []
     if (opts.edit !== undefined) query.push(`edit=${encodeURIComponent(opts.edit)}`)
     if (opts.maxAttendees !== undefined) query.push(`maxAttendees=${opts.maxAttendees}`)
     if (opts.mode !== undefined) query.push(`mode=${opts.mode}`)
+    if (opts.location) query.push(`location=${encodeURIComponent(opts.location)}`)
+    if (opts.surface !== undefined) query.push(`surface=${opts.surface}`)
     return href(query.length ? `/host?${query.join('&')}` : '/host')
   },
 
+  /** Court availability at venues that rent by the hour; booking itself happens on the venue's site. Public. */
+  book: (view: ViewOf<'book'> = {}) => href(withView('/book', VIEW.book, view)),
+
+  /** Terms and Conditions / Privacy Policy. Public (outside the auth gate). */
+  terms: () => href('/terms'),
+  privacy: () => href('/privacy'),
+  /** Public page on how to delete an account (the URL Google Play asks for). */
+  deleteAccountInfo: () => href('/delete-account'),
+
   notifications: () => href('/notifications'),
+
+  /** Player setup after sign-up (#156); `next` is where to go after Done or Skip (an in-app path). */
+  welcome: (next?: string) => href(next ? `/welcome?next=${encodeURIComponent(next)}` : '/welcome'),
+
+  /** Experimental scorekeeper (Settings → Experimental features). Matches live on the device. */
+  scorekeeper: () => href('/scorekeeper'),
+  scorekeeperNew: () => href('/scorekeeper/new'),
+  scorekeeperMatch: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}`),
+  scorekeeperSheet: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/sheet`),
+  scorekeeperCopy: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/copy`),
   settings: (section?: SettingsSection) => href(section ? `/settings/${section}` : '/settings'),
+  /** Admin usage metrics (Profile → Admin metrics); `tab` opens a section other than Overview. Admins only (the server checks). */
+  metrics: (tabOrView?: 'live' | 'people' | 'retention' | ViewOf<'metrics'>) =>
+    href(withView('/settings/metrics', VIEW.metrics, typeof tabOrView === 'string' ? { tab: tabOrView } : tabOrView ?? {})),
+  /** Settings → Badges with one badge's details open. */
+  badge: (type: string) => href(withView('/settings/badges', VIEW.badges, { badge: type })),
+  /** Settings → Submit feedback, set to a bug report or a feature request. */
+  feedback: (type: 'feature' | 'bug') => href(withView('/settings/feedback', VIEW.feedback, { type })),
+  /** One person's usage (Admin metrics → People). */
+  metricsPerson: (id: string) => href(`/settings/metrics/${encodeURIComponent(id)}`),
 
   // ── Groups ──────────────────────────────────────────────────────────────
-  login: () => href('/(auth)/login'),
+  /** Sign in; `{ mode: 'reset' }` opens Forgot password, `'code'` the emailed-code form. */
+  login: (view: ViewOf<'login'> = {}) => href(withView('/(auth)/login', VIEW.login, view)),
   register: () => href('/(auth)/register'),
+  /** Set a new password (where reset emails link, #223). */
+  resetPassword: () => href('/(auth)/reset-password'),
   /** The signed-in app group (resolves to the Events tab). */
   app: () => href('/(app)'),
 }

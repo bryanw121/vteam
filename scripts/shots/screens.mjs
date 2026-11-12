@@ -1,0 +1,183 @@
+/**
+ * The screens the shot tool knows how to capture.
+ *
+ *   name: {
+ *     route,       path to open (fixture ids from fixtures/index.mjs)
+ *     signedIn,    capture with the fake session (default true)
+ *     ready,       text that must be on screen before the shot (best effort; a miss is reported, not fatal)
+ *     actions,     steps after load: { tap: testID, text? } (text: fallback when an older ref lacks the testID)
+ *                  | { click: text } | { scroll: px } | { wait: ms }
+ *     fullPage,    capture the whole scroll height instead of the viewport
+ *     sources,     globs of source files that change this screen (affected.mjs)
+ *   }
+ *
+ * Add a screen when you add a route; keep `sources` to the files specific to it.
+ * Shared files (components/ui, theme, layouts) map to DEFAULT_SCREENS instead.
+ */
+import { IDS } from './fixtures/index.mjs'
+import { P } from './fixtures/people.mjs'
+
+const E = IDS.event
+/** A join a guest saved a minute before the capture's "now" (#229). */
+const joinIntent = opts => JSON.stringify({
+  kind: 'join', eventId: IDS.event.nextWeekIndoor, title: 'Indoor Open Gym', startsAt: '2026-11-18T19:30:00', spotsLeft: 11,
+  at: new Date(opts.now).getTime() - 60_000,
+})
+const T = IDS.tournament
+
+const EVENT_DETAIL = [
+  'app/(app)/event/**', 'components/event/**', 'hooks/event/**', 'components/EventCommentRow.tsx', 'components/DiscussionComposer.tsx',
+  'components/VenmoPayButton.tsx', 'components/LinkedText.tsx',
+  'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs',
+]
+const TOURNAMENT_DETAIL = ['app/(app)/tournament/[id].tsx', 'components/tournament/**', 'hooks/tournament/**', 'lib/tournament*.ts', 'constants/tournamentCopy.ts', 'types/tournament.ts']
+// settings/index.tsx only bounces back (settings live under Profile), so it has no screen of its own.
+const SETTINGS = ['app/(app)/(tabs)/settings/_layout.tsx', 'app/(app)/(tabs)/settings/index.tsx']
+const METRICS = [...SETTINGS, 'app/(app)/(tabs)/settings/metrics/**', 'components/metrics/**', 'hooks/useAdminMetrics.ts', 'utils/metrics.ts', 'types/metrics.ts']
+
+export const SCREENS = {
+  // ── Events ──────────────────────────────────────────────────────────────
+  'events-feed': {
+    route: '/', ready: 'Lunchtime Pepper',
+    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'app/(app)/(tabs)/(main)/_layout.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/ExternalProgramCard.tsx', 'hooks/useExternalPrograms.ts',
+      'components/MyEventsRail.tsx', 'components/Pager.tsx', 'hooks/useMonthEvents.ts', 'hooks/useMyUpcomingEvents.ts', 'hooks/useTags.ts', 'utils/feed*.ts', 'utils/eventCardPreviews.ts',
+      'utils/monthKeys.ts', 'utils/calendar*.ts', 'constants/events.ts', 'components/RefreshControl*.tsx', 'lib/pullGesture.ts',
+      'components/event/ForecastChip.tsx', 'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs',
+      'hooks/useHiddenFeed.ts', 'utils/hiddenFeed.ts', 'hooks/useUserSettings.ts'],
+  },
+  'events-feed-tournaments': {
+    route: '/', ready: 'Lunchtime Pepper', actions: [{ tap: 'filter-tournament', text: 'Tournament' }, { wait: 400 }], fullPage: true,
+    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'components/ExternalProgramCard.tsx', 'hooks/useExternalPrograms.ts', 'utils/externalPrograms.ts', 'utils/feedItems.ts', 'components/events/LeaguesLink.tsx', 'components/events/AllTournamentsLink.tsx'],
+  },
+  // Shareable links: each opens straight on the view it names.
+  'events-feed-link': {
+    route: '/?type=tournament&surface=sand', ready: 'Lunchtime Pepper', fullPage: true,
+    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'hooks/useUrlParam.ts', 'utils/urlState.ts', 'utils/urlViews.ts', 'components/ShareLinkButton.tsx'],
+  },
+  'events-feed-guest': {
+    route: '/', signedIn: false, ready: 'Lunchtime Pepper',
+    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/SignInButton.tsx', 'hooks/useMonthEvents.ts', 'utils/feed*.ts'],
+  },
+  'event-details': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', sources: EVENT_DETAIL },
+  // No-show flag (#151): what a flagged player sees on Details.
+  'event-details-noshow': { route: `/event/${E.pastIndoor}`, ready: 'Marked as a no-show', sources: EVENT_DETAIL },
+  'event-people': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }], sources: [...EVENT_DETAIL, 'components/ProfileAvatar.tsx'] },
+  // Host team builder (#149): Balanced mode, then Balance.
+  'event-people-balanced': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }, { tap: 'team-mode-balanced' }, { tap: 'team-shuffle' }, { wait: 300 }], sources: [...EVENT_DETAIL, 'utils/teamMode.ts'] },
+  'event-discussion': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-discussion', text: 'Discussion' }], sources: EVENT_DETAIL },
+  'event-cheers': { route: `/event/${E.pastSand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-cheers', text: 'Cheers' }], sources: [...EVENT_DETAIL, 'components/CheerRadarChart.tsx'] },
+  // Bottom of a paid event someone else hosts: price, Venmo button, about.
+  'event-paid-bottom': { route: `/event/${E.fridayNight}`, ready: 'Austin Sports Center', actions: [{ scroll: 3000 }], sources: EVENT_DETAIL },
+  // The leave sheet (#171) on a full, paid game that starts tonight: every line, plus the reason chips.
+  'event-leave-sheet': { route: `/event/${E.fridayNight}`, ready: 'Austin Sports Center', actions: [{ tap: 'leave-event' }, { wait: 400 }], sources: [...EVENT_DETAIL, 'components/ui/BottomSheet.tsx', 'components/ui/ConfirmDialog.tsx', 'components/ui/Chip.tsx', 'utils/leaveConsequences.ts', 'constants/copy.ts'] },
+  'event-guest': { route: `/event/${E.fridayNight}`, signedIn: false, ready: 'Austin Sports Center', sources: EVENT_DETAIL },
+  'host-create': { route: '/host', ready: 'Title', sources: ['app/(app)/host.tsx', 'components/host/**', 'components/DatePickerField*.tsx', 'components/LocationPickerField.tsx', 'components/Input.tsx'] },
+  'host-edit': { route: `/host?edit=${E.sundaySand}`, sources: ['app/(app)/host.tsx', 'components/host/**'] },
+  // Player setup after sign-up (#156): the three steps.
+  'welcome-position': { route: '/welcome', ready: 'What do you play?', sources: ['app/(app)/welcome.tsx', 'utils/playerSetup.ts', 'hooks/usePlayerSetupGate.ts'] },
+  'welcome-level': { route: '/welcome', ready: 'What do you play?', actions: [{ tap: 'welcome-next' }, { wait: 300 }], sources: ['app/(app)/welcome.tsx', 'constants/copy.ts'] },
+  'welcome-city': { route: '/welcome', ready: 'What do you play?', actions: [{ tap: 'welcome-next' }, { tap: 'welcome-next' }, { wait: 300 }], sources: ['app/(app)/welcome.tsx', 'components/MajorCityAutocomplete.tsx'] },
+  notifications: { route: '/notifications', ready: 'Running 10 minutes late', sources: ['app/(app)/notifications.tsx', 'hooks/useNotifications.ts', 'components/NotificationPopup.tsx'] },
+
+  // ── Clubs ───────────────────────────────────────────────────────────────
+  'clubs-list': { route: '/clubs', ready: 'Eastside Sand Social', sources: ['app/(app)/(tabs)/(main)/clubs.tsx', 'components/MajorCityAutocomplete.tsx'] },
+  'club-detail': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts', 'components/ClubPostCard.tsx', 'components/EventCard.tsx'] },
+  'club-detail-guest': { route: `/club/${IDS.club.indoor}`, signedIn: false, ready: 'Austin Indoor League', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts'] },
+  'club-create': { route: '/club/create', sources: ['app/(app)/club/create.tsx'] },
+
+  // ── Chat ────────────────────────────────────────────────────────────────
+  'chat-list': { route: '/chat', ready: 'Jordan', sources: ['app/(app)/(tabs)/(main)/chat.tsx', 'hooks/useConversations.ts', 'hooks/useChatUnread.tsx', 'hooks/useOpenDm.ts'] },
+  'chat-conversation': {
+    route: `/chat/${IDS.conversation.jordan}`, ready: 'Bringing the good ball',
+    sources: ['app/(app)/chat/**', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx', 'components/ReactionPicker.tsx', 'hooks/useMessages.ts', 'hooks/useSilencedUsers.ts'],
+  },
+  'chat-club': { route: `/chat/${IDS.conversation.clubChat}`, ready: 'shared album', sources: ['app/(app)/chat/**', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx'] },
+
+  // ── Profile ─────────────────────────────────────────────────────────────
+  'profile-own': {
+    route: '/profile', ready: 'Maya',
+    sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'hooks/useMyProfile.ts', 'hooks/useAdminMetrics.ts', 'hooks/useBadges.ts', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
+  },
+  'profile-edit-link': { route: '/profile?edit=1', ready: 'Maya', sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/EditProfileForm.tsx', 'hooks/useUrlParam.ts'] },
+  'profile-own-guest': { route: '/profile', signedIn: false, sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/SignInPrompt.tsx'] },
+  'profile-other': {
+    route: `/profile/${P.jordanr}`, ready: 'Jordan',
+    sources: ['app/(app)/profile/**', 'app/(app)/(tabs)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
+  },
+
+  // ── Settings ────────────────────────────────────────────────────────────
+  'settings-account': { route: '/settings/account', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/account.tsx'] },
+  'settings-experimental': { route: '/settings/experimental', ready: 'Scorekeeper', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/experimental.tsx', 'constants/experiments.ts', 'components/scoresheet/MatchRow.tsx'] },
+  scorekeeper: { route: '/scorekeeper', ready: 'New match', sources: ['app/(app)/scorekeeper/index.tsx', 'components/scoresheet/MatchRow.tsx', 'hooks/useSavedMatches.ts'] },
+  'scorekeeper-new': { route: '/scorekeeper/new', ready: 'NET', sources: ['app/(app)/scorekeeper/new.tsx', 'components/scoresheet/CourtLayout.tsx', 'components/scoresheet/CourtSpot.tsx', 'components/scoresheet/PlayerSheet.tsx', 'lib/scoresheet/rules.ts'] },
+  'settings-display': { route: '/settings/display', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/display.tsx', 'contexts/textScale.tsx'] },
+  'settings-notifications': {
+    route: '/settings/notifications', ready: 'Reminders',
+    sources: [...SETTINGS, 'app/(app)/(tabs)/settings/notifications.tsx', 'constants/notifications.ts', 'utils/notificationPrefs.ts', 'utils/reminders.ts', 'hooks/useUserSettings.ts'],
+  },
+  'settings-history': { route: '/settings/history', ready: 'Halloween Warm-up', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/history.tsx'] },
+  'settings-hosted': { route: '/settings/hosted', ready: 'Sand Doubles at Butler', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hosted.tsx'] },
+  'settings-cheers': { route: '/settings/cheers', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/cheers.tsx', 'components/CheerRadarChart.tsx'] },
+  'settings-badges': { route: '/settings/badges', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**', 'hooks/useBadges.ts'] },
+  'settings-badge-link': { route: '/settings/badges?badge=event_attendee', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/badges.tsx', 'hooks/useUrlParam.ts'] },
+  'settings-feedback': { route: '/settings/feedback', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/feedback.tsx'] },
+  // Submit with nothing filled in: what's missing, under each field (#228).
+  'settings-feedback-errors': { route: '/settings/feedback', ready: 'Submit', actions: [{ click: 'Submit' }, { wait: 300 }], sources: [...SETTINGS, 'app/(app)/(tabs)/settings/feedback.tsx', 'utils/feedbackForm.ts'] },
+  'settings-hidden': { route: '/settings/hidden', ready: 'ACES Volleyball', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/hidden.tsx', 'hooks/useHiddenFeed.ts', 'utils/hiddenFeed.ts', 'hooks/useUserSettings.ts'] },
+  'settings-silenced': { route: '/settings/silenced', ready: 'Hannah', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/silenced.tsx', 'hooks/useSilencedUsers.ts'] },
+  'admin-metrics': { route: '/settings/metrics', ready: 'Daily active people', sources: METRICS },
+  'admin-metrics-events': { route: '/settings/metrics', ready: 'Outside sign-ups', actions: [{ scroll: 2250 }, { wait: 400 }], sources: METRICS },
+  'admin-metrics-live': { route: '/settings/metrics?tab=live', ready: 'By platform', sources: METRICS },
+  'admin-metrics-people': { route: '/settings/metrics?tab=people', ready: 'Sessions 30d', sources: METRICS },
+  'admin-metrics-retention': { route: '/settings/metrics?tab=retention', ready: 'Guests who signed up', sources: METRICS },
+  'admin-metrics-person': { route: `/settings/metrics/${P.jordanr}`, ready: 'Recent sessions', sources: METRICS },
+
+  // ── Tournaments ─────────────────────────────────────────────────────────
+  'tournaments-list': { route: '/tournaments', ready: 'Halloween Sand Classic', sources: ['app/(app)/tournaments.tsx', 'hooks/useTournamentList.ts', 'utils/tournamentList.ts', 'components/events/AllTournamentsLink.tsx', 'hooks/useExternalPrograms.ts', 'components/ExternalProgramCard.tsx', 'components/programs/ProgramSection.tsx'] },
+  'leagues': { route: '/leagues', ready: 'Sunday Indoor Volleyball', sources: ['app/(app)/leagues.tsx', 'hooks/useExternalPrograms.ts', 'utils/externalPrograms.ts', 'components/ExternalProgramCard.tsx', 'components/programs/ProgramSection.tsx', 'components/events/LeaguesLink.tsx'] },
+  'tournaments-list-past': { route: '/tournaments', ready: 'Halloween Sand Classic', actions: [{ tap: 'tournaments-past' }], sources: ['app/(app)/tournaments.tsx', 'hooks/useTournamentList.ts', 'utils/tournamentList.ts'] },
+  'tournament-schedule-link': { route: `/tournament/${T.upcoming}?tab=schedule`, ready: 'Halloween Sand Classic', sources: [...TOURNAMENT_DETAIL, 'hooks/useUrlParam.ts', 'utils/urlViews.ts', 'components/ShareLinkButton.tsx'] },
+  'tournament-overview': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', sources: TOURNAMENT_DETAIL },
+  'tournament-teams': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-teams', text: 'Teams' }], sources: TOURNAMENT_DETAIL },
+  'tournament-schedule': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-schedule', text: 'Schedule' }], sources: TOURNAMENT_DETAIL },
+  'tournament-results': { route: `/tournament/${T.past}`, ready: 'Fall Doubles Cup', actions: [{ tap: 'tournament-tab-results', text: 'Results' }], sources: TOURNAMENT_DETAIL },
+  'tournament-discussion': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-discussion', text: 'Discussion' }], sources: TOURNAMENT_DETAIL },
+  'tournament-create': { route: '/tournament/create', sources: ['app/(app)/tournament/create.tsx'] },
+
+  // ── Auth and legal (signed out) ─────────────────────────────────────────
+  login: { route: '/login', signedIn: false, sources: ['app/(auth)/login.tsx', 'app/(auth)/_layout.tsx', 'components/legal/**', 'components/GoogleLogo.tsx', 'components/Input.tsx', 'components/Button.tsx'] },
+  register: { route: '/register', signedIn: false, sources: ['app/(auth)/register.tsx', 'app/(auth)/_layout.tsx', 'components/legal/**', 'components/Input.tsx'] },
+  // A guest who tapped Join (#229): the game they're joining, and the New here / I have an account switch.
+  'register-join-context': {
+    route: '/register', signedIn: false, ready: "YOU'RE JOINING",
+    sessionStorage: opts => ({ 'vteam.pendingAction': joinIntent(opts) }),
+    sources: ['app/(auth)/register.tsx', 'components/auth/JoinContextCard.tsx', 'utils/pendingAction.ts'],
+  },
+  // Back on that game after signing in: one tap to grab the spot.
+  'event-join-intent-sheet': {
+    route: `/event/${E.nextWeekIndoor}`, ready: 'Grab your spot?',
+    sessionStorage: opts => ({ 'vteam.pendingAction': joinIntent(opts) }),
+    sources: [...EVENT_DETAIL, 'components/event/JoinIntentSheet.tsx', 'utils/pendingAction.ts'],
+  },
+  'reset-password': { route: '/reset-password', signedIn: false, sources: ['app/(auth)/reset-password.tsx', 'app/(auth)/_layout.tsx'] },
+  'reset-password-expired': { route: '/reset-password#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired', signedIn: false, sources: ['app/(auth)/reset-password.tsx', 'utils/recoveryLink.ts', 'lib/passwordReset.ts'] },
+  terms: { route: '/terms', signedIn: false, sources: ['app/terms.tsx', 'components/legal/**', 'constants/legal.ts', 'utils/legalMarkdown.ts'] },
+  privacy: { route: '/privacy', signedIn: false, sources: ['app/privacy.tsx', 'components/legal/**', 'constants/legal.ts', 'utils/legalMarkdown.ts'] },
+}
+
+/** Shown when a shared file changes (or a frontend file no screen claims). */
+export const DEFAULT_SCREENS = ['events-feed', 'event-details', 'clubs-list', 'chat-conversation', 'profile-own', 'tournament-overview', 'settings-notifications', 'login']
+
+/** Files that affect every screen: a change here means DEFAULT_SCREENS. */
+export const SHARED_SOURCES = [
+  'components/ui/**', 'components/Button.tsx', 'components/Input.tsx', 'components/Toast.tsx', 'components/tour/**', 'components/WebStackContentTransition.tsx', 'components/DocScrollView.tsx',
+  'constants/theme.ts', 'constants/styles.ts', 'constants/navigation.ts', 'constants/layout.ts', 'constants/copy.ts', 'constants/index.ts', 'constants/banners.ts', 'constants/tours.ts',
+  'app/_layout.tsx', 'app/+html.tsx', 'app/(app)/_layout.tsx', 'app/(app)/(tabs)/_layout.tsx', 'contexts/**', 'lib/**', 'utils/index.ts', 'utils/routes.ts', 'utils/authGate.ts',
+  'assets/**', 'app.json', 'babel.config.js', 'metro.config.js', 'package.json', 'package-lock.json', 'public/**',
+]
+
+/** Files that never change what a screen looks like. */
+export const IGNORED_SOURCES = [
+  '__tests__/**', 'e2e/**', 'docs/**', 'scripts/**', 'supabase/**', '.github/**', 'api/**', '**/*.md', 'types/database.ts', 'playwright.config.ts', 'jest.setup.js',
+  'eas.json', 'vercel.json', '.env*', '.gitignore', 'tsconfig.json', '**/*.test.*',
+]

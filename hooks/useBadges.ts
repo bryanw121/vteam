@@ -1,13 +1,15 @@
 import { useCallback, useEffect } from 'react'
 import { Platform } from 'react-native'
 import { supabase } from '../lib/supabase'
-import { getQueryData, invalidate, queryKey, setQueryData, useQuery } from '../lib/query'
+import { getQueryData, invalidate, prefetchQuery, queryKey, setQueryData, useQuery } from '../lib/query'
 import { STALE } from '../constants/cache'
+import { USER_BADGE_SELECT } from '../constants/selects'
 import { useSession } from '../contexts/session'
-import { collectBadgeStats, checkAndAwardBadges } from '../utils/badges'
-import type { UserBadge, Profile } from '../types'
+import { collectBadgeStats, checkAndAwardBadges, mergeAwardedBadges } from '../utils/badges'
+import { fetchCheersReceived, myCheersCountKey } from './useMyProfile'
+import type { CheersReceived, UserBadge, Profile } from '../types'
 
-const BADGE_SELECT = 'id, user_id, badge_type, tier, awarded_at, display_order, display_tier'
+const BADGE_SELECT = USER_BADGE_SELECT
 
 // Awarding scans the user's attendance/cheer history, so it runs far less often
 // than the badge list is read. Explicit profile edits bypass this (see checkBadges).
@@ -118,9 +120,21 @@ export function useBadges(opts?: { enabled?: boolean }) {
       // Compare against the cached rows. Awaiting fetchBadges (cache-respecting,
       // usually a no-op) guarantees the list is populated — comparing against an
       // empty list would re-award every badge.
-      const [existing, stats] = await Promise.all([fetchBadges(), collectBadgeStats(userId, profile)])
+      // Received cheers come from the entry Profile's total reads (#224), joined
+      // or reused rather than read a second time.
+      const cheersKey = myCheersCountKey(userId)
+      const received = prefetchQuery(cheersKey, () => fetchCheersReceived(userId), { staleMs: STALE.profile })
+        .then(() => getQueryData<CheersReceived>(cheersKey))
+      const [existing, stats] = await Promise.all([
+        fetchBadges(),
+        received.then(r => collectBadgeStats(userId, profile, r)),
+      ])
       const newlyAwarded = await checkAndAwardBadges(userId, stats, existing)
-      if (newlyAwarded.length > 0) await fetchBadges(true)
+      if (newlyAwarded.length > 0) {
+        const k = badgesKey(userId)
+        setQueryData<UserBadge[]>(k, prev => mergeAwardedBadges(prev ?? existing, newlyAwarded))
+        void writeCache({ userId, badges: getQueryData<UserBadge[]>(k) ?? [], fetchedAt: Date.now() })
+      }
     },
     [userId, fetchBadges],
   )

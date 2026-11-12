@@ -1,5 +1,6 @@
 import React from 'react'
-import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Text } from '../ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Button } from '../Button'
 import { Input } from '../Input'
@@ -8,6 +9,7 @@ import type { Profile } from '../../types'
 import { profileDisplayName } from '../../utils'
 import { MAX_COHOSTS } from '../../hooks/event'
 import type { CohostsApi } from '../../types'
+import { Spinner } from '../ui/Spinner'
 
 type Props = { cohosts: CohostsApi }
 
@@ -32,7 +34,7 @@ export function CohostsDialog({ cohosts: c }: Props) {
                       <Text style={styles.name} numberOfLines={1}>{profileDisplayName(row.profiles as Profile)}</Text>
                       <TouchableOpacity onPress={() => c.remove(row.user_id)} hitSlop={8} disabled={removing}>
                         {removing
-                          ? <ActivityIndicator size="small" color={theme.colors.subtext} />
+                          ? <Spinner size="small" color={theme.colors.subtext} />
                           : <Ionicons name="close" size={18} color={theme.colors.subtext} />}
                       </TouchableOpacity>
                     </View>
@@ -44,7 +46,7 @@ export function CohostsDialog({ cohosts: c }: Props) {
             {c.cohosts.length < MAX_COHOSTS && (
               <>
                 <Input placeholder="Search by name or username" value={c.query} onChangeText={q => { void c.search(q) }} />
-                {c.searching && <ActivityIndicator size="small" color={theme.colors.primary} />}
+                {c.searching && <Spinner size="small" color={theme.colors.primary} />}
                 {c.results.length > 0 && (
                   <View style={{ gap: theme.spacing.xs, maxHeight: 200 }}>
                     <ScrollView nestedScrollEnabled>
@@ -53,7 +55,7 @@ export function CohostsDialog({ cohosts: c }: Props) {
                           <Text style={styles.name} numberOfLines={1}>{profileDisplayName(p)}</Text>
                           <Text style={styles.body}>@{p.username}</Text>
                           {c.adding
-                            ? <ActivityIndicator size="small" color={theme.colors.primary} />
+                            ? <Spinner size="small" color={theme.colors.primary} />
                             : <Ionicons name="add-circle-outline" size={20} color={theme.colors.primary} />}
                         </TouchableOpacity>
                       ))}

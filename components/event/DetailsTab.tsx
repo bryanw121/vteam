@@ -1,15 +1,28 @@
-import React, { useEffect, useState } from 'react'
-import { Platform, View, Text, TouchableOpacity, Alert, RefreshControl } from 'react-native'
+import React, { useMemo } from 'react'
+import { Platform, View, TouchableOpacity } from 'react-native'
+import { Text } from '../ui/Text'
+import { RefreshControl } from '../RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import * as Linking from 'expo-linking'
 import * as Calendar from 'expo-calendar'
 import { ProfileAvatar } from '../ProfileAvatar'
 import { DocScrollView } from '../DocScrollView'
 import { LinkedText } from '../LinkedText'
+import { VenmoPayButton } from '../VenmoPayButton'
+import { FriendsGoingLine } from '../FriendsGoingLine'
+import { useFriends } from '../../hooks/useFriends'
+import { attendeeRowsWithProfiles } from '../../hooks/event/derive'
+import { friendsGoingFromAttendees } from '../../utils/friends'
+import { PaidToggle } from './PaidToggle'
+import { Button } from '../Button'
+import { NO_SHOW_MESSAGE_HOST, NO_SHOW_PLAYER_BODY, NO_SHOW_PLAYER_TITLE } from '../../constants/copy'
+import { ForecastRow } from './ForecastRow'
 import { shared, theme, LOCATIONS } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
-import type { EventData } from '../../types'
-import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, resolveProfileAvatarUriSmall } from '../../utils'
+import type { EventData, EventPaymentsApi } from '../../types'
+import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, profileAvatarSmallUri } from '../../utils'
+import { profilePrefetchProps } from '../../hooks/useUserProfile'
+import { toast } from '../../lib/toast'
 
 function formatEndTime(startIso: string, durationMinutes: number): string {
   const normalized = /[Z+]/.test(startIso) ? startIso : startIso + 'Z'
@@ -47,7 +60,7 @@ async function addToCalendar(title: string, startIso: string, durationMinutes: n
 
   const { status } = await Calendar.requestCalendarPermissionsAsync()
   if (status !== 'granted') {
-    Alert.alert('Permission required', 'Please allow calendar access in Settings to add this event.')
+    toast.show({ title: 'Calendar access needed', message: 'Allow calendar access in Settings to add this event.', variant: 'warning' })
     return
   }
 
@@ -58,7 +71,7 @@ async function addToCalendar(title: string, startIso: string, durationMinutes: n
     calendars.find(c => c.allowsModifications)
 
   if (!defaultCal) {
-    Alert.alert('No calendar found', 'Could not find a writable calendar on this device.')
+    toast.show({ title: 'No calendar found', message: "Couldn't find a calendar on this device to add it to.", variant: 'warning' })
     return
   }
 
@@ -70,7 +83,7 @@ async function addToCalendar(title: string, startIso: string, durationMinutes: n
     ...(address ? { location: address } : {}),
   })
 
-  Alert.alert('Added to calendar', `"${title}" has been added to your calendar.`)
+  toast.show({ title: 'Added to calendar', message: `"${title}" is on your calendar.`, variant: 'success' })
 }
 
 function HostRow({
@@ -80,13 +93,7 @@ function HostRow({
   border?: Profile['selected_border']; label: string; isMe: boolean
   onMessage: () => void; onPress: () => void
 }) {
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
-  useEffect(() => {
-    if (!avatarUrl) return
-    let cancelled = false
-    resolveProfileAvatarUriSmall(avatarUrl).then(({ uri }) => { if (!cancelled) setAvatarUri(uri) })
-    return () => { cancelled = true }
-  }, [avatarUrl])
+  const avatarUri = profileAvatarSmallUri(avatarUrl)
   return (
     <TouchableOpacity
       activeOpacity={isMe ? 1 : 0.75}
@@ -95,12 +102,12 @@ function HostRow({
     >
       <ProfileAvatar uri={avatarUri} border={border ?? null} size={44} />
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: theme.fonts.body, fontSize: 10.5, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.8, textTransform: 'uppercase' }}>{label}</Text>
-        <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 16, color: theme.colors.text, letterSpacing: -0.2 }}>{name}</Text>
+        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.8, textTransform: 'uppercase' }}>{label}</Text>
+        <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.base, color: theme.colors.text, letterSpacing: -0.2 }}>{name}</Text>
       </View>
       {!isMe && (
         <TouchableOpacity onPress={onMessage} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border }} hitSlop={4}>
-          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: 12, color: theme.colors.text }}>Message</Text>
+          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.text }}>Message</Text>
         </TouchableOpacity>
       )}
     </TouchableOpacity>
@@ -109,7 +116,7 @@ function HostRow({
 
 type Props = {
   event: EventWithDetails
-  /** Co-hosts, viewer (id + profile for the Venmo note) and pull-to-refresh. */
+  /** Co-hosts, viewer id and pull-to-refresh. */
   data: EventData
   eventStatus: AttendanceStatus
   isOwner: boolean
@@ -119,6 +126,10 @@ type Props = {
   onOpenProfile: (userId: string) => void
   onMessageHost: (hostId: string) => void
   onManageCohosts: () => void
+  /** "I've paid" toggle; null when the viewer can't set one (free event, not on the roster, the creator). */
+  payments: EventPaymentsApi | null
+  /** The host flagged the viewer as a no-show (#151): show them why they get no points. */
+  noShow?: boolean
 }
 
 export function DetailsTab({
@@ -132,9 +143,16 @@ export function DetailsTab({
   onOpenProfile,
   onMessageHost,
   onManageCohosts,
+  payments,
+  noShow = false,
 }: Props) {
-  const { refreshing, refresh: onRefresh, cohosts, userId, viewerProfile: currentUserProfile } = data
+  const { refreshing, refresh: onRefresh, cohosts, userId } = data
   const totalAttending = eventStatus.count
+  const { data: myFriends } = useFriends()
+  const friendsGoing = useMemo(
+    () => friendsGoingFromAttendees(event.id, attendeeRowsWithProfiles(event), myFriends.friends),
+    [event, myFriends.friends],
+  )
   return (
     <DocScrollView
       docScroll={docScrollActive}
@@ -142,6 +160,19 @@ export function DetailsTab({
       contentContainerStyle={[shared.scrollContent, { paddingBottom: descFooterHeight + Math.max(bottomInset, theme.spacing.md) }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
     >
+
+      {/* ── The viewer was marked as a no-show (#151) ── */}
+      {noShow && (
+        <View testID="no-show-card" style={shared.noShowCard}>
+          <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.base, color: theme.colors.text }}>
+            {NO_SHOW_PLAYER_TITLE}
+          </Text>
+          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.subtextStrong, lineHeight: 20 }}>{NO_SHOW_PLAYER_BODY}</Text>
+          {event.created_by !== userId && (
+            <Button label={NO_SHOW_MESSAGE_HOST} variant="primary" onPress={() => onMessageHost(event.created_by)} testID="no-show-message-host" />
+          )}
+        </View>
+      )}
 
       {/* ── Quick-stats strip ── */}
       {(() => {
@@ -159,11 +190,11 @@ export function DetailsTab({
               <View key={s.l} style={{ flex: 1, backgroundColor: theme.colors.card, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 10, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center' }}>
                 <Text
                   testID={s.l === 'Price' ? 'event-price-stat' : undefined}
-                  style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: 20, letterSpacing: -0.5, color: theme.colors.text }}
+                  style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.heading.sm, letterSpacing: -0.5, color: theme.colors.text }}
                 >
                   {s.k}
                 </Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: 10, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.7, textTransform: 'uppercase', marginTop: 2 }}>{s.l}</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.7, textTransform: 'uppercase', marginTop: 2 }}>{s.l}</Text>
               </View>
             ))}
           </View>
@@ -190,7 +221,7 @@ export function DetailsTab({
                   border={h.border}
                   label={h.label}
                   isMe={h.isMe}
-                  onPress={() => onOpenProfile(h.id)}
+                  onPress={() => onOpenProfile(h.id)} {...profilePrefetchProps(h.id)}
                   onMessage={() => onMessageHost(h.id)}
                 />
               </View>
@@ -255,6 +286,7 @@ export function DetailsTab({
             </View>
           )}
         </View>
+        <FriendsGoingLine going={friendsGoing} testID="event-friends-going" />
       </View>
 
       {/* ── Info rows ── */}
@@ -296,7 +328,7 @@ export function DetailsTab({
               accessibilityRole="button"
               style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
             >
-              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.medium }}>
+              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
                 Add to calendar
               </Text>
               <Ionicons name="arrow-forward" size={12} color={theme.colors.primary} />
@@ -331,7 +363,7 @@ export function DetailsTab({
                     accessibilityRole="link"
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: theme.spacing.xs }}
                   >
-                    <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.medium }}>
+                    <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
                       Show in Maps
                     </Text>
                     <Ionicons name="arrow-forward" size={12} color={theme.colors.primary} />
@@ -341,6 +373,9 @@ export function DetailsTab({
             </>
           )
         })() : null}
+
+        {/* Forecast row: sand / grass events with coordinates (#165) */}
+        <ForecastRow event={event} />
 
         {/* Difficulty row */}
         {(() => {
@@ -362,7 +397,7 @@ export function DetailsTab({
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                     {diffTags.map(et => (
                       <View key={et.tag_id} style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: theme.radius.full, backgroundColor: theme.colors.primary + '14', borderWidth: 1, borderColor: theme.colors.primary + '30' }}>
-                        <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }}>
+                        <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }}>
                           {et.tags.name}
                         </Text>
                       </View>
@@ -401,44 +436,27 @@ export function DetailsTab({
         </>
 
         {/* Pay via Venmo — shown to non-owners when price > 0 and venmo_handle set */}
-        {!isOwner && event.price != null && event.price > 0 && event.venmo_handle && (() => {
-          const handle = event.venmo_handle
-          const amount = formatPriceAmount(event.price)
-          const name = currentUserProfile ? profileDisplayName(currentUserProfile) : ''
-          const date = new Date(event.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-          const noteParts = [event.title, 'entry fee', name, date].filter(Boolean)
-          const note = encodeURIComponent(noteParts.join(' — '))
-          const deepLink = `venmo://paycharge?txn=pay&recipients=${handle}&amount=${amount}&note=${note}`
-          const webLink = `https://venmo.com/${handle}?txn=pay&amount=${amount}&note=${note}`
-          return (
-            <TouchableOpacity
-              onPress={() => {
-                if (Platform.OS === 'web') {
-                  window.open(webLink, '_blank')
-                } else {
-                  void Linking.openURL(deepLink).catch(() => Linking.openURL(webLink))
-                }
-              }}
-              style={{
-                flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-                gap: 8, marginTop: theme.spacing.sm, paddingVertical: 12,
-                borderRadius: theme.radius.md, backgroundColor: '#008CFF',
-              }}
-            >
-              <Text style={{ fontSize: 18 }}>💸</Text>
-              <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.white }}>
-                Pay ${amount} via Venmo
-              </Text>
-            </TouchableOpacity>
-          )
-        })()}
+        {!isOwner && event.price != null && event.price > 0 && event.venmo_handle && (
+          <View style={{ marginTop: theme.spacing.sm }}>
+            <VenmoPayButton
+              handle={event.venmo_handle}
+              amount={formatPriceAmount(event.price)}
+              title={event.title}
+              date={event.event_date}
+              label={`Pay $${formatPriceAmount(event.price)} via Venmo`}
+            />
+          </View>
+        )}
+        {payments && (
+          <PaidToggle paid={payments.iPaid} saving={payments.saving} onChange={payments.setPaid} />
+        )}
 
       </View>
 
       {/* ── About / description card ── */}
       {event.description ? (
         <View style={{ backgroundColor: theme.colors.card, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: theme.colors.border, marginBottom: theme.spacing.md }}>
-          <Text style={{ fontFamily: theme.fonts.body, fontSize: 10.5, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>About</Text>
+          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>About</Text>
           <LinkedText text={event.description} style={{ fontSize: theme.font.size.sm, color: theme.colors.text, lineHeight: 20 }} />
         </View>
       ) : null}
@@ -450,7 +468,7 @@ export function DetailsTab({
           style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}
         >
           <Ionicons name="person-add-outline" size={14} color={theme.colors.primary} />
-          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.medium }}>
+          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
             Manage Co-hosts{cohosts.length > 0 ? ` (${cohosts.length})` : ''}
           </Text>
         </TouchableOpacity>

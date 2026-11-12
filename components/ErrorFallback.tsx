@@ -1,5 +1,6 @@
 import React from 'react'
-import { View, Text, TouchableOpacity } from 'react-native'
+import { View, TouchableOpacity } from 'react-native'
+import { Text } from './ui/Text'
 import { theme } from '../constants'
 
 type Props = { resetError: () => void }
@@ -15,7 +16,7 @@ export function ErrorFallback({ resetError }: Props) {
       gap: theme.spacing.md,
       backgroundColor: theme.colors.background,
     }}>
-      <Text style={{ fontSize: 18, fontWeight: theme.font.weight.semibold, color: theme.colors.text }}>
+      <Text style={{ fontSize: theme.font.size.lg, fontWeight: theme.font.weight.semibold, color: theme.colors.text }}>
         Something went wrong
       </Text>
       <Text style={{ fontSize: theme.font.size.md, color: theme.colors.subtext, textAlign: 'center', lineHeight: 22 }}>

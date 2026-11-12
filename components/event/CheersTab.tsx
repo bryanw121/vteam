@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native'
+import React from 'react'
+import { View, ScrollView, TouchableOpacity } from 'react-native'
+import { Text } from '../ui/Text'
+import { RefreshControl } from '../RefreshControl'
 import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Button } from '../Button'
 import { shared, theme, CHEER_TYPES, CHEERS_MAX_PER_EVENT, TEAM_COLORS, TEAM_COLOR_NAMES } from '../../constants'
 import type { Profile, CheerType, Cheer, IoniconName, PendingCheer, TeamAssignment } from '../../types'
-import { profileDisplayName, profileInitial, resolveProfileAvatarUriSmall } from '../../utils'
+import { profileAvatarSmallUri, profileDisplayName, profileInitial } from '../../utils'
 import type { EventCheersApi, EventData, EventTeamsApi } from '../../types'
+import { Spinner } from '../ui/Spinner'
 
 type CheerPersonCardProps = {
   profile: Profile
@@ -17,15 +20,7 @@ type CheerPersonCardProps = {
 }
 
 function CheerPersonCard({ profile, hasGiven, disabled, teamColor, onPress }: CheerPersonCardProps) {
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      const { uri } = await resolveProfileAvatarUriSmall(profile.avatar_url)
-      if (!cancelled) setAvatarUri(uri)
-    })()
-    return () => { cancelled = true }
-  }, [profile.avatar_url])
+  const avatarUri = profileAvatarSmallUri(profile.avatar_url)
 
   const activeColor = teamColor ?? theme.colors.primary
   const initials = profileInitial(profile)
@@ -120,7 +115,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
           contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.xl }}
           refreshControl={refresh}
         >
-          <ActivityIndicator color={theme.colors.primary} />
+          <Spinner color={theme.colors.primary} />
         </ScrollView>
       ) : selectedCheerType === null ? (
         /* Step 1: Pick a cheer type */
@@ -177,7 +172,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
                     {kt.label}
                   </Text>
                   {totalCount > 0 && (
-                    <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primary }}>
+                    <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText }}>
                       {totalCount} selected
                     </Text>
                   )}
@@ -199,7 +194,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
               borderColor: theme.colors.primary + '40',
             }}>
               <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} />
-              <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }}>
+              <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }}>
                 Cheers sent!
               </Text>
             </View>

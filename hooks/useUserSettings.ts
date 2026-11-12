@@ -4,21 +4,28 @@ import { getQueryData, queryKey, setQueryData, useMutation, useQuery } from '../
 import { DEFAULT_FEED_REGION, STALE } from '../constants'
 import { useSession } from '../contexts/session'
 import { notifyError } from '../utils/notify'
-import type { MajorCity, UserSettings } from '../types'
+import { DEFAULT_REMINDER_LEAD_MINUTES } from '../constants/notifications'
+import { parseHiddenFeed } from '../utils/hiddenFeed'
+import type { MajorCity, ReminderLeadMinutes, UserSettings } from '../types'
 
 /**
  * The signed-in user's private settings (`user_settings`, owner-only RLS):
- * home city (which region's outside sessions the feed shows) and the one-time
- * banners already seen. Guests have none; a missing row reads as defaults.
+ * home city (which region's outside sessions the feed shows), the one-time
+ * banners already seen, how long before an event reminders arrive, and what
+ * they hid from the Events feed (`useHiddenFeed`), and the notification
+ * switches `useMyProfile` reads from this same query (#224: one read, not two).
+ * Guests have none; a missing row reads as defaults.
  */
-const SETTINGS_SELECT = 'user_id, home_city_id, seen_banners, home_city:major_cities(id, display_name, city_name, admin_region, country_code)'
+const SETTINGS_SELECT = 'user_id, home_city_id, seen_banners, reminder_lead_minutes, hidden_feed, notification_prefs, home_city:major_cities(id, display_name, city_name, admin_region, country_code)'
 
 export const userSettingsKey = (userId: string) => queryKey('settings', userId)
 
-async function fetchSettings(userId: string): Promise<UserSettings | null> {
+export async function fetchSettings(userId: string): Promise<UserSettings | null> {
   const { data, error } = await supabase.from('user_settings').select(SETTINGS_SELECT).eq('user_id', userId).maybeSingle()
   if (error) throw error
-  return (data as unknown as UserSettings | null) ?? null
+  if (!data) return null
+  const row = data as unknown as UserSettings & { hidden_feed: unknown }
+  return { ...row, hidden_feed: parseHiddenFeed(row.hidden_feed) }
 }
 
 export function useUserSettings() {
@@ -46,8 +53,11 @@ export function useUserSettings() {
         setQueryData<UserSettings | null>(key, prev => ({
           user_id: userId,
           seen_banners: prev?.seen_banners ?? [],
+          reminder_lead_minutes: prev?.reminder_lead_minutes ?? DEFAULT_REMINDER_LEAD_MINUTES,
           home_city_id: city?.id ?? null,
           home_city: city ?? null,
+          hidden_feed: prev?.hidden_feed ?? [],
+          notification_prefs: prev?.notification_prefs ?? null,
         }))
         return () => setQueryData(key, before ?? null)
       },
@@ -57,12 +67,44 @@ export function useUserSettings() {
   const homeCityMutate = homeCity.mutate
   const setHomeCity = useCallback((city: MajorCity | null) => homeCityMutate(city), [homeCityMutate])
 
+  const reminderLead = useMutation(
+    async (minutes: ReminderLeadMinutes) => {
+      if (!userId) throw new Error('Sign in to set reminders')
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({ user_id: userId, reminder_lead_minutes: minutes, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+      if (error) throw error
+      return true
+    },
+    {
+      onMutate: minutes => {
+        if (!userId) return
+        const key = userSettingsKey(userId)
+        const before = getQueryData<UserSettings | null>(key)
+        setQueryData<UserSettings | null>(key, prev => ({
+          user_id: userId,
+          seen_banners: prev?.seen_banners ?? [],
+          home_city_id: prev?.home_city_id ?? null,
+          home_city: prev?.home_city ?? null,
+          reminder_lead_minutes: minutes,
+          hidden_feed: prev?.hidden_feed ?? [],
+          notification_prefs: prev?.notification_prefs ?? null,
+        }))
+        return () => setQueryData(key, before ?? null)
+      },
+      onError: () => notifyError("Couldn't save your reminder time", 'Check your connection and try again.'),
+    },
+  )
+  const reminderLeadMutate = reminderLead.mutate
+  const setReminderLead = useCallback((minutes: ReminderLeadMinutes) => reminderLeadMutate(minutes), [reminderLeadMutate])
+
   return {
     settings: query.data,
     isLoading: query.isLoading,
     error: query.error,
     setHomeCity,
     savingHomeCity: homeCity.isPending,
+    setReminderLead,
   }
 }
 
