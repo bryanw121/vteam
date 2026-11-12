@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { ScrollView, View } from 'react-native'
+import { SheetTeamsView } from '../../../components/programs/SheetTeamsView'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../../../components/ui/Text'
@@ -22,6 +23,7 @@ const VIEWS: { key: SheetScoresView; label: string }[] = [
   { key: 'live', label: 'Live' },
   { key: 'pools', label: 'Pools' },
   { key: 'brackets', label: 'Brackets' },
+  { key: 'teams', label: 'Teams' },
 ]
 
 const teamName = (id: string | null) => id ?? 'TBD'
@@ -42,6 +44,14 @@ export default function ProgramScoresScreen() {
   )
   const [view, setView] = useUrlParam('view', VIEW.scores.view)
   const [divisionParam, setDivision] = useUrlParam('division', VIEW.scores.division)
+  const [team, setTeam] = useUrlParam('team', VIEW.scores.team)
+  const scrollRef = React.useRef<ScrollView>(null)
+  // Any team name (standings, brackets, courts, a team's games) opens its page on the Teams tab.
+  const openTeam = (name: string) => {
+    setTeam(name)
+    if (view !== 'teams') setView('teams')
+    scrollRef.current?.scrollTo({ y: 0, animated: false })
+  }
   const [refreshing, setRefreshing] = useState(false)
 
   const state = scores.data
@@ -81,12 +91,13 @@ export default function ProgramScoresScreen() {
           emptyBody="Scores show here when the organizers run the day on the vteam tournament sheet."
         >
           <ScrollView
+            ref={scrollRef}
             contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xl }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void refresh() }} tintColor={theme.colors.primary} />}
           >
             <View style={{ flexDirection: 'row', gap: theme.spacing.sm, marginBottom: theme.spacing.md }} accessibilityRole="radiogroup">
               {VIEWS.map(v => (
-                <Chip key={v.key} label={v.label} role="radio" active={view === v.key} onPress={() => setView(v.key)} testID={`scores-view-${v.key}`} />
+                <Chip key={v.key} label={v.label} role="radio" active={view === v.key} onPress={() => { if (v.key === 'teams') setTeam(''); setView(v.key) }} testID={`scores-view-${v.key}`} />
               ))}
             </View>
 
@@ -105,7 +116,12 @@ export default function ProgramScoresScreen() {
                     </View>
                     {[{ name: m.teamA, side: 'a' as const }, { name: m.teamB, side: 'b' as const }].map(t => (
                       <View key={t.side} style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 8 }}>
-                        <Text numberOfLines={1} style={{ flex: 1, fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.text }}>{t.name}</Text>
+                        <Text
+                          numberOfLines={1}
+                          onPress={t.name !== 'TBD' ? () => openTeam(t.name) : undefined}
+                          accessibilityRole={t.name !== 'TBD' ? 'link' : undefined}
+                          style={{ flex: 1, fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.text }}
+                        >{t.name}</Text>
                         {m.sets.map((s, i) => {
                           const current = i === m.sets.length - 1
                           return (
@@ -145,10 +161,12 @@ export default function ProgramScoresScreen() {
               <View testID="scores-pools">
                 {pools.length === 0 && <Text style={ts.muted13}>Pools haven't been set yet.</Text>}
                 {pools.map(p => (
-                  <StandingsTable key={p.poolKey} title={p.name} rows={p.rows} teamName={teamName} testID={`scores-pool-${p.poolKey}`} />
+                  <StandingsTable key={p.poolKey} title={p.name} rows={p.rows} teamName={teamName} onPressTeam={openTeam} testID={`scores-pool-${p.poolKey}`} />
                 ))}
               </View>
             )}
+
+            {view === 'teams' && state && <SheetTeamsView state={state} team={team} onSelectTeam={openTeam} />}
 
             {view === 'brackets' && (
               <View testID="scores-brackets">
@@ -161,7 +179,7 @@ export default function ProgramScoresScreen() {
                         <Chip key={g} label={g} variant="tint" role="radio" active={division === g} onPress={() => setDivision(g)} testID={`scores-division-${g}`} />
                       ))}
                     </View>
-                    <BracketView matches={bracket} teamName={teamName} />
+                    <BracketView matches={bracket} teamName={teamName} onPressTeam={openTeam} />
                   </>
                 )}
               </View>

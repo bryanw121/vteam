@@ -1,5 +1,5 @@
 import React from 'react'
-import { View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import { Text } from '../ui/Text'
 import { theme } from '../../constants'
 import type { StandingRow } from '../../types'
@@ -13,6 +13,8 @@ type Props = {
   advanceCount?: number
   /** The viewer's team, highlighted. */
   myTeamId?: string | null
+  /** Tapping a row opens that team (live scores' team pages). Rows aren't tappable without it. */
+  onPressTeam?: (teamId: string) => void
   testID?: string
 }
 
@@ -20,7 +22,8 @@ const cell = { fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, colo
 const head = { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.subtext, letterSpacing: 0.5 } as const
 
 /** One standings table: rank, team, W-L, sets, point difference. */
-export function StandingsTable({ title, rows, teamName, advanceCount, myTeamId, testID }: Props) {
+export function StandingsTable({ title, rows, teamName, advanceCount, myTeamId, onPressTeam, testID }: Props) {
+  const Row = onPressTeam ? TouchableOpacity : View
   // Two-set pools can tie: show W-L-T only when someone has a tie, so other tables keep W-L.
   const showTies = rows.some(r => (r.ties ?? 0) > 0)
   const recordWidth = showTies ? 58 : 44
@@ -39,12 +42,13 @@ export function StandingsTable({ title, rows, teamName, advanceCount, myTeamId, 
         const mine = !!myTeamId && r.teamId === myTeamId
         const diff = r.pointsFor - r.pointsAgainst
         return (
-          <View
+          <Row
             key={r.teamId}
             accessible
+            {...(onPressTeam ? { onPress: () => onPressTeam(r.teamId), accessibilityRole: 'button' as const, accessibilityHint: 'Opens team stats' } : {})}
             accessibilityLabel={`${r.tied ? 'Tied ' : ''}${r.rank}. ${teamName(r.teamId)}, ${r.wins} wins, ${r.losses} losses${showTies ? `, ${r.ties ?? 0} ties` : ''}${advancing ? ', advancing' : ''}`}
             style={{
-              flexDirection: 'row', alignItems: 'center', paddingVertical: 9,
+              flexDirection: 'row', alignItems: 'center', paddingVertical: 9, minHeight: onPressTeam ? 44 : undefined,
               borderBottomWidth: i === rows.length - 1 ? 0 : 1, borderBottomColor: theme.colors.borderSoft,
               backgroundColor: mine ? theme.colors.primarySoft : 'transparent',
             }}
@@ -59,7 +63,7 @@ export function StandingsTable({ title, rows, teamName, advanceCount, myTeamId, 
             <Text style={[cell, { width: 44, textAlign: 'right', color: diff > 0 ? theme.colors.cool : diff < 0 ? theme.colors.hot : theme.colors.subtext }]}>
               {diff > 0 ? `+${diff}` : diff}
             </Text>
-          </View>
+          </Row>
         )
       })}
       {advanceCount !== undefined && (

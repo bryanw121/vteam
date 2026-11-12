@@ -448,6 +448,9 @@ export type ExternalProgramCardProps = {
   menuInset?: boolean
 }
 
+/** Props of SheetTeamsView. `team` '' shows the list; onSelectTeam('') goes back to it. */
+export type SheetTeamsViewProps = { state: import('./sheetScores').SheetState; team: string; onSelectTeam: (team: string) => void }
+
 /** Props of LiveScoresLink. */
 export type LiveScoresLinkProps = { programId: string; title: string }
 

@@ -5,7 +5,10 @@ import type {
   SheetLiveMatch,
   SheetMatch,
   SheetScheduledGame,
+  SheetStanding,
   SheetState,
+  SheetTeamDetail,
+  SheetTeamGame,
   TournamentMatchRow,
 } from '../types'
 
@@ -161,4 +164,66 @@ export function bracketRows(state: SheetState, group: string): TournamentMatchRo
       sets,
     }
   })
+}
+
+/** Every team with its pool standing, A–Z. `query` keeps names containing it (any case). */
+export function teamList(state: SheetState, query = ''): SheetStanding[] {
+  const q = query.trim().toLowerCase()
+  return Object.values(state.standings).flat()
+    .filter(s => !q || s.team.toLowerCase().includes(q))
+    .sort((a, b) => a.team.localeCompare(b.team))
+}
+
+/** "1-1-2" in two-set pools, where a 1–1 split is a tie; "3-1" otherwise. */
+export function record(s: Pick<SheetStanding, 'wins' | 'losses' | 'ties'>): string {
+  return `${s.wins}-${s.losses}${s.ties ? `-${s.ties}` : ''}`
+}
+
+/**
+ * A team's page: its standing, division seed, and every game (pool games, then bracket games by
+ * round, then scheduled pool games not started yet). Null when no pool lists the team.
+ */
+export function teamDetail(state: SheetState, name: string): SheetTeamDetail | null {
+  const standing = Object.values(state.standings).flat().find(s => s.team === name)
+  if (!standing) return null
+  const seed = state.seeds.find(s => s.team === name)
+  const played: SheetTeamGame[] = state.matches
+    .filter(m => m.team_a === name || m.team_b === name)
+    .sort((a, b) =>
+      (a.stage === b.stage ? 0 : a.stage === 'pool' ? -1 : 1)
+      || ((num(a.round) ?? 0) - (num(b.round) ?? 0))
+      || a.match_id.localeCompare(b.match_id, undefined, { numeric: true }))
+    .map(m => {
+      const isA = m.team_a === name
+      const opp = isA ? m.team_b : m.team_a
+      const final = m.status === 'final'
+      return {
+        id: m.match_id,
+        status: final ? 'final' : m.status === 'live' ? 'live' : 'upcoming',
+        result: !final ? null : m.winner === 'TIE' ? 'T' : m.winner === name ? 'W' : m.winner ? 'L' : null,
+        opponent: opp && opp !== 'BYE' ? opp : null,
+        bye: opp === 'BYE',
+        label: stageLabel(m),
+        detail: setsOf(m).map(s => (isA ? `${s.a}–${s.b}` : `${s.b}–${s.a}`)).join(', ')
+          || (m.court ? `Court ${m.court}` : ''),
+      }
+    })
+  const upcoming: SheetTeamGame[] = upNext(state, Infinity)
+    .filter(g => g.a === name || g.b === name)
+    .map(g => ({
+      id: `${g.pool}-schedule-${g.game ?? `${g.a}-${g.b}`}`,
+      status: 'upcoming',
+      result: null,
+      opponent: g.a === name ? g.b : g.a,
+      bye: false,
+      label: `Pool ${g.pool}`,
+      detail: [g.court ? `Court ${g.court}` : null, g.time].filter(Boolean).join(' · '),
+    }))
+  return {
+    name,
+    standing,
+    poolSize: state.standings[standing.pool]?.length ?? 0,
+    seed: seed ? { division: seed.division, seed: seed.seed } : null,
+    games: [...played, ...upcoming],
+  }
 }

@@ -44,6 +44,9 @@ export type SheetStanding = {
   sets_lost: number
   points_for: number
   points_against: number
+  /** Share of sets won, 0–1. */
+  set_pct?: number
+  point_ratio?: number
   rank: number
 }
 
@@ -74,5 +77,31 @@ export type SheetLiveMatch = {
   sets: { a: number; b: number }[]
 }
 
+/** One of a team's games, from the team's side. `result` is null for a game not finished or not started. */
+export type SheetTeamGame = {
+  id: string
+  status: 'final' | 'live' | 'upcoming'
+  result: 'W' | 'L' | 'T' | null
+  /** Null for a bye or an opponent not decided yet (`bye` tells them apart). */
+  opponent: string | null
+  bye: boolean
+  /** "Pool A" or "Gold · Semifinal 1". */
+  label: string
+  /** The team's points first: "25–21, 19–25". Court and time for upcoming games. */
+  detail: string
+}
+
+/** Everything the team page shows. */
+export type SheetTeamDetail = {
+  name: string
+  standing: SheetStanding
+  poolSize: number
+  seed: { division: string; seed: number } | null
+  games: SheetTeamGame[]
+}
+
 /** The tabs of the scores screen. */
-export type SheetScoresView = 'live' | 'pools' | 'brackets'
+export type SheetScoresView = 'live' | 'pools' | 'brackets' | 'teams'
+
+/** Opens a team's page; screens pass it to the tables and brackets. */
+export type OnPressTeam = (team: string) => void

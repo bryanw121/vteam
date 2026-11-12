@@ -1,6 +1,7 @@
 import type { SheetState } from '../types'
 import {
-  bracketGroups, bracketRows, liveMatches, parseSheetState, poolStandings, roundLabel, setsOf, sheetScoresUrl, upNext,
+  bracketGroups, bracketRows, liveMatches, parseSheetState, poolStandings, record, roundLabel, setsOf, sheetScoresUrl, teamDetail,
+  teamList, upNext,
 } from '../utils/sheetScores'
 
 /** A trimmed copy of what the Sheet app's `?format=json` returns mid-bracket. */
@@ -122,5 +123,38 @@ describe('brackets', () => {
     expect(byId['Gold-F']).toMatchObject({ round: 2, bracket_round_name: 'Final', winner_id: null, court: 'Court 5', status: 'in_progress' })
     expect(byId['Gold-3rd place'].court).toBeNull()
     expect(byId['Gold-3rd place']).toMatchObject({ round: 3, bracket_round_name: 'Other games', team_b_id: null })
+  })
+})
+
+describe('teams', () => {
+  it('lists every team A–Z and filters by name, any case', () => {
+    expect(teamList(state).map(t => t.team)).toEqual(['Aces', 'Blockers', 'Diggers', 'Setters'])
+    expect(teamList(state, 'ers').map(t => t.team)).toEqual(['Blockers', 'Diggers', 'Setters'])
+    expect(teamList(state, ' ACES ').map(t => t.team)).toEqual(['Aces'])
+  })
+
+  it('writes ties only when there are some', () => {
+    expect(record({ wins: 0, losses: 0, ties: 1 })).toBe('0-0-1')
+    expect(record({ wins: 3, losses: 1 })).toBe('3-1')
+  })
+
+  it("builds a team's page: standing, seed, and games from its side, pool first, then bracket, then up next", () => {
+    const aces = teamDetail(state, 'Aces')!
+    expect(aces).toMatchObject({ name: 'Aces', poolSize: 3, seed: { division: 'Gold', seed: 1 } })
+    expect(aces.games.map(g => [g.id, g.status, g.result, g.opponent, g.detail])).toEqual([
+      ['A-1', 'final', 'T', 'Blockers', '21–25, 25–20'],
+      ['A-2', 'live', null, 'Diggers', '9–12'],
+      ['Gold-SF1', 'final', 'W', 'Spikers', '25–18, 25–20'],
+      ['Gold-F', 'live', null, 'Setters', '7–5'],
+    ])
+    expect(aces.games[2].label).toBe('Gold · Semifinal 1')
+  })
+
+  it('adds scheduled pool games not started yet, with court and time, and marks byes', () => {
+    expect(teamDetail(state, 'Diggers')!.games.at(-1)).toMatchObject({ status: 'upcoming', opponent: 'Blockers', label: 'Pool A', detail: 'Court 1 · 9:45 AM' })
+    expect(teamDetail(state, 'Setters')!.games.find(g => g.id === 'Gold-SF2')).toMatchObject({ opponent: null, bye: true, result: 'W' })
+    expect(teamDetail(state, 'Spikers')).toBeNull() // in a bracket but not in the standings fixture
+    expect(teamDetail(state, 'Aces')!.games.every(g => !g.bye)).toBe(true)
+    expect(teamDetail(state, 'Nobody')).toBeNull()
   })
 })
