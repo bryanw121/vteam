@@ -1481,6 +1481,32 @@ export type Database = {
           },
         ]
       }
+      metrics_excluded_users: {
+        Row: {
+          added_at: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          reason?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metrics_excluded_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string
