@@ -130,14 +130,15 @@ describe('friends migration', () => {
   it('allows every notification type the app knows, and only those', () => {
     const list = migration.match(/add constraint notifications_notification_type_check[\s\S]*?array\[([\s\S]*?)\]::text\[\]/)?.[1] ?? ''
     const sqlTypes = [...list.matchAll(/'([a-z_]+)'/g)].map(m => m[1]).sort()
-    expect(sqlTypes).toEqual([...NOTIFICATION_TYPES].sort())
+    // Types added by later migrations (What to bring, #256).
+    expect(sqlTypes).toEqual(NOTIFICATION_TYPES.filter(t => t !== 'bring_item_uncovered').sort())
   })
 
   it('the down restores every other type and drops only the friend ones', () => {
     const down = read('supabase/migrations/20261028203837_friends.down.sql')
     const list = down.match(/add constraint notifications_notification_type_check[\s\S]*?array\[([\s\S]*?)\]::text\[\]/)?.[1] ?? ''
     const sqlTypes = [...list.matchAll(/'([a-z_]+)'/g)].map(m => m[1]).sort()
-    expect(sqlTypes).toEqual(NOTIFICATION_TYPES.filter(t => t !== 'friend_request' && t !== 'friend_accepted').sort())
+    expect(sqlTypes).toEqual(NOTIFICATION_TYPES.filter(t => t !== 'friend_request' && t !== 'friend_accepted' && t !== 'bring_item_uncovered').sort())
   })
 
   it('every SECURITY DEFINER function pins search_path and no RPC is granted to anon', () => {
