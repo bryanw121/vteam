@@ -24,6 +24,14 @@ export const STALE = {
   courts: 60_000,
   /** NWS hourly forecast per court (useForecast). The proxy's CDN copy is fresh for 30 min too. */
   forecast: 30 * 60_000,
+  /** Outside leagues and tournaments (useExternalPrograms): Schelagg refreshes them twice a day. */
+  programs: 30 * 60_000,
+  /** Whether the viewer is an admin (Profile's Admin metrics row). Changes only by hand in app_admins. */
+  adminCheck: 30 * 60_000,
+  /** Admin metrics screens (Overview, People, Retention, one person): computed on demand, a minute is fresh enough. */
+  metrics: 60_000,
+  /** Metrics → Live: refetched every 15 s while on screen. */
+  metricsLive: 10_000,
   /** Curated reference lists that change only by migration (major_cities). */
   reference: 60 * 60_000,
 } as const

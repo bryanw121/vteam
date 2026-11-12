@@ -1,10 +1,11 @@
-import { Platform, View, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import { Platform, View, TouchableOpacity, StyleSheet } from 'react-native'
 import { Text } from './ui/Text'
 import * as Linking from 'expo-linking'
 import { useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme, shared } from '../constants'
 import { routes } from '../utils/routes'
+import { confirmDestructive } from '../utils/confirm'
 import type { EventCommentWithAuthor } from '../types'
 import { profileAvatarSmallUri, profileDisplayName, formatCommentTime } from '../utils'
 import { ProfileAvatar } from './ProfileAvatar'
@@ -105,14 +106,8 @@ export function EventCommentRow({
   }
 
   function confirmDelete() {
-    Alert.alert(
-      'Delete comment?',
-      'This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => onDelete?.(comment.id) },
-      ],
-    )
+    // The native button dialog does nothing on web, so deleting a comment there never asked and never deleted (#228).
+    confirmDestructive('Delete comment?', 'This cannot be undone.', 'Delete', () => onDelete?.(comment.id))
   }
 
   if (isDeleted) {
@@ -249,7 +244,7 @@ const styles = StyleSheet.create({
   announcementBadgeText: {
     fontSize: theme.font.size.xs,
     fontWeight: theme.font.weight.semibold,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     letterSpacing: 0.3,
   },
   content: {
@@ -268,15 +263,15 @@ const styles = StyleSheet.create({
   },
   replyBtn: {
     fontSize: theme.font.size.sm,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     fontWeight: '600',
   },
   link: {
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     textDecorationLine: 'underline',
   },
   mention: {
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     fontWeight: '600',
   },
   actionBtn: {

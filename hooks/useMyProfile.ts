@@ -1,12 +1,14 @@
 import { useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { Sentry } from '../lib/sentry'
-import { getQueryData, queryKey, setQueryData, useMutation, useQuery } from '../lib/query'
+import { getQueryData, prefetchQuery, queryKey, setQueryData, useMutation, useQuery } from '../lib/query'
 import type { QueryResult } from '../lib/query'
 import { STALE } from '../constants/cache'
 import { useSession } from '../contexts/session'
 import { normalizeVolleyballPositions, normalizeVolleyballSkillLevel } from '../utils'
-import type { MyProfile, Profile, ProfileBrief, ProfilePatch } from '../types'
+import { fetchSettings, userSettingsKey } from './useUserSettings'
+import { countCheers } from '../utils/cheers'
+import type { CheersReceived, MyProfile, Profile, ProfileBrief, ProfilePatch, UserSettings } from '../types'
 
 /**
  * The columns every screen needs from a profile (own or someone else's): the
@@ -18,9 +20,19 @@ export const PROFILE_BRIEF_SELECT =
 
 /**
  * The viewer's private notification switches live in `user_settings`
- * (owner-only RLS), not on the `profiles` row every visitor can read.
+ * (owner-only RLS), not on the `profiles` row every visitor can read. They are
+ * read through `useUserSettings`' query (#224), so opening Profile doesn't
+ * read that row twice: this joins its request or reuses its fresh result.
  */
-const MY_NOTIFICATION_PREFS_SELECT = 'notification_prefs'
+async function readMyNotificationPrefs(userId: string): Promise<Profile['notification_prefs']> {
+  const key = userSettingsKey(userId)
+  await prefetchQuery(key, () => fetchSettings(userId), { staleMs: STALE.profile })
+  const settings = getQueryData<UserSettings | null>(key)
+  // A failed shared read leaves nothing usable: read it here so the error
+  // surfaces (showing default switches could save over the real ones).
+  if (settings === undefined) return (await fetchSettings(userId))?.notification_prefs ?? null
+  return settings?.notification_prefs ?? null
+}
 
 /** Cache key of the signed-in user's own profile. */
 export function myProfileKey(userId: string): string {
@@ -46,10 +58,22 @@ export function toProfileBrief(p: ProfileBrief): ProfileBrief {
   }
 }
 
-/** Cache key of how many cheers the signed-in user has received. */
+/**
+ * Cache key of the cheers the signed-in user has received, counted by type.
+ * Profile shows the total and the badge check reads the same entry (#224).
+ * (Not `cheers:received:<id>`: device snapshots of that key hold a number.)
+ */
 export function myCheersCountKey(userId: string): string {
-  return queryKey('cheers', 'received', userId)
+  return queryKey('cheers', 'received', userId, 'byType')
 }
+
+/** The cheers a player received: how many in all, and how many of each type. */
+export async function fetchCheersReceived(userId: string): Promise<CheersReceived> {
+  const { data, error } = await supabase.from('cheers').select('cheer_type').eq('receiver_id', userId)
+  if (error) throw error
+  return countCheers((data ?? []) as { cheer_type: string }[])
+}
+
 
 /** A `profiles` row as PostgREST returns it → the `Profile` the UI works with. */
 export function normalizeProfileRow(row: Partial<Profile>): Profile {
@@ -84,13 +108,11 @@ export function useMyProfile(opts?: { enabled?: boolean }): MyProfile {
   const query = useQuery<Profile>(
     key,
     async () => {
-      const [profileRes, settingsRes] = await Promise.all([
+      const [profileRes, prefs] = await Promise.all([
         supabase.from('profiles').select(PROFILE_BRIEF_SELECT).eq('id', userId as string).single(),
-        supabase.from('user_settings').select(MY_NOTIFICATION_PREFS_SELECT).eq('user_id', userId as string).maybeSingle(),
+        readMyNotificationPrefs(userId as string),
       ])
       if (profileRes.error) throw profileRes.error
-      if (settingsRes.error) throw settingsRes.error
-      const prefs = (settingsRes.data as Pick<Profile, 'notification_prefs'> | null)?.notification_prefs ?? null
       return normalizeProfileRow({ ...(profileRes.data as Partial<Profile>), notification_prefs: prefs })
     },
     { staleMs: STALE.profile, enabled },
@@ -114,11 +136,21 @@ export function useMyProfile(opts?: { enabled?: boolean }): MyProfile {
     },
     {
       onMutate: patch => {
-        if (!key) return
+        if (!key || !userId) return
         const previous = getQueryData<Profile>(key)
         if (!previous) return
         setQueryData<Profile>(key, { ...previous, ...patch })
-        return () => setQueryData<Profile>(key, previous)
+        // The switches are read from the settings query: keep it in step, or
+        // the next profile refetch would bring the old ones back.
+        const settingsKey = userSettingsKey(userId)
+        const previousSettings = getQueryData<UserSettings | null>(settingsKey)
+        if (patch.notification_prefs !== undefined && previousSettings) {
+          setQueryData<UserSettings | null>(settingsKey, { ...previousSettings, notification_prefs: patch.notification_prefs })
+        }
+        return () => {
+          setQueryData<Profile>(key, previous)
+          if (previousSettings !== undefined) setQueryData<UserSettings | null>(settingsKey, previousSettings)
+        }
       },
       onSuccess: () => {
         // Chat bubbles and the event page read the brief copy; keep it in step
@@ -127,6 +159,12 @@ export function useMyProfile(opts?: { enabled?: boolean }): MyProfile {
         if (userId && saved) setQueryData<ProfileBrief>(profileBriefKey(userId), toProfileBrief(saved))
       },
       onError: error => Sentry.captureException(error),
+      // A first save creates the settings row the cache holds as null: read it
+      // again so the switches the profile shows are the saved ones.
+      invalidates: patch =>
+        patch.notification_prefs !== undefined && userId && getQueryData(userSettingsKey(userId)) === null
+          ? [userSettingsKey(userId)]
+          : [],
     },
   )
 
@@ -176,21 +214,21 @@ export function useMyProfile(opts?: { enabled?: boolean }): MyProfile {
 }
 
 /**
- * How many cheers the signed-in user has received (exact, head-only count). A
- * failed refetch keeps the last known count instead of dropping it to zero.
+ * How many cheers the signed-in user has received. Reads the by-type rows the
+ * badge check needs anyway, so Profile reads `cheers` once. A failed refetch
+ * keeps the last known count instead of dropping it to zero.
  */
 export function useMyCheersCount(opts?: { enabled?: boolean }): QueryResult<number> {
   const { userId } = useSession()
-  return useQuery<number>(
+  const query = useQuery<CheersReceived>(
     userId ? myCheersCountKey(userId) : null,
-    async () => {
-      const { count, error } = await supabase
-        .from('cheers')
-        .select('id', { count: 'exact', head: true })
-        .eq('receiver_id', userId as string)
-      if (error) throw error
-      return count ?? 0
-    },
+    () => fetchCheersReceived(userId as string),
     { staleMs: STALE.profile, enabled: (opts?.enabled ?? true) && userId !== null },
   )
+  const { refetch } = query
+  const refetchTotal = useCallback(
+    async (o?: Parameters<typeof refetch>[0]) => (await refetch(o))?.total,
+    [refetch],
+  )
+  return { ...query, data: query.data?.total, refetch: refetchTotal }
 }

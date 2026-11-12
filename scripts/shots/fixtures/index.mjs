@@ -173,6 +173,18 @@ export function buildFixtures(now) {
     ext(4, { title: 'Reverse Co-ed 4s', venue: 'Volleyworld Austin', surface: 'indoor', session_type: 'open play', price: '$12', starts_at: t.iso(5, 19, 0), ends_at: t.iso(5, 22, 0), signup_url: 'https://example.com/volleyworld' }),
   ]
 
+  // Outside leagues and tournaments (Schelagg's programs feed).
+  const day = (n) => t.iso(n, 12, 0).slice(0, 10)
+  const prog = (n, f) => ({ id: `shots-program-${n}`, kind: 'league', surface: 'indoor', region: 'austin', state: 'TX', series: null, org: 'ACES', venue: 'Austin Sports Center', city: 'Austin', address: null, format: null, divisions: [], weekdays: [], registration_opens: null, waitlist_on: null, price_note: null, price_changes_on: null, status: 'open', signup_url: 'https://example.com/signup', source_url: 'https://example.com/signup', checked_at: t.ago(60 * 4), ...f })
+  const external_programs = [
+    prog(1, { title: 'Tuesday Co-ed Sand 4s · Winter', surface: 'sand', venue: 'ATX Beach', starts_on: day(9), ends_on: day(65), weekdays: ['Tuesday'], registration_deadline: day(4), team_price: '$400–500', individual_price: '$105', price_note: 'Early bird', price_changes_on: day(1) }),
+    prog(2, { title: 'Sunday Indoor Volleyball', org: 'Austin Sports & Social Club', venue: 'South Austin Rec Center', starts_on: day(14), ends_on: day(84), weekdays: ['Sunday'], registration_deadline: day(5), team_price: '$689', individual_price: '$99' }),
+    prog(3, { title: 'Coed 4s Sand · Mondays', org: 'Meanwhile Brewing', surface: 'sand', venue: 'Meanwhile Brewing Co', starts_on: day(70), ends_on: day(119), weekdays: ['Monday'], registration_deadline: day(36), team_price: '$700' }),
+    prog(4, { kind: 'tournament', title: 'Turkey Spikes BYO4s Sand Tourney', surface: 'sand', venue: 'ATX Beach', starts_on: day(6), ends_on: day(6), registration_deadline: day(5), team_price: '$160', individual_price: '$45' }),
+    prog(5, { kind: 'tournament', title: 'Holiday Spikes Indoor (BB/B)', starts_on: day(27), ends_on: day(27), registration_deadline: day(26), team_price: '$315–415', individual_price: '$50' }),
+    prog(6, { kind: 'tournament', series: 'nagva', org: 'NAGVA', region: null, title: 'Battle of the Alamo 2026', venue: 'Mission Concepcion Sports Complex', city: 'San Antonio', starts_on: day(40), ends_on: day(41), registration_deadline: null, waitlist_on: day(38), team_price: '$650', divisions: [{ name: 'A1', cap: 12, confirmed: 7 }, { name: 'BB', cap: 24, confirmed: 20 }] }),
+  ]
+
   // ─── Tournaments ───────────────────────────────────────────────────────────
   const TU = IDS.tournament
   const tournament = (tid, f) => ({
@@ -343,7 +355,7 @@ export function buildFixtures(now) {
   return {
     profiles: profiles(t),
     tags, major_cities, clubs, club_members, club_posts, club_post_likes, club_post_comments,
-    events, event_tags, event_attendees, event_guests, event_payments, event_cohosts, event_comments, cheers, user_event_templates, external_sessions,
+    events, event_tags, event_attendees, event_guests, event_payments, event_cohosts, event_comments, cheers, user_event_templates, external_sessions, external_programs,
     tournaments, tournament_rules, tournament_prizes, tournament_teams, tournament_team_members, tournament_pools, tournament_pool_teams,
     tournament_matches, tournament_sets, tournament_comments, tournament_team_invitations: [], tournament_team_join_requests: [],
     conversations, conversation_members, messages, message_reactions,

@@ -392,6 +392,8 @@ export type EventWithDetails = Event & {
   _isTournament?: boolean
   /** Set for sessions run elsewhere in Austin (Schelagg data). Rendered by ExternalSessionCard, which links out to the venue's sign-up. */
   _external?: ExternalSession
+  /** Set for tournaments run outside vteam (Schelagg's programs feed). Rendered by ExternalProgramCard, which links out to the organizer's sign-up. */
+  _program?: ExternalProgram
 }
 
 /** Last visit's Events feed saved on the device (utils/feedSnapshot.ts). `owner` is the viewer's user id, or null for a guest. */
@@ -410,12 +412,68 @@ export type QuerySnapshot = {
   entries: Record<string, unknown>
 }
 
+/** How recently Schelagg confirmed an outside session at its source (utils/externalFreshness). */
+export type SessionConfirmation = { state: 'ok' | 'unconfirmed' | 'hidden'; note: string | null }
+
 /** Row of `external_sessions`: a session another Austin venue or group runs, pulled hourly from the Schelagg feed (ingest_schelagg_feed). */
 export type ExternalSession = Pick<
   Override<Tables<'external_sessions'>, { surface: 'indoor' | 'sand' | 'grass' | null }>,
   | 'id' | 'source_id' | 'title' | 'venue' | 'city' | 'surface' | 'session_type' | 'level' | 'price'
   | 'starts_at' | 'ends_at' | 'signup_url' | 'signup_label' | 'note' | 'verified_at' | 'region'
 >
+
+/** One division of an outside league or tournament: its cap and, where the organizer lists it, how many teams are confirmed (counts only). */
+export type ProgramDivision = { name: string; cap?: number; confirmed?: number }
+
+/** Row of `external_programs`: a league season or tournament run outside vteam, pulled from Schelagg's programs feed (ingest_schelagg_programs). */
+export type ExternalProgram = Pick<
+  Override<Tables<'external_programs'>, {
+    kind: 'league' | 'tournament'
+    surface: 'indoor' | 'sand' | 'grass' | null
+    status: 'open' | 'waitlist' | 'full' | 'closed' | null
+    divisions: ProgramDivision[]
+  }>,
+  | 'id' | 'kind' | 'surface' | 'region' | 'state' | 'series' | 'org' | 'title' | 'venue' | 'city' | 'address'
+  | 'format' | 'divisions' | 'starts_on' | 'ends_on' | 'weekdays' | 'registration_opens' | 'registration_deadline'
+  | 'waitlist_on' | 'team_price' | 'individual_price' | 'price_note' | 'price_changes_on' | 'status'
+  | 'signup_url' | 'source_url' | 'checked_at'
+>
+
+/** Props of ExternalProgramCard. */
+export type ExternalProgramCardProps = {
+  program: ExternalProgram
+  /** No date block, and the dates in the text (lists that aren't grouped by day). */
+  compact?: boolean
+  /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
+  menuInset?: boolean
+}
+
+/** Props of ProgramHostChips. */
+export type ProgramHostChipsProps = {
+  programs: ExternalProgram[]
+  /** The chosen host (an `org`), or null for all. */
+  host: string | null
+  onSelect: (host: string | null) => void
+}
+
+/** Props of ProgramSection. */
+export type ProgramSectionProps = {
+  title: string
+  programs: ExternalProgram[]
+  /** Warning color: deadlines this week. */
+  hot?: boolean
+  testID?: string
+}
+
+/** Outside programs grouped for one viewer's region (utils/externalPrograms). */
+export type ProgramsForRegion = {
+  /** Tournaments in the region, soonest first. */
+  tournaments: ExternalProgram[]
+  /** Leagues in the region open (or opening) for sign-up, soonest deadline first. */
+  leagues: ExternalProgram[]
+  /** Tournaments elsewhere in the region's state (NAGVA, the Texas Asian Olympics…), soonest first. */
+  elsewhere: ExternalProgram[]
+}
 
 // ─── Form Types ───────────────────────────────────────────────────────────────
 // Represent the local state of input forms before data is sent to the database.
@@ -470,6 +528,8 @@ export type MajorCity = Tables<'major_cities'>
 
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
 export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
+  /** Notification switches (`useMyProfile` exposes them as `profile.notification_prefs`). Missing reads as the defaults. */
+  notification_prefs?: NotificationPrefs | null
   home_city: MajorCity | null
   /** What the player hid from their Events feed (`user_settings.hidden_feed`). Missing reads as nothing hidden. */
   hidden_feed?: HiddenFeedEntry[]
@@ -763,7 +823,7 @@ export type MyUpcomingEvent = {
 // ─── Events Feed Types ────────────────────────────────────────────────────────
 
 /** Events-tab filter chip ids. */
-export type FeedFilter = 'mine' | 'all' | 'open_play' | 'tournament' | 'not_full'
+export type FeedFilter = 'all' | 'open_play' | 'tournament'
 
 export type FeedFilterChip = { id: FeedFilter; label: string }
 
@@ -795,8 +855,6 @@ export type FilterChipsProps = {
   chips: FeedFilterChip[]
   active: FeedFilter
   onSelect: (id: FeedFilter) => void
-  /** Count shown on the Mine chip; hidden when 0. */
-  mineCount: number
   /** Desktop wraps the row; mobile scrolls it horizontally. */
   wide: boolean
 }
@@ -1298,6 +1356,7 @@ export type OwnedClubOption = { id: string; name: string }
 
 export * from './tournament'
 export * from './scoresheet'
+export * from './metrics'
 
 // ─── Schedule generator ───────────────────────────────────────────────────────
 
@@ -1520,6 +1579,20 @@ export type LeaveReason = 'something_came_up' | 'sick' | 'injured' | 'work'
 
 /** Toast with an optional action button (e.g. "Message host" after a failed leave note). */
 export type ToastAction = { label: string; onPress: () => void }
+
+/** How a toast looks: what kind of news it is (#228). */
+export type ToastVariant = 'error' | 'warning' | 'success' | 'info'
+
+/** One message for `toast.show` (`lib/toast`). */
+export type ToastMessage = {
+  message: string
+  /** Bold first line, e.g. "Couldn't join". */
+  title?: string
+  variant?: ToastVariant
+  action?: ToastAction
+  /** ms before it hides by itself (default 4000; 8000 with an action). */
+  duration?: number
+}
 
 /** Host removing someone from the roster (the X on a card). */
 export type RemoveTarget =
@@ -1920,6 +1993,32 @@ export type TextScaleContextValue = {
   setSize: (size: TextSizeId) => void
 }
 
+// ─── Account deletion (#99) ───────────────────────────────────────────────────
+
+/** Who takes over something the deleted account owned. */
+export type AccountDeletionSuccessor = Pick<Profile, 'id' | 'username' | 'first_name' | 'last_name'>
+
+/**
+ * What deleting the signed-in account does, from `get_account_deletion_preview()`
+ * (the same plan `prepare_account_deletion` then carries out).
+ */
+export type AccountDeletionPlan = {
+  clubs: {
+    id: string; name: string; action: 'transfer' | 'delete'; to: AccountDeletionSuccessor | null
+    /** Other members, posts, tournaments and whether it has a group chat: what a deletion takes with it. */
+    members: number; posts: number; tournaments: number; has_chat: boolean
+  }[]
+  tournaments: { id: string; title: string; status: string; action: 'transfer' | 'delete'; with_club: string | null; to: AccountDeletionSuccessor | null }[]
+  events: { id: string; title: string; event_date: string; action: 'transfer' | 'cancel'; to: AccountDeletionSuccessor | null }[]
+  past_events_kept: number
+  /** Kudos the person gave: recipients keep them, from "Deleted user". */
+  kudos_given_kept: number
+  /** md5 of the plan; sent back on delete so a stale confirmation is refused. */
+  hash: string
+}
+
+/** Why the delete-account function refused: sign in again, or the plan changed since the preview. */
+export type AccountDeletionBlock = 'reauth_required' | 'plan_changed' | null
 /** react-native-web's ScrollView instance: exposes the DOM node that scrolls (web only). */
 export type WebScrollableRef = { getScrollableNode?: () => HTMLElement } | null
 
@@ -1990,6 +2089,12 @@ export type UserProfileData = {
 /** hooks/useEventHistory: past events attended / hosted, or upcoming hosted. */
 export type EventHistoryKind = 'attended' | 'hosted-past' | 'hosted-upcoming'
 
+/** hooks/useMyProfile: cheers a player received, in all and by type (Profile total + badge check). */
+export type CheersReceived = {
+  total: number
+  byType: Record<string, number>
+}
+
 /** hooks/useCheersSummary: the viewer's cheers screen. */
 export type CheersSummary = {
   totalReceived: number
@@ -1997,3 +2102,36 @@ export type CheersSummary = {
   counts: Partial<Record<CheerType, number>>
 }
 
+
+/** What a password reset link brought (`utils/recoveryLink`, #223): a good link, an expired or used one, or neither. */
+export type RecoveryLink = 'recovery' | 'expired' | null
+
+// ─── Join intent (#229) ───────────────────────────────────────────────────────
+
+/**
+ * What a guest was doing when they were sent to sign up, so it can be finished
+ * after: today only joining an event (`kind` leaves room for "message host" or
+ * "join club"). `title`, `startsAt` and `spotsLeft` (when Join was tapped) are
+ * for the sign-up screen's context card; `at` is when it was saved (ms), for expiry.
+ */
+export type PendingAction = { kind: 'join'; eventId: string; title: string; startsAt: string; at: number; spotsLeft?: number | null }
+
+/** `takePendingAction`: a fresh action for this event, one that is too old, or nothing for it. */
+export type PendingActionTake = { status: 'ok'; action: PendingAction } | { status: 'expired' } | null
+
+/** Which signup the "Grab your spot?" sheet offers, or null when there is nothing to offer. */
+export type JoinOffer = 'join' | 'waitlist' | 'request'
+
+/** `join_intent_resumed` outcome. */
+export type JoinIntentOutcome = 'joined' | 'not_now' | 'skipped' | 'expired'
+
+// ─── View state in the URL (utils/urlState, hooks/useUrlParam) ────────────────
+
+/** How one URL param maps to a screen's view value. `format` returns undefined for the default, which leaves the param out. */
+export type UrlCodec<T> = {
+  parse: (raw: string | undefined) => T
+  format: (value: T) => string | undefined
+}
+
+/** Field errors on the feedback form (#228: shown under each field, not as an alert). */
+export type FeedbackFieldErrors = { title?: string; description?: string; platform?: string }

@@ -41,6 +41,12 @@ describe('forecastWindow / shouldShowForecast', () => {
     expect(forecastWindow({ ...outdoor, surface: undefined }, NOW)).toBeNull()
   })
 
+  it('never for outside sessions or outside tournaments (no events row to read coordinates from)', () => {
+    expect(forecastWindow({ ...outdoor, _external: {} }, NOW)).toBeNull()
+    expect(forecastWindow({ ...outdoor, _program: {} }, NOW)).toBeNull()
+    expect(forecastWindow({ ...outdoor, _isTournament: true }, NOW)).toBeNull()
+  })
+
   it('needs coordinates', () => {
     expect(shouldShowForecast({ ...outdoor, latitude: null }, NOW)).toBe(false)
     expect(shouldShowForecast({ ...outdoor, longitude: undefined }, NOW)).toBe(false)

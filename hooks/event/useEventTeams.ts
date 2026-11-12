@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Alert } from 'react-native'
 import { supabase } from '../../lib/supabase'
 import { useMutation } from '../../lib/query'
 import type { BalancePlayer, EventGuest, EventWithDetails, TeamAssignment, TeamMode } from '../../types'
@@ -8,6 +7,7 @@ import { attendeeRowsWithProfiles, balanceAssignments, deriveAssignments, mergeA
 import { loadTeamMode, saveTeamMode, teamModeNow } from '../../utils/teamMode'
 import { reportEventError } from './telemetry'
 import type { EventData } from '../../types'
+import { toast } from '../../lib/toast'
 
 /**
  * Team builder state for the People/Cheers tabs. `assignments` is the host's
@@ -74,7 +74,7 @@ export function useEventTeams(data: EventData, isHostOrCohost: boolean) {
       ? balanceAssignments(balancePlayers, assignments, numTeams)
       : randomizeAssignments(playerIds, assignments, numTeams)
     if (!result.ok) {
-      Alert.alert(result.title, result.message)
+      toast.show({ title: result.title, message: result.message, variant: 'warning' })
       return
     }
     setAssignments(result.assignments)
@@ -121,7 +121,7 @@ export function useEventTeams(data: EventData, isHostOrCohost: boolean) {
       },
       onError: e => {
         reportEventError(id, userId, 'saveTeams', e)
-        Alert.alert('Error', 'Could not save teams. Please try again.')
+        toast.error("Couldn't save teams", e)
       },
     },
   )

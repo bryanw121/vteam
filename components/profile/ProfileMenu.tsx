@@ -13,6 +13,12 @@ type Props = {
   onOpenPrivacy: () => void
   /** Pending incoming friend requests, shown as a count on the Friends row. */
   friendRequestCount?: number
+  /**
+   * Admins get an Admin metrics row, last: the admin check answers after the rest of Profile,
+   * and a group drawn above the others then pushed the whole menu down (a visible jump on refresh).
+   * Drawing it is cosmetic: every metrics read checks on the server.
+   */
+  showAdmin?: boolean
 }
 
 type IconName = ComponentProps<typeof Ionicons>['name']
@@ -69,14 +75,21 @@ const MENU_GROUPS: readonly MenuGroup[] = [
   },
 ]
 
+/** Only for accounts in app_admins. */
+const ADMIN_GROUP: MenuGroup = {
+  title: 'Admin',
+  rows: [{ title: 'Admin metrics', icon: 'stats-chart-outline', section: 'metrics' }],
+}
+
 const rowKey = (row: MenuRow) => ('section' in row ? row.section : row.action)
 
 /** The settings shortcuts under the profile hero, in labelled groups. Navigation is the caller's (`onOpen`). */
-export function ProfileMenu({ onOpen, onTakeTour, onOpenTerms, onOpenPrivacy, friendRequestCount = 0 }: Props) {
+export function ProfileMenu({ onOpen, onTakeTour, onOpenTerms, onOpenPrivacy, friendRequestCount = 0, showAdmin = false }: Props) {
   const actions = { tour: onTakeTour, terms: onOpenTerms, privacy: onOpenPrivacy }
+  const groups = showAdmin ? [...MENU_GROUPS, ADMIN_GROUP] : MENU_GROUPS
   return (
     <View style={styles.groups}>
-      {MENU_GROUPS.map(group => (
+      {groups.map(group => (
         <View key={group.title}>
           <Text style={styles.groupTitle} accessibilityRole="header">{group.title}</Text>
           <View style={[shared.card, styles.card]}>

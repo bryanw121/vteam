@@ -5,12 +5,11 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import { Button } from '../../../../components/Button'
 import { ConfirmDialog, ScreenContainer, ScreenState } from '../../../../components/ui'
-import { Toast } from '../../../../components/Toast'
+import { toast } from '../../../../lib/toast'
 import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useAdFreeStatus, useRedeemAdFree } from '../../../../hooks/useAdFree'
 import { GENERIC_ERROR_MESSAGE, shared, theme } from '../../../../constants'
 import { adFreeView, formatAdFreeDate } from '../../../../utils/adFree'
-import type { ToastState } from '../../../../types'
 
 /**
  * Spend points to hide ads (banners and sponsored slots) for a while. The
@@ -23,7 +22,6 @@ export default function AdFreeScreen() {
   const redeem = useRedeemAdFree()
   const [confirming, setConfirming] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const [toast, setToast] = useState<ToastState | null>(null)
 
   async function handleRefresh() {
     setRefreshing(true)
@@ -38,15 +36,15 @@ export default function AdFreeScreen() {
     const result = await redeem.mutate()
     setConfirming(false)
     if (!result) {
-      setToast({ message: GENERIC_ERROR_MESSAGE, variant: 'error' })
+      toast.show({ message: GENERIC_ERROR_MESSAGE, variant: 'error' })
       return
     }
     if (!result.ok) {
-      setToast({ message: `You need ${result.cost - result.balance} more points.`, variant: 'info' })
+      toast.show({ message: `You need ${result.cost - result.balance} more points.`, variant: 'info' })
       return
     }
     if (result.ad_free_until) {
-      setToast({ message: `No ads until ${formatAdFreeDate(new Date(result.ad_free_until))}.`, variant: 'success' })
+      toast.show({ message: `No ads until ${formatAdFreeDate(new Date(result.ad_free_until))}.`, variant: 'success' })
     }
   }
 
@@ -123,7 +121,6 @@ export default function AdFreeScreen() {
         loading={redeem.isPending}
       />
 
-      <Toast message={toast?.message ?? ''} variant={toast?.variant} visible={!!toast} onHide={() => setToast(null)} />
     </View>
   )
 }

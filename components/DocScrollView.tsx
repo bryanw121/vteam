@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useLayoutEffect, useRef } from 'react'
 import { Platform, ScrollView, ScrollViewProps, StyleProp, View, ViewStyle } from 'react-native'
 import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControlProps } from 'react-native'
 import { DocPullToRefresh } from './RefreshControl'
@@ -47,6 +47,24 @@ export function DocScrollView({ docScroll, memoryKey, children, style, contentCo
     // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
   }, [remember, memoryKey, onScroll])
 
+  // Coming back with a remembered offset: hide the content until it's restored, so it never
+  // paints at the top and then jumps (the flicker on Back). A timer always shows it again.
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const reveal = () => {
+    if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null }
+    const el = scrollNode()
+    if (el?.style) el.style.visibility = ''
+  }
+  useLayoutEffect(() => {
+    if (Platform.OS !== 'web' || docScroll || !remember || !memoryKey || recallScroll(memoryKey) <= 0) return
+    const el = scrollNode()
+    if (!el?.style) return
+    el.style.visibility = 'hidden'
+    hideTimer.current = setTimeout(reveal, 400)
+    return reveal
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mount
+  }, [])
+
   // Restore when the ScrollView first gets a size (mount, including the remount
   // after a browser back) and whenever it is shown again after being hidden.
   const handleLayout = useCallback((e: LayoutChangeEvent) => {
@@ -56,12 +74,14 @@ export function DocScrollView({ docScroll, memoryKey, children, style, contentCo
     const cameBack = shown && !wasShown.current
     wasShown.current = shown
     const y = recallScroll(memoryKey)
-    if (!cameBack || y <= 0) return
+    if (!cameBack) return
+    if (y <= 0) { reveal(); return }
     restoreWhenReady({
       y,
       ready: () => isShown(scrollNode()),
       apply: to => scrollRef.current?.scrollTo({ y: to, animated: false }),
       current: () => scrollNode()?.scrollTop ?? y,
+      onDone: reveal,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
   }, [remember, memoryKey, onLayout])

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Dimensions, Platform } from 'react-native'
 import { useRouter } from 'expo-router'
+import { Sentry } from '../lib/sentry'
 import { ANALYTICS_EVENTS, TABS, TOURS, tabIndexOf, tourCompletionId } from '../constants'
 import { track } from '../lib/analytics'
 import { TourOverlay } from '../components/tour/TourOverlay'
@@ -32,7 +33,19 @@ type Registry = {
 const TourRegistryContext = createContext<Registry | null>(null)
 const TourControlsContext = createContext<TourControls>({ start: () => {}, stop: () => {}, active: false })
 
+/** The target the tour is pointing at (or waiting for) right now, or null. */
+const TourWantedContext = createContext<string | null>(null)
+
 export const useTour = () => useContext(TourControlsContext)
+
+/**
+ * True while the tour is pointing at (or waiting for) target `id`. A screen that can
+ * hide a tour target (the week strip under the Tournament filter) keeps it on screen
+ * while this is true, so the step always has something to point at instead of being skipped.
+ */
+export function useTourWants(id: string): boolean {
+  return useContext(TourWantedContext) === id
+}
 
 /** Callback ref that registers a measurable view as tour target `id` while it's mounted. */
 export function useTourTarget(id: string): (node: TourMeasurable | null) => void {
@@ -99,6 +112,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const [tour, setTour] = useState<TourDef | null>(null)
   const [index, setIndex] = useState(0)
   const [rect, setRect] = useState<TourRect | null>(null)
+  const [wanted, setWanted] = useState<string | null>(null)
   const tourRef = useRef<TourDef | null>(null)
   const indexRef = useRef(0)
 
@@ -156,6 +170,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
     tourRef.current = null
     setTour(null)
     setRect(null)
+    setWanted(null)
     if (current && completed) {
       // Recorded next to seen banners (device, and account when signed in). Nothing
       // auto-starts a tour yet; it's there for that, and tours can always be restarted.
@@ -175,7 +190,13 @@ export function TourProvider({ children }: { children: ReactNode }) {
       if (myRun !== run.current) return true
       const step = def.steps[i]
       if (step.tab) showTab(step.tab)
+      setWanted(step.target)
       foundRect = await waitForTarget(step.target, myRun)
+      if (!foundRect && myRun === run.current) {
+        // Skipping a step is a bug to fix (a screen hid what it points at): make it visible.
+        track(ANALYTICS_EVENTS.tourStepMissing, { tour: def.id, step: i, target: step.target })
+        Sentry.captureMessage(`Tour step skipped: ${def.id} step ${i + 1} (${step.target}) not on screen`)
+      }
       return !!foundRect
     })
     if (myRun !== run.current) return
@@ -242,6 +263,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
   return (
     <TourRegistryContext.Provider value={registry}>
       <TourControlsContext.Provider value={controls}>
+        <TourWantedContext.Provider value={wanted}>
         {children}
         {tour && (
           <TourOverlay
@@ -254,6 +276,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
             onSkip={stop}
           />
         )}
+        </TourWantedContext.Provider>
       </TourControlsContext.Provider>
     </TourRegistryContext.Provider>
   )

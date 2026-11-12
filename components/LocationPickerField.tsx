@@ -320,7 +320,7 @@ export function LocationPickerField({ value, onChange, recentVenues = [], placeh
                   : null}
             </View>
             <TouchableOpacity onPress={close} hitSlop={8}>
-              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primary }}>
+              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primaryText }}>
                 Cancel
               </Text>
             </TouchableOpacity>

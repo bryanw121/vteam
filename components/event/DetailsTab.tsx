@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Platform, View, TouchableOpacity, Alert } from 'react-native'
+import { Platform, View, TouchableOpacity } from 'react-native'
 import { Text } from '../ui/Text'
 import { RefreshControl } from '../RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -22,6 +22,7 @@ import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
 import type { EventData, EventPaymentsApi } from '../../types'
 import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, profileAvatarSmallUri } from '../../utils'
 import { profilePrefetchProps } from '../../hooks/useUserProfile'
+import { toast } from '../../lib/toast'
 
 function formatEndTime(startIso: string, durationMinutes: number): string {
   const normalized = /[Z+]/.test(startIso) ? startIso : startIso + 'Z'
@@ -59,7 +60,7 @@ async function addToCalendar(title: string, startIso: string, durationMinutes: n
 
   const { status } = await Calendar.requestCalendarPermissionsAsync()
   if (status !== 'granted') {
-    Alert.alert('Permission required', 'Please allow calendar access in Settings to add this event.')
+    toast.show({ title: 'Calendar access needed', message: 'Allow calendar access in Settings to add this event.', variant: 'warning' })
     return
   }
 
@@ -70,7 +71,7 @@ async function addToCalendar(title: string, startIso: string, durationMinutes: n
     calendars.find(c => c.allowsModifications)
 
   if (!defaultCal) {
-    Alert.alert('No calendar found', 'Could not find a writable calendar on this device.')
+    toast.show({ title: 'No calendar found', message: "Couldn't find a calendar on this device to add it to.", variant: 'warning' })
     return
   }
 
@@ -82,7 +83,7 @@ async function addToCalendar(title: string, startIso: string, durationMinutes: n
     ...(address ? { location: address } : {}),
   })
 
-  Alert.alert('Added to calendar', `"${title}" has been added to your calendar.`)
+  toast.show({ title: 'Added to calendar', message: `"${title}" is on your calendar.`, variant: 'success' })
 }
 
 function HostRow({
@@ -327,7 +328,7 @@ export function DetailsTab({
               accessibilityRole="button"
               style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
             >
-              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.medium }}>
+              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
                 Add to calendar
               </Text>
               <Ionicons name="arrow-forward" size={12} color={theme.colors.primary} />
@@ -362,7 +363,7 @@ export function DetailsTab({
                     accessibilityRole="link"
                     style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: theme.spacing.xs }}
                   >
-                    <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.medium }}>
+                    <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
                       Show in Maps
                     </Text>
                     <Ionicons name="arrow-forward" size={12} color={theme.colors.primary} />
@@ -396,7 +397,7 @@ export function DetailsTab({
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                     {diffTags.map(et => (
                       <View key={et.tag_id} style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: theme.radius.full, backgroundColor: theme.colors.primary + '14', borderWidth: 1, borderColor: theme.colors.primary + '30' }}>
-                        <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }}>
+                        <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }}>
                           {et.tags.name}
                         </Text>
                       </View>
@@ -467,7 +468,7 @@ export function DetailsTab({
           style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}
         >
           <Ionicons name="person-add-outline" size={14} color={theme.colors.primary} />
-          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.medium }}>
+          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
             Manage Co-hosts{cohosts.length > 0 ? ` (${cohosts.length})` : ''}
           </Text>
         </TouchableOpacity>

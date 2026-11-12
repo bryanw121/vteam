@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Animated,
   Modal,
@@ -33,6 +33,8 @@ import {
 import { ScreenState } from '../../../../components/ui'
 import type { UserBadge } from '../../../../types'
 import type { ProfileBorderType, BadgeDef } from '../../../../constants'
+import { useUrlParam } from '../../../../hooks/useUrlParam'
+import { VIEW } from '../../../../utils/urlViews'
 
 export default function BadgesScreen() {
   useStackBackTitle('Badges')
@@ -58,7 +60,16 @@ export default function BadgesScreen() {
   }
   const detailBackdropStyle = { opacity: detailProgress }
 
-  function openDetail(def: BadgeDef) {
+  // The open badge is in the URL (`?badge=spiker`), so a link (a "you earned" notification) can open it.
+  const [badgeParam, setBadgeParam] = useUrlParam('badge', VIEW.badges.badge)
+  useEffect(() => {
+    if (!badgeParam || detailDef?.type === badgeParam) return
+    const def = BADGE_DEFINITIONS.find(d => d.type === badgeParam)
+    if (def) openDetail(def, false)
+  }, [badgeParam]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function openDetail(def: BadgeDef, writeUrl = true) {
+    if (writeUrl) setBadgeParam(def.type)
     setDetailDef(def)
     setDetailMounted(true)
     detailProgress.setValue(0)
@@ -66,6 +77,7 @@ export default function BadgesScreen() {
   }
 
   function closeDetail() {
+    setBadgeParam('')
     Animated.timing(detailProgress, { toValue: 0, duration: 220, useNativeDriver }).start(({ finished }) => {
       if (finished) {
         setDetailMounted(false)

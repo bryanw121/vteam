@@ -3,9 +3,9 @@ import { View, TouchableOpacity, Animated, Modal } from 'react-native'
 import { Text, TextInput } from '../../components/ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
-import * as Linking from 'expo-linking'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { supabase } from '../../lib/supabase'
+import { obfuscateEmail, sendPasswordReset } from '../../lib/passwordReset'
 import { signInWithGoogle, signInWithApple, sendEmailOtp, verifyEmailOtp } from '../../lib/socialAuth'
 import { isUnknownEmailOtpError } from '../../utils/authErrors'
 import { signInWithUsername } from '../../lib/usernameAuth'
@@ -18,13 +18,9 @@ import { routes, toRoute } from '../../utils/routes'
 import { takeGuestReturnPath } from '../../utils/authGate'
 import { AgreementLine } from '../../components/legal/AgreementLine'
 import { Spinner } from '../../components/ui/Spinner'
-
-function obfuscateEmail(email: string): string {
-  const [local, domain] = email.split('@')
-  if (!domain) return email
-  const visible = local.slice(0, 3)
-  return `${visible}****@${domain}`
-}
+import { JoinContextCard } from '../../components/auth/JoinContextCard'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { VIEW } from '../../utils/urlViews'
 
 export default function Login() {
   const router = useRouter()
@@ -35,14 +31,18 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({})
-  const [forgotMode, setForgotMode] = useState(false)
+  // Forgot password and the emailed-code form are in the URL (`?mode=reset`, `?mode=code`), so other screens can link straight to them.
+  const [mode, setMode] = useUrlParam('mode', VIEW.login.mode)
+  const forgotMode = mode === 'reset'
+  const setForgotMode = (on: boolean) => setMode(on ? 'reset' : null)
   const [resetEmail, setResetEmail] = useState('')
   const [resetSent, setResetSent] = useState<string | null>(null)
   const [resetLoading, setResetLoading] = useState(false)
   const [resetError, setResetError] = useState('')
 
   // ── OTP (magic code) mode ──────────────────────────────────────────────────
-  const [otpMode, setOtpMode] = useState(false)
+  const otpMode = mode === 'code'
+  const setOtpMode = (on: boolean) => setMode(on ? 'code' : null)
   const [otpEmail, setOtpEmail] = useState('')
   const [otpCode, setOtpCode] = useState('')
   const [otpCodeSent, setOtpCodeSent] = useState(false)
@@ -91,10 +91,9 @@ export default function Login() {
     setResetError('')
     setResetLoading(true)
     try {
-      const redirectTo = Linking.createURL('/(auth)/reset-password')
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+      const error = await sendPasswordReset(email)
       if (error) {
-        setResetError(error.message)
+        setResetError(error)
       } else {
         setResetSent(obfuscateEmail(email))
       }
@@ -212,7 +211,7 @@ export default function Login() {
         >
           <View style={{ backgroundColor: theme.colors.card, borderRadius: 24, padding: 32, alignItems: 'center', gap: 12, maxWidth: 300 }}>
             <Text style={{ fontSize: theme.font.emoji.hero }}>🏐🏆🏐</Text>
-            <Text style={{ fontSize: theme.font.heading.md, fontWeight: 'bold', color: theme.colors.primary, textAlign: 'center' }}>You're a natural!</Text>
+            <Text style={{ fontSize: theme.font.heading.md, fontWeight: 'bold', color: theme.colors.primaryText, textAlign: 'center' }}>You're a natural!</Text>
             <Text style={{ fontSize: theme.font.size.lgs, color: '#666', textAlign: 'center' }}>10 spikes. The team needs you. Now go sign in.</Text>
             <Text style={{ fontSize: theme.font.size.sm, color: '#aaa', marginTop: 4 }}>tap to dismiss</Text>
           </View>
@@ -223,7 +222,7 @@ export default function Login() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <Text style={shared.authTitle}>vteam</Text>
           <View style={{ backgroundColor: 'rgba(124,77,255,0.15)', borderWidth: 1, borderColor: 'rgba(124,77,255,0.4)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 2 }}>
-            <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primary, letterSpacing: 1 }}>BETA</Text>
+            <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, letterSpacing: 1 }}>BETA</Text>
           </View>
         </View>
 
@@ -313,6 +312,7 @@ export default function Login() {
         ) : (
           <>
             <Text style={shared.authSubtitle}>sign in to continue</Text>
+            <JoinContextCard screen="login" />
 
             <Input
               label="Email or username"

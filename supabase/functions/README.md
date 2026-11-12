@@ -8,6 +8,7 @@
 | `places-proxy` | the app, via `supabase.functions.invoke('places-proxy')` | user JWT checked by the gateway | `true` |
 | `send-feedback-email` | the app, after inserting `feedback_submissions` (`lib/feedback.ts`) | user JWT checked by the gateway; the function emails only a fresh row the caller owns | `true` |
 | `login-with-username` | the signed-out app, via `supabase.functions.invoke('login-with-username')` | none (it is a sign-in); rate limited per username and IP | `false` |
+| `delete-account` | the app (Settings → Account → Delete account, `hooks/useAccountDeletion.ts`) | user JWT checked by the gateway and again with `auth.getUser`; recent sign-in required | `true` |
 
 `verify_jwt` is declared in [`../config.toml`](../config.toml) and applied on deploy.
 Shared code lives in `_shared/` (`supabase.ts`: service-role client and `defaultDeps`;
@@ -151,8 +152,12 @@ works for a first test if that account uses the destination address.
 
 Resolves a username to an email server-side and signs in through Supabase Auth's
 password grant, returning only a session or a generic "Incorrect username or
-password". It limits attempts itself (`public.check_rate_limit`: 30 per username
-and 100 per IP every 15 minutes).
+password". It limits attempts itself (`public.check_rate_limit`, 15-minute windows): 100
+attempts per IP, and 30 failed attempts per username. The username counter is
+read before every attempt (so a correct password is refused too once it is
+used up) but only incremented on a failure (unknown username or wrong password
+alike), so successful sign-ins, such as CI signing the e2e account in, never
+use it up.
 
 **IP forwarding (needed in production).** Every username sign-in reaches Supabase
 Auth from this function, so Auth's own per-IP limit would otherwise treat all
@@ -181,6 +186,7 @@ supabase functions deploy check-push-receipts
 supabase functions deploy places-proxy
 supabase functions deploy send-feedback-email
 supabase functions deploy login-with-username
+supabase functions deploy delete-account
 # or all at once:
 supabase functions deploy
 ```
