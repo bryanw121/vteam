@@ -12,7 +12,7 @@
  * the handler tests must type-check and run with no network.
  */
 
-export type DbError = { message: string }
+export type DbError = { message: string; code?: string }
 
 /** What awaiting a query resolves to (the parts the handlers read). */
 export type DbResult = { data: unknown; error: DbError | null; count?: number | null }
@@ -40,9 +40,21 @@ export type AuthUser = { id: string; email?: string | null }
 /** The slice of a supabase-js client the handlers call. */
 export interface DbClient {
   from(table: string): DbQuery
+  /** A Postgres function through PostgREST (service role: bypasses EXECUTE grants for clients). */
+  rpc(fn: string, args?: Record<string, unknown>): PromiseLike<DbResult>
   auth: {
     getUser(jwt: string): PromiseLike<{ data: { user: AuthUser | null } | null; error: DbError | null }>
   }
+  /** Storage, as delete-account uses it: list a folder, remove objects. */
+  storage: {
+    from(bucket: string): DbBucket
+  }
+}
+
+/** The slice of a supabase-js storage bucket the handlers call. */
+export interface DbBucket {
+  list(prefix: string, options?: { limit?: number }): PromiseLike<{ data: { name: string }[] | null; error: DbError | null }>
+  remove(paths: string[]): PromiseLike<{ data?: unknown; error: DbError | null }>
 }
 
 export type Deps = {

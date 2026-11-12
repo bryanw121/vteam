@@ -14,6 +14,8 @@ export const STALE = {
   detail: 30_000,
   /** A user profile (own or someone else's): the `fetchProfile` pattern from CLAUDE.md. */
   profile: 60_000,
+  /** My friends and pending friend requests (useFriends), and friends going to feed events. */
+  friends: 2 * 60_000,
   /** Event tags (host form, feed filters): a near-static lookup table. */
   tags: 10 * 60_000,
   /** get_my_conversations (Chat list, chat tab badge, chat room header); realtime patches it in between. */
@@ -22,6 +24,14 @@ export const STALE = {
   courts: 60_000,
   /** NWS hourly forecast per court (useForecast). The proxy's CDN copy is fresh for 30 min too. */
   forecast: 30 * 60_000,
+  /** Outside leagues and tournaments (useExternalPrograms): Schelagg refreshes them twice a day. */
+  programs: 30 * 60_000,
+  /** Whether the viewer is an admin (Profile's Admin metrics row). Changes only by hand in app_admins. */
+  adminCheck: 30 * 60_000,
+  /** Admin metrics screens (Overview, People, Retention, one person): computed on demand, a minute is fresh enough. */
+  metrics: 60_000,
+  /** Metrics → Live: refetched every 15 s while on screen. */
+  metricsLive: 10_000,
   /** Curated reference lists that change only by migration (major_cities). */
   reference: 60 * 60_000,
 } as const

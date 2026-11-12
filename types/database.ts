@@ -90,6 +90,21 @@ export type Database = {
           },
         ]
       }
+      app_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_config: {
         Row: {
           message: string | null
@@ -117,29 +132,35 @@ export type Database = {
       app_events: {
         Row: {
           anon_id: string | null
+          app_version: string | null
           created_at: string
           id: number
           name: string
           platform: string | null
           props: Json
+          session_id: string | null
           user_id: string | null
         }
         Insert: {
           anon_id?: string | null
+          app_version?: string | null
           created_at?: string
           id?: never
           name: string
           platform?: string | null
           props?: Json
+          session_id?: string | null
           user_id?: string | null
         }
         Update: {
           anon_id?: string | null
+          app_version?: string | null
           created_at?: string
           id?: never
           name?: string
           platform?: string | null
           props?: Json
+          session_id?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -168,6 +189,90 @@ export type Database = {
           people?: number
           platform?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      app_online_daily: {
+        Row: {
+          avg_online: number
+          day: string
+          peak: number
+          peak_at: string | null
+          samples: number
+          updated_at: string
+        }
+        Insert: {
+          avg_online?: number
+          day: string
+          peak: number
+          peak_at?: string | null
+          samples?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_online?: number
+          day?: string
+          peak?: number
+          peak_at?: string | null
+          samples?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      app_online_samples: {
+        Row: {
+          at: string
+          by_platform: Json
+          online: number
+          signed_in: number
+        }
+        Insert: {
+          at: string
+          by_platform?: Json
+          online: number
+          signed_in: number
+        }
+        Update: {
+          at?: string
+          by_platform?: Json
+          online?: number
+          signed_in?: number
+        }
+        Relationships: []
+      }
+      app_sessions: {
+        Row: {
+          anon_id: string
+          app_version: string | null
+          heartbeats: number
+          id: string
+          last_seen: string
+          platform: string
+          screen: string | null
+          started_at: string
+          user_id: string | null
+        }
+        Insert: {
+          anon_id: string
+          app_version?: string | null
+          heartbeats?: number
+          id: string
+          last_seen?: string
+          platform: string
+          screen?: string | null
+          started_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          anon_id?: string
+          app_version?: string | null
+          heartbeats?: number
+          id?: string
+          last_seen?: string
+          platform?: string
+          screen?: string | null
+          started_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -209,7 +314,7 @@ export type Database = {
           cheer_type: string
           created_at: string
           event_id: string
-          giver_id: string
+          giver_id: string | null
           id: string
           receiver_id: string
         }
@@ -217,7 +322,7 @@ export type Database = {
           cheer_type: string
           created_at?: string
           event_id: string
-          giver_id: string
+          giver_id?: string | null
           id?: string
           receiver_id: string
         }
@@ -225,7 +330,7 @@ export type Database = {
           cheer_type?: string
           created_at?: string
           event_id?: string
-          giver_id?: string
+          giver_id?: string | null
           id?: string
           receiver_id?: string
         }
@@ -531,11 +636,57 @@ export type Database = {
           },
         ]
       }
+      event_attendee_denials: {
+        Row: {
+          created_at: string
+          event_id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendee_denials_attendee_fkey"
+            columns: ["event_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "event_attendees"
+            referencedColumns: ["event_id", "user_id"]
+          },
+          {
+            foreignKeyName: "event_attendee_denials_attendee_fkey"
+            columns: ["event_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "event_attendees_attending"
+            referencedColumns: ["event_id", "user_id"]
+          },
+          {
+            foreignKeyName: "event_attendee_denials_attendee_fkey"
+            columns: ["event_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "event_attendees_waitlisted"
+            referencedColumns: ["event_id", "user_id"]
+          },
+        ]
+      }
       event_attendees: {
         Row: {
           denial_reason: string | null
           event_id: string
           joined_at: string | null
+          no_show: boolean
+          no_show_marked_at: string | null
+          no_show_marked_by: string | null
           status: string
           team_number: number | null
           team_pinned: boolean
@@ -545,6 +696,9 @@ export type Database = {
           denial_reason?: string | null
           event_id: string
           joined_at?: string | null
+          no_show?: boolean
+          no_show_marked_at?: string | null
+          no_show_marked_by?: string | null
           status?: string
           team_number?: number | null
           team_pinned?: boolean
@@ -554,6 +708,9 @@ export type Database = {
           denial_reason?: string | null
           event_id?: string
           joined_at?: string | null
+          no_show?: boolean
+          no_show_marked_at?: string | null
+          no_show_marked_by?: string | null
           status?: string
           team_number?: number | null
           team_pinned?: boolean
@@ -565,6 +722,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendees_no_show_marked_by_fkey"
+            columns: ["no_show_marked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -912,6 +1076,108 @@ export type Database = {
           },
         ]
       }
+      external_programs: {
+        Row: {
+          address: string | null
+          checked_at: string | null
+          city: string | null
+          divisions: Json
+          ends_on: string | null
+          format: string | null
+          id: string
+          individual_price: string | null
+          kind: string
+          lat: number | null
+          lng: number | null
+          org: string
+          price_changes_on: string | null
+          price_note: string | null
+          region: string | null
+          registration_deadline: string | null
+          registration_opens: string | null
+          series: string | null
+          signup_url: string | null
+          source_id: string
+          source_url: string | null
+          starts_on: string | null
+          state: string | null
+          status: string | null
+          surface: string | null
+          team_price: string | null
+          title: string
+          updated_at: string
+          venue: string | null
+          waitlist_on: string | null
+          weekdays: string[]
+        }
+        Insert: {
+          address?: string | null
+          checked_at?: string | null
+          city?: string | null
+          divisions?: Json
+          ends_on?: string | null
+          format?: string | null
+          id: string
+          individual_price?: string | null
+          kind: string
+          lat?: number | null
+          lng?: number | null
+          org: string
+          price_changes_on?: string | null
+          price_note?: string | null
+          region?: string | null
+          registration_deadline?: string | null
+          registration_opens?: string | null
+          series?: string | null
+          signup_url?: string | null
+          source_id: string
+          source_url?: string | null
+          starts_on?: string | null
+          state?: string | null
+          status?: string | null
+          surface?: string | null
+          team_price?: string | null
+          title: string
+          updated_at?: string
+          venue?: string | null
+          waitlist_on?: string | null
+          weekdays?: string[]
+        }
+        Update: {
+          address?: string | null
+          checked_at?: string | null
+          city?: string | null
+          divisions?: Json
+          ends_on?: string | null
+          format?: string | null
+          id?: string
+          individual_price?: string | null
+          kind?: string
+          lat?: number | null
+          lng?: number | null
+          org?: string
+          price_changes_on?: string | null
+          price_note?: string | null
+          region?: string | null
+          registration_deadline?: string | null
+          registration_opens?: string | null
+          series?: string | null
+          signup_url?: string | null
+          source_id?: string
+          source_url?: string | null
+          starts_on?: string | null
+          state?: string | null
+          status?: string | null
+          surface?: string | null
+          team_price?: string | null
+          title?: string
+          updated_at?: string
+          venue?: string | null
+          waitlist_on?: string | null
+          weekdays?: string[]
+        }
+        Relationships: []
+      }
       external_sessions: {
         Row: {
           canceled: boolean
@@ -1009,6 +1275,84 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "feedback_submissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friend_requests: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friend_requests_addressee_id_fkey"
+            columns: ["addressee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friend_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friendships: {
+        Row: {
+          created_at: string
+          friend_id: string
+          is_best_friend: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_id: string
+          is_best_friend?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          friend_id?: string
+          is_best_friend?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friendships_friend_id_fkey"
+            columns: ["friend_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friendships_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1132,6 +1476,32 @@ export type Database = {
             foreignKeyName: "messages_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      metrics_excluded_users: {
+        Row: {
+          added_at: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          reason?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metrics_excluded_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1356,6 +1726,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rate_limits: {
+        Row: {
+          hits: number
+          key: string
+          window_start: string
+        }
+        Insert: {
+          hits?: number
+          key: string
+          window_start?: string
+        }
+        Update: {
+          hits?: number
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
       }
       sponsored_events: {
         Row: {
@@ -2204,6 +2592,7 @@ export type Database = {
         Row: {
           hidden_feed: Json
           home_city_id: string | null
+          notification_prefs: Json | null
           reminder_lead_minutes: number
           seen_banners: string[]
           updated_at: string
@@ -2212,6 +2601,7 @@ export type Database = {
         Insert: {
           hidden_feed?: Json
           home_city_id?: string | null
+          notification_prefs?: Json | null
           reminder_lead_minutes?: number
           seen_banners?: string[]
           updated_at?: string
@@ -2220,6 +2610,7 @@ export type Database = {
         Update: {
           hidden_feed?: Json
           home_city_id?: string | null
+          notification_prefs?: Json | null
           reminder_lead_minutes?: number
           seen_banners?: string[]
           updated_at?: string
@@ -2325,29 +2716,29 @@ export type Database = {
         Row: {
           added_by: string | null
           event_id: string | null
-          first_name: string | null
           id: string | null
           joined_at: string | null
-          last_name: string | null
           status: string | null
+          team_number: number | null
+          team_pinned: boolean | null
         }
         Insert: {
           added_by?: string | null
           event_id?: string | null
-          first_name?: string | null
           id?: string | null
           joined_at?: string | null
-          last_name?: string | null
           status?: string | null
+          team_number?: number | null
+          team_pinned?: boolean | null
         }
         Update: {
           added_by?: string | null
           event_id?: string | null
-          first_name?: string | null
           id?: string | null
           joined_at?: string | null
-          last_name?: string | null
           status?: string | null
+          team_number?: number | null
+          team_pinned?: boolean | null
         }
         Relationships: [
           {
@@ -2372,13 +2763,64 @@ export type Database = {
         Args: { p_invite_id: string }
         Returns: string
       }
+      account_deletion_plan: { Args: { p_user: string }; Returns: Json }
+      account_is_being_deleted: { Args: { p_user: string }; Returns: boolean }
       ad_free_offer: { Args: never; Returns: Json }
+      admin_metrics_events: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: Json
+      }
+      admin_metrics_overview: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: Json
+      }
+      admin_online_now: { Args: never; Returns: Json }
+      admin_retention: { Args: { p_weeks?: number }; Returns: Json }
+      admin_user_activity: { Args: { p_user: string }; Returns: Json }
+      admin_users: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
+      app_heartbeat: {
+        Args: {
+          p_anon: string
+          p_platform: string
+          p_screen?: string
+          p_session: string
+          p_version?: string
+        }
+        Returns: undefined
+      }
+      app_version_key: { Args: { p_version: string }; Returns: number[] }
       award_event_points: { Args: never; Returns: number }
+      can_read_chat_image: { Args: { p_name: string }; Returns: boolean }
+      cancel_friend_request: { Args: { p_user_id: string }; Returns: string }
+      check_rate_limit: {
+        Args: { p_key: string; p_max: number; p_window_seconds: number }
+        Returns: boolean
+      }
+      club_successor: {
+        Args: { p_club: string; p_user: string }
+        Returns: string
+      }
       complete_tournament: {
         Args: { p_podium: Json; p_tournament_id: string }
         Returns: number
       }
       current_user_is_admin: { Args: never; Returns: boolean }
+      delete_account: {
+        Args: { p_plan_hash: string; p_user: string }
+        Returns: Json
+      }
+      enforce_rate_limit: {
+        Args: { p_key: string; p_max: number; p_window_seconds: number }
+        Returns: undefined
+      }
       event_reminder_text: {
         Args: {
           p_location: string
@@ -2392,6 +2834,15 @@ export type Database = {
         }[]
       }
       find_or_create_dm: { Args: { other_user_id: string }; Returns: string }
+      friend_accept: {
+        Args: { p_addressee: string; p_request_id: string; p_requester: string }
+        Returns: undefined
+      }
+      friend_pair_lock: {
+        Args: { p_a: string; p_b: string }
+        Returns: undefined
+      }
+      get_account_deletion_preview: { Args: never; Returns: Json }
       get_ad_free_status: { Args: never; Returns: Json }
       get_chat_unread_count: { Args: never; Returns: number }
       get_email_by_username: { Args: { p_username: string }; Returns: string }
@@ -2413,6 +2864,17 @@ export type Database = {
           p_start: string
         }
         Returns: Json
+      }
+      get_friends_going: {
+        Args: { p_event_ids: string[] }
+        Returns: {
+          avatar_url: string
+          event_id: string
+          first_name: string
+          is_best_friend: boolean
+          user_id: string
+          username: string
+        }[]
       }
       get_my_conversations: {
         Args: never
@@ -2443,8 +2905,20 @@ export type Database = {
         }[]
       }
       ingest_schelagg_feed: { Args: never; Returns: number }
+      ingest_schelagg_programs: { Args: never; Returns: number }
+      is_app_admin: { Args: never; Returns: boolean }
       is_club_owner: { Args: { p_club_id: string }; Returns: boolean }
       is_conversation_member: { Args: { conv_id: string }; Returns: boolean }
+      job_health: {
+        Args: never
+        Returns: {
+          check_name: string
+          detail: string
+          failures_24h: number
+          last_ok_at: string
+          ok: boolean
+        }[]
+      }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       mark_conversation_read: {
         Args: { p_conversation_id: string }
@@ -2463,15 +2937,32 @@ export type Database = {
         Returns: boolean
       }
       redeem_ad_free: { Args: never; Returns: Json }
+      remove_friend: { Args: { p_user_id: string }; Returns: string }
       replace_tournament_schedule: {
         Args: { p_matches: Json; p_pools?: Json; p_tournament_id: string }
         Returns: number
       }
+      respond_friend_request: {
+        Args: { p_accept: boolean; p_request_id: string }
+        Returns: string
+      }
       rollup_app_events: { Args: { p_days?: number }; Returns: number }
+      rollup_app_online: { Args: { p_days?: number }; Returns: number }
+      sample_app_online: { Args: never; Returns: undefined }
+      schelagg_safe_date: { Args: { v: string }; Returns: string }
       schema_fingerprint: { Args: never; Returns: Json }
       schema_pending_changes: { Args: never; Returns: Json }
       send_event_reminders: { Args: never; Returns: number }
+      send_friend_request: { Args: { p_user_id: string }; Returns: string }
       send_kudos_reminders: { Args: never; Returns: undefined }
+      set_best_friend: {
+        Args: { p_best: boolean; p_user_id: string }
+        Returns: boolean
+      }
+      set_no_show: {
+        Args: { p_event_id: string; p_user_id: string; p_value: boolean }
+        Returns: undefined
+      }
       tournament_registration_check: {
         Args: {
           p_player: string

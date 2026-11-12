@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Vteam community volleyball mark</title>
+  <desc id="desc">A violet volleyball with a small V formed by its lower white seams.</desc>
+  <rect width="1024" height="1024" fill="#FAF8F5"/>
+  <circle cx="512" cy="512" r="318" fill="#6F20F4"/>
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="44">
+    <!-- A shallow upper seam establishes the volleyball's crown. -->
+    <path d="M 280 370 Q 512 235 744 370"/>
+    <!-- Mirrored lower seams meet as a quiet V inside the ball. -->
+    <path d="M 278 462 Q 425 548 512 756"/>
+    <path d="M 746 462 Q 599 548 512 756"/>
+  </g>
+</svg>

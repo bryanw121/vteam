@@ -25,7 +25,7 @@ test.describe('terms and privacy (guest)', () => {
     await expect(page.getByTestId('agreement-line')).toBeVisible({ timeout: 20_000 })
   })
 
-  for (const [path, heading] of [['/terms', 'Acceptable use'], ['/privacy', 'Your choices and rights']] as const) {
+  for (const [path, heading] of [['/terms', 'Acceptable use'], ['/privacy', 'Your choices and rights'], ['/delete-account', 'What happens to your data']] as const) {
     test(`${path} opens directly, signed out`, async ({ page }) => {
       await page.goto(`${BASE_URL}${path}`)
       await expect(page.getByText(heading)).toBeVisible({ timeout: 20_000 })

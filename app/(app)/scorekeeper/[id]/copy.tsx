@@ -6,8 +6,10 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../../../../components/ui/Text'
 import { IconButton, ScreenContainer, ScreenHeader, ScreenState } from '../../../../components/ui'
 import { Button } from '../../../../components/Button'
-import { SheetMap } from '../../../../components/scoresheet/SheetMap'
+import { OfficialSheetView } from '../../../../components/scoresheet/OfficialSheetView'
 import { useScoreMatch } from '../../../../hooks/useScoreMatch'
+import { useOfficialLayout } from '../../../../hooks/useOfficialLayout'
+import { focusGroups } from '../../../../lib/scoresheet/sheetView'
 import { copySteps, resumeIndex } from '../../../../lib/scoresheet/copySteps'
 import { COMPACT_TEXT_SCALE, shared, theme } from '../../../../constants'
 import { routes } from '../../../../utils/routes'
@@ -24,6 +26,7 @@ export default function CopyToPaperScreen() {
   const insets = useSafeAreaInsets()
   const { doc, state, loading, setCopied } = useScoreMatch(id)
   const steps = useMemo(() => (doc && state ? copySteps(doc, state) : []), [doc, state])
+  const layout = useOfficialLayout(doc, state)
   const copied = doc?.copied ?? []
   const [index, setIndex] = useState<number | null>(null)
   const [list, setList] = useState(false)
@@ -104,7 +107,19 @@ export default function CopyToPaperScreen() {
                 </View>
               ) : (
                 <View style={{ gap: theme.spacing.md }}>
-                  <SheetMap regions={step.regions} sheet={step.sheet} />
+                  {/* The real form, zoomed to this part, with what to write already on it. */}
+                  {layout && focusGroups(step.regions).map((group, i) => (
+                    <OfficialSheetView
+                      key={`${step.id}-${i}`}
+                      layout={layout}
+                      page={Math.min(step.sheet - 1, layout.pages.length - 1)}
+                      focus={group}
+                      highlight={group}
+                      accessibilityLabel={`${step.title} on the official scoresheet`}
+                      testID={i === 0 ? 'copy-form' : undefined}
+                    />
+                  ))}
+                  {step.sheet > 1 && <Text style={shared.caption}>On sheet {step.sheet} (a second copy of the form)</Text>}
                   <Text style={[shared.body, { color: theme.colors.subtextStrong }]}>{step.where}</Text>
                   {step.sections.map((section, i) => <Section key={`${step.id}-${i}`} section={section} />)}
                   <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>

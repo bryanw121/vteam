@@ -4,14 +4,13 @@ import { Chip } from '../ui'
 import type { FilterChipsProps } from '../../types'
 
 /** The Events filter row. Desktop wraps; mobile scrolls sideways under the week strip. */
-export function FilterChips({ chips, active, onSelect, mineCount, wide }: FilterChipsProps) {
+export function FilterChips({ chips, active, onSelect, wide }: FilterChipsProps) {
   const items = chips.map(chip => (
     <Chip
       key={chip.id}
       testID={`filter-${chip.id}`}
       label={chip.label}
       active={active === chip.id}
-      badge={chip.id === 'mine' && mineCount > 0 ? mineCount : undefined}
       onPress={() => onSelect(chip.id)}
     />
   ))

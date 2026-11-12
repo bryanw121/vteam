@@ -63,7 +63,7 @@ export default function NotificationsScreen() {
               style={{ paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.xs }}
               hitSlop={8}
             >
-              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.semibold }}>
+              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.semibold }}>
                 Read all
               </Text>
             </TouchableOpacity>

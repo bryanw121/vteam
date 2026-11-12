@@ -44,12 +44,14 @@ const expo = (dead: string[] = []) => (call: FetchCall) =>
 function setup(opts: {
   tokens?: string[]
   prefs?: unknown
+  legacyPrefs?: unknown
   results?: Record<string, ScriptedResult>
   respond?: (call: FetchCall, index: number) => Response | Promise<Response>
 } = {}) {
   const db = fakeSupabase({
     results: {
-      'profiles.select': { data: { notification_prefs: opts.prefs ?? {} } },
+      'user_settings.select': { data: opts.prefs === undefined ? null : { notification_prefs: opts.prefs } },
+      'profiles.select': { data: { notification_prefs: opts.legacyPrefs ?? { push: {}, in_app: {} } } },
       'push_tokens.select': { data: (opts.tokens ?? ['tok-a']).map((token) => ({ token })) },
       ...opts.results,
     },
@@ -122,6 +124,25 @@ Deno.test('push turned off for the type: 200, nothing sent', async () => {
   const res = await send()
   assert.equal(res.status, 200)
   assert.equal(await res.text(), 'Not pushed for this type')
+  assert.equal(net.calls.length, 0)
+})
+
+Deno.test('push prefs come from user_settings, not the legacy profiles column', async () => {
+  const { send, net, db } = setup({ prefs: { push: { event_reminder: false } }, legacyPrefs: { push: { event_reminder: true } } })
+  assert.equal(await (await send()).text(), 'Not pushed for this type')
+  assert.equal(net.calls.length, 0)
+  assert.equal(filterValue(db.callsTo('user_settings', 'select')[0], 'eq'), USER)
+})
+
+Deno.test('no user_settings prefs: falls back to the legacy profiles column', async () => {
+  const { send, net } = setup({ legacyPrefs: { push: { event_reminder: false } } })
+  assert.equal(await (await send()).text(), 'Not pushed for this type')
+  assert.equal(net.calls.length, 0)
+})
+
+Deno.test('500 when the user_settings lookup fails', async () => {
+  const { send, net } = setup({ results: { 'user_settings.select': { error: { message: 'boom' } } } })
+  assert.equal((await send()).status, 500)
   assert.equal(net.calls.length, 0)
 })
 

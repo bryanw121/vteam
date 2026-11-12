@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { Text } from '../ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { shared, theme } from '../../constants'
+import { shared, theme, TIGHT_TEXT_SCALE } from '../../constants'
 import type { SettingsSection } from '../../utils/routes'
 
 type Props = {
@@ -11,6 +11,14 @@ type Props = {
   onTakeTour: () => void
   onOpenTerms: () => void
   onOpenPrivacy: () => void
+  /** Pending incoming friend requests, shown as a count on the Friends row. */
+  friendRequestCount?: number
+  /**
+   * Admins get an Admin metrics row, last: the admin check answers after the rest of Profile,
+   * and a group drawn above the others then pushed the whole menu down (a visible jump on refresh).
+   * Drawing it is cosmetic: every metrics read checks on the server.
+   */
+  showAdmin?: boolean
 }
 
 type IconName = ComponentProps<typeof Ionicons>['name']
@@ -28,6 +36,7 @@ const MENU_GROUPS: readonly MenuGroup[] = [
   {
     title: 'Your activity',
     rows: [
+      { title: 'Friends', icon: 'people-outline', section: 'friends' },
       { title: 'History', icon: 'time-outline', section: 'history' },
       { title: 'Cheers', icon: 'star-outline', section: 'cheers' },
       { title: 'Badges', icon: 'ribbon-outline', section: 'badges' },
@@ -66,14 +75,21 @@ const MENU_GROUPS: readonly MenuGroup[] = [
   },
 ]
 
+/** Only for accounts in app_admins. */
+const ADMIN_GROUP: MenuGroup = {
+  title: 'Admin',
+  rows: [{ title: 'Admin metrics', icon: 'stats-chart-outline', section: 'metrics' }],
+}
+
 const rowKey = (row: MenuRow) => ('section' in row ? row.section : row.action)
 
 /** The settings shortcuts under the profile hero, in labelled groups. Navigation is the caller's (`onOpen`). */
-export function ProfileMenu({ onOpen, onTakeTour, onOpenTerms, onOpenPrivacy }: Props) {
+export function ProfileMenu({ onOpen, onTakeTour, onOpenTerms, onOpenPrivacy, friendRequestCount = 0, showAdmin = false }: Props) {
   const actions = { tour: onTakeTour, terms: onOpenTerms, privacy: onOpenPrivacy }
+  const groups = showAdmin ? [...MENU_GROUPS, ADMIN_GROUP] : MENU_GROUPS
   return (
     <View style={styles.groups}>
-      {MENU_GROUPS.map(group => (
+      {groups.map(group => (
         <View key={group.title}>
           <Text style={styles.groupTitle} accessibilityRole="header">{group.title}</Text>
           <View style={[shared.card, styles.card]}>
@@ -96,6 +112,11 @@ export function ProfileMenu({ onOpen, onTakeTour, onOpenTerms, onOpenPrivacy }: 
                     <Ionicons name={row.icon} size={18} color={theme.colors.primary} />
                   </View>
                   <Text style={styles.rowTitle}>{row.title}</Text>
+                  {key === 'friends' && friendRequestCount > 0 && (
+                    <View style={styles.countPip} accessibilityLabel={`${friendRequestCount} friend ${friendRequestCount === 1 ? 'request' : 'requests'}`} testID="profile-menu-friends-count">
+                      <Text style={styles.countText} maxFontSizeMultiplier={TIGHT_TEXT_SCALE}>{friendRequestCount > 9 ? '9+' : friendRequestCount}</Text>
+                    </View>
+                  )}
                   <Ionicons name="chevron-forward" size={16} color={theme.colors.subtext} />
                 </Pressable>
               )
@@ -146,6 +167,20 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary + '14',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  countPip: {
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
+    borderRadius: 11,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countText: {
+    fontFamily: theme.fonts.bodyBold,
+    fontSize: theme.font.size.xs,
+    color: theme.colors.white,
   },
   rowTitle: {
     flex: 1,

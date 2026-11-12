@@ -3,8 +3,14 @@ import { replay, warningsFor } from '../lib/scoresheet/engine'
 import { deleteEvent, editEvent, insertBefore, newId, record, redo as redoDoc, undo as undoDoc } from '../lib/scoresheet/history'
 import { loadMatch, saveMatch } from '../lib/scoresheet/storage'
 import { matchSummary } from '../lib/scoresheet/summary'
+import { exampleMatch } from '../lib/scoresheet/exampleMatch'
 import { Sentry } from '../lib/sentry'
+import { track } from '../lib/analytics'
+import { ANALYTICS_EVENTS } from '../constants/analytics'
 import type { MatchDoc, MatchInfo, MatchState, ScoreEventInput, Warning } from '../types'
+
+/** Matches whose finish was recorded while the app is open: an undo and redo of the last point doesn't count it twice. */
+const finishedThisRun = new Set<string>()
 
 export type ScoreMatchApi = {
   doc: MatchDoc | null
@@ -38,6 +44,8 @@ export function useScoreMatch(id: string | undefined): ScoreMatchApi {
   const [lastWarnings, setLastWarnings] = useState<Warning[]>([])
   // The latest doc, so quick taps build on each other even before React re-renders.
   const latest = useRef<MatchDoc | null>(null)
+  // Whether the match was over at the last load or save, so finishing it is recorded once.
+  const wasOver = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -46,6 +54,7 @@ export function useScoreMatch(id: string | undefined): ScoreMatchApi {
     void loadMatch(id).then(loaded => {
       if (cancelled) return
       latest.current = loaded
+      wasOver.current = loaded ? replay(loaded.setup, loaded.log).over : false
       setDoc(loaded)
       setLoading(false)
     })
@@ -58,8 +67,14 @@ export function useScoreMatch(id: string | undefined): ScoreMatchApi {
 
   const commit = useCallback((next: MatchDoc, newEventId?: string) => {
     latest.current = next
+    const after = replay(next.setup, next.log)
+    if (after.over && !wasOver.current && !next.example && !finishedThisRun.has(next.id)) {
+      finishedThisRun.add(next.id)
+      track(ANALYTICS_EVENTS.scorekeeperMatch, matchStageProps('finished', after))
+    }
+    wasOver.current = after.over
     // The write starts before the screen re-renders (on web it has already finished).
-    saveMatch(next, matchSummary(next, replay(next.setup, next.log)))
+    saveMatch(next, matchSummary(next, after))
       .then(saved => {
         if (latest.current?.id === saved.id && (latest.current.seq ?? 0) < (saved.seq ?? 0)) latest.current = { ...latest.current, seq: saved.seq }
         setSaveError(null)
@@ -70,8 +85,7 @@ export function useScoreMatch(id: string | undefined): ScoreMatchApi {
       })
     setDoc(next)
     if (newEventId) {
-      const s = replay(next.setup, next.log)
-      setLastWarnings(warningsFor(s, newEventId))
+      setLastWarnings(warningsFor(after, newEventId))
     } else setLastWarnings([])
   }, [])
 
@@ -111,11 +125,25 @@ export function useScoreMatch(id: string | undefined): ScoreMatchApi {
 }
 
 /** Creates and saves a new match, optionally starting set 1 (undoable); resolves with its id. */
+/** Saves a fresh copy of the built-in example match (lib/scoresheet/exampleMatch) and returns its id. */
+export async function openExampleMatch(): Promise<string> {
+  const doc = exampleMatch()
+  await saveMatch(doc, matchSummary(doc, replay(doc.setup, doc.log)))
+  return doc.id
+}
+
 export async function createMatch(setup: MatchDoc['setup'], firstSet?: ScoreEventInput): Promise<string> {
   const now = Date.now()
   const id = newId()
   let doc: MatchDoc = { id, createdAt: now, updatedAt: now, setup, log: [], undo: [], redo: [] }
   if (firstSet) doc = record(doc, firstSet, now).doc
-  await saveMatch(doc, matchSummary(doc, replay(setup, doc.log)))
+  const state = replay(setup, doc.log)
+  await saveMatch(doc, matchSummary(doc, state))
+  track(ANALYTICS_EVENTS.scorekeeperMatch, matchStageProps('started', state))
   return id
+}
+
+/** Props of a `scorekeeper_match` event: the stage and how many sets have been played (no names or scores). */
+export function matchStageProps(stage: 'started' | 'finished', state: Pick<MatchState, 'setsWon'>): { stage: 'started' | 'finished'; sets: number } {
+  return { stage, sets: state.setsWon.A + state.setsWon.B }
 }

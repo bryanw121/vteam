@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { shared, theme } from '../../../constants'
 import { BadgeIcon } from '../../../components/BadgeIcon'
 import { ProfileAvatar } from '../../../components/ProfileAvatar'
-import { Toast } from '../../../components/Toast'
+import { toast } from '../../../lib/toast'
 import { BADGE_DEFINITIONS } from '../../../constants/badges'
 import { userProfileKey, useUserProfile } from '../../../hooks/useUserProfile'
 import { useFocusRefetch } from '../../../lib/query'
@@ -18,6 +18,7 @@ import { PROFILE_LOAD_ERROR } from '../../../constants/copy'
 import { routes } from '../../../utils/routes'
 import { useSilencedUsers } from '../../../hooks/useSilencedUsers'
 import { useOpenDm } from '../../../hooks/useOpenDm'
+import { FriendButton } from '../../../components/profile/FriendButton'
 import { useUserTrophies } from '../../../hooks/useUserTrophies'
 import { TrophyCase } from '../../../components/profile/TrophyCase'
 import { usePointsBalance } from '../../../hooks/usePoints'
@@ -52,7 +53,6 @@ export default function UserProfileDetail() {
   const displayBadges = data?.displayBadges ?? []
   const trophies = useUserTrophies(id ?? null)
   const [refreshing, setRefreshing] = useState(false)
-  const [toast, setToast] = useState<{ message: string; variant: 'error' | 'success' | 'info' } | null>(null)
   const { silencedUserIds, silenceUser, unsilenceUser } = useSilencedUsers()
   const points = usePointsBalance(id)
   useFocusRefetch(userProfileKey(id))
@@ -72,7 +72,7 @@ export default function UserProfileDetail() {
   }
 
   function showToast(message: string, variant: 'error' | 'success' | 'info' = 'info') {
-    setToast({ message, variant })
+    toast.show({ message, variant })
   }
 
   const { openDm } = useOpenDm()
@@ -118,11 +118,11 @@ export default function UserProfileDetail() {
       }}>
         <TouchableOpacity onPress={goBack} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
-          <Text style={{ color: theme.colors.primary, fontSize: theme.font.size.sm }}>Back</Text>
+          <Text style={{ color: theme.colors.primaryText, fontSize: theme.font.size.sm }}>Back</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={openDM} style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Ionicons name="chatbubble-outline" size={18} color={theme.colors.primary} />
-          <Text style={{ color: theme.colors.primary, fontSize: theme.font.size.sm, fontFamily: theme.fonts.bodySemiBold }}>Message</Text>
+          <Text style={{ color: theme.colors.primaryText, fontSize: theme.font.size.sm, fontFamily: theme.fonts.bodySemiBold }}>Message</Text>
         </TouchableOpacity>
       </View>
 
@@ -228,6 +228,11 @@ export default function UserProfileDetail() {
                 {profile.bio}
               </Text>
             ) : null}
+
+            {/* Friend: Add friend / Requested / Accept + Decline / Friends (#15) */}
+            <View style={{ width: '100%', marginTop: theme.spacing.sm }} testID="profile-friend-action">
+              <FriendButton userId={id} profile={profile} onMessage={showToast} />
+            </View>
 
             {/* Stats */}
             <View style={{
@@ -336,13 +341,6 @@ export default function UserProfileDetail() {
         </ScrollView>
       )}
       </ScreenState>
-
-      <Toast
-        message={toast?.message ?? ''}
-        variant={toast?.variant ?? 'info'}
-        visible={!!toast}
-        onHide={() => setToast(null)}
-      />
     </View>
   )
 }

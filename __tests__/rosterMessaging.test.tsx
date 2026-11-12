@@ -318,7 +318,11 @@ function profile(id: string, first: string): Profile {
   return { id, username: id, first_name: first, last_name: 'Test', avatar_url: null } as unknown as Profile
 }
 
-function renderPeople(opts: { viewer: string; isOwner: boolean; isHostOrCohost: boolean; silenced?: string[]; paid?: string[] }) {
+function renderPeople(opts: {
+  viewer: string; isOwner: boolean; isHostOrCohost: boolean; silenced?: string[]; paid?: string[]
+  /** No-show window (#151): the event started 30 min ago, so it's open. Default: tomorrow (closed). */
+  started?: boolean; noShows?: string[]
+}) {
   const amy = profile('amy', 'Amy')
   const host = profile('host', 'Hank')
   const guest = { id: 'g1', added_by: 'amy', first_name: 'Gus', last_name: 'Guest' } as EventGuest
@@ -326,8 +330,10 @@ function renderPeople(opts: { viewer: string; isOwner: boolean; isHostOrCohost: 
   const onMessage = jest.fn()
   const onOpenProfile = jest.fn()
   const onRemoveAttendee = jest.fn()
+  const setNoShow = jest.fn(async () => true)
+  const start = new Date(Date.now() + (opts.started ? -30 : 24 * 60) * 60_000).toISOString()
   const props = {
-    event: { max_attendees: null } as never,
+    event: { max_attendees: null, event_date: start, duration_minutes: 120, cancelled_at: null } as never,
     eventStatus: { isOwner: opts.isOwner, count: 4, waitlistCount: 0, isFull: false, isAttending: true, isWaitlisted: false } as never,
     data: {
       userId: opts.viewer,
@@ -335,6 +341,7 @@ function renderPeople(opts: { viewer: string; isOwner: boolean; isHostOrCohost: 
       refresh: jest.fn(),
       roster: {
         attendees: [host, amy],
+        attendingRows: [host, amy].map(p => ({ user_id: p.id, status: 'attending', no_show: (opts.noShows ?? []).includes(p.id) })),
         attendingGuests: [guest, hostGuest],
         adderUsernames: { amy: 'amy', host: 'host' },
         requestedProfiles: [],
@@ -344,7 +351,7 @@ function renderPeople(opts: { viewer: string; isOwner: boolean; isHostOrCohost: 
     } as never,
     teams: { assignments: {}, numTeams: 2, setNumTeams: jest.fn(), hasTeams: false, savingTeams: false, togglePin: jest.fn(), resetTeams: jest.fn(), randomizeTeams: jest.fn(), mode: 'random', setMode: jest.fn(), balancePlayers: [], saveTeams: jest.fn() } as never,
     drag: { hoveredTeamKey: null, teamZoneRefs: { current: {} }, onDragStart: jest.fn(), onDragMove: jest.fn(), onDragEnd: jest.fn() } as never,
-    attendance: { processingRequest: null, approveRequest: jest.fn(), approveFromWaitlist: jest.fn() } as never,
+    attendance: { processingRequest: null, approveRequest: jest.fn(), approveFromWaitlist: jest.fn(), setNoShow } as never,
     isHostOrCohost: opts.isHostOrCohost,
     isMobileWeb: false,
     docScrollActive: false,
@@ -357,7 +364,7 @@ function renderPeople(opts: { viewer: string; isOwner: boolean; isHostOrCohost: 
     payments: opts.paid ? { paidUserIds: new Set(opts.paid), refetch: jest.fn() } as never : null,
   }
   render(<PeopleTab {...props} />)
-  return { onMessage, onOpenProfile, onRemoveAttendee }
+  return { onMessage, onOpenProfile, onRemoveAttendee, setNoShow }
 }
 
 describe('PeopleTab roster menu', () => {
@@ -419,5 +426,56 @@ describe('PeopleTab "I\'ve paid" badges (#6)', () => {
     renderPeople({ viewer: 'host', isOwner: true, isHostOrCohost: true, paid: ['amy'] })
     expect(screen.getAllByTestId('roster-paid-badge')).toHaveLength(1)
     expect(screen.getByText(/1 of 2 marked paid/)).toBeTruthy()
+  })
+})
+
+describe('PeopleTab no-show flag (#151)', () => {
+  it('outside the window there is no Mark as no-show and no note', () => {
+    renderPeople({ viewer: 'host', isOwner: true, isHostOrCohost: true })
+    fireEvent.press(screen.getByLabelText('Actions for Amy Test'))
+    expect(screen.queryByLabelText('Mark as no-show')).toBeNull()
+    expect(screen.queryByTestId('roster-no-show-note')).toBeNull()
+  })
+
+  it('a host inside the window flags a player from the menu', () => {
+    const { setNoShow } = renderPeople({ viewer: 'host', isOwner: true, isHostOrCohost: true, started: true })
+    expect(screen.getByText(/Tap ⋯ on anyone who didn't come\. Everyone else gets points at \d{1,2}:\d{2} (AM|PM)\.$/)).toBeTruthy()
+    fireEvent.press(screen.getByLabelText('Actions for Amy Test'))
+    // Above Remove, with when it can be undone.
+    const labels = screen.getAllByTestId(/^roster-action-/).map(n => n.props.testID)
+    expect(labels).toEqual(['roster-action-message', 'roster-action-profile', 'roster-action-no-show', 'roster-action-remove'])
+    expect(screen.getByText(/No points for this event\. You can undo until/)).toBeTruthy()
+    fireEvent.press(screen.getByLabelText('Mark as no-show'))
+    finishSlideOut()
+    expect(setNoShow).toHaveBeenCalledWith('amy', true)
+  })
+
+  it('a flagged player shows the badge and offers Undo; the note counts them', () => {
+    const { setNoShow } = renderPeople({ viewer: 'host', isOwner: true, isHostOrCohost: true, started: true, noShows: ['amy'] })
+    expect(screen.getAllByTestId('roster-no-show-badge')).toHaveLength(1)
+    expect(screen.getByText(/^1 no-show\. Everyone else gets points at/)).toBeTruthy()
+    fireEvent.press(screen.getByLabelText('Actions for Amy Test'))
+    fireEvent.press(screen.getByLabelText('Undo no-show'))
+    finishSlideOut()
+    expect(setNoShow).toHaveBeenCalledWith('amy', false)
+  })
+
+  it('a co-host can flag too, but not their own row', () => {
+    renderPeople({ viewer: 'amy', isOwner: false, isHostOrCohost: true, started: true })
+    fireEvent.press(screen.getByLabelText('Actions for Hank Test'))
+    expect(screen.getByLabelText('Mark as no-show')).toBeTruthy()
+  })
+
+  it('the host never offers it on their own row', () => {
+    renderPeople({ viewer: 'host', isOwner: true, isHostOrCohost: true, started: true })
+    fireEvent.press(screen.getByLabelText('Actions for Hank Test'))
+    expect(screen.queryByLabelText('Mark as no-show')).toBeNull()
+  })
+
+  it('players see no menu, no badge and no note, even with flags in the data', () => {
+    renderPeople({ viewer: 'zed', isOwner: false, isHostOrCohost: false, started: true, noShows: ['amy'] })
+    expect(screen.queryByLabelText(/^Actions for/)).toBeNull()
+    expect(screen.queryByTestId('roster-no-show-badge')).toBeNull()
+    expect(screen.queryByTestId('roster-no-show-note')).toBeNull()
   })
 })

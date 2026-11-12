@@ -82,7 +82,7 @@ export function NotificationPopup({
               </TouchableOpacity>
             )}
             <TouchableOpacity onPress={onSeeAll} hitSlop={8}>
-              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.semibold }}>
+              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.semibold }}>
                 See all
               </Text>
             </TouchableOpacity>

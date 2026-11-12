@@ -5,7 +5,9 @@
  * every inbox notification (event reminders, cancellations, waitlist, cheers,
  * join requests, late dropouts, and any type added later) to the recipient's
  * devices, unless they turned push off for that type in Settings →
- * Notifications (profiles.notification_prefs.push.<type> = false). Tapping
+ * Notifications (user_settings.notification_prefs.push.<type> = false; the
+ * legacy profiles.notification_prefs is read only when user_settings has none,
+ * the same fallback as public.notification_pref_enabled). Tapping
  * the push opens the row's data.deep_link in the app.
  *
  * Deployed with verify_jwt = false (supabase/config.toml), so the request is
@@ -94,14 +96,21 @@ export function createHandler(deps: Deps) {
       return fail('client setup', e instanceof Error ? e : { message: String(e) })
     }
 
-    const [prefsRes, tokensRes] = await Promise.all([
+    // The switches live in user_settings (owner-only) since #99; profiles keeps
+    // only the legacy default, read as a fallback like notification_pref_enabled.
+    const [settingsRes, profileRes, tokensRes] = await Promise.all([
+      supabase.from('user_settings').select('notification_prefs').eq('user_id', record.user_id).maybeSingle(),
       supabase.from('profiles').select('notification_prefs').eq('id', record.user_id).maybeSingle(),
       supabase.from('push_tokens').select('token').eq('user_id', record.user_id),
     ])
-    if (prefsRes.error) return fail('prefs lookup', prefsRes.error)
+    if (settingsRes.error) return fail('prefs lookup', settingsRes.error)
+    if (profileRes.error) return fail('prefs lookup', profileRes.error)
     if (tokensRes.error) return fail('token lookup', tokensRes.error)
 
-    const prefs = (prefsRes.data as { notification_prefs: NotificationPrefsJson } | null)?.notification_prefs
+    type PrefsRow = { notification_prefs: NotificationPrefsJson | null } | null
+    const prefs = (settingsRes.data as PrefsRow)?.notification_prefs
+      ?? (profileRes.data as PrefsRow)?.notification_prefs
+      ?? undefined
     if (!shouldPush(record, prefs)) return new Response('Not pushed for this type', { status: 200 })
 
     const tokens = ((tokensRes.data ?? []) as { token: string }[]).map(r => r.token)

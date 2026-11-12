@@ -9,10 +9,9 @@ import type { CopySection, CopyStep, MatchDoc, MatchState, SetState, SheetRegion
 import { POSITION_LABELS, other } from './engine'
 import { SANCTION_CODES } from './describe'
 import { teamName } from './summary'
-import { serviceBoxes } from './officialLayout'
+import { SET_DY, serviceBoxes } from './officialLayout'
 
 /** Set 2's block is this far below set 1's on the form. */
-const SET_DY = 244.5
 const R = (x: number, y: number, w: number, h: number): SheetRegion => ({ x, y, w, h })
 const LEFT = { x: 27.8, w: 243.7 }
 const RIGHT = { x: 354.9, w: 243.6 }
@@ -35,12 +34,13 @@ const leftTeam = (block: number): TeamSide => (block === 0 ? 'A' : 'B')
  * from, every point slashed, penalty points also circled, and a T-bar to close the rest once
  * the set is over (the final point is not circled).
  */
-export function pointsInstruction(score: number, startScore: number, finished: boolean, penalties: number[] = []): string {
+export function pointsInstruction(score: number, startScore: number, finished: boolean, penalties: number[] = [], liberoPoints: number[] = []): string {
   const parts: string[] = []
   if (startScore > 0) parts.push(`T-bar over 1–${startScore}: a line down from the top and a line under ${startScore}`)
   const from = startScore + 1
   if (score >= from) parts.push(from === score ? `slash ${score}` : `slash ${from}–${score}`)
   if (penalties.length) parts.push(`circle ${penalties.join(', ')} (penalty point${penalties.length > 1 ? 's' : ''})`)
+  if (liberoPoints.length) parts.push(`draw a triangle around ${liberoPoints.join(', ')} (scored on the libero's serve)`)
   if (finished && score < 36) parts.push(score > 0 ? `then a line under ${score} and down through ${score + 1}–36` : 'then a line down through every column')
   const text = parts.join(', ') || 'Nothing to mark yet'
   return text.charAt(0).toUpperCase() + text.slice(1)
@@ -73,7 +73,6 @@ function header(doc: MatchDoc, state: MatchState): CopyStep {
       { kind: 'rows', rows: [
         { label: 'Competition', value: or(info.competition) },
         { label: 'City, state', value: or(info.city) },
-        { label: 'Hall', value: or(info.hall) },
         { label: 'Division (tick)', value: gender },
         { label: 'Match no.', value: or(info.matchNo) },
         { label: 'Level', value: or(info.division) },
@@ -121,11 +120,18 @@ function setSteps(doc: MatchDoc, state: MatchState, set: SetState): CopyStep[] {
     where: where('The "Order" row under I–VI'),
     sheet,
     regions: [R(LEFT.x, 144.5 + dy, LEFT.w, 14.4), R(RIGHT.x, 144.5 + dy, RIGHT.w, 14.4)],
-    sections: ([L, Rt] as const).map(t => ({
-      kind: 'grid',
-      title: `${t === L ? 'Left' : 'Right'} · ${name(t)}`,
-      cells: POSITION_LABELS.map((label, slot) => ({ label, value: String(set.teams[t].lineup[slot]) })),
-    })),
+    sections: [
+      ...([L, Rt] as const).map(t => ({
+        kind: 'grid' as const,
+        title: `${t === L ? 'Left' : 'Right'} · ${name(t)}`,
+        // △ on the position the libero served for: triangle its Roman numeral (S6.2.1).
+        cells: POSITION_LABELS.map((label, slot) => ({ label: set.teams[t].liberoServeSlot === slot ? `${label} △` : label, value: String(set.teams[t].lineup[slot]) })),
+      })),
+      ...([L, Rt] as const).flatMap(t => {
+        const slot = set.teams[t].liberoServeSlot
+        return slot == null ? [] : [{ kind: 'rows' as const, title: '', rows: [{ label: `${name(t)}'s libero served`, value: `Triangle around ${POSITION_LABELS[slot]}` }] }]
+      }),
+    ],
   })
 
   const subs = ([L, Rt] as const).filter(t => set.teams[t].subs.length > 0)
@@ -156,7 +162,7 @@ function setSteps(doc: MatchDoc, state: MatchState, set: SetState): CopyStep[] {
         kind: 'big' as const,
         title: `${t === L ? 'Left' : 'Right'} column · ${name(t)}`,
         value: String(set.teams[t].score),
-        detail: pointsInstruction(set.teams[t].score, set.startScore, finished, set.teams[t].marks.flatMap((m, i) => (m === 'penalty' ? [i + 1] : []))),
+        detail: pointsInstruction(set.teams[t].score, set.startScore, finished, set.teams[t].marks.flatMap((m, i) => (m === 'penalty' ? [i + 1] : [])), set.teams[t].liberoPoints),
       })),
       {
         kind: 'rows',

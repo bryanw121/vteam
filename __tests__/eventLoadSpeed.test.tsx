@@ -51,6 +51,7 @@ jest.mock('../contexts/session', () => ({
   useSession: () => ({ userId: null, isGuest: true, loading: false, session: null }),
 }))
 jest.mock('../lib/sentry', () => ({ Sentry: { addBreadcrumb: jest.fn(), captureException: jest.fn() } }))
+jest.mock('../lib/sessionUser', () => ({ getSessionUser: async () => ({ id: 'u1' }) }))
 jest.mock('expo-router', () => ({ useFocusEffect: () => {}, useRouter: () => ({ push: jest.fn() }), usePathname: () => '/' }))
 jest.mock('expo-image', () => ({ Image: () => null }))
 
@@ -194,6 +195,20 @@ describe('prefetchQuery', () => {
     await settle()
     expect(seen).toBe('row')
     expect(calls).toBe(1)
+  })
+
+  it('joining an in-flight fetch waits for it, so the caller can read the result (#224)', async () => {
+    let release!: () => void
+    const fetcher = jest.fn(() => new Promise<string>(r => { release = () => r('row') }))
+    void prefetchQuery('k:3', fetcher)
+    let joined = false
+    const second = prefetchQuery('k:3', fetcher).then(() => { joined = true })
+    await Promise.resolve()
+    expect(joined).toBe(false)
+    release()
+    await second
+    expect(getQueryData('k:3')).toBe('row')
+    expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
   it('skips fresh data', async () => {

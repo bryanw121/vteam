@@ -1,5 +1,5 @@
 import { parseInline, parseLegalMarkdown, spansText } from '../utils/legalMarkdown'
-import { PRIVACY_MARKDOWN, TERMS_MARKDOWN } from '../constants/legal'
+import { DELETE_ACCOUNT_MARKDOWN, PRIVACY_MARKDOWN, TERMS_MARKDOWN } from '../constants/legal'
 
 describe('parseInline', () => {
   it('splits bold and placeholders', () => {
@@ -28,10 +28,10 @@ describe('parseLegalMarkdown', () => {
     expect(table.rows.map(r => r.map(spansText))).toEqual([['x', 'y'], ['z', 'w']])
   })
 
-  it.each([['terms', TERMS_MARKDOWN], ['privacy', PRIVACY_MARKDOWN]])('renders the %s text without losing content', (_n, md) => {
+  it.each([['terms', TERMS_MARKDOWN], ['privacy', PRIVACY_MARKDOWN], ['delete-account', DELETE_ACCOUNT_MARKDOWN]])('renders the %s text without losing content', (_n, md) => {
     const blocks = parseLegalMarkdown(md)
     expect(blocks[0].type).toBe('title')
-    const words = (s: string) => s.replace(/[*\\#|\-[\]]/g, ' ').split(/\s+/).filter(Boolean).length
+    const words = (s: string) => s.replace(/\*/g, '').replace(/[\\#|\-[\]]/g, ' ').split(/\s+/).filter(Boolean).length
     const rendered = blocks.map(b => {
       if (b.type === 'list') return b.items.map(spansText).join(' ')
       if (b.type === 'table') return [b.header, ...b.rows].map(r => r.map(spansText).join(' ')).join(' ')

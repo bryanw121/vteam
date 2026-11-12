@@ -112,6 +112,10 @@ jobs:
         run: npm run db:drift
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # reads the state of PRs in beta's ledger
+      # Every pg_cron job needs a health expectation (#157): a PR that adds a job on
+      # beta fails here until scripts/job-health.mjs knows how often it should succeed.
+      - name: Job health expectations (beta)
+        run: node scripts/job-health.mjs --project beta --expectations-only
       # Migrations reach live before the PR's code is deployed: flag drops,
       # renames, type changes and new required columns (expand, then contract).
       - name: Migration safety
@@ -175,10 +179,11 @@ jobs:
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
       - name: Install Chromium
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+      # System packages come from apt; the script falls back to archive.ubuntu.com when the
+      # runner's Azure mirror doesn't resolve, instead of failing every browser job.
       - name: Install Chromium system deps
-        if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        run: scripts/ci/install-playwright-deps.sh
       - uses: actions/download-artifact@v4
         with:
           name: web-dist-mock
@@ -227,13 +232,13 @@ jobs:
           - shard: chat
             specs: e2e/chat.spec.ts
           - shard: events
-            specs: e2e/events.spec.ts e2e/tournament-flow.spec.ts e2e/weather.spec.ts
+            specs: e2e/events.spec.ts e2e/tournament-flow.spec.ts e2e/noShow.spec.ts e2e/weather.spec.ts
           # Row level security + RPC integration tests (no browser). In the
           # matrix, so they share the one-suite-at-a-time group with the others.
           - shard: api
             specs: e2e/rls.spec.ts e2e/rls.matrix.spec.ts
           - shard: other
-            specs: e2e/guest.spec.ts e2e/legal.guest.spec.ts e2e/tour.guest.spec.ts e2e/pull-to-refresh.guest.spec.ts e2e/metrics.guest.spec.ts e2e/profile.spec.ts e2e/reminders.spec.ts e2e/book.guest.spec.ts e2e/book.spec.ts e2e/textSize.spec.ts e2e/surfaces.spec.ts e2e/scrollRestore.spec.ts e2e/timezone.guest.spec.ts
+            specs: e2e/guest.spec.ts e2e/legal.guest.spec.ts e2e/login.guest.spec.ts e2e/tour.guest.spec.ts e2e/pull-to-refresh.guest.spec.ts e2e/metrics.guest.spec.ts e2e/profile.spec.ts e2e/reminders.spec.ts e2e/book.guest.spec.ts e2e/book.spec.ts e2e/textSize.spec.ts e2e/surfaces.spec.ts e2e/scrollRestore.spec.ts e2e/timezone.guest.spec.ts e2e/shareableLinks.guest.spec.ts
     # Credentials of the dedicated e2e account (repository secrets). Required:
     # e2e/env.ts fails fast with a clear message when they are missing, which is
     # also what happens on PRs from forks (secrets are not exposed to them).
@@ -262,10 +267,11 @@ jobs:
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
       - name: Install Chromium
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
+      # System packages come from apt; the script falls back to archive.ubuntu.com when the
+      # runner's Azure mirror doesn't resolve, instead of failing every browser job.
       - name: Install Chromium system deps
-        if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        run: scripts/ci/install-playwright-deps.sh
       - uses: actions/download-artifact@v4
         with:
           name: web-dist
