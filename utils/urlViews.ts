@@ -31,6 +31,13 @@ export const VIEW = {
     host: text(60),
   },
   leagues: { host: text(60) },
+  /** Live scores from a tournament's Google Sheet: `/scores/<program id>?view=brackets&division=Gold`. */
+  scores: {
+    view: oneOf(['live', 'pools', 'brackets', 'teams'] as const, 'live'),
+    division: text(40),
+    /** A team's page on the Teams tab (`?view=teams&team=Bag%20toss`). */
+    team: text(80),
+  },
   clubs: {
     filter: oneOf(['joined', 'nearby', 'popular'] as const, 'joined'),
     q: text(60),

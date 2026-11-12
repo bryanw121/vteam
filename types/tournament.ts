@@ -131,6 +131,8 @@ export type StandingRow = {
   played: number
   wins: number
   losses: number
+  /** Tied matches (two-set pools split 1–1). Omitted where ties can't happen. */
+  ties?: number
   setsWon: number
   setsLost: number
   pointsFor: number
