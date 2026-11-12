@@ -364,23 +364,26 @@
     "n": 1,
     "title": "Back to the same place on desktop: the Events feed keeps its scroll after an event page",
     "bucket": "end-user-experience",
-    "status": "proposed",
-    "summary": "Health-check fix: desktop web Back from an event lands Events at the top (900 -> 0 px every run) because the desktop ScrollView has no memoryKey; use DocScrollView (forwarded ref) with tab:events, hide the whole phone screen until restored (one-frame header flash), e2e cases in scrollRestore.spec.ts."
+    "status": "approved",
+    "summary": "Health-check fix: desktop web Back from an event lands Events at the top (900 -> 0 px every run) because the desktop ScrollView has no memoryKey; use DocScrollView (forwarded ref) with tab:events, hide the whole phone screen until restored (one-frame header flash), e2e cases in scrollRestore.spec.ts.",
+    "issue": 254
   },
   {
     "date": "2026-11-12",
     "n": 2,
     "title": "Stability check in CI: today's tour, flicker and link checks run on every PR",
     "bucket": "testing",
-    "status": "proposed",
-    "summary": "scripts/shots/stability-flow.mjs on the mocked export in the a11y job: tours never skip, no jump/layout shift on refresh or Back, every VIEW link round-trips; shrink-only baseline like axe; nightly --full with 800 ms delay."
+    "status": "approved",
+    "summary": "scripts/shots/stability-flow.mjs on the mocked export in the a11y job: tours never skip, no jump/layout shift on refresh or Back, every VIEW link round-trips; shrink-only baseline like axe; nightly --full with 800 ms delay.",
+    "issue": 255
   },
   {
     "date": "2026-11-12",
     "n": 3,
     "title": "What to bring: hosts list the net and balls, players say \"I'll bring it\"",
     "bucket": "competitor-gap",
-    "status": "proposed",
-    "summary": "TeamSnap Assignments / Spond event tasks for pickup gear: host lists items by surface, attending players claim them, claims release on leave, reminder line and a host alert when a required item is uncovered. New tables event_bring_items/claims + RPCs."
+    "status": "approved",
+    "summary": "TeamSnap Assignments / Spond event tasks for pickup gear: host lists items by surface, attending players claim them, claims release on leave, reminder line and a host alert when a required item is uncovered. New tables event_bring_items/claims + RPCs.",
+    "issue": 256
   }
 ]
