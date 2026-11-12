@@ -123,7 +123,7 @@ export function CheerRadarChart({ counts }: Props) {
               <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }}>
                 {kt.label}
               </Text>
-              <Text style={{ fontSize: theme.font.size.xs, fontWeight: theme.font.weight.bold, color: theme.colors.primary }}>
+              <Text style={{ fontSize: theme.font.size.xs, fontWeight: theme.font.weight.bold, color: theme.colors.primaryText }}>
                 {kt.count}
               </Text>
             </View>

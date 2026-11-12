@@ -37,7 +37,7 @@ export const shared = StyleSheet.create({
   /** A section heading inside a settings subpage (e.g. Friends: Requests / Friends / Sent). */
   subpageSectionTitle: { fontFamily: theme.fonts.display, fontSize: font.size.lg, color: colors.text, marginTop: theme.spacing.lg, marginBottom: theme.spacing.sm },
   label:        { fontFamily: theme.fonts.bodyMedium,     fontSize: font.size.sm,  color: colors.subtext, marginBottom: spacing.xs },
-  primaryText:  { fontFamily: theme.fonts.bodyMedium,     fontSize: font.size.md,  color: colors.primary },
+  primaryText:  { fontFamily: theme.fonts.bodyMedium,     fontSize: font.size.md,  color: colors.primaryText },
   errorText:    { fontFamily: theme.fonts.body,           fontSize: font.size.sm,  color: colors.error, marginTop: spacing.xs },
 
   // ─── Inputs ───────────────────────────────────────────────
@@ -63,7 +63,7 @@ export const shared = StyleSheet.create({
   buttonDanger:       { backgroundColor: colors.error },
   buttonDisabled:     { opacity: 0.5 },
   buttonLabelPrimary: { fontFamily: theme.fonts.bodySemiBold, color: colors.white,   fontSize: font.size.md },
-  buttonLabelSecondary: { fontFamily: theme.fonts.bodySemiBold, color: colors.primary, fontSize: font.size.md },
+  buttonLabelSecondary: { fontFamily: theme.fonts.bodySemiBold, color: colors.primaryText, fontSize: font.size.md },
 
   // ─── Badges ───────────────────────────────────────────────
   badge:     { backgroundColor: colors.primary, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
@@ -80,10 +80,10 @@ export const shared = StyleSheet.create({
     maxWidth: 400,
     ...shadow.md,
   },
-  authTitle:    { fontSize: font.size.xxl, fontWeight: font.weight.bold, color: colors.primary, marginBottom: spacing.xs, textAlign: 'center' },
+  authTitle:    { fontSize: font.size.xxl, fontWeight: font.weight.bold, color: colors.primaryText, marginBottom: spacing.xs, textAlign: 'center' },
   authSubtitle: { fontSize: font.size.md, color: colors.subtext, marginBottom: spacing.xl, textAlign: 'center' },
   authLink:     { marginTop: spacing.md, alignItems: 'center' },
-  authLinkText: { color: colors.primary, fontSize: font.size.md },
+  authLinkText: { color: colors.primaryText, fontSize: font.size.md },
   // Join intent (#229): the game a guest was joining, on the sign-up / sign-in card.
   joinContextCard: {
     borderWidth: 1, borderColor: colors.timeBorder, backgroundColor: colors.time,
@@ -130,7 +130,7 @@ export const shared = StyleSheet.create({
   },
   stepperBtn:         { width: 56, height: 48, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   stepperBtnDisabled: { opacity: 0.3 },
-  stepperBtnText:     { fontSize: font.size.xl, color: colors.primary, fontWeight: font.weight.medium },
+  stepperBtnText:     { fontSize: font.size.xl, color: colors.primaryText, fontWeight: font.weight.medium },
   stepperValue:       { flex: 1, textAlign: 'center', fontSize: font.size.md, fontWeight: font.weight.medium, color: colors.text },
 
   // ─── Attendee row (event detail) ──────────────────────────
@@ -144,7 +144,7 @@ export const shared = StyleSheet.create({
 
   // ─── Tags ─────────────────────────────────────────────────
   tag:     { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.full, backgroundColor: colors.primary + '18', borderWidth: 1, borderColor: colors.primary + '40' },
-  tagText: { fontSize: font.size.xs, fontWeight: font.weight.medium, color: colors.primary },
+  tagText: { fontSize: font.size.xs, fontWeight: font.weight.medium, color: colors.primaryText },
 
   // ─── Floating actions ─────────────────────────────────────
   floatingButtonWrap: {
@@ -568,7 +568,7 @@ export const shared = StyleSheet.create({
     color: colors.subtextStrong,
   },
   chipLabelActive:     { color: colors.onPrimary },
-  chipLabelActiveTint: { color: colors.primary },
+  chipLabelActiveTint: { color: colors.primaryText },
 
   // ── IconButton (notifications bell, etc.) ─────────────────
   iconButton: {
@@ -619,12 +619,12 @@ export const shared = StyleSheet.create({
   },
   screenHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingBottom: spacing.xs },
   screenHeaderBack:  { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start', marginLeft: spacing.lg, marginTop: spacing.sm },
-  screenHeaderBackLabel: { fontFamily: theme.fonts.body, fontSize: font.size.sm, color: colors.primary },
+  screenHeaderBackLabel: { fontFamily: theme.fonts.body, fontSize: font.size.sm, color: colors.primaryText },
 
   // ── EmptyState / ScreenState ──────────────────────────────
   emptyState:       { alignItems: 'center', paddingTop: spacing.xxl, paddingHorizontal: spacing.lg, gap: spacing.sm },
   emptyStateBody:   { textAlign: 'center', maxWidth: 320 },
-  emptyStateAction: { fontSize: font.size.sm, color: colors.primary, fontWeight: font.weight.medium },
+  emptyStateAction: { fontSize: font.size.sm, color: colors.primaryText, fontWeight: font.weight.medium },
   // EventDetailSkeleton: placeholders in the event page's final layout
   skeletonBlock: { backgroundColor: theme.colors.card, borderRadius: 16 },
   /** "Load earlier comments" at the top of a discussion: full-width, 44pt touch target. */
@@ -633,7 +633,7 @@ export const shared = StyleSheet.create({
     paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.xs,
     ...(Platform.OS === 'web' ? ({ cursor: 'pointer', touchAction: 'manipulation' } as object) : null),
   },
-  loadEarlierLabel: { fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primary },
+  loadEarlierLabel: { fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText },
   /** Host form while a cold edit link loads: one field-shaped block. */
   skeletonField: { height: 48, borderRadius: 12, backgroundColor: theme.colors.card },
   skeletonLabel: { width: 96, height: 10, borderRadius: 5, backgroundColor: theme.colors.card, marginBottom: 8 },
@@ -788,7 +788,7 @@ export const shared = StyleSheet.create({
   oneTimeBannerBody: { color: theme.colors.subtext, fontSize: theme.font.size.sm, fontFamily: theme.fonts.body, lineHeight: 18 },
   /** The banner's link (e.g. "Check out our tour"): text-styled, but a full 44pt touch target. */
   oneTimeBannerAction: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', marginTop: -theme.spacing.xs, marginBottom: -theme.spacing.sm },
-  oneTimeBannerActionText: { color: theme.colors.primary, fontSize: theme.font.size.smd, fontFamily: theme.fonts.bodySemiBold, textDecorationLine: 'underline' },
+  oneTimeBannerActionText: { color: theme.colors.primaryText, fontSize: theme.font.size.smd, fontFamily: theme.fonts.bodySemiBold, textDecorationLine: 'underline' },
 
   // ── Guided tour overlay (components/tour/TourOverlay) ─────
   tourRoot: { ...StyleSheet.absoluteFillObject, zIndex: 1000, elevation: 1000 },
@@ -1005,7 +1005,7 @@ export const shared = StyleSheet.create({
     minHeight: 44,
     ...(Platform.OS === 'web' ? ({ cursor: 'pointer', touchAction: 'manipulation' } as object) : null),
   },
-  bookFollowUpText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primary },
+  bookFollowUpText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primaryText },
   bookFootnote: { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, lineHeight: 16, color: theme.colors.subtext },
 
   // ── ScreenContainer ───────────────────────────────────────
@@ -1020,11 +1020,11 @@ export const shared = StyleSheet.create({
   legalBold:        { fontFamily: fonts.bodySemiBold },
   legalPlaceholder: { fontFamily: fonts.bodyMedium, color: colors.warning, backgroundColor: colors.warning + '22' },
   legalListItem:    { flexDirection: 'row', gap: spacing.sm, paddingLeft: spacing.xs },
-  legalBullet:      { fontFamily: fonts.body, fontSize: font.size.lgs, lineHeight: 23, color: colors.primary },
+  legalBullet:      { fontFamily: fonts.body, fontSize: font.size.lgs, lineHeight: 23, color: colors.primaryText },
   legalTableRow:    { backgroundColor: colors.card, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, padding: spacing.md, gap: spacing.xs },
   legalTableLabel:  { fontFamily: fonts.bodyMedium, fontSize: font.size.sm, color: colors.subtext, textTransform: 'uppercase', letterSpacing: 0.5 },
   agreementLine:    { fontFamily: fonts.body, fontSize: font.size.xs, lineHeight: 16, color: colors.subtext, textAlign: 'center', marginTop: spacing.md },
-  agreementLink:    { color: colors.primary, textDecorationLine: 'underline' },
+  agreementLink:    { color: colors.primaryText, textDecorationLine: 'underline' },
 
   // Settings → Display (text size)
   settingsOptionRow: {

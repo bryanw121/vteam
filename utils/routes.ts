@@ -138,6 +138,8 @@ export const routes = {
   /** Sign in; `{ mode: 'reset' }` opens Forgot password, `'code'` the emailed-code form. */
   login: (view: ViewOf<'login'> = {}) => href(withView('/(auth)/login', VIEW.login, view)),
   register: () => href('/(auth)/register'),
+  /** Set a new password (where reset emails link, #223). */
+  resetPassword: () => href('/(auth)/reset-password'),
   /** The signed-in app group (resolves to the Events tab). */
   app: () => href('/(app)'),
 }

@@ -3,9 +3,9 @@ import { View, TouchableOpacity, Animated, Modal } from 'react-native'
 import { Text, TextInput } from '../../components/ui/Text'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
-import * as Linking from 'expo-linking'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { supabase } from '../../lib/supabase'
+import { obfuscateEmail, sendPasswordReset } from '../../lib/passwordReset'
 import { signInWithGoogle, signInWithApple, sendEmailOtp, verifyEmailOtp } from '../../lib/socialAuth'
 import { isUnknownEmailOtpError } from '../../utils/authErrors'
 import { signInWithUsername } from '../../lib/usernameAuth'
@@ -21,13 +21,6 @@ import { Spinner } from '../../components/ui/Spinner'
 import { JoinContextCard } from '../../components/auth/JoinContextCard'
 import { useUrlParam } from '../../hooks/useUrlParam'
 import { VIEW } from '../../utils/urlViews'
-
-function obfuscateEmail(email: string): string {
-  const [local, domain] = email.split('@')
-  if (!domain) return email
-  const visible = local.slice(0, 3)
-  return `${visible}****@${domain}`
-}
 
 export default function Login() {
   const router = useRouter()
@@ -98,10 +91,9 @@ export default function Login() {
     setResetError('')
     setResetLoading(true)
     try {
-      const redirectTo = Linking.createURL('/(auth)/reset-password')
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+      const error = await sendPasswordReset(email)
       if (error) {
-        setResetError(error.message)
+        setResetError(error)
       } else {
         setResetSent(obfuscateEmail(email))
       }
@@ -219,7 +211,7 @@ export default function Login() {
         >
           <View style={{ backgroundColor: theme.colors.card, borderRadius: 24, padding: 32, alignItems: 'center', gap: 12, maxWidth: 300 }}>
             <Text style={{ fontSize: theme.font.emoji.hero }}>🏐🏆🏐</Text>
-            <Text style={{ fontSize: theme.font.heading.md, fontWeight: 'bold', color: theme.colors.primary, textAlign: 'center' }}>You're a natural!</Text>
+            <Text style={{ fontSize: theme.font.heading.md, fontWeight: 'bold', color: theme.colors.primaryText, textAlign: 'center' }}>You're a natural!</Text>
             <Text style={{ fontSize: theme.font.size.lgs, color: '#666', textAlign: 'center' }}>10 spikes. The team needs you. Now go sign in.</Text>
             <Text style={{ fontSize: theme.font.size.sm, color: '#aaa', marginTop: 4 }}>tap to dismiss</Text>
           </View>
@@ -230,7 +222,7 @@ export default function Login() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <Text style={shared.authTitle}>vteam</Text>
           <View style={{ backgroundColor: 'rgba(124,77,255,0.15)', borderWidth: 1, borderColor: 'rgba(124,77,255,0.4)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 2 }}>
-            <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primary, letterSpacing: 1 }}>BETA</Text>
+            <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, letterSpacing: 1 }}>BETA</Text>
           </View>
         </View>
 

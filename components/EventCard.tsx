@@ -235,7 +235,7 @@ function EventCardInner({
                     }}>
                       {uri
                         ? <Image source={{ uri }} style={{ width: 24, height: 24 }} contentFit="cover" transition={150} />
-                        : <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.xs, color: theme.colors.primary }}>{initials}</Text>
+                        : <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.xs, color: theme.colors.primaryText }}>{initials}</Text>
                       }
                     </View>
                   )
@@ -476,7 +476,7 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
                   }}>
                     {uri
                       ? <Image source={{ uri }} style={{ width: 22, height: 22 }} contentFit="cover" transition={150} />
-                      : <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.xs, color: theme.colors.primary }}>{initials}</Text>
+                      : <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.xs, color: theme.colors.primaryText }}>{initials}</Text>
                     }
                   </View>
                 )

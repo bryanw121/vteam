@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: theme.font.size.sm,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
   },
   scrollContent: { gap: theme.spacing.sm, paddingRight: theme.spacing.xs },
   card: {

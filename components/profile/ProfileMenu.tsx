@@ -13,7 +13,11 @@ type Props = {
   onOpenPrivacy: () => void
   /** Pending incoming friend requests, shown as a count on the Friends row. */
   friendRequestCount?: number
-  /** Admins get an Admin metrics row first (drawing it is cosmetic: every metrics read checks on the server). */
+  /**
+   * Admins get an Admin metrics row, last: the admin check answers after the rest of Profile,
+   * and a group drawn above the others then pushed the whole menu down (a visible jump on refresh).
+   * Drawing it is cosmetic: every metrics read checks on the server.
+   */
   showAdmin?: boolean
 }
 
@@ -82,7 +86,7 @@ const rowKey = (row: MenuRow) => ('section' in row ? row.section : row.action)
 /** The settings shortcuts under the profile hero, in labelled groups. Navigation is the caller's (`onOpen`). */
 export function ProfileMenu({ onOpen, onTakeTour, onOpenTerms, onOpenPrivacy, friendRequestCount = 0, showAdmin = false }: Props) {
   const actions = { tour: onTakeTour, terms: onOpenTerms, privacy: onOpenPrivacy }
-  const groups = showAdmin ? [ADMIN_GROUP, ...MENU_GROUPS] : MENU_GROUPS
+  const groups = showAdmin ? [...MENU_GROUPS, ADMIN_GROUP] : MENU_GROUPS
   return (
     <View style={styles.groups}>
       {groups.map(group => (

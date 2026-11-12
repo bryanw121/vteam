@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `8441d9bef5be`
+> Inventory fingerprint: `b99160d89b39`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -481,7 +481,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `messages` | [`hooks/useMessages.ts:85`](../hooks/useMessages.ts#L85)<br>[`hooks/useOpenDm.ts:45`](../hooks/useOpenDm.ts#L45) |
 | `notifications` | [`hooks/event/useCohosts.ts:73`](../hooks/event/useCohosts.ts#L73)<br>[`hooks/event/useEventAttendance.ts:91`](../hooks/event/useEventAttendance.ts#L91)<br>[`hooks/useNotifications.ts:34`](../hooks/useNotifications.ts#L34)<br>[`utils/badges.ts:233`](../utils/badges.ts#L233) |
 | `point_balances` | [`hooks/usePoints.ts:24`](../hooks/usePoints.ts#L24) |
-| `profiles` | [`app/(app)/(tabs)/(main)/chat.tsx:55`](../app/%28app%29/%28tabs%29/%28main%29/chat.tsx#L55)<br>[`app/(auth)/register.tsx:68`](../app/%28auth%29/register.tsx#L68)<br>[`hooks/event/useCohosts.ts:37`](../hooks/event/useCohosts.ts#L37)<br>[`hooks/event/useEventData.ts:109`](../hooks/event/useEventData.ts#L109)<br>[`hooks/tournament/api.ts:192`](../hooks/tournament/api.ts#L192)<br>[`hooks/useMessages.ts:68`](../hooks/useMessages.ts#L68)<br>+5 more files |
+| `profiles` | [`app/(app)/(tabs)/(main)/chat.tsx:55`](../app/%28app%29/%28tabs%29/%28main%29/chat.tsx#L55)<br>[`app/(auth)/register.tsx:69`](../app/%28auth%29/register.tsx#L69)<br>[`hooks/event/useCohosts.ts:37`](../hooks/event/useCohosts.ts#L37)<br>[`hooks/event/useEventData.ts:109`](../hooks/event/useEventData.ts#L109)<br>[`hooks/tournament/api.ts:192`](../hooks/tournament/api.ts#L192)<br>[`hooks/useMessages.ts:68`](../hooks/useMessages.ts#L68)<br>+5 more files |
 | `push_receipts` | [`supabase/functions/check-push-receipts/handler.ts:42`](../supabase/functions/check-push-receipts/handler.ts#L42)<br>[`supabase/functions/send-chat-push/handler.ts:206`](../supabase/functions/send-chat-push/handler.ts#L206)<br>[`supabase/functions/send-notification-push/handler.ts:150`](../supabase/functions/send-notification-push/handler.ts#L150) |
 | `push_tokens` | [`supabase/functions/check-push-receipts/handler.ts:87`](../supabase/functions/check-push-receipts/handler.ts#L87)<br>[`supabase/functions/send-chat-push/handler.ts:151`](../supabase/functions/send-chat-push/handler.ts#L151)<br>[`supabase/functions/send-notification-push/handler.ts:104`](../supabase/functions/send-notification-push/handler.ts#L104)<br>[`utils/pushNotifications.ts:111`](../utils/pushNotifications.ts#L111) |
 | `rate_limits` | [`supabase/functions/login-with-username/handler.ts:67`](../supabase/functions/login-with-username/handler.ts#L67) |
@@ -549,20 +549,20 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Surface | Name | Call sites |
 |---|---|---|
 | Auth | `exchangeCodeForSession` | [`lib/socialAuth.ts:24`](../lib/socialAuth.ts#L24) |
-| Auth | `getSession` | [`app/(app)/(tabs)/settings/account.tsx:23`](../app/%28app%29/%28tabs%29/settings/account.tsx#L23)<br>[`app/(auth)/reset-password.tsx:33`](../app/%28auth%29/reset-password.tsx#L33)<br>[`contexts/session.tsx:35`](../contexts/session.tsx#L35)<br>[`lib/sessionUser.ts:10`](../lib/sessionUser.ts#L10) |
+| Auth | `getSession` | [`app/(auth)/reset-password.tsx:48`](../app/%28auth%29/reset-password.tsx#L48)<br>[`contexts/session.tsx:35`](../contexts/session.tsx#L35)<br>[`lib/sessionUser.ts:10`](../lib/sessionUser.ts#L10) |
 | Auth | `getUser` | [`contexts/session.tsx:15`](../contexts/session.tsx#L15)<br>[`lib/sessionUser.ts:6`](../lib/sessionUser.ts#L6) |
-| Auth | `onAuthStateChange` | [`app/(auth)/reset-password.tsx:28`](../app/%28auth%29/reset-password.tsx#L28)<br>[`contexts/session.tsx:40`](../contexts/session.tsx#L40) |
-| Auth | `resetPasswordForEmail` | [`app/(auth)/login.tsx:102`](../app/%28auth%29/login.tsx#L102) |
+| Auth | `onAuthStateChange` | [`app/(auth)/reset-password.tsx:44`](../app/%28auth%29/reset-password.tsx#L44)<br>[`contexts/session.tsx:40`](../contexts/session.tsx#L40) |
+| Auth | `resetPasswordForEmail` | [`lib/passwordReset.ts:15`](../lib/passwordReset.ts#L15) |
 | Auth | `setSession` | [`lib/socialAuth.ts:27`](../lib/socialAuth.ts#L27)<br>[`lib/usernameAuth.ts:27`](../lib/usernameAuth.ts#L27)<br>[`supabase/functions/login-with-username/handler.ts:19`](../supabase/functions/login-with-username/handler.ts#L19) |
 | Auth | `signInWithIdToken` | [`lib/socialAuth.ts:78`](../lib/socialAuth.ts#L78) |
 | Auth | `signInWithOAuth` | [`lib/socialAuth.ts:38`](../lib/socialAuth.ts#L38) |
 | Auth | `signInWithOtp` | [`lib/socialAuth.ts:89`](../lib/socialAuth.ts#L89) |
-| Auth | `signInWithPassword` | [`app/(auth)/login.tsx:127`](../app/%28auth%29/login.tsx#L127)<br>[`hooks/useAccountDeletion.ts:70`](../hooks/useAccountDeletion.ts#L70) |
-| Auth | `signOut` | [`app/(app)/(tabs)/settings/account.tsx:31`](../app/%28app%29/%28tabs%29/settings/account.tsx#L31)<br>[`hooks/useAccountDeletion.ts:63`](../hooks/useAccountDeletion.ts#L63) |
-| Auth | `signUp` | [`app/(auth)/register.tsx:78`](../app/%28auth%29/register.tsx#L78) |
-| Auth | `startAutoRefresh` | [`lib/supabase.ts:59`](../lib/supabase.ts#L59) |
-| Auth | `stopAutoRefresh` | [`lib/supabase.ts:60`](../lib/supabase.ts#L60) |
-| Auth | `updateUser` | [`app/(auth)/reset-password.tsx:47`](../app/%28auth%29/reset-password.tsx#L47) |
+| Auth | `signInWithPassword` | [`app/(auth)/login.tsx:119`](../app/%28auth%29/login.tsx#L119)<br>[`hooks/useAccountDeletion.ts:70`](../hooks/useAccountDeletion.ts#L70) |
+| Auth | `signOut` | [`app/(app)/(tabs)/settings/account.tsx:52`](../app/%28app%29/%28tabs%29/settings/account.tsx#L52)<br>[`app/(auth)/reset-password.tsx:67`](../app/%28auth%29/reset-password.tsx#L67)<br>[`hooks/useAccountDeletion.ts:63`](../hooks/useAccountDeletion.ts#L63) |
+| Auth | `signUp` | [`app/(auth)/register.tsx:79`](../app/%28auth%29/register.tsx#L79) |
+| Auth | `startAutoRefresh` | [`lib/supabase.ts:71`](../lib/supabase.ts#L71) |
+| Auth | `stopAutoRefresh` | [`lib/supabase.ts:72`](../lib/supabase.ts#L72) |
+| Auth | `updateUser` | [`app/(auth)/reset-password.tsx:64`](../app/%28auth%29/reset-password.tsx#L64) |
 | Auth | `verifyOtp` | [`lib/socialAuth.ts:97`](../lib/socialAuth.ts#L97) |
 | Realtime table | `chat_silences` | [`utils/chatUtils.ts:98`](../utils/chatUtils.ts#L98) |
 | Realtime table | `conversation_members` | [`utils/chatUtils.ts:93`](../utils/chatUtils.ts#L93) |
@@ -614,9 +614,9 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Text size (#43) | [`TextSizeId`](../types/index.ts#L1995), [`TextSizeOption`](../types/index.ts#L1997), [`TextScaleContextValue`](../types/index.ts#L2004) |
 | Account deletion (#99) | [`AccountDeletionSuccessor`](../types/index.ts#L2017), [`AccountDeletionPlan`](../types/index.ts#L2023), [`AccountDeletionBlock`](../types/index.ts#L2039), [`WebScrollableRef`](../types/index.ts#L2041) |
 | Weather on outdoor games (#165) | [`ForecastHour`](../types/index.ts#L2046), [`Forecast`](../types/index.ts#L2063), [`ForecastWindow`](../types/index.ts#L2070), [`ForecastCell`](../types/index.ts#L2073), [`ForecastTone`](../types/index.ts#L2076), [`ForecastSummary`](../types/index.ts#L2079), [`ForecastCourt`](../types/index.ts#L2094) |
-| Public profile, history, cheers summary (#185) | [`UserProfileData`](../types/index.ts#L2099), [`EventHistoryKind`](../types/index.ts#L2108), [`CheersReceived`](../types/index.ts#L2111), [`CheersSummary`](../types/index.ts#L2117) |
-| Join intent (#229) | [`PendingAction`](../types/index.ts#L2132), [`PendingActionTake`](../types/index.ts#L2135), [`JoinOffer`](../types/index.ts#L2138), [`JoinIntentOutcome`](../types/index.ts#L2141) |
-| View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2146), [`FeedbackFieldErrors`](../types/index.ts#L2152) |
+| Public profile, history, cheers summary (#185) | [`UserProfileData`](../types/index.ts#L2099), [`EventHistoryKind`](../types/index.ts#L2108), [`CheersReceived`](../types/index.ts#L2111), [`CheersSummary`](../types/index.ts#L2117), [`RecoveryLink`](../types/index.ts#L2125) |
+| Join intent (#229) | [`PendingAction`](../types/index.ts#L2135), [`PendingActionTake`](../types/index.ts#L2138), [`JoinOffer`](../types/index.ts#L2141), [`JoinIntentOutcome`](../types/index.ts#L2144) |
+| View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2149), [`FeedbackFieldErrors`](../types/index.ts#L2155) |
 
 ### Constrained string values
 
@@ -648,8 +648,8 @@ TypeScript `enum` keyword.
 | `FriendStatus` | `none`, `requested`, `incoming`, `friends` | [`types/index.ts:997`](../types/index.ts#L997) |
 | `HiddenFeedKind` | `item`, `venue`, `host`, `type` | [`types/index.ts:559`](../types/index.ts#L559) |
 | `JoinAction` | `leave`, `leave-waitlist`, `cancel-request`, `rerequest`, `waitlist`, `request`, `join` | [`types/index.ts:1547`](../types/index.ts#L1547) |
-| `JoinIntentOutcome` | `joined`, `not_now`, `skipped`, `expired` | [`types/index.ts:2141`](../types/index.ts#L2141) |
-| `JoinOffer` | `join`, `waitlist`, `request` | [`types/index.ts:2138`](../types/index.ts#L2138) |
+| `JoinIntentOutcome` | `joined`, `not_now`, `skipped`, `expired` | [`types/index.ts:2144`](../types/index.ts#L2144) |
+| `JoinOffer` | `join`, `waitlist`, `request` | [`types/index.ts:2141`](../types/index.ts#L2141) |
 | `LeaveConsequence.kind` | `waitlist`, `full`, `open`, `approval`, `hostNotified`, `paid`, `points` | [`types/index.ts:1579`](../types/index.ts#L1579) |
 | `LeaveReason` | `something_came_up`, `sick`, `injured`, `work` | [`types/index.ts:1596`](../types/index.ts#L1596) |
 | `MembershipType` | `open`, `invite` | [`types/index.ts:539`](../types/index.ts#L539) |
@@ -657,6 +657,7 @@ TypeScript `enum` keyword.
 | `MyEventStatus` | `hosting`, `attending`, `waitlisted`, `requested` | [`types/index.ts:828`](../types/index.ts#L828) |
 | `NOTIFICATION_TYPES / NotificationType` | `tournament_team_invite`, `tournament_join_request`, `tournament_join_accepted`, `tournament_join_declined`, `tournament_free_agent_assigned`, `tournament_mention`, `chat_mention` | [`types/index.ts:103`](../types/index.ts#L103) |
 | `ProfileBorder` | `bronze`, `gold`, `gradient`, `storm`, `aether` | [`types/index.ts:66`](../types/index.ts#L66) |
+| `RecoveryLink` | `recovery`, `expired` | [`types/index.ts:2125`](../types/index.ts#L2125) |
 | `RecurrenceCadence` | `weekly`, `biweekly`, `monthly` | [`constants/events.ts:90`](../constants/events.ts#L90) |
 | `RosterAction.key` | `message`, `message-adder`, `profile`, `no-show`, `remove` | [`types/index.ts:1622`](../types/index.ts#L1622) |
 | `ScheduleMatch.stage` | `pool_play`, `bracket`, `round_robin` | [`types/index.ts:1426`](../types/index.ts#L1426) |

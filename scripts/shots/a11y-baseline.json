@@ -48,444 +48,147 @@
     }
   },
   "chat-club": {
-    "mobile": {
-      "color-contrast": 7
-    },
+    "mobile": {},
     "desktop": {
-      "color-contrast": 12
+      "color-contrast": 1
     }
   },
   "chat-conversation": {
     "mobile": {
-      "color-contrast": 11
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 16
+      "color-contrast": 2
     }
   },
   "chat-list": {
     "mobile": {
-      "color-contrast": 9
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 14
+      "color-contrast": 2
     }
   },
   "club-create": {
     "mobile": {
-      "color-contrast": 8
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 13
+      "color-contrast": 2
     }
   },
   "club-detail": {
-    "mobile": {
-      "color-contrast": 8
-    },
+    "mobile": {},
     "desktop": {
-      "color-contrast": 14
+      "color-contrast": 1
     }
   },
   "club-detail-guest": {
     "mobile": {
-      "color-contrast": 7
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 12
+      "color-contrast": 2
     }
   },
   "clubs-list": {
-    "mobile": {
-      "color-contrast": 2
-    },
+    "mobile": {},
     "desktop": {
-      "color-contrast": 7
+      "color-contrast": 1
     }
   },
   "event-cheers": {
     "mobile": {
-      "color-contrast": 10
+      "color-contrast": 2
     },
     "desktop": {
-      "color-contrast": 15
+      "color-contrast": 3
     }
   },
   "event-details": {
     "mobile": {
-      "color-contrast": 20
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 23
+      "color-contrast": 2
     }
   },
   "event-details-noshow": {
-    "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 4
-    },
+    "mobile": {},
     "desktop": {
-      "aria-progressbar-name": 2,
-      "color-contrast": 5
+      "color-contrast": 1
     }
   },
   "event-discussion": {
     "mobile": {
-      "color-contrast": 16
+      "color-contrast": 2
     },
     "desktop": {
-      "color-contrast": 21
+      "color-contrast": 3
     }
   },
   "event-guest": {
     "mobile": {
-      "color-contrast": 19
+      "color-contrast": 3
     },
     "desktop": {
-      "color-contrast": 23
+      "color-contrast": 4
+    }
+  },
+  "event-join-intent-sheet": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 6
     }
   },
   "event-leave-sheet": {
     "mobile": {
-      "aria-progressbar-name": 1,
-      "color-contrast": 10
+      "color-contrast": 5
     },
     "desktop": {
-      "aria-progressbar-name": 2,
-      "color-contrast": 11
+      "color-contrast": 5
     }
   },
   "event-paid-bottom": {
     "mobile": {
-      "color-contrast": 20
+      "color-contrast": 4
     },
     "desktop": {
-      "color-contrast": 20
+      "color-contrast": 4
     }
   },
   "event-people": {
     "mobile": {
-      "color-contrast": 20
+      "color-contrast": 2
     },
     "desktop": {
-      "color-contrast": 25
+      "color-contrast": 3
     }
   },
   "event-people-balanced": {
     "mobile": {
-      "color-contrast": 5
+      "color-contrast": 2
     },
     "desktop": {
-      "color-contrast": 7
+      "color-contrast": 3
     }
   },
   "events-feed": {
     "mobile": {
-      "color-contrast": 33
+      "color-contrast": 18
     },
     "desktop": {
-      "color-contrast": 49
+      "color-contrast": 9
     }
   },
   "events-feed-guest": {
     "mobile": {
-      "color-contrast": 24
-    },
-    "desktop": {
-      "color-contrast": 44
-    }
-  },
-  "events-feed-tournaments": {
-    "mobile": {
-      "color-contrast": 8
-    },
-    "desktop": {
-      "color-contrast": 8
-    }
-  },
-  "host-create": {
-    "mobile": {
-      "color-contrast": 10
-    },
-    "desktop": {
-      "color-contrast": 15
-    }
-  },
-  "host-edit": {
-    "mobile": {
-      "color-contrast": 10
-    },
-    "desktop": {
-      "color-contrast": 15
-    }
-  },
-  "leagues": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "login": {
-    "mobile": {
-      "color-contrast": 10
-    },
-    "desktop": {
-      "color-contrast": 11
-    }
-  },
-  "notifications": {
-    "mobile": {
-      "color-contrast": 12
-    },
-    "desktop": {
-      "color-contrast": 17
-    }
-  },
-  "privacy": {
-    "mobile": {
-      "color-contrast": 5
-    },
-    "desktop": {
-      "color-contrast": 7
-    }
-  },
-  "profile-other": {
-    "mobile": {
-      "color-contrast": 4
-    },
-    "desktop": {
-      "color-contrast": 9
-    }
-  },
-  "profile-own": {
-    "mobile": {
-      "color-contrast": 4
-    },
-    "desktop": {
-      "color-contrast": 9
-    }
-  },
-  "profile-own-guest": {
-    "mobile": {
-      "color-contrast": 3
-    },
-    "desktop": {
-      "color-contrast": 8
-    }
-  },
-  "register": {
-    "mobile": {
-      "color-contrast": 13
-    },
-    "desktop": {
-      "color-contrast": 13
-    }
-  },
-  "reset-password": {
-    "mobile": {
-      "color-contrast": 3
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "scorekeeper": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "scorekeeper-new": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "settings-account": {
-    "mobile": {
-      "color-contrast": 3
-    },
-    "desktop": {
-      "color-contrast": 8
-    }
-  },
-  "settings-badges": {
-    "mobile": {
-      "color-contrast": 13
-    },
-    "desktop": {
-      "color-contrast": 18
-    }
-  },
-  "settings-cheers": {
-    "mobile": {
-      "color-contrast": 8
-    },
-    "desktop": {
-      "color-contrast": 13
-    }
-  },
-  "settings-display": {
-    "mobile": {
-      "color-contrast": 9
-    },
-    "desktop": {
-      "color-contrast": 14
-    }
-  },
-  "settings-experimental": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "settings-feedback": {
-    "mobile": {
-      "color-contrast": 9
-    },
-    "desktop": {
-      "color-contrast": 14
-    }
-  },
-  "settings-hidden": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "settings-history": {
-    "mobile": {
-      "color-contrast": 5
-    },
-    "desktop": {
-      "color-contrast": 10
-    }
-  },
-  "settings-hosted": {
-    "mobile": {
-      "color-contrast": 4
-    },
-    "desktop": {
-      "color-contrast": 9
-    }
-  },
-  "settings-notifications": {
-    "mobile": {
-      "color-contrast": 6
-    },
-    "desktop": {
-      "color-contrast": 11
-    }
-  },
-  "settings-silenced": {
-    "mobile": {
-      "color-contrast": 4
-    },
-    "desktop": {
-      "color-contrast": 9
-    }
-  },
-  "terms": {
-    "mobile": {
-      "color-contrast": 3
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "tournament-create": {
-    "mobile": {
-      "color-contrast": 12
-    },
-    "desktop": {
-      "color-contrast": 17
-    }
-  },
-  "tournament-discussion": {
-    "mobile": {
-      "color-contrast": 11
-    },
-    "desktop": {
-      "color-contrast": 16
-    }
-  },
-  "tournament-overview": {
-    "mobile": {
-      "color-contrast": 15
-    },
-    "desktop": {
-      "color-contrast": 22
-    }
-  },
-  "tournament-results": {
-    "mobile": {
-      "color-contrast": 21
-    },
-    "desktop": {
-      "color-contrast": 24
-    }
-  },
-  "tournament-schedule": {
-    "mobile": {
       "color-contrast": 17
     },
     "desktop": {
-      "color-contrast": 24
-    }
-  },
-  "tournament-teams": {
-    "mobile": {
-      "color-contrast": 14
-    },
-    "desktop": {
-      "color-contrast": 20
-    }
-  },
-  "tournaments-list": {
-    "mobile": {
-      "color-contrast": 8
-    },
-    "desktop": {
-      "color-contrast": 13
-    }
-  },
-  "tournaments-list-past": {
-    "mobile": {
-      "color-contrast": 4
-    },
-    "desktop": {
       "color-contrast": 9
-    }
-  },
-  "welcome-city": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "welcome-level": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "welcome-position": {
-    "desktop": {
-      "color-contrast": 2
     }
   },
   "events-feed-link": {
@@ -496,17 +199,105 @@
       "color-contrast": 9
     }
   },
-  "tournament-schedule-link": {
+  "events-feed-tournaments": {
     "mobile": {
-      "color-contrast": 8
+      "color-contrast": 5
     },
     "desktop": {
-      "color-contrast": 10
+      "color-contrast": 6
     }
+  },
+  "host-create": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "host-edit": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "leagues": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "login": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "notifications": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "privacy": {
+    "mobile": {},
+    "desktop": {}
   },
   "profile-edit-link": {
     "mobile": {
       "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "profile-other": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "profile-own": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "profile-own-guest": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "register": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "register-join-context": {
+    "mobile": {
+      "color-contrast": 2
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "reset-password": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "scorekeeper": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "scorekeeper-new": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-account": {
+    "mobile": {
+      "color-contrast": 2
     },
     "desktop": {
       "color-contrast": 2
@@ -520,20 +311,44 @@
       "color-contrast": 16
     }
   },
-  "register-join-context": {
+  "settings-badges": {
     "mobile": {
-      "color-contrast": 2
+      "color-contrast": 11
     },
     "desktop": {
-      "color-contrast": 2
+      "color-contrast": 11
     }
   },
-  "event-join-intent-sheet": {
+  "settings-cheers": {
     "mobile": {
-      "color-contrast": 4
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 6
+      "color-contrast": 1
+    }
+  },
+  "settings-display": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-experimental": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-feedback": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
     }
   },
   "settings-feedback-errors": {
@@ -542,6 +357,135 @@
     },
     "desktop": {
       "color-contrast": 6
+    }
+  },
+  "settings-hidden": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-history": {
+    "mobile": {
+      "color-contrast": 5
+    },
+    "desktop": {
+      "color-contrast": 5
+    }
+  },
+  "settings-hosted": {
+    "mobile": {
+      "color-contrast": 4
+    },
+    "desktop": {
+      "color-contrast": 4
+    }
+  },
+  "settings-notifications": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "settings-silenced": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "terms": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "tournament-create": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "tournament-discussion": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "tournament-overview": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "tournament-results": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 3
+    }
+  },
+  "tournament-schedule": {
+    "mobile": {
+      "color-contrast": 6
+    },
+    "desktop": {
+      "color-contrast": 8
+    }
+  },
+  "tournament-schedule-link": {
+    "mobile": {
+      "color-contrast": 8
+    },
+    "desktop": {
+      "color-contrast": 10
+    }
+  },
+  "tournament-teams": {
+    "mobile": {
+      "color-contrast": 6
+    },
+    "desktop": {
+      "color-contrast": 8
+    }
+  },
+  "tournaments-list": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "tournaments-list-past": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "welcome-city": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "welcome-level": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "welcome-position": {
+    "desktop": {
+      "color-contrast": 1
     }
   }
 }

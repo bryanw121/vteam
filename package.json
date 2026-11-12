@@ -9,7 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "TZ=America/Chicago jest",
+    "test": "jest",
+    "test:timezones": "node scripts/test-timezones.mjs",
     "test:tz": "for tz in UTC Asia/Tokyo America/Los_Angeles; do echo \"\u2500\u2500 TZ=$tz \u2500\u2500\"; TZ=$tz jest --silent || exit 1; done",
     "e2e:sweep": "node e2e/sweep.mjs",
     "docs:update": "node scripts/generate-architecture-doc.mjs",
@@ -30,6 +31,7 @@
     "setupFiles": [
       "./jest.setup.js"
     ],
+    "globalSetup": "./jest.globalSetup.js",
     "collectCoverageFrom": [
       "{app,components,contexts,hooks,lib,utils,constants}/**/*.{ts,tsx}",
       "!**/*.d.ts"

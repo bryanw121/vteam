@@ -172,7 +172,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
                     {kt.label}
                   </Text>
                   {totalCount > 0 && (
-                    <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primary }}>
+                    <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText }}>
                       {totalCount} selected
                     </Text>
                   )}
@@ -194,7 +194,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
               borderColor: theme.colors.primary + '40',
             }}>
               <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} />
-              <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primary }}>
+              <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }}>
                 Cheers sent!
               </Text>
             </View>

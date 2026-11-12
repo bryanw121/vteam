@@ -160,6 +160,7 @@ export const SCREENS = {
     sources: [...EVENT_DETAIL, 'components/event/JoinIntentSheet.tsx', 'utils/pendingAction.ts'],
   },
   'reset-password': { route: '/reset-password', signedIn: false, sources: ['app/(auth)/reset-password.tsx', 'app/(auth)/_layout.tsx'] },
+  'reset-password-expired': { route: '/reset-password#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired', signedIn: false, sources: ['app/(auth)/reset-password.tsx', 'utils/recoveryLink.ts', 'lib/passwordReset.ts'] },
   terms: { route: '/terms', signedIn: false, sources: ['app/terms.tsx', 'components/legal/**', 'constants/legal.ts', 'utils/legalMarkdown.ts'] },
   privacy: { route: '/privacy', signedIn: false, sources: ['app/privacy.tsx', 'components/legal/**', 'constants/legal.ts', 'utils/legalMarkdown.ts'] },
 }

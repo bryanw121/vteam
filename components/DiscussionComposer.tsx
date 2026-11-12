@@ -129,7 +129,7 @@ export function DiscussionComposer({
           backgroundColor: theme.colors.primary + '14',
           borderRadius: 8, marginBottom: 6,
         }}>
-          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, flex: 1 }}>Editing comment</Text>
+          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, flex: 1 }}>Editing comment</Text>
           <TouchableOpacity onPress={onCancelEdit} hitSlop={8}>
             <Ionicons name="close-circle" size={18} color={theme.colors.primary} />
           </TouchableOpacity>

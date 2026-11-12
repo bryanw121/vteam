@@ -119,6 +119,22 @@ test.describe('anon (guest browsing)', () => {
   })
 })
 
+test.describe('job health (#157)', () => {
+  test('a guest can read the aggregate report, and nothing behind it', async () => {
+    const report = await q(() => anon.rpc('job_health'), 'job_health')
+    expect(report.error).toBeNull()
+    const rows = (report.data ?? []) as Record<string, unknown>[]
+    expect(rows.some(r => String(r.check_name).startsWith('cron: '))).toBe(true)
+    for (const row of rows) {
+      expect(Object.keys(row).sort()).toEqual(['check_name', 'detail', 'failures_24h', 'last_ok_at', 'ok'])
+      // Counts and ages only: no ids, no error text.
+      expect(String(row.detail ?? '')).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-|ERROR:/i)
+    }
+    const ledger = await q(() => anon.from('point_events').select('id').limit(1), 'anon point_events')
+    expect(ledger.data ?? []).toEqual([])
+  })
+})
+
 test.describe('event_payments ("I\'ve paid", #6)', () => {
   test('anon reads nothing and cannot write', async () => {
     const res = await q(() => anon.from('event_payments').select('*').limit(1), 'anon event_payments')
@@ -178,6 +194,23 @@ test.describe('signed in as the e2e account', () => {
     const profile = await q(() => me.from('profiles').update({ first_name: 'E2E' }).eq('id', BUDDY_ID).select('id'), "update buddy's profile")
     // UPDATE with a USING policy filters the row out: no error, zero rows changed.
     expect(profile.data ?? []).toEqual([])
+  })
+
+  test('cannot rename itself; other columns of its own row still update (#223)', async () => {
+    const mine = await q(() => me.from('profiles').select('username, first_name').eq('id', myId).single(), 'my profile')
+    const { username, first_name } = mine.data as unknown as { username: string; first_name: string | null }
+
+    const rename = await q(() => me.from('profiles').update({ username: `${username}_x` }).eq('id', myId).select('username'), 'rename myself')
+    if (!rename.error) {
+      // The guard is missing: put the shared account's name back before failing.
+      await me.from('profiles').update({ username }).eq('id', myId)
+    }
+    expect(rename.error?.code, 'profiles_guard_username rejects a username change').toBe('42501')
+
+    // Writes the current value back, so nothing changes either way.
+    const other = await q(() => me.from('profiles').update({ first_name }).eq('id', myId).select('id'), 'update my first name')
+    expect(other.error).toBeNull()
+    expect(other.data).toHaveLength(1)
   })
 
   test('reads only its own friend rows and cannot write them directly (#15)', async () => {

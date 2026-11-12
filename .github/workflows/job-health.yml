@@ -1,0 +1,24 @@
+name: Job health
+
+# Every 3 hours: are the database's background jobs (points, reminders, the
+# Schelagg imports, the nightly prune) still succeeding, are attendees getting
+# their points, and are webhook calls (push) going through? Calls
+# public.job_health() on live and beta with their public anon keys
+# (scripts/job-health.mjs, #157). GitHub emails the repo owner about a failed
+# scheduled run; the job summary shows which check failed and since when.
+on:
+  schedule:
+    - cron: '47 */3 * * *'
+  workflow_dispatch:
+
+jobs:
+  health:
+    name: Background jobs on live and beta
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/job-health.mjs

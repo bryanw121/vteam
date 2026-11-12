@@ -2121,6 +2121,9 @@ export type CheersSummary = {
 }
 
 
+/** What a password reset link brought (`utils/recoveryLink`, #223): a good link, an expired or used one, or neither. */
+export type RecoveryLink = 'recovery' | 'expired' | null
+
 // ─── Join intent (#229) ───────────────────────────────────────────────────────
 
 /**
