@@ -56,7 +56,7 @@ export function InviteModal({ visible, onClose, viewerId, teams, invitingId, onI
             inputStyle={{ height: 44, paddingVertical: 0 }}
           />
           <TouchableOpacity onPress={close} hitSlop={8}>
-            <Text style={{ color: theme.colors.primary, fontSize: theme.font.size.md }}>Cancel</Text>
+            <Text style={{ color: theme.colors.primaryText, fontSize: theme.font.size.md }}>Cancel</Text>
           </TouchableOpacity>
         </View>
         {error && <Text style={{ textAlign: 'center', padding: 16, color: theme.colors.error }}>{error}</Text>}

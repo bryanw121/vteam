@@ -38,5 +38,5 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   title: { fontFamily: theme.fonts.display, fontSize: theme.font.heading.hero, lineHeight: 46, letterSpacing: -1.6, color: theme.colors.text, marginTop: 2 },
-  dot: { color: theme.colors.primary },
+  dot: { color: theme.colors.primaryText },
 })

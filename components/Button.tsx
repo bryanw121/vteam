@@ -41,7 +41,8 @@ export function Button({
   const tinted = variant === 'secondary' || variant === 'ghost'
   const labelStyle = tinted ? shared.buttonLabelSecondary : shared.buttonLabelPrimary
   const inactive = !!(disabled || loading)
-  const contentColor = tinted ? theme.colors.primary : theme.colors.onPrimary
+  // Text on a dark surface: the lighter primaryText passes AA where primary (3.5:1 on card) doesn't (#134).
+  const contentColor = tinted ? theme.colors.primaryText : theme.colors.onPrimary
   const iconSize = size === 'sm' ? 14 : 16
   const compact = size === 'sm' || size === 'touch'
 
@@ -64,7 +65,7 @@ export function Button({
       accessibilityState={inactive ? { disabled: true, busy: !!loading } : undefined}
     >
       {loading
-        ? <Spinner color={tinted ? theme.colors.primary : theme.colors.white} />
+        ? <Spinner color={tinted ? theme.colors.primaryText : theme.colors.white} />
         : (
           <>
             {icon && <Ionicons name={icon} size={iconSize} color={contentColor} />}

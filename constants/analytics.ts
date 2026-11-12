@@ -18,6 +18,8 @@ export const ANALYTICS_EVENTS = {
   tourCompleted: 'tour_completed',
   /** Skip / Esc. props: { tour, step, target } (the step it was on) */
   tourSkipped: 'tour_skipped',
+  /** A tour step was skipped because its target wasn't on screen (a screen hid it). props: { tour, step, target }. Should never happen; also a Sentry warning. */
+  tourStepMissing: 'tour_step_missing',
   /** The leave sheet opened on an event the viewer attends (#171). props: { full, within24h, paid } */
   leaveSheetShown: 'leave_sheet_shown',
   /** "Leave game" tapped. props: { reason } (a LEAVE_REASONS id, or 'none') */

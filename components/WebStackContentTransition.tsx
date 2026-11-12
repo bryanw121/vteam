@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   backLabel: {
     fontSize: theme.font.size.md,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
     fontWeight: theme.font.weight.medium,
   },
 })
