@@ -138,7 +138,7 @@ export function MessageBubble({
             opacity: 0.8,
           }}
         >
-          <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primary, fontWeight: theme.font.weight.semibold }}>
+          <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText, fontWeight: theme.font.weight.semibold }}>
             {replyContentSuppressed
               ? 'Message'
               : (message.reply_to.profiles ? displayName(message.reply_to.profiles) : 'Message')}

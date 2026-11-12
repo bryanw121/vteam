@@ -566,7 +566,7 @@ export default function ClubDetailScreen() {
                     <Text style={{
                       fontSize: theme.font.size.sm,
                       fontWeight: theme.font.weight.semibold,
-                      color: theme.colors.primary,
+                      color: theme.colors.primaryText,
                     }}>
                       New post
                     </Text>
@@ -589,7 +589,7 @@ export default function ClubDetailScreen() {
                       <Text style={{
                         fontSize: theme.font.size.sm,
                         fontWeight: theme.font.weight.semibold,
-                        color: theme.colors.primary,
+                        color: theme.colors.primaryText,
                       }}>
                         Share the first post
                       </Text>
@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontSize: theme.font.size.xxl,
     fontWeight: theme.font.weight.bold,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
   },
   avatarCameraBtn: {
     position: 'absolute',
@@ -808,7 +808,7 @@ const styles = StyleSheet.create({
   memberInitialText: {
     fontSize: theme.font.size.md,
     fontWeight: theme.font.weight.semibold,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
   },
   ownerBadge: {
     paddingHorizontal: theme.spacing.xs,

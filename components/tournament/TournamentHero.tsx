@@ -111,7 +111,7 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack, action
           <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
             {(tournament.skill_levels ?? []).map(s => (
               <View key={s} style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: theme.colors.primary + '30' }}>
-                <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.primary }}>{SKILL_LEVEL_LABELS[s] ?? s}</Text>
+                <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.primaryText }}>{SKILL_LEVEL_LABELS[s] ?? s}</Text>
               </View>
             ))}
           </View>

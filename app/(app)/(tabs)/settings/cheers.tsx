@@ -53,7 +53,7 @@ export default function ProfileCheersScreen() {
           <View style={[shared.card, { flex: 1, alignItems: 'center', gap: theme.spacing.xs }]}>
             <Text
               testID="cheers-received-count"
-              style={{ fontSize: theme.font.size.xxl, fontWeight: theme.font.weight.bold, color: theme.colors.primary }}
+              style={{ fontSize: theme.font.size.xxl, fontWeight: theme.font.weight.bold, color: theme.colors.primaryText }}
             >
               {totalReceived}
             </Text>
