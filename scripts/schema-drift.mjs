@@ -81,7 +81,7 @@ async function rpc(name, fn, { delays = RETRY_DELAYS_MS, fetchImpl = fetch, slee
     await sleep(delays[attempt])
   }
 }
-export { rpc as callRpc }
+export { rpc as callRpc, PROJECTS }
 
 /** Pure: the list of differences between two fingerprints, minus ALLOWED ones. */
 export function diffFingerprints(live, beta, allowed = ALLOWED) {
