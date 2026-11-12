@@ -94,6 +94,7 @@ function Overview({ data, events, days, onOpenLive }: { data: MetricsOverview; e
           height={132}
           color={theme.colors.primary}
           markMax
+          xLabels={[shortDay(data.from), shortDay(data.to)]}
           label={`Daily active people from ${shortDay(data.from)} to ${shortDay(data.to)}: active on ${activeDays.length} days${busiest ? `, most ${busiest.active} on ${weekdayDay(busiest.day)}` : ''}`}
         />
         {busiest && busiest.active > 0 ? <Text style={s.note}>{`Busiest: ${busiest.active} on ${weekdayDay(busiest.day)}`}</Text> : null}
@@ -102,8 +103,9 @@ function Overview({ data, events, days, onOpenLive }: { data: MetricsOverview; e
       <MetricCard title="Peak online per day" aside={record?.peak ? `max ${record.peak}` : undefined}>
         <MetricBarChart
           values={data.daily.map(d => d.peak)}
-          height={64}
+          height={88}
           color={theme.colors.accent}
+          xLabels={[shortDay(data.from), shortDay(data.to)]}
           label={record?.peak ? `Most people online at once each day; the record is ${record.peak} on ${weekdayDay(record.day)}` : 'No online samples in this range yet'}
         />
         <Text style={s.note}>

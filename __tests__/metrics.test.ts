@@ -1,7 +1,7 @@
 import {
   activeDayWeeks, activityLevel, chicagoDateKey, daysBetween, feedFilterLabel, formatDelta, formatSeconds, lastSeenLabel,
   mergeSmallCohorts, metricsRange, minutesSince, percentOf, platformShares, platformVersion, retentionLevel,
-  outsideKindsLine, screenLabel, screenPath, shortDay,
+  outsideKindsLine, screenLabel, screenPath, shortDay, axisTicks, axisTop,
 } from '../utils/metrics'
 import type { RetentionCohort } from '../types'
 
@@ -149,5 +149,24 @@ describe('part 3 labels', () => {
   it('summarizes outside link-outs by kind, largest first, singular when one', () => {
     expect(outsideKindsLine({ league: 4, session: 12, court: 1, tournament: 0 })).toBe('12 sessions · 4 leagues · 1 court booking')
     expect(outsideKindsLine({})).toBe('')
+  })
+})
+
+describe('axisTop / axisTicks', () => {
+  it('starts at 0 and ends on a whole number at or above the largest value', () => {
+    expect(axisTicks(0)).toEqual([0, 1])
+    expect(axisTicks(1)).toEqual([0, 1])
+    expect(axisTicks(2)).toEqual([0, 1, 2])
+    expect(axisTicks(3)).toEqual([0, 2, 4])
+    expect(axisTicks(7)).toEqual([0, 4, 8])
+    expect(axisTicks(10)).toEqual([0, 5, 10])
+  })
+  it('rounds fractions up and ignores bad input', () => {
+    expect(axisTop(2.2)).toBe(4)
+    expect(axisTop(-5)).toBe(1)
+    expect(axisTop(Number.NaN)).toBe(1)
+  })
+  it('every tick is a whole number', () => {
+    for (let max = 0; max <= 60; max++) for (const t of axisTicks(max)) expect(Number.isInteger(t)).toBe(true)
   })
 })

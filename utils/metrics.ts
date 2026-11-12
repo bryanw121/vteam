@@ -28,6 +28,21 @@ export function shortDay(day: string): string {
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
+/**
+ * The top of a count chart's y axis: the largest value rounded up to a whole number (at least 1),
+ * and to an even one above 1 so the middle gridline is a whole number too.
+ */
+export function axisTop(max: number): number {
+  const top = Math.max(1, Math.ceil(Number.isFinite(max) ? max : 0))
+  return top > 1 && top % 2 === 1 ? top + 1 : top
+}
+
+/** The labelled y-axis values of a count chart, bottom to top: 0, the middle (when above 1) and the top. */
+export function axisTicks(max: number): number[] {
+  const top = axisTop(max)
+  return top === 1 ? [0, 1] : [0, top / 2, top]
+}
+
 /** "Sat Nov 7" for a YYYY-MM-DD day. */
 export function weekdayDay(day: string): string {
   const [y, m, d] = day.split('-').map(Number)
