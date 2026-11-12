@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Vteam volleyball-first logo mock</title>
+  <desc id="desc">A clear white volleyball with conventional violet curved seams on a rounded violet app tile.</desc>
+  <rect width="1024" height="1024" fill="#120B28"/>
+  <rect x="112" y="112" width="800" height="800" rx="168" fill="#7024E8"/>
+  <circle cx="512" cy="512" r="302" fill="#FFFFFF"/>
+  <g fill="none" stroke="#7024E8" stroke-linecap="round" stroke-width="42">
+    <!-- A familiar top seam plus mirrored side seams: volleyball before brand device. -->
+    <path d="M 286 398 Q 512 522 738 398"/>
+    <path d="M 294 354 Q 452 484 458 750"/>
+    <path d="M 730 354 Q 572 484 566 750"/>
+    <path d="M 298 670 Q 512 790 726 670"/>
+  </g>
+</svg>
