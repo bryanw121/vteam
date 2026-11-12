@@ -1,0 +1,12 @@
+# Shared: wait until the Events tab has loaded, past any first-launch prompt.
+appId: com.vteamvolleyball.app
+---
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- extendedWaitUntil:
+    visible:
+      id: filter-all
+    timeout: 90000
