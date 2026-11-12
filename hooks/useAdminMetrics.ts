@@ -6,7 +6,7 @@ import type { QueryResult } from '../lib/query'
 import { STALE } from '../constants/cache'
 import { useSession } from '../contexts/session'
 import type {
-  AdminUserActivity, AdminUserSort, AdminUsersPage, MetricsOverview, OnlineNow, RetentionReport,
+  AdminUserActivity, AdminUserSort, AdminUsersPage, MetricsEvents, MetricsOverview, OnlineNow, RetentionReport,
 } from '../types'
 
 /**
@@ -48,6 +48,16 @@ export function useMetricsOverview(range: { from: string; to: string }, opts?: {
   return useQuery<MetricsOverview>(
     userId ? queryKey('admin', userId, 'overview', range.from, range.to) : null,
     () => rpcJson(supabase.rpc('admin_metrics_overview', { p_from: range.from, p_to: range.to })),
+    { staleMs: STALE.metrics, enabled: opts?.enabled ?? true, keepPreviousData: true },
+  )
+}
+
+/** Outside link-outs, shares, feed filters, Scorekeeper matches and the guest funnel, for the same range as the overview. */
+export function useMetricsEvents(range: { from: string; to: string }, opts?: { enabled?: boolean }): QueryResult<MetricsEvents> {
+  const { userId } = useSession()
+  return useQuery<MetricsEvents>(
+    userId ? queryKey('admin', userId, 'events', range.from, range.to) : null,
+    () => rpcJson(supabase.rpc('admin_metrics_events', { p_from: range.from, p_to: range.to })),
     { staleMs: STALE.metrics, enabled: opts?.enabled ?? true, keepPreviousData: true },
   )
 }

@@ -22,7 +22,7 @@ jest.mock('../constants/tours', () => ({
   },
 }))
 
-import { TourProvider, useTour, useTourTarget } from '../contexts/tour'
+import { TourProvider, useTour, useTourTarget, useTourWants } from '../contexts/tour'
 import { __resetSeenBanners, seenBannersNow, loadSeenBanners } from '../utils/seenBanners'
 import type { TourControls } from '../types'
 
@@ -56,8 +56,34 @@ function layoutCard() {
   fireEvent(screen.getByTestId('tour-card'), 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 300, height: 160 } } })
 }
 
+/** A target its screen normally hides (the week strip under Tournament), shown while the tour wants it. */
+function HiddenUnlessWanted({ id }: { id: string }) {
+  const wanted = useTourWants(id)
+  return wanted ? <FakeTarget id={id} /> : null
+}
+
 describe('TourProvider', () => {
   beforeEach(() => __resetSeenBanners())
+
+  it('a screen keeps a hidden target on screen while the tour points at it, so the step is not skipped', async () => {
+    render(
+      <TourProvider>
+        <FakeTarget id="a" />
+        <HiddenUnlessWanted id="missing" />
+        <FakeTarget id="c" />
+        <Grab />
+      </TourProvider>,
+    )
+    act(() => controls.start('intro'))
+    expect(await screen.findByText('Step A')).toBeTruthy()
+    layoutCard()
+    fireEvent.press(screen.getByTestId('tour-next'))
+    await waitFor(() => expect(screen.getByText('Step Missing')).toBeTruthy(), { timeout: 4000 })
+    expect(screen.getByText('2 of 3')).toBeTruthy()
+    fireEvent.press(screen.getByTestId('tour-next'))
+    await waitFor(() => expect(screen.getByText('Step C')).toBeTruthy(), { timeout: 4000 })
+    act(() => controls.stop())
+  })
 
   it('walks next, skips a step whose target is not mounted, goes back, and completes', async () => {
     setup()

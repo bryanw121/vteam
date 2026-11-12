@@ -33,7 +33,7 @@ const BADGE_SLOTS = [1, 2, 3]
 function ClearLink({ onPress }: { onPress: () => void }) {
   return (
     <Pressable onPress={onPress} hitSlop={8}>
-      <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primary, fontWeight: theme.font.weight.medium }}>Clear</Text>
+      <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>Clear</Text>
     </Pressable>
   )
 }

@@ -123,7 +123,7 @@ export default function Register() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <Text style={shared.authTitle}>vteam</Text>
           <View style={{ backgroundColor: 'rgba(124,77,255,0.15)', borderWidth: 1, borderColor: 'rgba(124,77,255,0.4)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 2 }}>
-            <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primary, letterSpacing: 1 }}>BETA</Text>
+            <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, letterSpacing: 1 }}>BETA</Text>
           </View>
         </View>
         <Text style={shared.authSubtitle}>create your account</Text>
