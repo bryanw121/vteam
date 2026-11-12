@@ -85,6 +85,12 @@ describe('liveMatches and upNext', () => {
     ])
   })
 
+  it('leaves the court out when the scorekeeper set none, and lists that game last', () => {
+    const noCourt = parseSheetState({ ...raw, matches: [...raw.matches, { match_id: 'B-1', stage: 'pool', group: 'B', team_a: 'Setters', team_b: 'Spikers', s1_a: 3, s1_b: 4, status: 'live' }] })
+    const last = liveMatches(noCourt).at(-1)
+    expect(last).toMatchObject({ id: 'B-1', court: null, label: 'Pool B' })
+  })
+
   it('leaves out scheduled games already started, whichever side each team is on', () => {
     expect(upNext(state).map(g => g.game)).toEqual(['3'])
   })
@@ -95,7 +101,7 @@ describe('poolStandings', () => {
     const pools = poolStandings(state)
     expect(pools.map(p => p.name)).toEqual(['Pool A', 'Pool B'])
     expect(pools[0].rows.map(r => [r.teamId, r.rank, r.tied])).toEqual([['Aces', 1, true], ['Blockers', 1, true], ['Diggers', 3, false]])
-    expect(pools[0].rows[0]).toMatchObject({ setsWon: 1, setsLost: 1, pointsFor: 46, pointsAgainst: 45 })
+    expect(pools[0].rows[0]).toMatchObject({ ties: 1, setsWon: 1, setsLost: 1, pointsFor: 46, pointsAgainst: 45 })
   })
 })
 
@@ -113,7 +119,8 @@ describe('brackets', () => {
       { set_number: 2, team_a_score: 25, team_b_score: 20 },
     ])
     expect(byId['Gold-SF2']).toMatchObject({ team_b_id: null, winner_id: 'Setters' })
-    expect(byId['Gold-F']).toMatchObject({ round: 2, bracket_round_name: 'Final', winner_id: null, court: 'Live · Court 5' })
+    expect(byId['Gold-F']).toMatchObject({ round: 2, bracket_round_name: 'Final', winner_id: null, court: 'Court 5', status: 'in_progress' })
+    expect(byId['Gold-3rd place'].court).toBeNull()
     expect(byId['Gold-3rd place']).toMatchObject({ round: 3, bracket_round_name: 'Other games', team_b_id: null })
   })
 })

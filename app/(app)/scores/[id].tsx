@@ -95,9 +95,9 @@ export default function ProgramScoresScreen() {
                 <Text style={[ts.sectionTitle, { marginBottom: theme.spacing.sm }]}>On court now · {live.length}</Text>
                 {live.length === 0 && <Text style={[ts.muted13, { marginBottom: theme.spacing.md }]}>No games in play right now.</Text>}
                 {live.map(m => (
-                  <View key={m.id} style={ts.card} accessible accessibilityLabel={`Court ${m.court ?? 'unknown'}, ${m.label}: ${m.teamA} versus ${m.teamB}, ${m.sets.map(s => `${s.a} to ${s.b}`).join(', ')}`}>
+                  <View key={m.id} style={ts.card} accessible accessibilityLabel={`${m.court ? `Court ${m.court}, ` : ''}${m.label}: ${m.teamA} versus ${m.teamB}, ${m.sets.map(s => `${s.a} to ${s.b}`).join(', ')}`}>
                     <View style={ts.rowBetween}>
-                      <Text style={ts.sectionTitle}>{m.court ? `Court ${m.court}` : 'Court ?'} · {m.label}</Text>
+                      <Text style={ts.sectionTitle}>{m.court ? `Court ${m.court} · ${m.label}` : m.label}</Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.hot }} />
                         <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.hot }}>LIVE</Text>

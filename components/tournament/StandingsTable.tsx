@@ -21,13 +21,16 @@ const head = { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.x
 
 /** One standings table: rank, team, W-L, sets, point difference. */
 export function StandingsTable({ title, rows, teamName, advanceCount, myTeamId, testID }: Props) {
+  // Two-set pools can tie: show W-L-T only when someone has a tie, so other tables keep W-L.
+  const showTies = rows.some(r => (r.ties ?? 0) > 0)
+  const recordWidth = showTies ? 58 : 44
   return (
     <View style={ts.card} testID={testID}>
       <Text style={[ts.sectionTitle, { marginBottom: theme.spacing.sm }]}>{title}</Text>
       <View accessibilityRole="header" style={{ flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
         <Text style={[head, { width: 28 }]}>#</Text>
         <Text style={[head, { flex: 1 }]}>TEAM</Text>
-        <Text style={[head, { width: 44, textAlign: 'center' }]}>W-L</Text>
+        <Text style={[head, { width: recordWidth, textAlign: 'center' }]}>{showTies ? 'W-L-T' : 'W-L'}</Text>
         <Text style={[head, { width: 48, textAlign: 'center' }]}>SETS</Text>
         <Text style={[head, { width: 44, textAlign: 'right' }]}>+/-</Text>
       </View>
@@ -39,7 +42,7 @@ export function StandingsTable({ title, rows, teamName, advanceCount, myTeamId, 
           <View
             key={r.teamId}
             accessible
-            accessibilityLabel={`${r.tied ? 'Tied ' : ''}${r.rank}. ${teamName(r.teamId)}, ${r.wins} wins, ${r.losses} losses${advancing ? ', advancing' : ''}`}
+            accessibilityLabel={`${r.tied ? 'Tied ' : ''}${r.rank}. ${teamName(r.teamId)}, ${r.wins} wins, ${r.losses} losses${showTies ? `, ${r.ties ?? 0} ties` : ''}${advancing ? ', advancing' : ''}`}
             style={{
               flexDirection: 'row', alignItems: 'center', paddingVertical: 9,
               borderBottomWidth: i === rows.length - 1 ? 0 : 1, borderBottomColor: theme.colors.borderSoft,
@@ -51,7 +54,7 @@ export function StandingsTable({ title, rows, teamName, advanceCount, myTeamId, 
               {advancing && <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.cool }} />}
               <Text numberOfLines={1} style={[cell, { flexShrink: 1, fontFamily: theme.fonts.bodySemiBold }]}>{teamName(r.teamId)}</Text>
             </View>
-            <Text style={[cell, { width: 44, textAlign: 'center' }]}>{r.wins}-{r.losses}</Text>
+            <Text style={[cell, { width: recordWidth, textAlign: 'center' }]}>{r.wins}-{r.losses}{showTies ? `-${r.ties ?? 0}` : ''}</Text>
             <Text style={[cell, { width: 48, textAlign: 'center', color: theme.colors.subtext }]}>{r.setsWon}-{r.setsLost}</Text>
             <Text style={[cell, { width: 44, textAlign: 'right', color: diff > 0 ? theme.colors.cool : diff < 0 ? theme.colors.hot : theme.colors.subtext }]}>
               {diff > 0 ? `+${diff}` : diff}

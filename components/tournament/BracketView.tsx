@@ -22,6 +22,7 @@ function setLine(m: TournamentMatchRow): string {
 
 function MatchBox({ match, teamName, myTeamId, onPress }: { match: TournamentMatchRow; teamName: Props['teamName']; myTeamId?: string | null; onPress?: () => void }) {
   const done = !!match.winner_id
+  const live = match.status === 'in_progress' && !done
   const playable = !!onPress && !!match.team_a_id && !!match.team_b_id
   const row = (id: string | null) => {
     const won = done && match.winner_id === id
@@ -45,12 +46,19 @@ function MatchBox({ match, teamName, myTeamId, onPress }: { match: TournamentMat
   const body = (
     <View style={{
       backgroundColor: theme.colors.card, borderRadius: theme.radius.md, borderWidth: 1,
-      borderColor: playable && !done ? theme.colors.primary : theme.colors.border, paddingHorizontal: 10, paddingVertical: 6,
+      borderColor: live ? theme.colors.hot : playable && !done ? theme.colors.primary : theme.colors.border, paddingHorizontal: 10, paddingVertical: 6,
     }}>
       {row(match.team_a_id)}
       <View style={{ height: 1, backgroundColor: theme.colors.borderSoft }} />
       {row(match.team_b_id)}
-      {(done || !!match.court) && (
+      {live ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }} testID="bracket-match-live">
+          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: theme.colors.hot }} />
+          <Text numberOfLines={1} style={{ flexShrink: 1, fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.hot }}>
+            {['LIVE', match.court, setLine(match)].filter(Boolean).join(' · ')}
+          </Text>
+        </View>
+      ) : (done || !!match.court) && (
         <Text numberOfLines={1} style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext, marginTop: 2 }}>
           {done ? setLine(match) : match.court}
         </Text>
@@ -62,7 +70,7 @@ function MatchBox({ match, teamName, myTeamId, onPress }: { match: TournamentMat
     <TouchableOpacity
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${match.bracket_round_name ?? 'Match'}: ${teamName(match.team_a_id)} vs ${teamName(match.team_b_id)}. ${done ? 'Edit result' : 'Record result'}`}
+      accessibilityLabel={`${match.bracket_round_name ?? 'Match'}: ${teamName(match.team_a_id)} vs ${teamName(match.team_b_id)}${live ? ', live' : ''}. ${done ? 'Edit result' : 'Record result'}`}
       style={{ minHeight: 44 }}
     >
       {body}
