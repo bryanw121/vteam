@@ -44,6 +44,12 @@ export default function Root({ children }: { children: React.ReactNode }) {
         {SUPABASE_ORIGIN ? <link rel="preconnect" href={SUPABASE_ORIGIN} crossOrigin="anonymous" /> : null}
         {SUPABASE_ORIGIN ? <link rel="dns-prefetch" href={SUPABASE_ORIGIN} /> : null}
         {/*
+          The app restores scroll itself (utils/scrollMemory, DocScrollView memoryKey). Left on
+          'auto', the browser first jumps to its own remembered offset on Back, then the app moves
+          it again: a visible flicker. Set before the app loads so the first Back is already right.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: "try{if('scrollRestoration' in history)history.scrollRestoration='manual'}catch(e){}" }} />
+        {/*
           Start the Events feed request now (#184), before the app bundle has
           downloaded: on a cold server the wait overlaps the download. Only on
           `/`; useMonthEvents adopts it if span and viewer match (lib/feedPrefetch.web).
