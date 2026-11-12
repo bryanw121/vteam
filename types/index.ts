@@ -448,6 +448,9 @@ export type ExternalProgramCardProps = {
   menuInset?: boolean
 }
 
+/** Props of LiveScoresLink. */
+export type LiveScoresLinkProps = { programId: string; title: string }
+
 /** Props of ProgramHostChips. */
 export type ProgramHostChipsProps = {
   programs: ExternalProgram[]
@@ -1357,6 +1360,7 @@ export type OwnedClubOption = { id: string; name: string }
 export * from './tournament'
 export * from './scoresheet'
 export * from './metrics'
+export * from './sheetScores'
 
 // ─── Schedule generator ───────────────────────────────────────────────────────
 
