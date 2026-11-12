@@ -30,6 +30,7 @@ import { BANNERS, BREAKPOINTS, COMPACT_TEXT_SCALE, FEED_STALE_NOTICE, SWIPE_NAVI
 import { track } from '../../../../lib/analytics'
 import { ANALYTICS_EVENTS } from '../../../../constants/analytics'
 import { TourTarget } from '../../../../components/tour/TourTarget'
+import { useTourWants } from '../../../../contexts/tour'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
 import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, Notification, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
@@ -265,6 +266,9 @@ export default function EventsScreen() {
   // Under the Tournament filter the list isn't about a day: every upcoming outside tournament shows,
   // however far out, including the ones elsewhere in the state (people travel for those).
   const tournamentsOnly = activeFilter === 'tournament'
+  // The week strip hides under Tournament, except while the tour's "Pick a day" step points at it.
+  const tourWantsCalendar = useTourWants(TOUR_TARGETS.calendar)
+  const showCalendar = !tournamentsOnly || tourWantsCalendar
   const feedEvents = useMemo(() => {
     const rows = tournamentsOnly
       ? [...(programs.data?.tournaments ?? []), ...(programs.data?.elsewhere ?? [])]
@@ -682,7 +686,7 @@ export default function EventsScreen() {
           >
             {/* Mini calendar (not under the Tournament filter: that list isn't about a day) */}
             {!tournamentsOnly && <Text style={feedStyles.railLabel}>This week</Text>}
-            {!tournamentsOnly && <TourTarget id={TOUR_TARGETS.calendar} style={{ backgroundColor: theme.colors.background, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 20, overflow: 'hidden' }}>
+            {showCalendar && <TourTarget id={TOUR_TARGETS.calendar} style={{ backgroundColor: theme.colors.background, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 20, overflow: 'hidden' }}>
               <MonthGridContent
                 month={monthForIdx(curMonthPage)}
                 selectedDate={selectedDate}
@@ -748,7 +752,7 @@ export default function EventsScreen() {
         />
 
         {/* Calendar strip (not under the Tournament filter: that list isn't about a day) */}
-        {!tournamentsOnly && <TourTarget id={TOUR_TARGETS.calendar}>
+        {showCalendar && <TourTarget id={TOUR_TARGETS.calendar}>
           <WeekPager
             curWeekPage={curWeekPage}
             selectedDate={selectedDate}
