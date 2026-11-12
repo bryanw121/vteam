@@ -70,7 +70,9 @@ export default function SheetScorekeeperScreen() {
         setPinError("That PIN isn't right. Ask the tournament desk.")
       }
     } catch (e) {
-      if (e instanceof SheetNotReadyError) setPinError("This tournament's sheet isn't set up for scorekeeping in vteam yet. Ask the tournament desk to update it.")
+      // Scores load from this Sheet, so a failed scoring call is almost always a Sheet without doPost: in a browser,
+      // Apps Script's error page has no CORS header, so it shows up as a network error, not SheetNotReadyError.
+      if (e instanceof SheetNotReadyError || state) setPinError("This tournament's sheet isn't set up for scorekeeping in vteam yet (or can't be reached). Ask the tournament desk to update it, then try again.")
       else toast.error("Couldn't reach the tournament sheet", e)
     } finally {
       setChecking(false)
