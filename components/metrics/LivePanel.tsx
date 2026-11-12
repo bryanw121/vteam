@@ -44,15 +44,12 @@ export function LivePanel({ active, onOpenPerson }: Props) {
               <>
                 <MetricLineChart
                   values={data.last_hour.map(p => p.online)}
-                  height={70}
+                  height={88}
                   color={theme.colors.accent}
                   markLast
+                  xLabels={['60 min ago', 'now']}
                   label={`People online over the last hour, between ${Math.min(...data.last_hour.map(p => p.online))} and ${Math.max(...data.last_hour.map(p => p.online))}`}
                 />
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={s.note}>60 min ago</Text>
-                  <Text style={s.note}>now</Text>
-                </View>
               </>
             ) : null}
           </MetricCard>

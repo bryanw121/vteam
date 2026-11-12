@@ -1481,6 +1481,32 @@ export type Database = {
           },
         ]
       }
+      metrics_excluded_users: {
+        Row: {
+          added_at: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          reason?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metrics_excluded_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string
@@ -2740,6 +2766,10 @@ export type Database = {
       account_deletion_plan: { Args: { p_user: string }; Returns: Json }
       account_is_being_deleted: { Args: { p_user: string }; Returns: boolean }
       ad_free_offer: { Args: never; Returns: Json }
+      admin_metrics_events: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: Json
+      }
       admin_metrics_overview: {
         Args: { p_from?: string; p_to?: string }
         Returns: Json

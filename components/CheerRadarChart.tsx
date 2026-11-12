@@ -71,6 +71,18 @@ export function CheerRadarChart({ counts }: Props) {
           return <Circle key={i} cx={x} cy={y} r={3.5} fill={theme.colors.primary} />
         })}
 
+        {/* Ring values: each ring is a share of the top count; label the whole-number ones beside the top spoke. */}
+        {[0.25, 0.5, 0.75, 1].map(level => {
+          const value = maxCount * level
+          if (!Number.isInteger(value) || value === 0) return null
+          return (
+            <SvgText key={`r${level}`} x={CX + 4} y={CY - level * R} alignmentBaseline="middle"
+              fontSize={svgLabelSize} fontFamily={theme.fonts.body} fill={theme.colors.subtext}>
+              {String(value)}
+            </SvgText>
+          )
+        })}
+
         {/* Labels */}
         {CHEER_TYPES.map((kt, i) => {
           const angle = angleAt(i)
@@ -79,7 +91,7 @@ export function CheerRadarChart({ counts }: Props) {
           const anchor = cos > 0.15 ? 'start' : cos < -0.15 ? 'end' : 'middle'
           return (
             <SvgText key={kt.type} x={x} y={y} textAnchor={anchor} alignmentBaseline="middle"
-              fontSize={svgLabelSize} fontWeight="600" fill={theme.colors.subtext}>
+              fontSize={svgLabelSize} fontFamily={theme.fonts.bodySemiBold} fill={theme.colors.subtext}>
               {CHART_LABEL_OVERRIDES[kt.label] ?? kt.label}
             </SvgText>
           )

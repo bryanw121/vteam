@@ -5,6 +5,8 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { shared, theme, SURFACE_ACCENTS, COMPACT_TEXT_SCALE } from '../constants'
 import { TimePill } from './ui'
 import { openExternalUrl } from '../lib/openExternalUrl'
+import { track } from '../lib/analytics'
+import { ANALYTICS_EVENTS } from '../constants/analytics'
 import { useToday } from '../hooks/useToday'
 import { programDateBadge, programDeadline, programKicker, programPrice, programRelative, programUrgency, programWhen } from '../utils/externalPrograms'
 import type { ExternalProgramCardProps } from '../types'
@@ -35,7 +37,11 @@ function ExternalProgramCardInner({ program: p, compact = false, menuInset = fal
   return (
     <TouchableOpacity
       activeOpacity={0.85}
-      onPress={() => { if (p.signup_url) void openExternalUrl(p.signup_url) }}
+      onPress={() => {
+        if (!p.signup_url) return
+        track(ANALYTICS_EVENTS.outsideLinkOpened, { kind: p.kind, org: p.org })
+        void openExternalUrl(p.signup_url)
+      }}
       disabled={!p.signup_url}
       style={shared.externalCard}
       accessibilityRole="link"
