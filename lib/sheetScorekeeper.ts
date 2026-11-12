@@ -13,9 +13,23 @@ export async function callSheet(execUrl: string, fn: SheetScoringFn, payload: Re
     body: JSON.stringify({ fn, payload }),
   })
   if (!res.ok) throw new Error(`Scoring answered ${res.status}`)
-  const out = (await res.json()) as SheetScoringResult
-  if (!out || typeof out.ok !== 'boolean') throw new Error('Not a scoring answer')
+  const text = await res.text()
+  let out: SheetScoringResult | null = null
+  try { out = JSON.parse(text) as SheetScoringResult } catch { /* an Apps Script error page */ }
+  if (!out || typeof out.ok !== 'boolean') {
+    // A Sheet still on the old script (no doPost, or saved without deploying a new version) answers an HTML error page.
+    if (/doPost/.test(text)) throw new SheetNotReadyError()
+    throw new Error('Not a scoring answer')
+  }
   return out
+}
+
+/** The Sheet's deployed script has no doPost yet: scorekeeping can't work until it's updated and redeployed. */
+export class SheetNotReadyError extends Error {
+  constructor() {
+    super('This tournament sheet has not been updated for scorekeeping yet')
+    this.name = 'SheetNotReadyError'
+  }
 }
 
 /** The PIN and name a scorekeeper entered, per tournament: in memory, and for the tab on web. */

@@ -101,3 +101,23 @@ describe('what a scorekeeper can pick', () => {
     ])
   })
 })
+
+describe('callSheet', () => {
+  const realFetch = global.fetch
+  afterEach(() => { global.fetch = realFetch })
+  const answer = (body: string) => { global.fetch = jest.fn(async () => ({ ok: true, status: 200, text: async () => body })) as unknown as typeof fetch }
+
+  it("returns the Sheet's answer, wrong PIN included", async () => {
+    const { callSheet } = require('../lib/sheetScorekeeper')
+    answer('{"ok":true,"valid":false}')
+    await expect(callSheet('https://x.test/exec', 'checkPin', { pin: '1' })).resolves.toEqual({ ok: true, valid: false })
+  })
+
+  it('tells a Sheet still on the old script (no doPost) apart from a network failure', async () => {
+    const { callSheet, SheetNotReadyError } = require('../lib/sheetScorekeeper')
+    answer('<!DOCTYPE html><html><title>Error</title><div>Script function not found: doPost</div></html>')
+    await expect(callSheet('https://x.test/exec', 'checkPin', { pin: '1' })).rejects.toBeInstanceOf(SheetNotReadyError)
+    answer('<html>something else</html>')
+    await expect(callSheet('https://x.test/exec', 'checkPin', { pin: '1' })).rejects.not.toBeInstanceOf(SheetNotReadyError)
+  })
+})

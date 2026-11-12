@@ -9,7 +9,7 @@ import { SheetScoringPanel } from '../../../../components/programs/SheetScoringP
 import { ts } from '../../../../components/tournament/tournamentStyles'
 import { shared, theme } from '../../../../constants'
 import { useSheetScores } from '../../../../hooks/useSheetScores'
-import { callSheet, getKeeper, setKeeper } from '../../../../lib/sheetScorekeeper'
+import { callSheet, getKeeper, setKeeper, SheetNotReadyError } from '../../../../lib/sheetScorekeeper'
 import { toast } from '../../../../lib/toast'
 import { routes } from '../../../../utils/routes'
 import { sheetExecUrl } from '../../../../utils/sheetScores'
@@ -70,7 +70,8 @@ export default function SheetScorekeeperScreen() {
         setPinError("That PIN isn't right. Ask the tournament desk.")
       }
     } catch (e) {
-      toast.error("Couldn't reach the tournament sheet", e)
+      if (e instanceof SheetNotReadyError) setPinError("This tournament's sheet isn't set up for scorekeeping in vteam yet. Ask the tournament desk to update it.")
+      else toast.error("Couldn't reach the tournament sheet", e)
     } finally {
       setChecking(false)
     }
