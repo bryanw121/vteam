@@ -1,6 +1,6 @@
 # VTeam icon
 
-Selected direction: Volleyball V, combining a crisp white V monogram with closed volleyball seams and layered Vteam-purple panels. The production assets are derived from `docs/ui-mocks/logo-exploration/vteam-logo-airy-01-purple-panels.png`.
+Selected direction: Volleyball V, combining a crisp white V monogram with closed volleyball seams and high-contrast Vteam-purple panels. The production assets are derived from `docs/ui-mocks/logo-exploration/vteam-logo-bottom-01-control.png`.
 
 - `vteam-app-icon.png`: 1024×1024 opaque RGB source for the Expo app icon.
 - `vteam-favicon.png`: 64×64 browser source; Expo exports `/favicon.ico`.
