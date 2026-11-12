@@ -83,6 +83,30 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 800 
       await expect(page.getByTestId(`banner-${BANNER_ID}`)).toHaveCount(0)
     })
 
+    // Every step must show whatever the feed's filters are: a step whose target a screen hides is
+    // skipped ("1 of 6" → "3 of 6"). The week strip hides under Tournament, which a saved filter or
+    // a shared `?type=tournament` link turns on, so walk the whole tour in both.
+    for (const [label, open] of [
+      ['from a ?type=tournament link', async (page: Page) => { await page.goto(`${BASE_URL}/?type=tournament`) }],
+      ['with Tournament saved on the device', async (page: Page) => {
+        await page.addInitScript(() => localStorage.setItem('vteam.feedFilters', JSON.stringify({ filter: 'tournament', surface: 'sand' })))
+        await page.goto(`${BASE_URL}/`)
+      }],
+    ] as const) {
+      test(`no step is skipped ${label}`, async ({ page }) => {
+        await open(page)
+        await page.getByTestId(`banner-${BANNER_ID}-action`).locator('visible=true').click({ timeout: 20_000 })
+        for (let i = 0; i < STEPS.length; i++) {
+          await expectStep(page, i)
+          if (i < STEPS.length - 1) await page.getByTestId('tour-next').click()
+        }
+        await page.getByTestId('tour-next').click()
+        await expect(page.getByTestId('tour-overlay')).toHaveCount(0)
+        // The filter is untouched: the strip only showed for its step.
+        expect(new URL(page.url()).searchParams.get('type')).toBe('tournament')
+      })
+    }
+
     test('keyboard: arrows move, Escape skips', async ({ page }) => {
       test.skip(viewport.width < 768, 'desktop keyboard only')
       await page.goto(`${BASE_URL}/`)
