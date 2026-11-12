@@ -37,7 +37,9 @@ export const EXPECTATIONS = {
   'ingest-schelagg-programs': { maxAgeMs: 4.5 * HOUR, what: 'leagues and tournaments import (every 2 h)' },
   'kudos-reminders': { maxAgeMs: 30 * MIN, what: 'kudos reminders (every 10 min)', only: 'live' },
   'prune-app-events': { maxAgeMs: 26 * HOUR, what: 'usage metrics rollup and prune (daily)' },
+  'prune-app-online': { maxAgeMs: 26 * HOUR, what: 'online-now rollup and prune (daily)' },
   'prune-rate-limits': { maxAgeMs: 2.5 * HOUR, what: 'rate limit cleanup (hourly)' },
+  'sample-app-online': { maxAgeMs: 10 * MIN, what: 'online-now sample (every minute)' },
   'vclub-maintenance-cleanup': { maxAgeMs: 26 * HOUR, what: 'maintenance cleanup (daily)' },
 }
 
