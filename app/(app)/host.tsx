@@ -973,7 +973,7 @@ export default function HostEventScreen() {
                   <DatePickerField value={recurrence.endDate} onChange={d => setRecurrence(prev => ({ ...prev, endDate: d }))} />
                 </View>
                 {eventCount > 0 && (
-                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.primary }}>
+                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.primaryText }}>
                     {eventCount} event{eventCount !== 1 ? 's' : ''} will be created
                   </Text>
                 )}

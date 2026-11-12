@@ -84,6 +84,19 @@ test.describe('anon (guest browsing)', () => {
     expect(dm.data ?? []).toEqual([])
   })
 
+  test('sees no friend data and cannot call the friend RPCs (#15)', async () => {
+    const probe = await q(() => anon.from('friendships').select('user_id').limit(1), 'anon friendships')
+    // Until the migration is on beta (draft PR) the tables do not exist.
+    test.skip(probe.error?.code === 'PGRST205', 'friends migration not applied on beta yet')
+    for (const table of ['friendships', 'friend_requests'] as const) {
+      const res = await q(() => anon.from(table).select('*').limit(1), `anon ${table}`)
+      if (res.error) expect(res.error.code, `anon ${table}: ${res.error.message}`).toBe(RLS_DENIED)
+      else expect(res.data, `anon rows visible in ${table}`).toEqual([])
+    }
+    const rpc = await q(() => anon.rpc('send_friend_request', { p_user_id: BUDDY_ID }), 'anon send_friend_request')
+    expect(rpc.error, 'anon must not execute send_friend_request').not.toBeNull()
+  })
+
   test('cannot run the reminder job or read its ledger (#129)', async () => {
     const run = await q(() => anon.rpc('send_event_reminders'), 'anon send_event_reminders')
     expect(run.error, 'anon may not run send_event_reminders').not.toBeNull()
@@ -103,6 +116,22 @@ test.describe('anon (guest browsing)', () => {
   test('cannot create a club', async () => {
     const club = await q(() => anon.from('clubs').insert({ name: '[e2e rls] must fail', created_by: BUDDY_ID }).select('id'), 'anon insert club')
     expect(club.error?.code).toBe(RLS_DENIED)
+  })
+})
+
+test.describe('job health (#157)', () => {
+  test('a guest can read the aggregate report, and nothing behind it', async () => {
+    const report = await q(() => anon.rpc('job_health'), 'job_health')
+    expect(report.error).toBeNull()
+    const rows = (report.data ?? []) as Record<string, unknown>[]
+    expect(rows.some(r => String(r.check_name).startsWith('cron: '))).toBe(true)
+    for (const row of rows) {
+      expect(Object.keys(row).sort()).toEqual(['check_name', 'detail', 'failures_24h', 'last_ok_at', 'ok'])
+      // Counts and ages only: no ids, no error text.
+      expect(String(row.detail ?? '')).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-|ERROR:/i)
+    }
+    const ledger = await q(() => anon.from('point_events').select('id').limit(1), 'anon point_events')
+    expect(ledger.data ?? []).toEqual([])
   })
 })
 
@@ -167,6 +196,36 @@ test.describe('signed in as the e2e account', () => {
     expect(profile.data ?? []).toEqual([])
   })
 
+  test('cannot rename itself; other columns of its own row still update (#223)', async () => {
+    const mine = await q(() => me.from('profiles').select('username, first_name').eq('id', myId).single(), 'my profile')
+    const { username, first_name } = mine.data as unknown as { username: string; first_name: string | null }
+
+    const rename = await q(() => me.from('profiles').update({ username: `${username}_x` }).eq('id', myId).select('username'), 'rename myself')
+    if (!rename.error) {
+      // The guard is missing: put the shared account's name back before failing.
+      await me.from('profiles').update({ username }).eq('id', myId)
+    }
+    expect(rename.error?.code, 'profiles_guard_username rejects a username change').toBe('42501')
+
+    // Writes the current value back, so nothing changes either way.
+    const other = await q(() => me.from('profiles').update({ first_name }).eq('id', myId).select('id'), 'update my first name')
+    expect(other.error).toBeNull()
+    expect(other.data).toHaveLength(1)
+  })
+
+  test('reads only its own friend rows and cannot write them directly (#15)', async () => {
+    const probe = await q(() => me.from('friendships').select('user_id, friend_id, is_best_friend'), 'my friendships')
+    test.skip(probe.error?.code === 'PGRST205', 'friends migration not applied on beta yet')
+    expect(probe.error).toBeNull()
+    for (const row of (probe.data ?? []) as { user_id: string }[]) expect(row.user_id).toBe(myId)
+    const forged = await q(() => me.from('friendships').insert({ user_id: myId, friend_id: BUDDY_ID }), 'insert friendship')
+    expect(forged.error?.code).toBe(RLS_DENIED)
+    const forgedReq = await q(() => me.from('friend_requests').insert({ requester_id: BUDDY_ID, addressee_id: myId }), 'insert friend request')
+    expect(forgedReq.error?.code).toBe(RLS_DENIED)
+    const internal = await q(() => me.rpc('friend_accept', { p_request_id: crypto.randomUUID(), p_requester: BUDDY_ID, p_addressee: myId }), 'friend_accept')
+    expect(internal.error, 'friend_accept is internal').not.toBeNull()
+  })
+
   test('event reminders (#129): the job and its ledger are server-only', async () => {
     const run = await q(() => me.rpc('send_event_reminders'), 'send_event_reminders')
     expect(run.error, 'a signed-in user may not run send_event_reminders').not.toBeNull()
@@ -222,6 +281,59 @@ test.describe('signed in as the e2e account', () => {
   })
 })
 
+/**
+ * #99 / #102 tightens what signed-out visitors and other users can read. These
+ * run once that migration is on the beta project (detected by its new
+ * event_attendee_denials table) and skip before that.
+ * TODO(#102): drop the skip once the migration is applied on beta and live.
+ */
+test.describe('privacy tightening (#99)', () => {
+  let applied = false
+  test.beforeAll(async () => {
+    const probe = await q(() => me.from('event_attendee_denials').select('event_id').limit(1), 'probe #102 migration')
+    applied = !probe.error
+  })
+
+  test('anon cannot read +1 guest names, but head counts still work', async () => {
+    test.skip(!applied, 'TODO(#102): migration 20261028120000_privacy_private_reads not on beta yet')
+    const rows = await q(() => anon.from('event_guests').select('id, first_name, last_name').limit(5), 'anon guests')
+    if (rows.error) expect(rows.error.code).toBe(RLS_DENIED)
+    else expect(rows.data).toEqual([])
+    const view = await q(() => anon.from('event_guests_attending').select('id, event_id, added_by').limit(1), 'anon guest view')
+    expect(view.error).toBeNull()
+    const names = await q(() => anon.from('event_guests_attending').select('first_name').limit(1), 'anon guest view names')
+    expect(names.error, 'the public view has no name columns').not.toBeNull()
+  })
+
+  test('anon cannot see who gave a kudo, only that it was received', async () => {
+    test.skip(!applied, 'TODO(#102): migration not on beta yet')
+    const givers = await q(() => anon.from('cheers').select('giver_id').limit(1), 'anon cheers giver')
+    expect(givers.error?.code).toBe(RLS_DENIED)
+    const received = await q(() => anon.from('cheers').select('id', { count: 'exact', head: true }).eq('receiver_id', BUDDY_ID), 'anon cheers received')
+    expect(received.error).toBeNull()
+  })
+
+  test('private profile values live off the public row', async () => {
+    test.skip(!applied, 'TODO(#102): migration not on beta yet')
+    const buddy = await q(() => anon.from('profiles').select('is_admin, notification_prefs').eq('id', BUDDY_ID), 'anon private columns')
+    expect(buddy.error).toBeNull()
+    expect(buddy.data).toEqual([{ is_admin: false, notification_prefs: { push: {}, in_app: {} } }])
+    const denials = await q(() => anon.from('event_attendee_denials').select('event_id').limit(1), 'anon denials')
+    expect(denials.error?.code).toBe(RLS_DENIED)
+    const admins = await q(() => me.from('app_admins').select('user_id').limit(1), 'app_admins')
+    if (admins.error) expect(admins.error.code).toBe(RLS_DENIED)
+    else expect(admins.data).toEqual([])
+    const mine = await q(() => me.from('user_settings').select('notification_prefs').eq('user_id', myId), 'own prefs')
+    expect(mine.error).toBeNull()
+  })
+
+  test('nobody can add themselves to a conversation directly', async () => {
+    test.skip(!applied, 'TODO(#102): migration 20261028120300_conversation_members_insert not on beta yet')
+    const join = await q(() => me.from('conversation_members').insert({ conversation_id: crypto.randomUUID(), user_id: myId }), 'self-join conversation')
+    expect(join.error?.code).toBe(RLS_DENIED)
+  })
+})
+
 test.describe('tournament trophies (#7)', () => {
   test('anyone can read trophies; nobody can write them directly', async () => {
     const read = await q(() => anon.from('tournament_trophies').select('id, place, tournament_title').limit(1), 'anon trophies')
@@ -238,6 +350,27 @@ test.describe('tournament trophies (#7)', () => {
     expect(guest.error).not.toBeNull()
     const notMine = await q(() => me.rpc('complete_tournament', { p_tournament_id: crypto.randomUUID(), p_podium: [] }), 'complete someone else')
     expect(notMine.error?.code).toBe(RLS_DENIED)
+  })
+})
+
+/**
+ * #99 part 2 (#106): account deletion RPCs. Skipped until its migration is on
+ * beta. TODO(#106): drop the skip once applied.
+ */
+test.describe('account deletion RPCs (#106)', () => {
+  test('only the signed-in owner can preview; nobody but the service role can delete', async () => {
+    const preview = await q(() => me.rpc('get_account_deletion_preview'), 'deletion preview')
+    test.skip(!!preview.error && /get_account_deletion_preview|PGRST202/.test(`${preview.error.code} ${preview.error.message}`),
+      'TODO(#106): migration 20261028130000_account_deletion not on beta yet')
+    expect(preview.error).toBeNull()
+    expect(preview.data).toMatchObject({ clubs: expect.any(Array), events: expect.any(Array), hash: expect.stringMatching(/^[0-9a-f]{32}$/) })
+
+    const anonPreview = await q(() => anon.rpc('get_account_deletion_preview'), 'anon deletion preview')
+    expect(anonPreview.error).not.toBeNull()
+    for (const client of [anon, me]) {
+      const del = await q(() => client.rpc('delete_account', { p_user: myId, p_plan_hash: '0'.repeat(32) }), 'delete_account')
+      expect(del.error, 'delete_account must not be callable by clients').not.toBeNull()
+    }
   })
 })
 
@@ -261,6 +394,38 @@ test.describe('points (#4)', () => {
 })
 
 /**
+ * No-show flag (#151): only set_no_show() writes event_attendees.no_show, and
+ * only for the host or a co-host. Nothing here succeeds: random ids, an event
+ * the account doesn't host, and inserts the guard trigger refuses.
+ */
+test.describe('no-show flag (#151)', () => {
+  // TEMPORARY casts: set_no_show / no_show reach types/database.ts when it is regenerated after merge.
+  const args = (eventId: string, userId: string) => ({ p_event_id: eventId, p_user_id: userId, p_value: true }) as never
+
+  test('anon cannot call set_no_show', async () => {
+    const res = await q(() => anon.rpc('set_no_show' as never, args(crypto.randomUUID(), BUDDY_ID)), 'anon set_no_show')
+    expect(res.error?.code).toBe(RLS_DENIED)
+  })
+
+  test('a user cannot flag on an event they do not host (or that does not exist)', async () => {
+    const missing = await q(() => me.rpc('set_no_show' as never, args(crypto.randomUUID(), BUDDY_ID)), 'set_no_show unknown event')
+    expect(missing.error, 'unknown event').not.toBeNull()
+    const other = await q(() => me.from('events').select('id').neq('created_by', myId).limit(1), 'an event someone else hosts')
+    test.skip(!other.data?.length, 'beta has no event hosted by someone else')
+    const res = await q(() => me.rpc('set_no_show' as never, args(other.data![0].id, BUDDY_ID)), 'set_no_show not host')
+    expect(res.error?.code).toBe(RLS_DENIED)
+  })
+
+  test('the columns cannot be set directly, even on your own RSVP', async () => {
+    // Rejected by the guard trigger before any foreign key or RLS check could save it.
+    const ins = await q(() => me.from('event_attendees').insert({ event_id: crypto.randomUUID(), user_id: myId, no_show: true } as never), 'insert with no_show')
+    expect(ins.error?.code).toBe(RLS_DENIED)
+    const marked = await q(() => me.from('event_attendees').insert({ event_id: crypto.randomUUID(), user_id: myId, no_show_marked_by: BUDDY_ID } as never), 'insert with no_show_marked_by')
+    expect(marked.error?.code).toBe(RLS_DENIED)
+  })
+})
+
+/**
  * #111: signed-in RPCs are no longer executable by anon. Skips while the
  * migration is not on beta (anon can still call them then).
  * TODO(#111): drop the skip once 20261028160000_definer_search_path is applied.
@@ -276,5 +441,38 @@ test.describe('definer hardening (#111)', () => {
     }
     const dm = await q(() => anon.rpc('find_or_create_dm', { other_user_id: BUDDY_ID }), 'anon find_or_create_dm')
     expect(dm.error?.code).toBe(RLS_DENIED)
+  })
+})
+
+test.describe('admin usage metrics (#232 part 2)', () => {
+  // The e2e account is not in app_admins: every admin_* function must refuse it (42501), and
+  // guests can't execute them at all. The functions are the only way to read app_sessions,
+  // app_online_samples and app_online_daily, so this is what keeps usage data admin-only.
+  const calls: [string, Record<string, unknown>][] = [
+    ['admin_metrics_overview', { p_from: '2026-11-01', p_to: '2026-11-07' }],
+    ['admin_metrics_events', { p_from: '2026-11-01', p_to: '2026-11-07' }],
+    ['admin_online_now', {}],
+    ['admin_retention', { p_weeks: 4 }],
+    ['admin_users', { p_search: '', p_sort: 'last_seen', p_limit: 5, p_offset: 0 }],
+    ['admin_user_activity', { p_user: BUDDY_ID }],
+  ]
+
+  test('a signed-in non-admin gets nothing from the admin functions', async () => {
+    const admin = await q(() => me.rpc('current_user_is_admin'), 'current_user_is_admin')
+    expect(admin.error).toBeNull()
+    expect(admin.data, 'the e2e account must not be an admin').toBe(false)
+    for (const [fn, args] of calls) {
+      const res = await q(() => me.rpc(fn as never, args as never), `me ${fn}`)
+      expect(res.error?.code, `${fn} for a non-admin`).toBe(RLS_DENIED)
+      expect(res.data, `${fn} returned data to a non-admin`).toBeNull()
+    }
+  })
+
+  test('guests cannot execute them', async () => {
+    for (const [fn, args] of calls) {
+      const res = await q(() => anon.rpc(fn as never, args as never), `anon ${fn}`)
+      expect(res.error, `anon ${fn}`).not.toBeNull()
+      expect(res.data, `${fn} returned data to a guest`).toBeNull()
+    }
   })
 })

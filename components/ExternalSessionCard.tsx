@@ -8,6 +8,8 @@ import type { ExternalSession, SessionLinkDecision, SessionLinkNotice } from '..
 import { formatSessionTimeRange, signupHost } from '../utils/feedItems'
 import { describeNewTime } from '../lib/schelagg'
 import { useOutsideSessionLink } from '../hooks/useOutsideSessionLink'
+import { useToday } from '../hooks/useToday'
+import { sessionConfirmation } from '../utils/externalFreshness'
 import { ConfirmDialog } from './ui'
 import { Spinner } from './ui/Spinner'
 
@@ -86,6 +88,8 @@ function ExternalSessionCardInner({ session, menuInset = false }: Props) {
   const link = useOutsideSessionLink(session)
   const copy = link.notice ? noticeCopy(link.notice, host) : null
   const finding = link.finding ? findingLabel(link.finding) : null
+  // Not confirmed at the source lately (Schelagg kept its last good copy): say so before anyone drives out.
+  const confirmation = sessionConfirmation(session, useToday())
 
   return (
     <>
@@ -96,7 +100,7 @@ function ExternalSessionCardInner({ session, menuInset = false }: Props) {
       style={shared.externalCard}
       accessibilityRole="link"
       accessibilityState={{ busy: link.checking }}
-      accessibilityLabel={`${session.title} at ${session.venue}. ${finding ? `${finding}. ` : ''}${signupLabel ?? ''}`}
+      accessibilityLabel={`${session.title} at ${session.venue}. ${finding ? `${finding}. ` : confirmation.note ? `${confirmation.note}. ` : ''}${signupLabel ?? ''}`}
       testID="external-session-card"
     >
       <View style={[shared.externalDateBlock, { backgroundColor: accent + '22' }]}>
@@ -116,6 +120,9 @@ function ExternalSessionCardInner({ session, menuInset = false }: Props) {
           {session.city ? `${session.venue} · ${session.city}` : session.venue}
         </Text>
         {meta ? <Text style={shared.externalMeta} numberOfLines={1}>{meta}</Text> : null}
+        {!finding && confirmation.note ? (
+          <Text style={shared.externalFinding} numberOfLines={2} testID="external-session-unconfirmed">{confirmation.note}</Text>
+        ) : null}
         {finding ? (
           <Text
             style={[shared.externalFinding, link.finding?.kind !== 'changed' && shared.externalFindingCanceled]}

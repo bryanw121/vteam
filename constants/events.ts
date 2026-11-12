@@ -153,6 +153,26 @@ export const EVENT_CARD_MY_ATTENDANCE_SELECT_ATTENDING_ONLY =
 export const EXTERNAL_SESSION_SELECT =
   'id, source_id, region, title, venue, city, surface, session_type, level, price, starts_at, ends_at, signup_url, signup_label, note, verified_at'
 
+/** Columns the app reads from `external_programs` (Schelagg's leagues and tournaments). */
+export const EXTERNAL_PROGRAM_SELECT =
+  'id, kind, surface, region, state, series, org, title, venue, city, address, format, divisions, starts_on, ends_on, weekdays, registration_opens, registration_deadline, waitlist_on, team_price, individual_price, price_note, price_changes_on, status, signup_url, source_url, checked_at'
+
+/**
+ * Hide outside leagues and tournaments Schelagg hasn't checked for this long. Schelagg reads each
+ * organizer twice a day and vteam ingests every two hours, so older rows mean ingestion (or that
+ * organizer's page) has stopped: show nothing rather than a deadline or price that may have changed.
+ */
+export const EXTERNAL_PROGRAM_MAX_AGE_MS = 48 * 60 * 60 * 1000
+
+/**
+ * How long since Schelagg last confirmed an outside session at its source (`verified_at`) before
+ * vteam says so on the card, and before it stops showing it. A scraped source is rechecked every
+ * 30 minutes, so a few days means its scrape keeps failing and Schelagg is showing the last good
+ * copy. Hand-checked sessions (`source_id = 'manual'`) are rechecked by a person every few weeks, so
+ * they get Schelagg's own "stale" line (over 21 days) and are never hidden for age.
+ */
+export const EXTERNAL_SESSION_CONFIRM_DAYS = { scrapedNote: 2, scrapedHide: 7, manualNote: 21 } as const
+
 /**
  * Hide external sessions the hourly Schelagg feed ingest hasn't refreshed for this long.
  * Each ingest rewrites every upcoming row's `updated_at` and deletes sessions the

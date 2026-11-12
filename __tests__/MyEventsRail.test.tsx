@@ -34,7 +34,7 @@ describe('MyEventsRail', () => {
   const noop = () => {}
 
   it('renders nothing at all when the viewer is registered for nothing', () => {
-    render(<MyEventsRail items={[]} onPressEvent={noop} onSeeAll={noop} nowMs={NOW} />)
+    render(<MyEventsRail items={[]} onPressEvent={noop} nowMs={NOW} />)
     // No header, no empty-state card, no zero count — the pre-rail screen.
     expect(screen.queryByTestId('my-events-rail')).toBeNull()
   })
@@ -44,7 +44,7 @@ describe('MyEventsRail', () => {
       <MyEventsRail
         items={[item('a', 'attending'), item('b', 'waitlisted')]}
         onPressEvent={noop}
-        onSeeAll={noop}
+       
         nowMs={NOW}
       />,
     )
@@ -54,7 +54,7 @@ describe('MyEventsRail', () => {
 
   it('caps the rail at 3 cards but counts them all in the header', () => {
     const items = ['a', 'b', 'c', 'd', 'e'].map(id => item(id, 'attending'))
-    render(<MyEventsRail items={items} onPressEvent={noop} onSeeAll={noop} nowMs={NOW} />)
+    render(<MyEventsRail items={items} onPressEvent={noop} nowMs={NOW} />)
     expect(screen.getByTestId('my-event-card-c')).toBeTruthy()
     expect(screen.queryByTestId('my-event-card-d')).toBeNull()
     expect(screen.getByText("YOU'RE GOING · 5")).toBeTruthy()
@@ -62,23 +62,26 @@ describe('MyEventsRail', () => {
 
   it('hides "See all" when everything already fits', () => {
     render(
-      <MyEventsRail items={[item('a', 'attending')]} onPressEvent={noop} onSeeAll={noop} nowMs={NOW} />,
+      <MyEventsRail items={[item('a', 'attending')]} onPressEvent={noop} nowMs={NOW} />,
     )
     expect(screen.queryByTestId('my-events-see-all')).toBeNull()
   })
 
-  it('shows "See all" once there are more than 3 and fires the callback', () => {
-    const onSeeAll = jest.fn()
+  it('shows "See all" once there are more than 3, opens the whole list in place, and folds it back', () => {
     const items = ['a', 'b', 'c', 'd'].map(id => item(id, 'attending'))
-    render(<MyEventsRail items={items} onPressEvent={noop} onSeeAll={onSeeAll} nowMs={NOW} />)
+    render(<MyEventsRail items={items} onPressEvent={noop} nowMs={NOW} />)
+    expect(screen.queryByTestId('my-event-card-d')).toBeNull()
     fireEvent.press(screen.getByTestId('my-events-see-all'))
-    expect(onSeeAll).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('my-event-card-d')).toBeTruthy()
+    expect(screen.getByText('Show less')).toBeTruthy()
+    fireEvent.press(screen.getByTestId('my-events-see-all'))
+    expect(screen.queryByTestId('my-event-card-d')).toBeNull()
   })
 
   it('opens the event when a card is pressed', () => {
     const onPressEvent = jest.fn()
     render(
-      <MyEventsRail items={[item('a', 'attending')]} onPressEvent={onPressEvent} onSeeAll={noop} nowMs={NOW} />,
+      <MyEventsRail items={[item('a', 'attending')]} onPressEvent={onPressEvent} nowMs={NOW} />,
     )
     fireEvent.press(screen.getByTestId('my-event-card-a'))
     expect(onPressEvent).toHaveBeenCalledWith('a')
@@ -89,7 +92,7 @@ describe('MyEventsRail', () => {
       <MyEventsRail
         items={[item('a', 'waitlisted', { waitlistPosition: 2 })]}
         onPressEvent={noop}
-        onSeeAll={noop}
+       
         nowMs={NOW}
       />,
     )
@@ -98,7 +101,7 @@ describe('MyEventsRail', () => {
 
   it('falls back to WAITLISTED before the position is known', () => {
     render(
-      <MyEventsRail items={[item('a', 'waitlisted')]} onPressEvent={noop} onSeeAll={noop} nowMs={NOW} />,
+      <MyEventsRail items={[item('a', 'waitlisted')]} onPressEvent={noop} nowMs={NOW} />,
     )
     expect(screen.getByText('WAITLISTED')).toBeTruthy()
   })
@@ -108,7 +111,7 @@ describe('MyEventsRail', () => {
       <MyEventsRail
         items={[item('a', 'requested'), item('b', 'hosting')]}
         onPressEvent={noop}
-        onSeeAll={noop}
+       
         nowMs={NOW}
       />,
     )

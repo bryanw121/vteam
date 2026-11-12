@@ -17,6 +17,8 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationPrefType, string> = {
   request_denied: 'Request denied',
   event_reminder: 'Event reminders',
   late_dropout: 'Late dropouts (hosts)',
+  friend_request: 'Friend requests',
+  friend_accepted: 'Friend request accepted',
 }
 
 /** Settings → Notifications → Reminders: the lead times `user_settings.reminder_lead_minutes` allows. */

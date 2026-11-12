@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient, type Session } from '@supabase/supabase-js'
-import type { AppDatabase } from '../types'
+import type { AppDatabase, RecoveryLink } from '../types'
+import { parseRecoveryLink } from '../utils/recoveryLink'
 import { AppState, Platform } from 'react-native'
 import 'react-native-url-polyfill/auto'
 
@@ -37,6 +38,17 @@ export function readStoredSession(): Session | null {
     return null
   }
 }
+
+/**
+ * Whether this page was opened from a password reset link (#223), read before
+ * the client below starts: it consumes the URL hash as it signs in, and a
+ * screen that mounts later can miss the `PASSWORD_RECOVERY` event. If Auth
+ * couldn't use our `/reset-password` redirect it lands on the Site URL instead,
+ * so the root layout uses this to send the person to the form from any path.
+ * Web only (native links open the web page).
+ */
+export const recoveryLinkAtStart: RecoveryLink =
+  Platform.OS === 'web' && !isSSR ? parseRecoveryLink(window.location.hash, window.location.search) : null
 
 export const supabase = createClient<AppDatabase>(supabaseUrl, supabaseAnonKey, {
   auth: {

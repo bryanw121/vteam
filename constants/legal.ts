@@ -122,7 +122,7 @@ vteam is operated from Austin, Texas ("we", "us"). vteam is in beta, and our pra
 | Host payment info | A host's Venmo handle and the event price they set | Hosts |
 | Event locations | Venue address and map coordinates | Hosts |
 | Guest names | First and last name of a guest a member adds to an event (guests may not have a vteam account) | The member who adds them |
-| Device and usage data | Platform (iOS, Android or web), push notification token, a random device ID, in-app actions (for example, tutorial steps viewed), notification preferences | Your device, automatically |
+| Device and usage data | Platform (iOS, Android or web), app version, push notification token, a random device ID, when the app is open and the types of screens you use (for example "an event page", not which event), in-app actions (for example, tutorial steps viewed), notification preferences | Your device, automatically |
 | Crash and error reports | Error details, device model, OS version, your account ID, and your IP address | Your device, via our crash reporter |
 
 We do not collect your GPS location; event addresses are entered by hosts. If you add an event to your calendar, vteam writes that event to your device calendar but does not read it. If you choose a profile photo, vteam accesses only the photo you pick.
@@ -137,7 +137,7 @@ We may also receive other information you choose to give us, such as when you co
 
 We may use information to operate, maintain and improve the Service and to develop new features; create and manage accounts; show and manage events; connect players with hosts; send notifications; communicate with you; understand how the Service is used; detect, prevent and respond to fraud, abuse, security issues and violations of our Terms; and comply with law.
 
-**What is public.** vteam is a community app, so much of your activity is visible to other users and to anyone browsing without an account: your full name, username, profile photo, bio, position, skill level, badges, clubs, kudos you give and receive, and the events you join with your RSVP status. Event details are public too, including the venue address and the host's Venmo handle. Names of guests added to an event are shown on that event. Photos (profile, club and chat images) are stored at links that anyone who has the link can open. Messages are visible to the people in that conversation.
+**What is public.** vteam is a community app, so much of your activity is visible to other users and to anyone browsing without an account: your full name, username, profile photo, bio, position, skill level, badges, clubs, kudos you receive, and the events you join with your RSVP status. Signed-in members can also see kudos you give. Event details are public too, including the venue address and the host's Venmo handle. Names of guests added to an event are shown to signed-in members on that event. Profile and club photos are stored at links that anyone who has the link can open. Photos sent in chat are private to the people in that conversation. Messages are visible to the people in that conversation.
 
 **Push notifications.** Notifications are delivered through Apple Push Notification service (iOS) and Firebase Cloud Messaging (Android). Chat notifications include the sender's name and the message text.
 
@@ -157,6 +157,8 @@ These providers may process data in the United States and other countries.
 
 **Other sharing.** We may disclose information when we believe in good faith it is reasonably necessary to comply with law or legal process; to enforce our Terms; to protect the rights, property or safety of vteam, our users or others; to investigate fraud or abuse; or in connection with a merger, sale, financing, reorganization or transfer of all or part of the Service. We may also share information that is aggregated or de-identified. As of the effective date, vteam does not sell personal information or use it for third-party advertising.
 
+**Usage data.** We use it to see which parts of vteam get used and when it is busiest. Only vteam administrators can see it, including which account a session belongs to. It never includes what you type, which events or profiles you view, or your location. Detailed usage data is kept for 180 days; after that we keep only daily totals that don't identify anyone.
+
 **How long we keep it.** We generally keep information for as long as your account is open and as long as we consider reasonably necessary for the purposes above. After an account is deleted, we take reasonable steps to delete or de-identify personal information within a reasonable time, but we may keep information as needed to comply with law, resolve disputes, prevent abuse, enforce our Terms, or where it remains in backups, logs or providers' systems. Content others have copied or that appears in their conversations may remain visible.
 
 **Legal bases (EEA and UK visitors).** We process your data to provide the Service you signed up for (contract), to keep it secure and fix crashes (legitimate interests), and to send push notifications (your consent, which you can withdraw in settings).
@@ -165,7 +167,7 @@ These providers may process data in the United States and other countries.
 
 - **Edit your profile** in the app.
 - **Turn off push notifications** in the app or your phone's settings.
-- **Request deletion of your account** by emailing us.
+- **Delete your account** in the app (Profile > Account Settings > Delete account), or by emailing us. Instructions: vteamvolleyball.com/delete-account.
 - **Request access to your data** by emailing us. We may need to verify your identity, and will respond as required by applicable law.
 
 Depending on where you live, you may have additional rights under applicable law, such as to correct your data or appeal a decision about your request. Where those laws apply, email us to make a request. Some rights are subject to exceptions and limits under those laws.
@@ -189,4 +191,32 @@ We may update this policy from time to time. We'll post the updated version with
 ## Contact
 
 Questions or requests: **privacy@vteamvolleyball.com** \[set up this address before publishing\].
+`
+
+/** Public page Google Play links to: how to delete an account, in the app or by email (/delete-account). */
+export const DELETE_ACCOUNT_MARKDOWN = String.raw`# Delete your vteam account
+
+## In the app
+
+- Open vteam and sign in.
+- Go to **Profile > Account Settings > Delete account**.
+- If you signed in more than 10 minutes ago, confirm it's you with your password or an emailed code.
+- Check what will happen to your clubs, tournaments and events, type DELETE, and tap **Delete my account**.
+
+Your account is deleted right away.
+
+## By email
+
+If you can't sign in, email **privacy@vteamvolleyball.com** \[set up this address before publishing\] from the address on your account and ask us to delete it. We'll confirm by email when it's done.
+
+## What happens to your data
+
+- Your profile, photos, messages, comments, RSVPs, settings and push notification tokens are deleted.
+- Kudos you gave stay with the people who received them, without your name.
+- Clubs you created go to another owner of the club if there is one. Otherwise they are deleted, with their group chat, posts and tournaments (finished ones too).
+- Tournaments you created go to an owner of their club if there is one. Otherwise they are deleted.
+- Upcoming events you host go to your co-host if you have one. Otherwise they are cancelled, and players who joined are notified.
+- Past events you hosted stay for the people who played, without your name.
+
+Some information may remain for a limited time in backups and logs, or where we must keep it by law, as described in our Privacy Policy.
 `

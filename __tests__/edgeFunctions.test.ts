@@ -13,7 +13,7 @@ import { join } from 'path'
 const root = join(__dirname, '..')
 const read = (path: string) => readFileSync(join(root, path), 'utf8')
 
-const FUNCTIONS = ['send-chat-push', 'send-notification-push', 'check-push-receipts', 'places-proxy', 'send-feedback-email']
+const FUNCTIONS = ['send-chat-push', 'send-notification-push', 'check-push-receipts', 'places-proxy', 'send-feedback-email', 'login-with-username', 'delete-account']
 const handler = (fn: string) => read(`supabase/functions/${fn}/handler.ts`)
 const index = (fn: string) => read(`supabase/functions/${fn}/index.ts`)
 
@@ -21,6 +21,7 @@ const sendPush = handler('send-chat-push')
 const notificationPush = handler('send-notification-push')
 const checkReceipts = handler('check-push-receipts')
 const places = handler('places-proxy')
+const deleteAccount = handler('delete-account')
 const shared = read('supabase/functions/_shared/supabase.ts')
 const config = read('supabase/config.toml')
 
@@ -97,6 +98,14 @@ describe('supabase/config.toml', () => {
     expect(verifyJwt('check-push-receipts')).toBe('false')
   })
 
+  it('turns JWT verification off for login-with-username (callers are signed out)', () => {
+    expect(verifyJwt('login-with-username')).toBe('false')
+  })
+
+  it('keeps JWT verification on for delete-account', () => {
+    expect(verifyJwt('delete-account')).toBe('true')
+  })
+
   it('keeps JWT verification on for places-proxy', () => {
     expect(verifyJwt('places-proxy')).toBe('true')
   })
@@ -108,5 +117,26 @@ describe('places-proxy CORS', () => {
     const wildcards = places.match(/'Access-Control-Allow-Origin': '\*'/g) ?? []
     expect(wildcards).toHaveLength(1)
     expect(places).toMatch(/if \(!allowed\.length\)[\s\S]{0,200}'\*'/)
+  })
+})
+
+describe('delete-account', () => {
+  it('takes the user from the JWT, never from the request body', () => {
+    expect(deleteAccount).toMatch(/service\.auth\.getUser\(token\)/)
+    expect(deleteAccount).not.toMatch(/body\.(user|user_id|userId)/)
+  })
+  it('requires a recent sign-in before deleting', () => {
+    const reauthAt = deleteAccount.indexOf('isRecentSignIn(')
+    const deleteAt = deleteAccount.indexOf("rpc('delete_account'")
+    expect(reauthAt).toBeGreaterThan(-1)
+    expect(deleteAt).toBeGreaterThan(reauthAt)
+  })
+  it('deletes in one SQL transaction (no separate auth admin call) and removes files only afterwards', () => {
+    expect(deleteAccount).not.toMatch(/auth\.admin\.deleteUser/)
+    const deleteAt = deleteAccount.indexOf("rpc('delete_account'")
+    const filesAt = deleteAccount.indexOf('await removeFolder(')
+    expect(filesAt).toBeGreaterThan(deleteAt)
+    expect(deleteAccount.slice(deleteAt, filesAt)).toMatch(/if \(deleteError\) \{[\s\S]*?return json/)
+    expect(deleteAccount).toMatch(/removeFolder\(service, 'club-avatars', club\.id\)/)
   })
 })

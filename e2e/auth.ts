@@ -6,7 +6,7 @@ const MAX_LOGIN_ATTEMPTS = 3
 
 function isAuthRequest(urlString: string): boolean {
   const url = new URL(urlString)
-  return url.pathname.startsWith('/auth/v1/') || url.pathname.includes('/rpc/get_email_by_username')
+  return url.pathname.startsWith('/auth/v1/') || url.pathname.includes('/functions/v1/login-with-username')
 }
 
 function responseLabel(response: Response): string | null {

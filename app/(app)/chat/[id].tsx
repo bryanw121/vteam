@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Image, Pressable, Modal, Alert } from 'react-native'
+import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Image, Pressable, Modal } from 'react-native'
 import { Text, TextInput } from '../../../components/ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
@@ -29,6 +29,7 @@ import { profileAvatarSmallUri, profileDisplayName, confirmDestructive } from '.
 import { chatAlert } from '../../../utils/chatUtils'
 import { routes } from '../../../utils/routes'
 import { Spinner } from '../../../components/ui/Spinner'
+import { toast } from '../../../lib/toast'
 
 const AVATAR_SIZE = 36
 
@@ -290,11 +291,7 @@ export default function ChatRoomScreen() {
       last_name: convRow.other_user_last_name,
       username: convRow.other_user_username ?? 'player',
     })
-    if (Platform.OS === 'web') {
-      window.alert(`${name} has been reported to vteam.`)
-    } else {
-      Alert.alert('Report submitted', `${name} has been reported to vteam.`)
-    }
+    toast.show({ title: 'Report submitted', message: `${name} has been reported to vteam.`, variant: 'success' })
   }, [convRow])
 
   const confirmReportDmUser = useCallback(() => {
@@ -465,7 +462,7 @@ export default function ChatRoomScreen() {
           }}>
             <Ionicons name="return-down-back" size={16} color={theme.colors.primary} />
             <View style={{ flex: 1, borderLeftWidth: 2, borderLeftColor: theme.colors.primary, paddingLeft: 8 }}>
-              <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primary, fontWeight: theme.font.weight.semibold }}>
+              <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText, fontWeight: theme.font.weight.semibold }}>
                 Replying to {replyTo.profiles ? displayName(replyTo.profiles) : 'message'}
               </Text>
               <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }} numberOfLines={1}>
@@ -491,7 +488,7 @@ export default function ChatRoomScreen() {
           }}>
             <Ionicons name="pencil-outline" size={16} color={theme.colors.primary} />
             <View style={{ flex: 1, borderLeftWidth: 2, borderLeftColor: theme.colors.primary, paddingLeft: 8 }}>
-              <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primary, fontWeight: theme.font.weight.semibold }}>
+              <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText, fontWeight: theme.font.weight.semibold }}>
                 Editing message
               </Text>
               <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }} numberOfLines={1}>

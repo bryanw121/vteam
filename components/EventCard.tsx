@@ -1,6 +1,7 @@
 import React, { memo, useState } from 'react'
 import { TouchableOpacity, View } from 'react-native'
 import { Text } from './ui/Text'
+import { FriendsGoingLine } from './FriendsGoingLine'
 import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter, usePathname } from 'expo-router'
@@ -11,7 +12,7 @@ import { routes } from '../utils/routes'
 import { rememberEventCard } from '../hooks/event/seed'
 import { eventPrefetchProps } from '../hooks/event/prefetch'
 import { profileAvatarSmallUri, profileDisplayName, surfaceOf } from '../utils'
-import type { EventCardRsvpHandler, EventWithDetails, ForecastSummary, Tag } from '../types'
+import type { EventCardRsvpHandler, EventWithDetails, ForecastSummary, FriendGoing, Tag } from '../types'
 import { Spinner } from './ui/Spinner'
 
 // ─── Attendance helpers ───────────────────────────────────────────────────────
@@ -84,6 +85,7 @@ function EventCardInner({
   currentUserId,
   onRsvp,
   rsvpPending = false,
+  friendsGoing,
   forecast,
   menuInset = false,
 }: {
@@ -93,6 +95,8 @@ function EventCardInner({
   onRsvp?: EventCardRsvpHandler
   /** The parent's RSVP write for this event is in flight (survives a remount, unlike the local spinner). */
   rsvpPending?: boolean
+  /** My friends going (useFriendsGoing), best friends first (#15). */
+  friendsGoing?: FriendGoing[]
   /** Weather chip for an outdoor event (#165); the feed works it out (`useFeedForecasts`). */
   forecast?: ForecastSummary | null
   /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
@@ -206,6 +210,8 @@ function EventCardInner({
           </View>
         )}
 
+        <FriendsGoingLine going={friendsGoing} tone="onDark" />
+
         {/* Attendee row + capacity */}
         <View style={{
           marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -229,7 +235,7 @@ function EventCardInner({
                     }}>
                       {uri
                         ? <Image source={{ uri }} style={{ width: 24, height: 24 }} contentFit="cover" transition={150} />
-                        : <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.xs, color: theme.colors.primary }}>{initials}</Text>
+                        : <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.xs, color: theme.colors.primaryText }}>{initials}</Text>
                       }
                     </View>
                   )
@@ -320,7 +326,7 @@ export const HeroEventCard = EventCard
 
 // ─── Row Event Card (desktop secondary cards) ─────────────────────────────────
 
-function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, rsvpPending = false, forecast, menuInset = false }: {
+function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, rsvpPending = false, friendsGoing, forecast, menuInset = false }: {
   event: EventWithDetails
   from?: string
   currentUserId?: string | null
@@ -328,6 +334,7 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
   /** See EventCard. */
   rsvpPending?: boolean
   /** See EventCard. */
+  friendsGoing?: FriendGoing[]
   forecast?: ForecastSummary | null
   /** See EventCard. */
   menuInset?: boolean
@@ -449,6 +456,8 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
           </View>
         )}
 
+        <FriendsGoingLine going={friendsGoing} />
+
         {/* Attendees + capacity bar + RSVP */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10 }}>
           {previews.length > 0 && (
@@ -467,7 +476,7 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
                   }}>
                     {uri
                       ? <Image source={{ uri }} style={{ width: 22, height: 22 }} contentFit="cover" transition={150} />
-                      : <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.xs, color: theme.colors.primary }}>{initials}</Text>
+                      : <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.xs, color: theme.colors.primaryText }}>{initials}</Text>
                     }
                   </View>
                 )

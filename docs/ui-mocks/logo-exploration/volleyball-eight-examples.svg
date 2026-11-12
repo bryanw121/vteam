@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1160" viewBox="0 0 2048 1160" role="img" aria-labelledby="title desc">
+  <title id="title">Vteam volleyball logo directions</title>
+  <desc id="desc">Eight logo directions built from familiar curved volleyball seams, with no standalone V or shield.</desc>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#271049"/>
+      <stop offset="1" stop-color="#160A2B"/>
+    </linearGradient>
+    <linearGradient id="violetBall" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#A890FF"/>
+      <stop offset="1" stop-color="#6533E2"/>
+    </linearGradient>
+    <filter id="shadow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#05010E" flood-opacity=".38"/>
+    </filter>
+  </defs>
+
+  <rect width="2048" height="1160" fill="#10081E"/>
+  <text x="64" y="76" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="700" letter-spacing="1.5">VTEAM • VOLLEYBALL-FIRST MARKS</text>
+  <text x="64" y="118" fill="#C7BDE6" font-family="Arial, Helvetica, sans-serif" font-size="24">Eight clean seam constructions — each begins with a recognizable volleyball silhouette.</text>
+
+  <!-- 01 Classic three-panel -->
+  <g transform="translate(64 164)">
+    <rect width="430" height="430" rx="54" fill="url(#tile)"/>
+    <g filter="url(#shadow)">
+      <circle cx="215" cy="205" r="132" fill="#FFFDFE"/>
+      <circle cx="215" cy="205" r="132" fill="none" stroke="#8B62F5" stroke-width="14"/>
+      <g fill="none" stroke="#6D37DE" stroke-width="25" stroke-linecap="round">
+        <path d="M101 145 C168 186 203 239 213 330"/>
+        <path d="M329 145 C262 186 227 239 217 330"/>
+        <path d="M105 145 C168 109 262 109 325 145"/>
+      </g>
+    </g>
+    <text x="215" y="390" text-anchor="middle" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">01  CLASSIC PANEL</text>
+  </g>
+
+  <!-- 02 Inverse court -->
+  <g transform="translate(550 164)">
+    <rect width="430" height="430" rx="54" fill="#F4F1FF"/>
+    <g filter="url(#shadow)">
+      <circle cx="215" cy="205" r="132" fill="url(#violetBall)"/>
+      <circle cx="215" cy="205" r="132" fill="none" stroke="#35166D" stroke-width="14"/>
+      <g fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round">
+        <path d="M101 146 C166 194 200 248 209 331"/>
+        <path d="M329 146 C264 194 230 248 221 331"/>
+        <path d="M105 146 C169 107 261 107 325 146"/>
+      </g>
+    </g>
+    <text x="215" y="390" text-anchor="middle" fill="#2B1255" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">02  INVERSE COURT</text>
+  </g>
+
+  <!-- 03 Wrapped seams -->
+  <g transform="translate(1036 164)">
+    <rect width="430" height="430" rx="54" fill="url(#tile)"/>
+    <g filter="url(#shadow)">
+      <circle cx="215" cy="205" r="132" fill="#FFFDFE"/>
+      <circle cx="215" cy="205" r="132" fill="none" stroke="#9A74FB" stroke-width="14"/>
+      <g fill="none" stroke="#6D37DE" stroke-width="24" stroke-linecap="round">
+        <path d="M99 159 C153 216 190 238 216 331"/>
+        <path d="M331 159 C277 216 240 238 214 331"/>
+        <path d="M100 159 C168 220 262 220 330 159"/>
+      </g>
+    </g>
+    <text x="215" y="390" text-anchor="middle" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">03  WRAPPED SEAMS</text>
+  </g>
+
+  <!-- 04 Broad ribbon panels -->
+  <g transform="translate(1522 164)">
+    <rect width="430" height="430" rx="54" fill="#F4F1FF"/>
+    <g filter="url(#shadow)">
+      <circle cx="215" cy="205" r="132" fill="#FFFDFE" stroke="#35166D" stroke-width="14"/>
+      <g fill="none" stroke="#733BEA" stroke-width="31" stroke-linecap="round">
+        <path d="M101 147 C171 188 203 246 213 329"/>
+        <path d="M329 147 C259 188 227 246 217 329"/>
+        <path d="M104 147 C172 114 258 114 326 147"/>
+      </g>
+      <g fill="none" stroke="#DCD2FF" stroke-width="8" stroke-linecap="round" opacity=".92">
+        <path d="M101 147 C171 188 203 246 213 329"/>
+        <path d="M329 147 C259 188 227 246 217 329"/>
+        <path d="M104 147 C172 114 258 114 326 147"/>
+      </g>
+    </g>
+    <text x="215" y="390" text-anchor="middle" fill="#2B1255" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">04  BROAD RIBBONS</text>
+  </g>
+
+  <!-- 05 Compact club -->
+  <g transform="translate(64 650)">
+    <rect width="430" height="430" rx="54" fill="#F4F1FF"/>
+    <g filter="url(#shadow)">
+      <circle cx="215" cy="205" r="132" fill="#6B35E5"/>
+      <circle cx="215" cy="205" r="132" fill="none" stroke="#2D1261" stroke-width="14"/>
+      <g fill="none" stroke="#FFFFFF" stroke-width="21" stroke-linecap="round">
+        <path d="M99 157 C163 192 200 244 215 330"/>
+        <path d="M331 157 C267 192 230 244 215 330"/>
+        <path d="M100 157 C167 113 263 113 330 157"/>
+      </g>
+      <circle cx="215" cy="205" r="145" fill="none" stroke="#FFFFFF" stroke-width="4" opacity=".55"/>
+    </g>
+    <text x="215" y="390" text-anchor="middle" fill="#2B1255" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">05  COMPACT CLUB</text>
+  </g>
+
+  <!-- 06 Flow ball -->
+  <g transform="translate(550 650)">
+    <rect width="430" height="430" rx="54" fill="url(#tile)"/>
+    <g filter="url(#shadow)">
+      <circle cx="215" cy="205" r="132" fill="#FFFDFE"/>
+      <circle cx="215" cy="205" r="132" fill="none" stroke="#A078FF" stroke-width="14"/>
+      <g fill="none" stroke="#6D37DE" stroke-width="23" stroke-linecap="round">
+        <path d="M101 153 C173 169 211 226 215 331"/>
+        <path d="M329 153 C257 169 219 226 215 331"/>
+        <path d="M101 153 C176 230 254 230 329 153"/>
+      </g>
+    </g>
+    <text x="215" y="390" text-anchor="middle" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">06  FLOW BALL</text>
+  </g>
+
+  <!-- 07 Soft sport -->
+  <g transform="translate(1036 650)">
+    <rect width="430" height="430" rx="54" fill="#F4F1FF"/>
+    <g filter="url(#shadow)">
+      <circle cx="215" cy="205" r="132" fill="url(#violetBall)"/>
+      <circle cx="215" cy="205" r="132" fill="none" stroke="#2D1261" stroke-width="14"/>
+      <g fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round">
+        <path d="M102 153 C166 193 199 246 210 331"/>
+        <path d="M328 153 C264 193 231 246 220 331"/>
+        <path d="M105 153 C166 121 264 121 325 153"/>
+      </g>
+      <path d="M136 109 C187 78 248 78 294 109" fill="none" stroke="#DCD2FF" stroke-width="8" stroke-linecap="round" opacity=".8"/>
+    </g>
+    <text x="215" y="390" text-anchor="middle" fill="#2B1255" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">07  SOFT SPORT</text>
+  </g>
+
+  <!-- 08 Ribbon panel ball -->
+  <g transform="translate(1522 650)">
+    <rect width="430" height="430" rx="54" fill="url(#tile)"/>
+    <g filter="url(#shadow)">
+      <circle cx="215" cy="205" r="132" fill="#FFFDFE"/>
+      <circle cx="215" cy="205" r="132" fill="none" stroke="#8B62F5" stroke-width="14"/>
+      <path d="M104 151 C169 180 205 235 215 331" fill="none" stroke="#743BEB" stroke-width="29" stroke-linecap="round"/>
+      <path d="M326 151 C261 180 225 235 215 331" fill="none" stroke="#743BEB" stroke-width="29" stroke-linecap="round"/>
+      <path d="M104 151 C166 196 264 196 326 151" fill="none" stroke="#743BEB" stroke-width="29" stroke-linecap="round"/>
+      <path d="M118 145 C173 121 254 121 312 145" fill="none" stroke="#C7B4FF" stroke-width="9" stroke-linecap="round"/>
+    </g>
+    <text x="215" y="390" text-anchor="middle" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700">08  RIBBON PANEL</text>
+  </g>
+</svg>

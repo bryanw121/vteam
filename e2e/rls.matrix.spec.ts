@@ -54,7 +54,7 @@ for (const table of tables) {
   const spec = RLS_MATRIX[table]
 
   test(`${table}: guest reads ${spec.anonSelect}`, async () => {
-    const res = await run(`anon select ${table}`, () => anon.from(table).select('*').limit(1) as unknown as PromiseLike<Res>)
+    const res = await run(`anon select ${table}`, () => anon.from(table).select(spec.anonColumns ?? '*').limit(1) as unknown as PromiseLike<Res>)
     if (spec.anonSelect === 'none') expectNoRows(res, `anon can read ${table}: expected none`)
     else expect(res.error, `anon select on ${table} (expected ${spec.anonSelect})`).toBeNull()
   })

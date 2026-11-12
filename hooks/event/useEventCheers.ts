@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert } from 'react-native'
 import { supabase } from '../../lib/supabase'
 import { getQueryData, setQueryData, useMutation, useQuery } from '../../lib/query'
 import { CHEER_SELECT, CHEERS_MAX_PER_EVENT, STALE } from '../../constants'
 import type { Cheer, CheerType, PendingCheer } from '../../types'
 import { eventKeys } from './keys'
 import { reportEventError } from './telemetry'
+import { toast } from '../../lib/toast'
 
 
 const NO_CHEERS: Cheer[] = []
@@ -59,7 +59,7 @@ export function useEventCheers(eventId: string, userId: string | null, enabled: 
         writeGiven(prev => prev.filter(k => !same(k, c.receiverId, c.cheerType)))
         return () => { if (removed) writeGiven(prev => [...prev, removed]) }
       },
-      onError: e => Alert.alert('Error', e.message),
+      onError: e => { toast.error("Couldn't save your cheers", e) },
     },
   )
 
@@ -99,7 +99,7 @@ export function useEventCheers(eventId: string, userId: string | null, enabled: 
         const snapshot = writeGiven(() => [])
         return () => { writeGiven(() => snapshot) }
       },
-      onError: e => Alert.alert('Error', e.message),
+      onError: e => { toast.error("Couldn't save your cheers", e) },
     },
   )
 

@@ -63,7 +63,7 @@ export function OverviewTab(p: Props) {
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
               <Ionicons name="checkmark-circle" size={14} color={theme.colors.primary} />
-              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.primary }}>
+              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.primaryText }}>
                 {myTeam.status === 'free_agent' ? 'Registered as Free Agent' : myTeam.status === 'waitlisted' ? 'On the waitlist' : 'Registered'}
               </Text>
             </View>

@@ -15,44 +15,49 @@ type Update = { patch: Record<string, unknown>; release: (r: { error: unknown })
 let mockUpdates: Update[]
 let mockUpserts: Record<string, unknown>[]
 let mockLead: number | null
+let mockSettingsReads: string[]
 
 jest.mock('../lib/supabase', () => ({
   supabase: {
-    from: (table: string) => table === 'user_settings' ? ({
-      select: () => {
+    from: (table: string) => ({
+      select: (columns: string) => {
         const chain: Record<string, unknown> = {}
         chain.eq = () => chain
-        chain.maybeSingle = () => Promise.resolve({
-          data: mockLead === null ? null : { user_id: 'u1', home_city_id: null, seen_banners: [], reminder_lead_minutes: mockLead, home_city: null },
-          error: null,
-        })
-        return chain
-      },
-      upsert: (row: Record<string, unknown>) => { mockUpserts.push(row); return Promise.resolve({ error: null }) },
-    }) : ({
-      select: () => {
-        const chain: Record<string, unknown> = {}
-        chain.eq = () => chain
+        chain.maybeSingle = () => {
+          if (table !== 'user_settings') return Promise.resolve({ data: null, error: null })
+          // One read of the row: useMyProfile takes the switches from useUserSettings' query (#224).
+          mockSettingsReads.push(columns)
+          return Promise.resolve({
+            data: mockLead === null && mockPrefs === null
+              ? null
+              : { user_id: 'u1', home_city_id: null, seen_banners: [], reminder_lead_minutes: mockLead ?? 120, home_city: null, notification_prefs: mockPrefs },
+            error: null,
+          })
+        }
         chain.single = () => Promise.resolve({
           data: {
             id: 'u1', username: 'bryan', first_name: null, last_name: null, avatar_url: null, position: [],
             skill_level: null, created_at: 'x', selected_border: null, selected_card_bg: null, bio: null,
-            notification_prefs: mockPrefs,
           },
           error: null,
         })
         return chain
       },
-      update: (patch: Record<string, unknown>) => ({
-        eq: () => new Promise(release => { mockUpdates.push({ patch, release }) }),
-      }),
+      update: () => ({ eq: () => Promise.reject(new Error(`unexpected ${table} update`)) }),
+      upsert: (patch: Record<string, unknown>) => {
+        if (table !== 'user_settings') return Promise.reject(new Error(`unexpected ${table} upsert`))
+        // Notification switches (useMyProfile) are held until the test releases them; lead time saves at once.
+        if ('notification_prefs' in patch) return new Promise(release => { mockUpdates.push({ patch, release }) })
+        mockUpserts.push(patch)
+        return Promise.resolve({ error: null })
+      },
     }),
   },
 }))
 
 async function flush() {
   await act(async () => {
-    for (let i = 0; i < 6; i++) await Promise.resolve()
+    for (let i = 0; i < 12; i++) await Promise.resolve()
   })
 }
 
@@ -63,6 +68,7 @@ beforeEach(() => {
   mockUpdates = []
   mockUpserts = []
   mockLead = 120
+  mockSettingsReads = []
   mockPrefs = null
 })
 
@@ -96,6 +102,13 @@ describe('notification settings', () => {
     await act(async () => { mockUpdates[0].release({ error: { message: 'denied' } }) })
     await flush()
     expect(view.getByText('Could not save settings. Please try again.')).toBeTruthy()
+  })
+
+  it('reads user_settings once for the switches and the reminder time (#224)', async () => {
+    render(<NotificationSettingsScreen />)
+    await flush()
+    expect(mockSettingsReads).toHaveLength(1)
+    expect(mockSettingsReads[0]).toContain('notification_prefs')
   })
 
   it('has no "coming soon" label: push is live', async () => {

@@ -17,6 +17,7 @@ import { WrongServerSheet } from '../../../../components/scoresheet/WrongServerS
 import { FixSheet } from '../../../../components/scoresheet/FixSheet'
 import { TextSheet } from '../../../../components/scoresheet/TextSheet'
 import { TimelineSheet } from '../../../../components/scoresheet/TimelineSheet'
+import { LiveSheetPanel } from '../../../../components/scoresheet/LiveSheetPanel'
 import { TimeoutTimer } from '../../../../components/scoresheet/TimeoutTimer'
 import { MatchClock } from '../../../../components/scoresheet/MatchClock'
 import { TEAM_COLORS } from '../../../../components/scoresheet/teamColors'
@@ -254,6 +255,8 @@ export default function ScoreMatchScreen() {
                       }}
                     />
                   </View>
+
+                  <LiveSheetPanel doc={m.doc} state={m.state} setIndex={set.index} onOpenSheet={() => router.push(routes.scorekeeperSheet(m.doc!.id))} />
                 </>
               )}
 

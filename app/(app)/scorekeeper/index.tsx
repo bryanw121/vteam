@@ -24,7 +24,7 @@ export default function ScorekeeperScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: insets.bottom + theme.spacing.xxl }}>
         <ScreenContainer>
-          <ScreenHeader safeTop kicker="Experimental" title="Scorekeeper" onBack={() => router.back()} />
+          <ScreenHeader safeTop kicker="Experimental" title="Scorekeeper" onBack={() => (router.canGoBack() ? router.back() : router.replace(routes.settings('experimental')))} />
           <Text style={[shared.body, { color: theme.colors.subtextStrong }]}>
             Tap to score, and the app tracks rotations, subs and time-outs and fills in the official scoresheet. Every tap is saved on this device, so you can close the app and pick up where you left off.
           </Text>

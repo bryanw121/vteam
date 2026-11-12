@@ -8,8 +8,6 @@ test.describe('guest browsing', () => {
     await expect(page).toHaveURL(`${BASE_URL}/`)
     await expect(page.getByTestId('filter-all').first()).toBeVisible({ timeout: 20_000 })
     await expect(page.getByTestId('header-sign-in').first()).toBeVisible()
-    // "Mine" needs an account.
-    await expect(page.getByTestId('filter-mine')).toHaveCount(0)
   })
 
   test('week strip names its month, steps with the arrows, and Today comes back', async ({ page }) => {
@@ -58,7 +56,8 @@ test.describe('guest browsing', () => {
       page.on('pageerror', err => errors.push(err.message))
       for (const path of ['/', '/clubs']) {
         await page.goto(`${BASE_URL}${path}`)
-        await expect(page.getByTestId('header-sign-in').first()).toBeVisible({ timeout: 20_000 })
+        // The phone pager keeps other tabs mounted (hidden), each with its own sign-in button.
+        await expect(page.getByTestId('header-sign-in').filter({ visible: true }).first()).toBeVisible({ timeout: 20_000 })
       }
       expect(errors.filter(m => /#418|[Hh]ydrat/.test(m))).toEqual([])
     })

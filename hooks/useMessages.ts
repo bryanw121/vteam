@@ -450,7 +450,7 @@ export function useMessages(conversationId: string) {
     }
   }, [userId, setMessages])
 
-  /** Upload a picked image; `null` on failure (the caller must not send without it). */
+  /** Upload a picked image; resolves to its object path, or `null` on failure (the caller must not send without it). */
   const uploadImage = useCallback(async (uri: string): Promise<string | null> => {
     if (!userId) return null
     try {
@@ -465,7 +465,8 @@ export function useMessages(conversationId: string) {
       const uriExt = uri.split('?')[0].split('.').pop()?.toLowerCase()
       const ext = (uriExt && VALID_EXTS.has(uriExt)) ? uriExt : extFromMime
 
-      const path = `${userId}/${Date.now()}.${ext}`
+      // Unguessable name: the bucket is private, but don't make paths enumerable either.
+      const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`
       const { error: e } = await supabase.storage
         .from(CHAT_IMAGES_BUCKET)
         .upload(path, blob, { contentType: mimeType })
@@ -473,8 +474,9 @@ export function useMessages(conversationId: string) {
         console.error('[uploadImage] storage upload failed:', e.message)
         return null
       }
-      const { data: { publicUrl } } = supabase.storage.from(CHAT_IMAGES_BUCKET).getPublicUrl(path)
-      return publicUrl
+      // The object path, not a URL: the bucket is private and viewers get
+      // short-lived signed URLs (useChatImageUrl).
+      return path
     } catch (e) {
       console.error('[uploadImage] failed:', (e as Error)?.message)
       return null

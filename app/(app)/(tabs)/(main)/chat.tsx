@@ -1,28 +1,31 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { View, FlatList, TouchableOpacity, Modal, Pressable, Platform } from 'react-native'
-import { Text, TextInput } from '../../../components/ui/Text'
-import { RefreshControl } from '../../../components/RefreshControl'
+import { Text, TextInput } from '../../../../components/ui/Text'
+import { RefreshControl } from '../../../../components/RefreshControl'
 import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter, Stack } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { theme, shared, CHAT_TAB_INDEX } from '../../../constants'
-import { useConversations } from '../../../hooks/useConversations'
-import { supabase } from '../../../lib/supabase'
-import { useSilencedUsers } from '../../../hooks/useSilencedUsers'
-import { useOpenDm } from '../../../hooks/useOpenDm'
-import { useTabsActive, useTabsShell } from '../../../contexts/tabs'
-import { timeAgo, lastMessagePreview } from '../../../utils/chatUtils'
-import { profileAvatarSmallUri, buildMemberSearchFilter, profileDisplayName, confirmDestructive } from '../../../utils'
-import { routes } from '../../../utils/routes'
-import type { ConversationRow, Profile } from '../../../types'
-import { useSession } from '../../../contexts/session'
-import { SignInPrompt } from '../../../components/SignInPrompt'
-import { ScreenState } from '../../../components/ui'
-import { Spinner } from '../../../components/ui/Spinner'
+import { theme, shared, CHAT_TAB_INDEX } from '../../../../constants'
+import { useConversations } from '../../../../hooks/useConversations'
+import { supabase } from '../../../../lib/supabase'
+import { useSilencedUsers } from '../../../../hooks/useSilencedUsers'
+import { useOpenDm } from '../../../../hooks/useOpenDm'
+import { useTabsActive, useTabsShell } from '../../../../contexts/tabs'
+import { timeAgo, lastMessagePreview } from '../../../../utils/chatUtils'
+import { profileAvatarSmallUri, buildMemberSearchFilter, profileDisplayName, confirmDestructive } from '../../../../utils'
+import { routes } from '../../../../utils/routes'
+import type { ConversationRow, Profile } from '../../../../types'
+import { useSession } from '../../../../contexts/session'
+import { SignInPrompt } from '../../../../components/SignInPrompt'
+import { ScreenState } from '../../../../components/ui'
+import { DELETED_USER_LABEL } from '../../../../constants/copy'
+import { Spinner } from '../../../../components/ui/Spinner'
 
 function conversationTitle(row: ConversationRow): string {
   if (row.type === 'club') return row.club_name ?? 'Club Chat'
+  // A DM whose other member is gone: that person deleted their account.
+  if (!row.other_user_id) return DELETED_USER_LABEL
   return profileDisplayName({
     username: row.other_user_username ?? 'Direct Message',
     first_name: row.other_user_first_name,
@@ -92,7 +95,7 @@ function NewDMModal({ visible, onDismiss, onSelect, silencedUserIds, myId }: {
             }}
           />
           <TouchableOpacity onPress={handleDismiss}>
-            <Text style={{ color: theme.colors.primary, fontSize: theme.font.size.md }}>Cancel</Text>
+            <Text style={{ color: theme.colors.primaryText, fontSize: theme.font.size.md }}>Cancel</Text>
           </TouchableOpacity>
         </View>
 

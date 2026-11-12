@@ -15,11 +15,11 @@ export function AllTournamentsLink({ onPress }: Props) {
       testID="all-tournaments-link"
       style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: theme.spacing.md }}
     >
-      <Ionicons name="trophy-outline" size={16} color={theme.colors.primary} />
-      <Text style={{ flex: 1, fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.primary }}>
+      <Ionicons name="trophy-outline" size={16} color={theme.colors.primaryText} />
+      <Text style={{ flex: 1, fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.primaryText }}>
         All tournaments, upcoming and past
       </Text>
-      <Ionicons name="chevron-forward" size={16} color={theme.colors.primary} />
+      <Ionicons name="chevron-forward" size={16} color={theme.colors.primaryText} />
     </TouchableOpacity>
   )
 }

@@ -1,0 +1,23 @@
+name: Outside data freshness
+
+# Is vteam's copy of Schelagg's data still being refreshed? scripts/feed-freshness.mjs reads the
+# newest row of external_sessions and external_programs on live (public anon key, read-only) and
+# fails if an import has missed about three runs. The app hides stale rows, so without this a
+# stopped import would only show as an empty schedule. GitHub emails the repo owner about failed
+# scheduled runs.
+on:
+  schedule:
+    - cron: '7 */6 * * *' # every 6 hours
+  workflow_dispatch:
+
+jobs:
+  freshness:
+    name: Schelagg imports are running
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/feed-freshness.mjs

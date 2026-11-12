@@ -8,6 +8,7 @@ import { useFeedRsvp, useMonthEvents } from '../../../../hooks/useMonthEvents'
 import { useDocScrollMemory } from '../../../../hooks/useDocScrollMemory'
 import { useNotifications } from '../../../../hooks/useNotifications'
 import { useIsNarrowWeb } from '../../../../hooks/useIsNarrowWeb'
+import { useFriendsGoing } from '../../../../hooks/useFriendsGoing'
 import { EventCard, RowEventCard } from '../../../../components/EventCard'
 import type { EventCardRsvpHandler } from '../../../../types'
 import { MyEventsRail } from '../../../../components/MyEventsRail'
@@ -17,16 +18,26 @@ import { FilterChips } from '../../../../components/events/FilterChips'
 import { SurfaceFilter } from '../../../../components/events/SurfaceFilter'
 import { FeedEmpty } from '../../../../components/events/FeedEmpty'
 import { AllTournamentsLink } from '../../../../components/events/AllTournamentsLink'
+import { LeaguesLink } from '../../../../components/events/LeaguesLink'
+import { ExternalProgramCard } from '../../../../components/ExternalProgramCard'
+import { useExternalPrograms } from '../../../../hooks/useExternalPrograms'
+import { normalizeProgramTournaments } from '../../../../utils/feedItems'
 import { NextUpCard } from '../../../../components/events/NextUpCard'
 import { IconButton } from '../../../../components/ui'
 import { myStatusFor, useMyUpcomingEvents } from '../../../../hooks/useMyUpcomingEvents'
 import { NotificationPopup } from '../../../../components/NotificationPopup'
 import { BANNERS, BREAKPOINTS, COMPACT_TEXT_SCALE, FEED_STALE_NOTICE, SWIPE_NAVIGATION, TIGHT_TEXT_SCALE, TOUR_TARGETS, shared, theme } from '../../../../constants'
+import { track } from '../../../../lib/analytics'
+import { ANALYTICS_EVENTS } from '../../../../constants/analytics'
 import { TourTarget } from '../../../../components/tour/TourTarget'
+import { useTourWants } from '../../../../contexts/tour'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
 import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, Notification, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
-import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters, usableFeedFilter } from '../../../../utils/feedFilters'
+import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters } from '../../../../utils/feedFilters'
+import { useUrlParam } from '../../../../hooks/useUrlParam'
+import { feedDay } from '../../../../utils/urlState'
+import { VIEW } from '../../../../utils/urlViews'
 import { useTabsShell } from '../../../../contexts/tabs'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useSession } from '../../../../contexts/session'
@@ -44,10 +55,11 @@ import { planFeedAds } from '../../../../utils/feedAds'
 import { FeedBanner } from '../../../../components/ads/FeedBanner'
 import { SponsoredLabel } from '../../../../components/ads/SponsoredLabel'
 import { Spinner } from '../../../../components/ui/Spinner'
-import { Toast } from '../../../../components/Toast'
+import { toast } from '../../../../lib/toast'
 import { FeedItemShell, HiddenCountRow, HideFeedSheet } from '../../../../components/events/FeedHiding'
 import { useHiddenFeed } from '../../../../hooks/useHiddenFeed'
 import { hiddenIndex, hideOptions, isHidden, matchingEntries } from '../../../../utils/hiddenFeed'
+import { ShareLinkButton } from '../../../../components/ShareLinkButton'
 
 // Anchors for the week/month pager indexes only. "Today" itself comes from
 // useToday() so it rolls over at midnight in an app left open (#195).
@@ -74,15 +86,12 @@ function idxForMonth(month: string): number {
   return MONTH_CENTER + (y - ry) * 12 + (m - rm)
 }
 
-// "Mine" leads the row but is deliberately NOT the default filter — opening the
-// Events tab on an empty screen is the worst possible first run for a new member,
-// and it hides the rest of the club from everyone else.
+// No "Mine" chip: the games a player is going to or hosting are already in the
+// "You're going" rail above the feed.
 const FILTER_CHIPS: FeedFilterChip[] = [
-  { id: 'mine',       label: 'Mine'       },
   { id: 'all',        label: 'All'        },
   { id: 'open_play',  label: 'Open Play'  },
   { id: 'tournament', label: 'Tournament' },
-  { id: 'not_full',   label: 'Not Full'   },
 ]
 
 /** One day of the feed. `hiddenCount` counts that day's hidden items; `revealed` = they're shown (dimmed) in `data`. */
@@ -106,11 +115,17 @@ export default function EventsScreen() {
   const insets = useSafeAreaInsets()
 
   const today = useToday()
-  const [selectedDate, setSelectedDate] = useState<string>(today)
-  // Filters are remembered per device (utils/feedFilters): restored before the
-  // first paint on web, a moment later on native.
-  const [chosenFilter, setChosenFilter] = useState<FeedFilter>(() => feedFiltersNow()?.filter ?? DEFAULT_FEED_FILTERS.filter)
-  const [surfaceFilter, setSurfaceFilter] = useState<SurfaceFilterValue>(() => feedFiltersNow()?.surface ?? DEFAULT_FEED_FILTERS.surface)
+  // The view is in the URL (`/?type=tournament&surface=sand&day=2026-11-14`, utils/urlViews) so a
+  // copied link opens it. A link's filters show for that visit only; without them the
+  // filters remembered on this device (utils/feedFilters) are used and written to the address.
+  const [linkDay, setUrlDay] = useUrlParam('day', VIEW.feed.day, { tab: 'events' })
+  const [selectedDate, setSelectedDate] = useState<string>(() => feedDay(linkDay, today) ?? today)
+  const [chosenFilter, setChosenFilter, typeInLink] = useUrlParam('type', VIEW.feed.type, {
+    tab: 'events', fallback: () => feedFiltersNow()?.filter ?? DEFAULT_FEED_FILTERS.filter,
+  })
+  const [surfaceFilter, setSurfaceFilter, surfaceInLink] = useUrlParam('surface', VIEW.feed.surface, {
+    tab: 'events', fallback: () => feedFiltersNow()?.surface ?? DEFAULT_FEED_FILTERS.surface,
+  })
   const feedRegion = useFeedRegion()
   // What this player hid from the feed (Settings → Hidden in feed). Days (mobile)
   // or months (desktop) in `revealedKeys` show their hidden items, dimmed.
@@ -118,19 +133,25 @@ export default function EventsScreen() {
   const hiddenIdx = useMemo(() => hiddenIndex(hiddenFeed.entries), [hiddenFeed.entries])
   const [revealedKeys, setRevealedKeys] = useState<ReadonlySet<string>>(() => new Set())
   const [hideTarget, setHideTarget] = useState<EventWithDetails | null>(null)
-  const [hideToast, setHideToast] = useState<{ message: string; undo: HiddenFeedEntry[] } | null>(null)
+  // "Hidden: …" with Undo (shared toast, #228).
+  const showHideToast = (message: string, undo: HiddenFeedEntry[]) => {
+    toast.show({ message, variant: 'info', duration: 5000, action: { label: 'Undo', onPress: () => hiddenFeed.restore(undo) } })
+  }
   const [notifOpen, setNotifOpen] = useState(false)
-  const [curWeekPage, setCurWeekPage] = useState(WEEK_CENTER)
-  const [curMonthPage, setCurMonthPage] = useState(MONTH_CENTER)
+  const [curWeekPage, setCurWeekPage] = useState(() => idxForWeek(getWeekStart(new Date(selectedDate + 'T00:00:00'))))
+  const [curMonthPage, setCurMonthPage] = useState(() => idxForMonth(selectedDate.substring(0, 7)))
   const [eventsPullRefreshing, setEventsPullRefreshing] = useState(false)
   const { userId: currentUserId, isGuest } = useSession()
   const requireSignIn = useRequireSignIn()
-  // A remembered "Mine" waits for an account: guests (and the moment before the session restores) see All.
-  const activeFilter = usableFeedFilter(chosenFilter, !!currentUserId)
+  // "You're going" rail. Derived from events already in memory — no extra query
+  // on the happy path, and it re-derives whenever the feed does, so an RSVP made
+  // from a feed card lands in the rail without a manual refresh.
+  const myUpcoming = useMyUpcomingEvents(events, currentUserId)
+  const activeFilter = chosenFilter
 
-  const filtersTouchedRef = useRef(false)
+  const filtersTouchedRef = useRef(typeInLink || surfaceInLink)
   useEffect(() => {
-    if (feedFiltersNow()) return
+    if (filtersTouchedRef.current || feedFiltersNow()) return
     let live = true
     void loadFeedFilters().then(saved => {
       if (!live || filtersTouchedRef.current) return
@@ -142,6 +163,7 @@ export default function EventsScreen() {
 
   const selectFilters = useCallback((next: StoredFeedFilters) => {
     filtersTouchedRef.current = true
+    track(ANALYTICS_EVENTS.feedFilterChanged, { filter: next.filter, surface: next.surface })
     setChosenFilter(next.filter)
     setSurfaceFilter(next.surface)
     saveFeedFilters(next)
@@ -237,6 +259,25 @@ export default function EventsScreen() {
 
   // Hidden for this player: matched by an entry, and not one of their own
   // (going, waitlisted, hosting: those always show).
+  // Outside tournaments (Schelagg's programs feed) join the feed on their first day, within the
+  // months already loaded so they don't run ahead of infinite scroll. Leagues get their own screen.
+  const programs = useExternalPrograms()
+  const lastLoadedMonth = loadedMonths[loadedMonths.length - 1] ?? null
+  // Under the Tournament filter the list isn't about a day: every upcoming outside tournament shows,
+  // however far out, including the ones elsewhere in the state (people travel for those).
+  const tournamentsOnly = activeFilter === 'tournament'
+  // The week strip hides under Tournament, except while the tour's "Pick a day" step points at it.
+  const tourWantsCalendar = useTourWants(TOUR_TARGETS.calendar)
+  const showCalendar = !tournamentsOnly || tourWantsCalendar
+  const feedEvents = useMemo(() => {
+    const rows = tournamentsOnly
+      ? [...(programs.data?.tournaments ?? []), ...(programs.data?.elsewhere ?? [])]
+      : programs.data?.tournaments ?? []
+    const items = normalizeProgramTournaments(rows)
+      .filter(e => tournamentsOnly || (!!lastLoadedMonth && eventLocalDateKey(e.event_date).substring(0, 7) <= lastLoadedMonth))
+    return items.length ? [...events, ...items] : events
+  }, [events, programs.data, lastLoadedMonth, tournamentsOnly])
+
   const isHiddenForMe = useCallback(
     (event: EventWithDetails) =>
       isHidden(event, hiddenIdx) && !(currentUserId && myStatusFor(event, currentUserId) !== null),
@@ -244,24 +285,14 @@ export default function EventsScreen() {
   )
 
   const { sections, hiddenItemIds } = useMemo(() => {
-    const filtered = events.filter(event => {
+    const filtered = feedEvents.filter(event => {
       // Outside sessions (Schelagg) only for the viewer's region: home city, else the pilot default.
       if (event._external && event._external.region !== feedRegion) return false
       if (surfaceFilter !== 'any' && surfaceOf(event) !== surfaceFilter) return false
       if (activeFilter === 'all') return true
-      if (activeFilter === 'mine') return !!currentUserId && myStatusFor(event, currentUserId) !== null
       const tags = event.event_tags?.map(et => et.tags.name.toLowerCase()) ?? []
       if (activeFilter === 'open_play')  return tags.some(t => t.includes('open play') || t.includes('open-play'))
       if (activeFilter === 'tournament') return tags.some(t => t.includes('tournament'))
-      if (activeFilter === 'not_full') {
-        // Capacity at other venues is unknown, so they can't be called "not full".
-        if (event._external) return false
-        if (!event.max_attendees) return true
-        const count = event.event_attendees_attending?.[0]
-          ? Number(event.event_attendees_attending[0].count)
-          : 0
-        return count < event.max_attendees
-      }
       return true
     })
     const grouped: Record<string, DateSection> = {}
@@ -282,7 +313,7 @@ export default function EventsScreen() {
     }
     const list = Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date))
     return { sections: list, hiddenItemIds: hiddenIds }
-  }, [events, activeFilter, surfaceFilter, currentUserId, feedRegion, isHiddenForMe, revealedKeys])
+  }, [feedEvents, activeFilter, surfaceFilter, currentUserId, feedRegion, isHiddenForMe, revealedKeys])
 
   const toggleReveal = useCallback((key: string) => {
     setRevealedKeys(prev => {
@@ -302,7 +333,7 @@ export default function EventsScreen() {
     const before = hiddenFeed.entries
     setHideTarget(null)
     hiddenFeed.hide(option.entry)
-    setHideToast({ message: `Hidden: ${option.entry.label}`, undo: before })
+    showHideToast(`Hidden: ${option.entry.label}`, before)
   }, [hiddenFeed])
 
   const unhideItem = useCallback((event: EventWithDetails) => {
@@ -310,7 +341,7 @@ export default function EventsScreen() {
     const matches = matchingEntries(event, before)
     if (matches.length === 0) return
     hiddenFeed.restore(before.filter(e => !matches.includes(e)))
-    setHideToast({ message: `Showing again: ${matches.map(m => m.label).join(', ')}`, undo: before })
+    showHideToast(`Showing again: ${matches.map(m => m.label).join(', ')}`, before)
   }, [hiddenFeed])
 
   const hideOptionsFor = useMemo(
@@ -318,29 +349,26 @@ export default function EventsScreen() {
     [hideTarget, currentUserId],
   )
 
-  // "You're going" rail. Derived from events already in memory — no extra query
-  // on the happy path, and it re-derives whenever the feed does, so an RSVP made
-  // from a feed card lands in the rail without a manual refresh.
-  const myUpcoming = useMyUpcomingEvents(events, currentUserId)
+  // "Ana and 2 friends going" on cards (#15): one RPC for the loaded RSVP-able events.
+  const friendEventIds = useMemo(() => events.filter(e => !e._external && !e._isTournament).map(e => e.id), [events])
+  const friendsGoing = useFriendsGoing(friendEventIds)
 
   const railNode = (
     <MyEventsRail
       items={myUpcoming}
       onPressEvent={eventId => router.push(routes.event(eventId))}
-      // "See all" switches the feed to Mine rather than growing the rail — one
-      // place to look for the long list, and the rail stays above the fold.
-      onSeeAll={() => selectFilter('mine')}
     />
   )
 
   // Calendar dots leave out what this player hid.
   const markedDates = useMemo(
-    () => buildMarkedDates(hiddenIdx.size ? events.filter(e => !isHiddenForMe(e)) : events, selectedDate),
-    [events, selectedDate, hiddenIdx, isHiddenForMe],
+    () => buildMarkedDates(hiddenIdx.size ? feedEvents.filter(e => !isHiddenForMe(e)) : feedEvents, selectedDate),
+    [feedEvents, selectedDate, hiddenIdx, isHiddenForMe],
   )
 
   const selectDate = useCallback((dateStr: string) => {
     setSelectedDate(dateStr)
+    setUrlDay(dateStr === today ? '' : dateStr)
     setCurWeekPage(idxForWeek(getWeekStart(new Date(dateStr + 'T00:00:00'))))
     setCurMonthPage(idxForMonth(dateStr.substring(0, 7)))
     const sectionIndex = sections.findIndex(s => s.date === dateStr)
@@ -368,7 +396,16 @@ export default function EventsScreen() {
         }
       }
     }, 50)
-  }, [sections])
+  }, [sections, today, setUrlDay])
+
+  // A link to a day (`?day=`) scrolls there once that day's games have loaded.
+  const linkedDayRef = useRef<string | null>(selectedDate !== today ? selectedDate : null)
+  useEffect(() => {
+    const day = linkedDayRef.current
+    if (!day || !sections.some(sec => sec.date === day)) return
+    linkedDayRef.current = null
+    selectDate(day)
+  }, [sections, selectDate])
 
   const goPrevWeek  = useCallback(() => setCurWeekPage(p => p - 1), [])
   const goNextWeek  = useCallback(() => setCurWeekPage(p => p + 1), [])
@@ -412,12 +449,6 @@ export default function EventsScreen() {
     })
   }, [refetchNotifs])
 
-  // "Mine" means nothing without an account.
-  const visibleChips = useMemo(
-    () => (currentUserId ? FILTER_CHIPS : FILTER_CHIPS.filter(c => c.id !== 'mine')),
-    [currentUserId],
-  )
-
   // Flatten all events from sections for desktop grid layout
   const allEvents = useMemo(() => sections.flatMap(s => s.data), [sections])
   // "Next up" links to an event page, so it skips sessions at other venues.
@@ -432,7 +463,18 @@ export default function EventsScreen() {
   const forecasts = useFeedForecasts(allEvents)
   const sponsoredIds = useMemo(() => new Set(showAds ? feedAds?.sponsoredEventIds ?? [] : []), [showAds, feedAds])
 
-  const headerRight = isGuest ? <SignInButton /> : (
+  // Share appears once the view is more than the plain feed: a filter or a day other than today.
+  const viewFiltered = activeFilter !== 'all' || surfaceFilter !== 'any' || selectedDate !== today
+  const shareButton = viewFiltered ? (
+    <ShareLinkButton
+      path={routes.events({ type: activeFilter, surface: surfaceFilter, day: selectedDate === today ? '' : selectedDate })}
+      title="Volleyball games on vteam"
+      screen="events"
+      filtered
+      testID="events-share-button"
+    />
+  ) : null
+  const accountButton = isGuest ? <SignInButton /> : (
     <IconButton
       icon={notifOpen ? 'notifications' : 'notifications-outline'}
       label="Notifications"
@@ -441,6 +483,12 @@ export default function EventsScreen() {
       onPress={toggleNotifPanel}
     />
   )
+  const headerRight = shareButton ? (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+      {shareButton}
+      {accountButton}
+    </View>
+  ) : accountButton
 
   // A refresh failed while older events are on screen (cache or last visit's
   // saved feed): say so rather than silently showing what may be out of date.
@@ -460,15 +508,17 @@ export default function EventsScreen() {
       <OneTimeBanner banner={BANNERS.austinPilot} style={isMobile ? shared.feedStaleNoticeMobile : undefined} />
       <TourTarget id={TOUR_TARGETS.feedFilters}>
         <FilterChips
-          chips={visibleChips}
+          chips={FILTER_CHIPS}
           active={activeFilter}
           onSelect={selectFilter}
-          mineCount={myUpcoming.length}
           wide={!isMobile}
         />
         <SurfaceFilter active={surfaceFilter} onSelect={selectSurface} wide={!isMobile} />
       </TourTarget>
       {activeFilter === 'tournament' && <AllTournamentsLink onPress={() => router.push(routes.tournaments())} />}
+      {(activeFilter === 'all' || activeFilter === 'tournament') && !!programs.data?.leagues.length && (
+        <LeaguesLink count={programs.data.leagues.length} onPress={() => router.push(routes.leagues())} />
+      )}
       {staleNotice}
     </>
   )
@@ -478,7 +528,9 @@ export default function EventsScreen() {
   // refetch keeps it on screen.
   const feedEmpty = (
     <FeedEmpty
-      loading={loading}
+      // Under Tournament most rows are outside tournaments: keep the spinner until they've loaded too,
+      // rather than saying nothing matches the filter.
+      loading={loading || (tournamentsOnly && programs.isLoading && !programs.data)}
       error={events.length === 0 ? error : null}
       onRetry={() => void refresh()}
       filterActive={activeFilter !== 'all' || surfaceFilter !== 'any'}
@@ -568,12 +620,15 @@ export default function EventsScreen() {
                             rsvpPending={isRsvpPending(event.id)}
                             forecast={forecasts.get(event.id)}
                             menuInset={menuInset}
+                            friendsGoing={friendsGoing.get(event.id)}
                           />
                         )
                         const withMenu = !(currentUserId && myStatusFor(item, currentUserId) !== null)
                         const card = item._external
                           ? <ExternalSessionCard session={item._external} menuInset={withMenu} />
-                          : renderRowCard(item, withMenu)
+                          : item._program
+                            ? <ExternalProgramCard program={item._program} menuInset={withMenu} />
+                            : renderRowCard(item, withMenu)
                         return (
                           <React.Fragment key={item.id}>
                             <View style={{ width: 'calc(50% - 5px)' as any }}>
@@ -629,9 +684,9 @@ export default function EventsScreen() {
             showsVerticalScrollIndicator={false}
             refreshControl={refreshControl}
           >
-            {/* Mini calendar */}
-            <Text style={feedStyles.railLabel}>This week</Text>
-            <TourTarget id={TOUR_TARGETS.calendar} style={{ backgroundColor: theme.colors.background, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 20, overflow: 'hidden' }}>
+            {/* Mini calendar (not under the Tournament filter: that list isn't about a day) */}
+            {!tournamentsOnly && <Text style={feedStyles.railLabel}>This week</Text>}
+            {showCalendar && <TourTarget id={TOUR_TARGETS.calendar} style={{ backgroundColor: theme.colors.background, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 20, overflow: 'hidden' }}>
               <MonthGridContent
                 month={monthForIdx(curMonthPage)}
                 selectedDate={selectedDate}
@@ -640,7 +695,7 @@ export default function EventsScreen() {
                 onPrevMonth={goPrevMonth}
                 onNextMonth={goNextMonth}
               />
-            </TourTarget>
+            </TourTarget>}
 
             {/* Your next event */}
             {nextClubEvent && (
@@ -663,14 +718,6 @@ export default function EventsScreen() {
           options={hideOptionsFor}
           onPick={pickHideOption}
           onDismiss={() => setHideTarget(null)}
-        />
-        <Toast
-          message={hideToast?.message ?? ''}
-          variant="info"
-          visible={!!hideToast}
-          onHide={() => setHideToast(null)}
-          duration={5000}
-          action={hideToast ? { label: 'Undo', onPress: () => hiddenFeed.restore(hideToast.undo) } : undefined}
         />
       </View>
     )
@@ -704,8 +751,8 @@ export default function EventsScreen() {
           )}
         />
 
-        {/* Calendar strip */}
-        <TourTarget id={TOUR_TARGETS.calendar}>
+        {/* Calendar strip (not under the Tournament filter: that list isn't about a day) */}
+        {showCalendar && <TourTarget id={TOUR_TARGETS.calendar}>
           <WeekPager
             curWeekPage={curWeekPage}
             selectedDate={selectedDate}
@@ -714,7 +761,7 @@ export default function EventsScreen() {
             onPrevWeek={goPrevWeek}
             onNextWeek={goNextWeek}
           />
-        </TourTarget>
+        </TourTarget>}
 
         {filterChips}
       </View>
@@ -747,12 +794,15 @@ export default function EventsScreen() {
           const withMenu = menu && !(currentUserId && myStatusFor(item, currentUserId) !== null)
           const card = item._external ? (
             <ExternalSessionCard session={item._external} menuInset={withMenu} />
+          ) : item._program ? (
+            <ExternalProgramCard program={item._program} menuInset={withMenu} />
           ) : (
             <EventCard
               event={item}
               currentUserId={currentUserId}
               onRsvp={item._isTournament ? undefined : handleRsvp}
               rsvpPending={isRsvpPending(item.id)}
+              friendsGoing={friendsGoing.get(item.id)}
               forecast={forecasts.get(item.id)}
               menuInset={withMenu}
             />
@@ -885,14 +935,6 @@ export default function EventsScreen() {
         options={hideOptionsFor}
         onPick={pickHideOption}
         onDismiss={() => setHideTarget(null)}
-      />
-      <Toast
-        message={hideToast?.message ?? ''}
-        variant="info"
-        visible={!!hideToast}
-        onHide={() => setHideToast(null)}
-        duration={5000}
-        action={hideToast ? { label: 'Undo', onPress: () => hiddenFeed.restore(hideToast.undo) } : undefined}
       />
     </View>
   )
@@ -1273,7 +1315,7 @@ const weekNavStyles = StyleSheet.create({
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: theme.font.size.sm,
     fontWeight: theme.font.weight.bold,
-    color: theme.colors.primary,
+    color: theme.colors.primaryText,
   },
 })
 

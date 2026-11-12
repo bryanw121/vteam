@@ -83,7 +83,8 @@ try {
           await expect(picker.getByTestId('badge-artwork-event_attendee')).toHaveCount(5)
           await picker.getByRole('img', { name: 'Regular', exact: true }).click()
           await expect.poll(() => db.rowsOf('user_badges').find(b => b.badge_type === 'event_attendee').display_tier).toBe(2)
-          await page.reload({ waitUntil: 'load' })
+          // The editor is in the URL (`?edit=1`): reload the plain profile to see the pinned badge once.
+          await page.goto(`${server.url}/profile`, { waitUntil: 'load' })
           const pinned = page.getByTestId('badge-artwork-event_attendee')
           await expect(pinned).toHaveAttribute('aria-label', 'Regular')
           await expect(pinned.locator('img')).toHaveAttribute('src', /event_attendee_tier2_silver\./)
