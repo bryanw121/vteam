@@ -1,0 +1,24 @@
+# A guest opens the app and moves through the four tabs: Events and Clubs are
+# open to everyone, Chat and Me ask them to sign in.
+appId: com.vteamvolleyball.app
+name: Guest browses the tabs
+tags: [guest]
+---
+- launchApp:
+    clearState: true
+- runFlow: _ready.yaml
+- takeScreenshot: guest-events
+- tapOn:
+    text: "Clubs"
+    index: 0
+- tapOn: "Chat"
+- extendedWaitUntil:
+    visible:
+      id: sign-in-prompt
+    timeout: 15000
+- tapOn: "Me"
+- assertVisible:
+    id: sign-in-prompt
+- tapOn: "Events"
+- assertVisible:
+    id: filter-all
