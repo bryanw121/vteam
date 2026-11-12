@@ -429,6 +429,34 @@ export const shared = StyleSheet.create({
     fontSize: theme.font.size.sm,
     color: theme.colors.text,
   },
+  /** ExternalProgramCard with a Scores & brackets strip under it: the card's bottom edge joins the strip. */
+  externalCardJoined: {
+    marginBottom: 0,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  /** LiveScoresLink: the strip under an outside tournament's card that opens its scores in vteam. */
+  programScoresLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    marginBottom: theme.spacing.sm,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: theme.colors.border,
+    borderStyle: 'dashed',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    backgroundColor: theme.colors.primarySoft,
+  },
+  programScoresLinkLabel: {
+    flex: 1,
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.smd,
+    color: theme.colors.text,
+  },
   // ── Guest mode (SignInPrompt, SignInButton) ──────────────────────────────
   signInPromptContainer: {
     flex: 1,

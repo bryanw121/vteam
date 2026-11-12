@@ -11,6 +11,8 @@ type Props = {
   myTeamId?: string | null
   /** Organizer: tap a playable match to record its result. */
   onPressMatch?: (match: TournamentMatchRow) => void
+  /** Tapping a team opens it (live scores' team pages). Ignored where matches are tappable. */
+  onPressTeam?: (teamId: string) => void
 }
 
 const COLUMN_WIDTH = 190
@@ -20,14 +22,20 @@ function setLine(m: TournamentMatchRow): string {
   return m.sets.map(s => `${s.team_a_score}-${s.team_b_score}`).join(', ')
 }
 
-function MatchBox({ match, teamName, myTeamId, onPress }: { match: TournamentMatchRow; teamName: Props['teamName']; myTeamId?: string | null; onPress?: () => void }) {
+function MatchBox({ match, teamName, myTeamId, onPress, onPressTeam }: { match: TournamentMatchRow; teamName: Props['teamName']; myTeamId?: string | null; onPress?: () => void; onPressTeam?: Props['onPressTeam'] }) {
   const done = !!match.winner_id
+  const live = match.status === 'in_progress' && !done
   const playable = !!onPress && !!match.team_a_id && !!match.team_b_id
   const row = (id: string | null) => {
     const won = done && match.winner_id === id
     const mine = !!myTeamId && id === myTeamId
+    const tappable = !!onPressTeam && !!id && !playable
+    const Row = tappable ? TouchableOpacity : View
     return (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5 }}>
+      <Row
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5 }}
+        {...(tappable ? { onPress: () => onPressTeam?.(id as string), accessibilityRole: 'button' as const, accessibilityLabel: `${teamName(id)}, team stats`, hitSlop: { top: 6, bottom: 6 } } : {})}
+      >
         {mine && <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: theme.colors.primary }} />}
         <Text
           numberOfLines={1}
@@ -39,18 +47,25 @@ function MatchBox({ match, teamName, myTeamId, onPress }: { match: TournamentMat
           }}
         >{teamName(id)}</Text>
         {won && <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.cool, fontFamily: theme.fonts.bodySemiBold }}>W</Text>}
-      </View>
+      </Row>
     )
   }
   const body = (
     <View style={{
       backgroundColor: theme.colors.card, borderRadius: theme.radius.md, borderWidth: 1,
-      borderColor: playable && !done ? theme.colors.primary : theme.colors.border, paddingHorizontal: 10, paddingVertical: 6,
+      borderColor: live ? theme.colors.hot : playable && !done ? theme.colors.primary : theme.colors.border, paddingHorizontal: 10, paddingVertical: 6,
     }}>
       {row(match.team_a_id)}
       <View style={{ height: 1, backgroundColor: theme.colors.borderSoft }} />
       {row(match.team_b_id)}
-      {(done || !!match.court) && (
+      {live ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 }} testID="bracket-match-live">
+          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: theme.colors.hot }} />
+          <Text numberOfLines={1} style={{ flexShrink: 1, fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.hot }}>
+            {['LIVE', match.court, setLine(match)].filter(Boolean).join(' · ')}
+          </Text>
+        </View>
+      ) : (done || !!match.court) && (
         <Text numberOfLines={1} style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext, marginTop: 2 }}>
           {done ? setLine(match) : match.court}
         </Text>
@@ -62,7 +77,7 @@ function MatchBox({ match, teamName, myTeamId, onPress }: { match: TournamentMat
     <TouchableOpacity
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${match.bracket_round_name ?? 'Match'}: ${teamName(match.team_a_id)} vs ${teamName(match.team_b_id)}. ${done ? 'Edit result' : 'Record result'}`}
+      accessibilityLabel={`${match.bracket_round_name ?? 'Match'}: ${teamName(match.team_a_id)} vs ${teamName(match.team_b_id)}${live ? ', live' : ''}. ${done ? 'Edit result' : 'Record result'}`}
       style={{ minHeight: 44 }}
     >
       {body}
@@ -86,7 +101,7 @@ function Columns({ matches, ...rest }: Props) {
                   {list.length > 1 && m.bracket_round_name !== list[0]?.bracket_round_name && (
                     <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.subtext, marginBottom: 4 }}>{m.bracket_round_name}</Text>
                   )}
-                  <MatchBox match={m} teamName={rest.teamName} myTeamId={rest.myTeamId} onPress={rest.onPressMatch ? () => rest.onPressMatch?.(m) : undefined} />
+                  <MatchBox match={m} teamName={rest.teamName} myTeamId={rest.myTeamId} onPressTeam={rest.onPressTeam} onPress={rest.onPressMatch ? () => rest.onPressMatch?.(m) : undefined} />
                 </View>
               ))}
             </View>

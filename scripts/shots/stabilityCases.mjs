@@ -44,6 +44,8 @@ export const LINK_CASES = [
   { view: 'badges', path: '/settings/badges?badge=event_host', keep: { badge: 'event_host' } },
   { view: 'feedback', path: '/settings/feedback?type=bug', keep: { type: 'bug' }, change: { text: 'Feature', exact: false }, after: { type: null } },
   { view: 'metrics', path: '/settings/metrics?tab=people&range=7&sort=active', keep: { tab: 'people', range: '7', sort: 'active' }, change: { text: 'Live' }, after: { tab: 'live' } },
+  // No Sheet URL in the mock, so the scores screen draws its empty state: the link is only checked to stay.
+  { view: 'scores', path: '/scores/texasao-2026-11-14?view=brackets&division=Gold', keep: { view: 'brackets', division: 'Gold' } },
   { view: 'login', path: '/login?mode=reset', guest: true, keep: { mode: 'reset' } },
 ]
 
