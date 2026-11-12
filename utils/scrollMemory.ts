@@ -59,5 +59,6 @@ export function restoreWhenReady({ y, ready, apply, current, frames = 30, nextFr
     if (--left > 0) raf(attempt)
     else onDone?.()
   }
-  raf(attempt)
+  // Try now first: a frame painted at the wrong offset before the jump is the flicker this avoids.
+  attempt()
 }

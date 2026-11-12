@@ -85,7 +85,8 @@ describe('restoreWhenReady', () => {
     const f = frames()
     const apply = jest.fn()
     restoreWhenReady({ y: 500, ready: () => false, apply, current: () => 0, frames: 5, nextFrame: f.nextFrame })
-    expect(f.run()).toBe(5)
+    // Five tries: one right away, four on later frames.
+    expect(f.run()).toBe(4)
     expect(apply).not.toHaveBeenCalled()
   })
 })

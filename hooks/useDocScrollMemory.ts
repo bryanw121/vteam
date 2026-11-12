@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { Platform } from 'react-native'
 import type { LayoutChangeEvent, View } from 'react-native'
 import { isShown, recallScroll, rememberScroll, restoreWhenReady } from '../utils/scrollMemory'
@@ -40,6 +40,27 @@ export function useDocScrollMemory(
     // eslint-disable-next-line react-hooks/exhaustive-deps -- nodeRef is stable
   }, [enabled, key])
 
+  // Coming back (Back remounts the screen): until the offset is put back, the content is
+  // hidden, so it never paints at the top and then jumps there (the flicker). Document scroll
+  // switches back on in an effect that runs after this one, so the restore itself can't happen
+  // before the first paint. A timer always shows it again.
+  const hiddenUntil = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const reveal = () => {
+    if (hiddenUntil.current) { clearTimeout(hiddenUntil.current); hiddenUntil.current = null }
+    const el = node()
+    if (el?.style) el.style.visibility = ''
+  }
+  useLayoutEffect(() => {
+    if (!enabled || !key || typeof window === 'undefined') return
+    if (recallScroll(key) <= 0) return
+    const el = node()
+    if (!el?.style) return
+    el.style.visibility = 'hidden'
+    hiddenUntil.current = setTimeout(reveal, 400)
+    return reveal
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mount
+  }, [])
+
   return useCallback((e: LayoutChangeEvent) => {
     onLayout?.(e)
     if (!enabled || !key) return
@@ -49,13 +70,13 @@ export function useDocScrollMemory(
     if (!shown) { restoring.current = true; return }
     if (!cameBack) return
     const y = recallScroll(key)
-    if (y <= 0) { restoring.current = false; return }
+    if (y <= 0) { restoring.current = false; reveal(); return }
     restoreWhenReady({
       y,
       ready: () => docScrollOn() && isShown(node()),
       apply: to => window.scrollTo(0, to),
       current: () => window.scrollY,
-      onDone: () => { restoring.current = false },
+      onDone: () => { restoring.current = false; reveal() },
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- nodeRef is stable
   }, [enabled, key, onLayout])
