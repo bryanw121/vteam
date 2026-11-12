@@ -1,0 +1,59 @@
+name: Stability (nightly, full)
+
+# The full stability check (#255) on main: every tour × filter state, every
+# long screen on refresh and Back (guest and signed in), every shareable link,
+# each at normal speed and again with every Supabase response delayed 800 ms.
+# PRs run the smaller set in ci.yml's a11y job. Against the mocked export, so
+# no secrets and no database. GitHub emails the owner when a scheduled run fails.
+on:
+  schedule:
+    - cron: '47 10 * * *' # 04:47 CT
+  workflow_dispatch:
+
+jobs:
+  stability:
+    name: Stability (full)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Web build (shots mock)
+        run: npx expo export -p web --clear --output-dir dist-mock
+        env:
+          CI: '1'
+          EXPO_NO_TELEMETRY: '1'
+          EXPO_PUBLIC_SUPABASE_URL: https://shotsmock.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: shots-mock-anon-key
+          EXPO_PUBLIC_SENTRY_DSN: ''
+          EXPO_PUBLIC_APP_ENV: development
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+      - name: Install Chromium system deps
+        run: scripts/ci/install-playwright-deps.sh
+      - name: Stability check (full)
+        run: node scripts/shots/stability-flow.mjs --dist dist-mock --out stability-report --full
+      - name: Job summary
+        if: always() && hashFiles('stability-report/summary.md') != ''
+        run: cat stability-report/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload report
+        if: always() && hashFiles('stability-report/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: stability-report
+          path: stability-report/
+          retention-days: 14

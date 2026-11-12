@@ -58,6 +58,53 @@ export if you built another export before: Metro can reuse a cached
 `lib/env.ts` with a different Supabase URL inlined, and every screen then shows
 its error state.
 
+## Stability check (tours, refresh/Back, links)
+
+`stability-flow.mjs` (#255) catches the bugs that passed every other test: a
+tour that silently skips a step when a filter hides its target (#249), a screen
+that paints at one scroll offset and jumps (#250), Back that lands at the top
+(#254), and shareable links that lose their values. Same mocked export:
+
+```bash
+npm run stability                  # PR set (~2 min): compare with stability-baseline.json, exit 1 on a new finding
+npm run stability -- --full        # every combination, also with every Supabase response delayed 800 ms (nightly)
+npm run stability -- --only scroll # tours, scroll, links: any of them
+npm run stability:baseline         # rewrite the baseline from this run (after fixing findings)
+```
+
+- **tours**: the intro tour from Profile's "Take the tour" and from the Austin
+  banner (as a guest), under the Events type × surface filters set from a link
+  and saved on the device, phone and desktop. Every step must read "n of N" in
+  order with a spotlight on screen.
+- **scroll**: each screen in `SCROLL_SCREENS` (`stabilityCases.mjs`) is
+  scrolled partway, then reloaded, and (where it has a `child`) left for a child
+  screen and come back to with the browser's Back. A sampler in the page records
+  the offset, splash, visible text and spinners every 60 ms, and every
+  `layout-shift` entry with the nodes that moved. Findings: `back:not-restored`
+  (came back elsewhere), `*:jump` (painted at one offset, then moved),
+  `*:layout-shift` (worst single shift above 0.01 after the splash, with what
+  moved), `*:content-dropped`, `*:spinner-after-content`. A reload landing at the
+  top is fine: the scroll memory lives in memory.
+- **links**: one case per `VIEW` entry in `LINK_CASES`; the address must keep the
+  link's values, follow a change, and survive a phone tab switch.
+  `__tests__/stabilityCases.test.ts` fails when a `VIEW` key has no case.
+
+`stability-baseline.json` is check → screen → viewport → finding → largest
+accepted value, with a note per known problem in `_notes`. A new finding, or one
+clearly worse than its entry (layout shift above 1.25× + 0.01, an offset 40 px
+further off), fails after one re-run of that case confirms it, so a one-off
+runner hiccup doesn't. Entries that no longer show up are listed as improved:
+shrink the baseline then, never raise it to get a PR through. The report
+(`index.html`, `summary.md`, `stability.json`) has a frame strip for each
+finding (screencast frames from the moment of the reload or Back). CI runs the
+PR set in the a11y job (report under `a11y-report/stability/`);
+`.github/workflows/stability-nightly.yml` runs `--full`. The analysis lives in
+`lib/stability.mjs` (tested by `stability.test.mjs`).
+
+When you add a long screen, add it to `SCROLL_SCREENS` with the testID of
+something partway down that opens a child screen; when you add a `VIEW` entry,
+add its link case.
+
 ## How it works
 
 - **compare.mjs** checks each ref out in a temporary `git worktree`, links
