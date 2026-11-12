@@ -3,9 +3,9 @@
  * marks from officialLayout.ts onto copies of the blank form (usavTemplate.ts) with pdf-lib: no
  * network, no service. Imported lazily (pdf-lib and the form are ~1 MB of script together).
  */
-// pdf-lib exposes its CommonJS entry at the package root. Metro cannot resolve the package's
-// internal /cjs directory as an import target.
-import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
+// Use the explicit CommonJS entry: Metro cannot resolve the /cjs directory itself, while the ES
+// build resolves tslib as an ES module and fails at runtime.
+import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFPage } from 'pdf-lib/cjs/index.js'
 import type { MatchDoc, MatchState, SheetOp } from '../../types/scoresheet'
 import { SHEET_HEIGHT, SHEET_WIDTH, officialLayout } from './officialLayout'
 import { USAV_TWO_SET_TEMPLATE } from './usavTemplate'
