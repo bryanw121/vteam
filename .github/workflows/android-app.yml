@@ -1,0 +1,122 @@
+name: Android app
+
+# The installed Android app, end to end: builds a release APK the way a phone
+# gets it (JS bundled in, no dev server), installs it on an emulator and drives
+# it with Maestro flows (e2e/android/flows): guest tabs, a vteam:// event link and
+# guest Join, the intro tour, username sign-in, Profile and the scorekeeper.
+# Runs against the "vteam beta" database (never live), on GitHub's free Linux
+# runners: no EAS build minutes. Nightly, on demand, and on PRs that touch
+# native-only code.
+
+on:
+  schedule:
+    - cron: '41 8 * * *' # 08:41 UTC, nightly
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - app.json
+      - eas.json
+      - '**/*.native.ts'
+      - '**/*.native.tsx'
+      - '**/*.android.ts'
+      - '**/*.android.tsx'
+      - e2e/android/**
+      - .github/workflows/android-app.yml
+
+concurrency:
+  group: android-app-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXPO_PUBLIC_SUPABASE_URL: https://uifolvbwtrbcmfrvelnl.supabase.co
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpZm9sdmJ3dHJiY21mcnZlbG5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NTY2OTUsImV4cCI6MjEwODUzMjY5NX0.8CcvfSOI3LNZ8KQ9OadOyN2dVy8lYiBeSVFzfC5ihh8
+  EXPO_PUBLIC_APP_ENV: e2e
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: Generate the native project
+        run: npx expo prebuild --platform android --no-install
+      - name: Release build (x86_64 only, for the emulator)
+        working-directory: android
+        env:
+          # No Sentry credentials here: skip the source map upload.
+          SENTRY_DISABLE_AUTO_UPLOAD: 'true'
+          NODE_ENV: production
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 3
+
+  flows:
+    name: Maestro flows (emulator)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      E2E_RUN_TAG: android-r${{ github.run_id }}-${{ github.run_attempt }}
+      # Maestro passes MAESTRO_* environment variables to flows as ${MAESTRO_...}.
+      MAESTRO_E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+      MAESTRO_E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: apk/
+      - name: Install Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Create the event fixture (beta)
+        run: node e2e/android/fixture.mjs create >> "$GITHUB_ENV"
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run the flows
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          # One line: the action runs each script line in its own shell.
+          script: adb install -r apk/app-release.apk && mkdir -p test-results/android && maestro test e2e/android/flows -e EVENT_ID="$EVENT_ID" --format junit --output test-results/android/report.xml --test-output-dir test-results/android
+      - name: Delete the event fixture
+        if: always()
+        run: node e2e/android/fixture.mjs delete || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-app-results
+          path: |
+            test-results/android/
+            ~/.maestro/tests/
+          retention-days: 7

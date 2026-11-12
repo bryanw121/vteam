@@ -1,0 +1,22 @@
+# A vteam:// link opens the event page in the app (push taps use the same path),
+# and a guest's Join leads to sign-up with the game shown (#229).
+appId: com.vteamvolleyball.app
+name: Event link, then Join as a guest
+tags: [guest]
+---
+- launchApp:
+    clearState: true
+- runFlow: _ready.yaml
+- openLink: vteam://event/${EVENT_ID}
+- extendedWaitUntil:
+    visible:
+      id: event-hero-title
+    timeout: 30000
+- assertVisible: ".*Android open play.*"
+- takeScreenshot: guest-event
+- tapOn: "Join event"
+- extendedWaitUntil:
+    visible:
+      id: join-context
+    timeout: 15000
+- takeScreenshot: guest-join-signup

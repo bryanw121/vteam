@@ -1,0 +1,38 @@
+# The intro tour shows every one of its steps, in order (a skipped step is the
+# bug fixed in #249), started from the first-visit banner.
+appId: com.vteamvolleyball.app
+name: Intro tour shows all six steps
+tags: [guest]
+---
+- launchApp:
+    clearState: true
+- runFlow: _ready.yaml
+- tapOn: "Check out our tour"
+- extendedWaitUntil:
+    visible:
+      id: tour-card
+    timeout: 15000
+- assertVisible: "Step 1 of 6"
+- assertVisible: "Find a game"
+- tapOn:
+    id: tour-next
+- assertVisible: "Step 2 of 6"
+- assertVisible: "Pick a day"
+- tapOn:
+    id: tour-next
+- assertVisible: "Step 3 of 6"
+- assertVisible: "Host or book"
+- tapOn:
+    id: tour-next
+- assertVisible: "Step 4 of 6"
+- tapOn:
+    id: tour-next
+- assertVisible: "Step 5 of 6"
+- tapOn:
+    id: tour-next
+- assertVisible: "Step 6 of 6"
+- assertVisible: "Your profile"
+- tapOn:
+    id: tour-next
+- assertNotVisible:
+    id: tour-card
