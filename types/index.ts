@@ -451,6 +451,17 @@ export type ExternalProgramCardProps = {
 /** Props of SheetTeamsView. `team` '' shows the list; onSelectTeam('') goes back to it. */
 export type SheetTeamsViewProps = { state: import('./sheetScores').SheetState; team: string; onSelectTeam: (team: string) => void }
 
+/** Props of SheetScoringPanel. `latest` is the Sheet's current copy of the game (polled), adopted when nothing of ours is waiting. */
+export type SheetScoringPanelProps = {
+  execUrl: string
+  keeper: { pin: string; by: string }
+  match: import('./sheetScores').SheetMatch
+  latest: import('./sheetScores').SheetMatch | null
+  rules: import('./sheetScores').SheetState['settings']
+  /** `changed`: something was saved as final or cancelled, so the lists should refresh. */
+  onClose: (changed: boolean) => void
+}
+
 /** Props of LiveScoresLink. */
 export type LiveScoresLinkProps = { programId: string; title: string }
 

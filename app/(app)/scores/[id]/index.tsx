@@ -1,23 +1,24 @@
 import React, { useMemo, useState } from 'react'
 import { ScrollView, View } from 'react-native'
-import { SheetTeamsView } from '../../../components/programs/SheetTeamsView'
+import { SheetTeamsView } from '../../../../components/programs/SheetTeamsView'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { Text } from '../../../components/ui/Text'
-import { Chip, ScreenContainer, ScreenHeader, ScreenState } from '../../../components/ui'
-import { RefreshControl } from '../../../components/RefreshControl'
-import { StandingsTable } from '../../../components/tournament/StandingsTable'
-import { BracketView } from '../../../components/tournament/BracketView'
-import { ts } from '../../../components/tournament/tournamentStyles'
-import { shared, theme } from '../../../constants'
-import { useSheetScores } from '../../../hooks/useSheetScores'
-import { useExternalPrograms } from '../../../hooks/useExternalPrograms'
-import { useUrlParam } from '../../../hooks/useUrlParam'
-import { VIEW } from '../../../utils/urlViews'
-import { routes } from '../../../utils/routes'
-import { openExternalUrl } from '../../../lib/openExternalUrl'
-import { bracketGroups, bracketRows, liveMatches, poolStandings, upNext } from '../../../utils/sheetScores'
-import type { SheetScoresView } from '../../../types'
+import { Text } from '../../../../components/ui/Text'
+import { Chip, ScreenContainer, ScreenHeader, ScreenState } from '../../../../components/ui'
+import { RefreshControl } from '../../../../components/RefreshControl'
+import { StandingsTable } from '../../../../components/tournament/StandingsTable'
+import { BracketView } from '../../../../components/tournament/BracketView'
+import { ts } from '../../../../components/tournament/tournamentStyles'
+import { shared, theme } from '../../../../constants'
+import { useSheetScores } from '../../../../hooks/useSheetScores'
+import { useExternalPrograms } from '../../../../hooks/useExternalPrograms'
+import { useUrlParam } from '../../../../hooks/useUrlParam'
+import { VIEW } from '../../../../utils/urlViews'
+import { routes } from '../../../../utils/routes'
+import { openExternalUrl } from '../../../../lib/openExternalUrl'
+import { Button } from '../../../../components/Button'
+import { bracketGroups, bracketRows, liveMatches, poolStandings, upNext } from '../../../../utils/sheetScores'
+import type { SheetScoresView } from '../../../../types'
 
 const VIEWS: { key: SheetScoresView; label: string }[] = [
   { key: 'live', label: 'Live' },
@@ -197,6 +198,15 @@ export default function ProgramScoresScreen() {
                 {program.org} website <Ionicons name="open-outline" size={12} color={theme.colors.primary} />
               </Text>
             ) : null}
+            <View style={{ marginTop: theme.spacing.lg }}>
+              <Button
+                label="I'm a scorekeeper"
+                icon="clipboard-outline"
+                variant="secondary"
+                onPress={() => router.push(routes.programScorekeeper(id as string))}
+                testID="scores-scorekeeper"
+              />
+            </View>
           </ScrollView>
         </ScreenState>
       </ScreenContainer>

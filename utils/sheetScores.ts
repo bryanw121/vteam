@@ -18,6 +18,12 @@ import type {
  * using team names as team ids: the Sheet has no ids, and names are unique within a tournament.
  */
 
+/** The Sheet web app's `/exec` URL for an outside tournament (scoring posts here), or null. */
+export function sheetExecUrl(programId: string | null | undefined): string | null {
+  const base = programId ? LIVE_SCORE_SHEETS[programId] : undefined
+  return base && /^https?:\/\//.test(base) ? base : null
+}
+
 /** The Sheet web app's JSON URL for an outside tournament, or null when it doesn't run on one. */
 export function sheetScoresUrl(programId: string | null | undefined): string | null {
   const base = programId ? LIVE_SCORE_SHEETS[programId] : undefined
