@@ -86,10 +86,9 @@ try {
   ]) {
     const start = Date.now()
     await page.goto(`${server.url}${path}`, { waitUntil: 'commit' })
-    // What the viewer sees 1.5 s in (the server hasn't answered yet), then how long until it's really there.
-    await page.waitForTimeout(Math.max(0, 1500 - (Date.now() - start)))
-    await page.screenshot({ path: `${out}/${name}-at-1.5s.png` }).catch(() => {})
+    // Time first (a screenshot before it used to put a 1.5 s floor under every number, #225), then the picture.
     report[name] = await timeUntil(page, start, target, delay * 3)
+    await page.screenshot({ path: `${out}/${name}-painted.png` }).catch(() => {})
   }
   report.serverDelayMs = delay
   await writeFile(`${out}/report.json`, JSON.stringify(report, null, 2))
