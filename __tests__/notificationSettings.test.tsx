@@ -55,6 +55,11 @@ jest.mock('../lib/supabase', () => ({
   },
 }))
 
+/** The per-type switches (the New game alerts card's own switches come first on the screen). */
+function prefSwitches(view: ReturnType<typeof render>) {
+  return view.UNSAFE_getAllByType(Switch).filter(s => !String(s.props.testID ?? '').startsWith('game-alerts'))
+}
+
 async function flush() {
   await act(async () => {
     for (let i = 0; i < 12; i++) await Promise.resolve()
@@ -76,7 +81,7 @@ describe('notification settings', () => {
   it('flipping two switches quickly saves both (latest prefs win) with no false error', async () => {
     const view = render(<NotificationSettingsScreen />)
     await flush()
-    const switches = view.UNSAFE_getAllByType(Switch)
+    const switches = prefSwitches(view)
 
     act(() => { fireEvent(switches[0], 'valueChange', false) })
     act(() => { fireEvent(switches[1], 'valueChange', false) })
@@ -97,7 +102,7 @@ describe('notification settings', () => {
   it('still reports a real failure of the latest save', async () => {
     const view = render(<NotificationSettingsScreen />)
     await flush()
-    const switches = view.UNSAFE_getAllByType(Switch)
+    const switches = prefSwitches(view)
     act(() => { fireEvent(switches[0], 'valueChange', false) })
     await act(async () => { mockUpdates[0].release({ error: { message: 'denied' } }) })
     await flush()
@@ -164,7 +169,25 @@ describe('Reminders', () => {
     const view = render(<NotificationSettingsScreen />)
     await flush()
     expect(view.queryByTestId('reminder-lead-60')).toBeNull()
-    const pushReminder = view.UNSAFE_getAllByType(Switch).find(s => s.props.accessibilityLabel === 'Event reminders')
+    const pushReminder = prefSwitches(view).find(s => s.props.accessibilityLabel === 'Event reminders')
     expect(pushReminder?.props.disabled).toBe(true)
+  })
+
+  it('new game alerts: taps are saved together, as one game_alerts object', async () => {
+    jest.useFakeTimers()
+    try {
+      const view = render(<NotificationSettingsScreen />)
+      await flush()
+      expect(view.getByTestId('game-alerts-summary').props.children).toBe('New games from your clubs, at most 3 a day.')
+      act(() => { fireEvent(view.getByTestId('game-alerts-hosts'), 'valueChange', true) })
+      act(() => { fireEvent.press(view.getByTestId('game-alerts-surfaces-sand')) })
+      expect(mockUpserts.filter(p => 'game_alerts' in p)).toHaveLength(0)
+      await act(async () => { jest.advanceTimersByTime(700) })
+      const saved = mockUpserts.filter(p => 'game_alerts' in p)
+      expect(saved).toHaveLength(1)
+      expect(saved[0].game_alerts).toEqual({ clubs: true, hosts: true, surfaces: ['sand'], levels: [], times: [] })
+    } finally {
+      jest.useRealTimers()
+    }
   })
 })

@@ -1,24 +1,25 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'components', 'ProfileAvatar.tsx'), 'utf8')
+const avatarSource = fs.readFileSync(path.join(__dirname, '..', 'components', 'ProfileAvatar.tsx'), 'utf8')
+const frameSource = fs.readFileSync(path.join(__dirname, '..', 'components', 'profile', 'ElementalBorderFrame.tsx'), 'utf8')
 
 function bodyOf(component: string, endMarker: string) {
-  const start = source.indexOf(`function ${component}`)
-  const end = source.indexOf(endMarker, start)
-  return source.slice(start, end)
+  const start = avatarSource.indexOf(`function ${component}`)
+  const end = avatarSource.indexOf(endMarker, start)
+  return avatarSource.slice(start, end)
 }
 
 describe('elemental avatar border layering', () => {
   it.each([
     ['StormBorder', 'function AetherBorder'],
     ['AetherBorder', '/**\n * Avatar circle'],
-  ])('%s leaves the photo interactive and draws its artwork above it', (component, nextComponent) => {
+  ])('%s uses the shared photo-safe elemental frame', (component, nextComponent) => {
     const body = bodyOf(component, nextComponent)
-    const photo = body.indexOf('<RingHole')
-    const artwork = body.indexOf('<Svg pointerEvents="none"')
+    expect(body).toContain('<ElementalBorderFrame')
+  })
 
-    expect(photo).toBeGreaterThan(-1)
-    expect(artwork).toBeGreaterThan(photo)
+  it('draws decoration before the opaque photo centre', () => {
+    expect(frameSource.indexOf('<Svg pointerEvents="none"')).toBeLessThan(frameSource.indexOf('backgroundColor: centreColor'))
   })
 })

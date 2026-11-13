@@ -1,3 +1,4 @@
+import { profileAvatarSmallUri } from '../../utils'
 import { useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { Text } from '../ui/Text'
@@ -256,11 +257,11 @@ export function EditProfileForm({ profile, badges, saving, onSave, onSetBorder, 
         <Text style={shared.subheading}>Profile Border</Text>
         <Text style={[shared.caption, shared.mt_xs]}>Select a border for your avatar.</Text>
         <View role="radiogroup" aria-label="Profile border" style={{ flexDirection: 'row', gap: theme.spacing.lg, marginTop: theme.spacing.md, flexWrap: 'wrap' }}>
-          <BorderSwatch label="None" selected={!profile.selected_border} unlocked onPress={() => onSetBorder(null)} />
+          <BorderSwatch avatarUri={profileAvatarSmallUri(profile.avatar_url)} label="None" selected={!profile.selected_border} unlocked onPress={() => onSetBorder(null)} />
           {PROFILE_BORDERS.map(border => {
             const unlocked = isBorderUnlocked(border, earned)
             return (
-              <BorderSwatch
+              <BorderSwatch avatarUri={profileAvatarSmallUri(profile.avatar_url)}
                 key={border.type}
                 label={border.label}
                 borderDef={border}
