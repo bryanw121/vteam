@@ -624,7 +624,7 @@ export const shared = StyleSheet.create({
     marginTop: 2,
   },
   screenHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingBottom: spacing.xs },
-  screenHeaderBack:  { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start', marginLeft: spacing.lg, marginTop: spacing.sm },
+  screenHeaderBack:  { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start', marginLeft: spacing.lg, marginTop: spacing.sm, minHeight: 24 }, // minHeight: the chevron's icon font loads late on web and grew the row 8 px, moving the whole screen (#288)
   screenHeaderBackLabel: { fontFamily: theme.fonts.body, fontSize: font.size.sm, color: colors.primaryText },
 
   // ── EmptyState / ScreenState ──────────────────────────────

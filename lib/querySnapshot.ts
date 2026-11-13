@@ -21,6 +21,8 @@ export const QUERY_SNAPSHOT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 /** Never let it fill the origin's storage quota. */
 const MAX_BYTES = 300_000
 const WRITE_DELAY_MS = 1000
+/** lib/query's key separator. */
+const SEP = ':'
 
 /**
  * Cache prefixes worth keeping. Only reads a returning viewer sees on the first
@@ -40,7 +42,24 @@ export const SNAPSHOT_PREFIXES = [
   'conversations',
   'chatSilences',
   'external-programs', // public listings (Tournaments, Leagues): safe on a shared device
+  // The viewer's club tournaments (key tournaments:list:<user>), so Tournaments paints complete
+  // instead of pushing the outside list down when they arrive (#288). Only ever shown to that viewer.
+  'tournaments:list',
 ] as const
+
+/** Entries kept smaller than the read (the tournament list reads up to 200 rows). */
+const SNAPSHOT_TRIM: Partial<Record<(typeof SNAPSHOT_PREFIXES)[number], (data: unknown) => unknown>> = {
+  'tournaments:list': data => (Array.isArray(data) ? data.slice(0, TOURNAMENT_LIST_SNAPSHOT_ROWS) : data),
+}
+/** Newest start dates first, so this keeps every upcoming tournament and the latest past ones. */
+export const TOURNAMENT_LIST_SNAPSHOT_ROWS = 40
+
+/** What the snapshot stores for `key`: the cached value, trimmed where a prefix asks for it. */
+export function snapshotValue(key: string, data: unknown): unknown {
+  const prefix = SNAPSHOT_PREFIXES.find(p => key === p || key.startsWith(p + SEP))
+  const trim = prefix ? SNAPSHOT_TRIM[prefix] : undefined
+  return trim ? trim(data) : data
+}
 
 function storage(): Storage | null {
   if (Platform.OS !== 'web') return null
@@ -51,7 +70,6 @@ function storage(): Storage | null {
   }
 }
 
-const SEP = ':'
 export function isSnapshotKey(key: string): boolean {
   return SNAPSHOT_PREFIXES.some(p => key === p || key.startsWith(p + SEP))
 }
@@ -112,7 +130,7 @@ function write(): void {
   const entries: Record<string, unknown> = {}
   liveKeys.forEach(key => {
     const data = getQueryData<unknown>(key)
-    if (data !== undefined) entries[key] = data
+    if (data !== undefined) entries[key] = snapshotValue(key, data)
   })
   try {
     if (Object.keys(entries).length === 0) {

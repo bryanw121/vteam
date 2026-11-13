@@ -12,6 +12,7 @@ import { IDS } from './fixtures/index.mjs'
  * partway down the page: it is scrolled into the middle of the viewport (that
  * offset is what Back must restore), then clicked.
  * `guest`: also checked signed out. `pr`: also in PR mode (the rest run nightly).
+ * `fresh`: reload without the device's saved reads (lib/querySnapshot), like a first visit.
  */
 export const SCROLL_SCREENS = [
   { screen: 'events', path: '/', child: { testIdPrefix: 'event-card', nth: 5 }, guest: true, pr: true },
@@ -19,6 +20,8 @@ export const SCROLL_SCREENS = [
   { screen: 'clubs', path: '/clubs', child: null, guest: true },
   { screen: 'chat', path: '/chat', child: { testIdPrefix: 'conversation-row', last: true } },
   { screen: 'tournaments', path: '/tournaments', child: { testIdPrefix: 'tournament-row-', last: true }, guest: true, pr: true },
+  // First visit: the club tournaments load while a placeholder holds their space (#288).
+  { screen: 'tournaments-first', path: '/tournaments', child: null, fresh: true, pr: true },
   { screen: 'event', path: `/event/${IDS.event.sundaySand}`, child: { text: 'Host' }, guest: true, pr: true },
   { screen: 'club', path: `/club/${IDS.club.eastside}`, child: { testIdPrefix: 'event-card', last: true }, guest: true, pr: true },
 ]
