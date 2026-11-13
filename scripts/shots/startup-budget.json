@@ -1,0 +1,88 @@
+{
+  "events": {
+    "paintMs": 1200,
+    "requests": 14,
+    "allowedDuplicates": [],
+    "requestList": [
+      "GET ad_banners select=id,title,body,image_url,link_url,display_order",
+      "GET app_config select=platform,min_version,store_url,message",
+      "GET chat_silences select=silenced_user_id,created_at,profiles!chat_silences_silenced_",
+      "GET events select=id,latitude,longitude",
+      "GET external_programs select=id,kind,surface,region,state,series,org,title,venue,city,add",
+      "GET friend_requests select=id,requester_id,addressee_id,created_at,requester:profiles!f",
+      "GET friendships select=friend_id,is_best_friend,created_at,profile:profiles!friends",
+      "GET profiles select=id,username,first_name,last_name,avatar_url,position,skill_l",
+      "GET sponsored_events select=event_id",
+      "GET user_settings select=user_id,home_city_id,seen_banners,reminder_lead_minutes,hidd",
+      "HEAD notifications select=id",
+      "POST rpc/get_ad_free_status",
+      "POST rpc/get_feed_span",
+      "POST rpc/get_my_conversations"
+    ]
+  },
+  "profile": {
+    "paintMs": 1000,
+    "requests": 16,
+    "allowedDuplicates": [],
+    "requestList": [
+      "GET app_config select=platform,min_version,store_url,message",
+      "GET badge_art select=badge_type,tier,image_url",
+      "GET chat_silences select=silenced_user_id,created_at,profiles!chat_silences_silenced_",
+      "GET cheers select=cheer_type",
+      "GET cheers select=event_id",
+      "GET events select=id,event_tags(tags(name))",
+      "GET friend_requests select=id,requester_id,addressee_id,created_at,requester:profiles!f",
+      "GET friendships select=friend_id,is_best_friend,created_at,profile:profiles!friends",
+      "GET point_balances select=balance",
+      "GET profiles select=id,username,first_name,last_name,avatar_url,position,skill_l",
+      "GET tournament_trophies select=id,tournament_id,place,tournament_title,tournament_date,team",
+      "GET user_badges select=id,user_id,badge_type,tier,awarded_at,display_order,display_",
+      "GET user_settings select=user_id,home_city_id,seen_banners,reminder_lead_minutes,hidd",
+      "HEAD event_attendees select=event_id,events!inner(event_date)",
+      "POST rpc/current_user_is_admin",
+      "POST rpc/get_my_conversations"
+    ]
+  },
+  "chat": {
+    "paintMs": 1100,
+    "requests": 8,
+    "allowedDuplicates": [],
+    "requestList": [
+      "GET app_config select=platform,min_version,store_url,message",
+      "GET chat_silences select=silenced_user_id,created_at,profiles!chat_silences_silenced_",
+      "GET friend_requests select=id,requester_id,addressee_id,created_at,requester:profiles!f",
+      "GET friendships select=friend_id,is_best_friend,created_at,profile:profiles!friends",
+      "GET profiles select=id,username,first_name,last_name,avatar_url,position,skill_l",
+      "GET tournament_trophies select=id,tournament_id,place,tournament_title,tournament_date,team",
+      "GET user_settings select=user_id,home_city_id,seen_banners,reminder_lead_minutes,hidd",
+      "POST rpc/get_my_conversations"
+    ]
+  },
+  "tournaments": {
+    "paintMs": 1000,
+    "requests": 7,
+    "allowedDuplicates": [],
+    "requestList": [
+      "GET app_config select=platform,min_version,store_url,message",
+      "GET chat_silences select=silenced_user_id,created_at,profiles!chat_silences_silenced_",
+      "GET external_programs select=id,kind,surface,region,state,series,org,title,venue,city,add",
+      "GET profiles select=id,username,first_name,last_name,avatar_url,position,skill_l",
+      "GET tournaments select=id,title,location,start_date,status,format,club_id,max_teams",
+      "GET user_settings select=user_id,home_city_id,seen_banners,reminder_lead_minutes,hidd",
+      "POST rpc/get_my_conversations"
+    ]
+  },
+  "events-guest": {
+    "paintMs": 1300,
+    "requests": 6,
+    "allowedDuplicates": [],
+    "requestList": [
+      "GET ad_banners select=id,title,body,image_url,link_url,display_order",
+      "GET app_config select=platform,min_version,store_url,message",
+      "GET events select=id,latitude,longitude",
+      "GET external_programs select=id,kind,surface,region,state,series,org,title,venue,city,add",
+      "GET sponsored_events select=event_id",
+      "POST rpc/get_feed_span"
+    ]
+  }
+}

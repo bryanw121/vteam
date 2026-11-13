@@ -200,6 +200,11 @@ jobs:
       - name: Stability check (tours, refresh/Back, links)
         if: success() || failure()
         run: node scripts/shots/stability-flow.mjs --dist dist-mock --out a11y-report/stability
+      # First screens don't get slower or send more reads (#225): paint on a slow
+      # mocked server and every first-visit read, against startup-budget.json.
+      - name: Startup budget (paint and reads)
+        if: success() || failure()
+        run: node scripts/shots/startup-budget.mjs --dist dist-mock --out a11y-report/startup
       - name: Job summary
         if: always() && hashFiles('a11y-report/summary.md') != ''
         run: cat a11y-report/summary.md >> "$GITHUB_STEP_SUMMARY"

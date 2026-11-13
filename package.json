@@ -23,6 +23,8 @@
     "a11y:baseline": "node scripts/shots/a11y.mjs --update-baseline",
     "stability": "node scripts/shots/stability-flow.mjs --dist dist-mock",
     "stability:baseline": "node scripts/shots/stability-flow.mjs --dist dist-mock --update-baseline",
+    "startup": "node scripts/shots/startup-budget.mjs --dist dist-mock",
+    "startup:baseline": "node scripts/shots/startup-budget.mjs --dist dist-mock --update",
     "og:render": "tsx scripts/render-og.tsx"
   },
   "jest": {
