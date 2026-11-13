@@ -4,6 +4,7 @@ import { RefreshControl } from '../../../../components/RefreshControl'
 import { useCallback, useState } from 'react'
 import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { supabase } from '../../../../lib/supabase'
+import { forgetWebPushToken } from '../../../../utils/pushNotifications'
 import { Button } from '../../../../components/Button'
 import { Spinner } from '../../../../components/ui'
 import { useSession } from '../../../../contexts/session'
@@ -49,6 +50,7 @@ export default function AccountSettingsScreen() {
   }, [refetch])
 
   async function handleSignOut() {
+    await forgetWebPushToken()
     const { error } = await supabase.auth.signOut()
     if (error) toast.error("Couldn't sign out", error)
   }
