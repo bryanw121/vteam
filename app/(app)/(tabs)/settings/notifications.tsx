@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { Platform, ScrollView, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
@@ -17,6 +17,7 @@ import { isReminderLead, reminderPreview } from '../../../../utils/reminders'
 import type { NotificationPrefs, NotificationType } from '../../../../types'
 import { NotificationSettingRow as Row } from '../../../../components/profile/NotificationSettingRow'
 import { GameAlertsCard } from '../../../../components/profile/GameAlertsCard'
+import { WebPushCard } from '../../../../components/settings/WebPushCard'
 
 export default function NotificationSettingsScreen() {
   useStackBackTitle('Notification settings')
@@ -47,6 +48,26 @@ export default function NotificationSettingsScreen() {
   const lead = isReminderLead(stored) ? stored : DEFAULT_REMINDER_LEAD_MINUTES
   const preview = reminderPreview(lead)
 
+  const pushRows = (
+    <>
+        <Row
+          key="push_event_reminder"
+          label={NOTIFICATION_TYPE_LABELS.event_reminder}
+          value={isNotificationTypeEnabled(prefs, 'push', 'event_reminder')}
+          disabled={!remindersOn}
+          onValueChange={v => void toggle('push', 'event_reminder', v)}
+        />
+        {rows.map(({ type, push }) => (
+          <Row
+            key={`push_${type}`}
+            label={NOTIFICATION_TYPE_LABELS[type]}
+            value={push}
+            onValueChange={v => void toggle('push', type, v)}
+          />
+        ))}
+    </>
+  )
+
   async function handleRefresh() {
     setRefreshing(true)
     try {
@@ -72,7 +93,7 @@ export default function NotificationSettingsScreen() {
         >
           <>
             <Text style={[shared.caption, { marginBottom: theme.spacing.md }]}>
-              Choose which updates you want, in the app and as push notifications on your phone.
+              Choose which updates you want, in the app and as push notifications.
             </Text>
             {saveFailed ? <Text style={shared.errorText}>Could not save settings. Please try again.</Text> : null}
             <GameAlertsCard />
@@ -117,24 +138,15 @@ export default function NotificationSettingsScreen() {
                 />
               ))}
             </View>
-            <View style={[shared.card, { marginTop: theme.spacing.md }]}>
-              <Text style={[shared.labelStrong, { marginBottom: theme.spacing.sm }]}>Push on this phone</Text>
-              <Row
-                key="push_event_reminder"
-                label={NOTIFICATION_TYPE_LABELS.event_reminder}
-                value={isNotificationTypeEnabled(prefs, 'push', 'event_reminder')}
-                disabled={!remindersOn}
-                onValueChange={v => void toggle('push', 'event_reminder', v)}
-              />
-              {rows.map(({ type, push }) => (
-                <Row
-                  key={`push_${type}`}
-                  label={NOTIFICATION_TYPE_LABELS[type]}
-                  value={push}
-                  onValueChange={v => void toggle('push', type, v)}
-                />
-              ))}
-            </View>
+            {Platform.OS === 'web' ? (
+              // Web push (#189): the switches show once this browser has push on.
+              <WebPushCard>{pushRows}</WebPushCard>
+            ) : (
+              <View style={[shared.card, { marginTop: theme.spacing.md }]}>
+                <Text style={[shared.labelStrong, { marginBottom: theme.spacing.sm }]}>Push on this phone</Text>
+                {pushRows}
+              </View>
+            )}
           </>
         </ScreenState>
       </ScrollView>
