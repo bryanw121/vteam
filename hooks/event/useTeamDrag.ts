@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Platform, View } from 'react-native'
 import { useAnimatedStyle, useSharedValue } from 'react-native-reanimated'
 import type { ZoneLayout } from '../../types'
+import type { ViewInstance } from 'react-native'
 
 /**
  * Drag-a-player-onto-a-team for the People tab. The card's pan gesture reports
@@ -21,8 +22,8 @@ export function useTeamDrag(onDrop: (playerId: string, team: number | null) => v
   const containerOffsetX = useSharedValue(0)
   const containerOffsetY = useSharedValue(0)
   const draggingRef = useRef<string | null>(null)
-  const containerRef = useRef<View>(null)
-  const teamZoneRefs = useRef<Record<string, View | null>>({})
+  const containerRef = useRef<ViewInstance>(null)
+  const teamZoneRefs = useRef<Record<string, ViewInstance | null>>({})
   const zoneLayouts = useRef<Record<string, ZoneLayout>>({})
   /** True while dragging: the inner tab Pager must not claim the gesture. */
   const pagerBlockedRef = useRef(false)

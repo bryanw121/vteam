@@ -9,6 +9,7 @@ import { profileDisplayName } from '../../utils'
 import { EventCommentRow } from '../EventCommentRow'
 import { DiscussionComposer } from '../DiscussionComposer'
 import { Spinner } from '../ui/Spinner'
+import type { ScrollViewInstance } from 'react-native'
 
 type Props = {
   discussion: EventCommentsApi
@@ -17,7 +18,7 @@ type Props = {
   isHostOrCohost: boolean
   usernameToId: Map<string, string>
   mentionableUsers: MentionUser[]
-  scrollRef: React.RefObject<ScrollView | null>
+  scrollRef: React.RefObject<ScrollViewInstance | null>
   isActive: boolean
   scrollToBottom: (animated: boolean) => void
   keyboardInset: number

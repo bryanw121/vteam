@@ -7,6 +7,7 @@ import { Button } from '../Button'
 import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { TOUR_ARROW_SIZE, placeTourCard, scrimRects, spotlightRect, tourCardWidth } from '../../utils/tour'
 import type { TourRect, TourStepDef } from '../../types'
+import type { ViewInstance } from 'react-native'
 
 type Props = {
   step: TourStepDef
@@ -33,7 +34,7 @@ export function TourOverlay({ step, index, count, target, onNext, onBack, onSkip
   const insets = useSafeAreaInsets()
   const reduceMotion = useReducedMotion()
   const [cardHeight, setCardHeight] = useState<number | null>(null)
-  const cardRef = useRef<View>(null)
+  const cardRef = useRef<ViewInstance>(null)
   const fade = useRef(new Animated.Value(0)).current
   const isLast = index === count - 1
 

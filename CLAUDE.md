@@ -79,7 +79,7 @@ A volleyball club app. Members find and join open play sessions and tournaments,
 ---
 
 ## Tech Stack
-- **React Native 0.81 / Expo SDK 54** with Expo Router (file-based routing)
+- **React Native 0.88 / Expo SDK 58** with Expo Router (file-based routing). A custom `app/+html.tsx` must render `headNodes` / `bodyNodes` from `useServerDocumentContext()` (the app scripts arrive there)
 - **React Native Web** for browser support
 - **Supabase** for auth (email/password) and PostgreSQL database
 - **TypeScript** (strict mode)

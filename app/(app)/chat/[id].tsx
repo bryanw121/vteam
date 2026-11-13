@@ -31,6 +31,7 @@ import { chatAlert } from '../../../utils/chatUtils'
 import { routes } from '../../../utils/routes'
 import { Spinner } from '../../../components/ui/Spinner'
 import { toast } from '../../../lib/toast'
+import type { TextInputInstance, ViewInstance } from 'react-native'
 
 const AVATAR_SIZE = 36
 
@@ -44,7 +45,7 @@ export default function ChatRoomScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
-  const inputRef = useRef<import('react-native').TextInput>(null)
+  const inputRef = useRef<TextInputInstance>(null)
 
 
   const { userId: myId } = useSession()
@@ -71,7 +72,7 @@ export default function ChatRoomScreen() {
   // Full-screen image viewer
   const [viewingImage, setViewingImage] = useState<string | null>(null)
 
-  const headerKebabRef = useRef<View>(null)
+  const headerKebabRef = useRef<ViewInstance>(null)
   const [headerMenuVisible, setHeaderMenuVisible] = useState(false)
   const [headerMenuAnchor, setHeaderMenuAnchor] = useState<AnchorRect | null>(null)
   const [unsportsmanlikeModalVisible, setUnsportsmanlikeModalVisible] = useState(false)
