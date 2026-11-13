@@ -19,6 +19,7 @@ import { routes } from '../../utils/routes'
 import { useSession } from '../../contexts/session'
 import { useTags } from '../../hooks/useTags'
 import { cleanDate, diffTagIds, isSurface, normalizePriceText, parsePrice, sanitizePriceInput } from '../../utils'
+import { parsePrefillDate } from '../../utils/clubPoll'
 import { bringDraftsChanged, draftsFromItems, draftsFromTemplate, saveBringArgs, templateBringItems } from '../../utils/bringList'
 import { BringItemsSection } from '../../components/host/BringItemsSection'
 import { fetchBringList } from '../../hooks/event/useEventBringList'
@@ -116,7 +117,13 @@ export default function HostEventScreen() {
   }
   const {
     mode: modeParam, edit: editId, maxAttendees: maxAttendeesParam, location: locationParam, surface: surfaceParam,
-  } = useLocalSearchParams<{ mode?: string; edit?: string; maxAttendees?: string; location?: string; surface?: string }>()
+    clubId: clubIdParam, date: dateParam, title: titleParam, pollId: pollIdParam,
+  } = useLocalSearchParams<{
+    mode?: string; edit?: string; maxAttendees?: string; location?: string; surface?: string
+    clubId?: string; date?: string; title?: string; pollId?: string
+  }>()
+  // A club poll's winning time (#175) opens Host with the club, start and question filled in.
+  const prefillDate = parsePrefillDate(dateParam)
   const isEdit = !!editId
   // Read once on mount: the cached detail row seeds the form's initial state.
   const [seed] = useState(() => cachedEditSource(editId))
@@ -128,6 +135,8 @@ export default function HostEventScreen() {
     // "Already booked? Create a vteam event for it" (Book a court) passes the venue and its surface.
     location: typeof locationParam === 'string' ? locationParam.slice(0, 200) : '',
     surface: isSurface(surfaceParam) ? surfaceParam : null,
+    ...(prefillDate ? { date: prefillDate } : {}),
+    ...(typeof titleParam === 'string' && titleParam.trim() ? { title: titleParam.trim().slice(0, 100) } : {}),
   })
   const formRef = useRef(form)
   formRef.current = form
@@ -183,7 +192,9 @@ export default function HostEventScreen() {
     { staleMs: STALE.feed, enabled: !!userId },
   )
   const ownedClubs = ownedClubsQuery.data ?? EMPTY_CLUBS
-  const [selectedClubId, setSelectedClubId] = useState<string | null>(seed?.club_id ?? null)
+  const [selectedClubId, setSelectedClubId] = useState<string | null>(seed?.club_id ?? (typeof clubIdParam === 'string' && clubIdParam ? clubIdParam : null))
+  /** The poll this new event answers; cleared once linked (or if the club changes). */
+  const pollIdRef = useRef(!isEdit && typeof pollIdParam === 'string' && pollIdParam ? pollIdParam : null)
   const selectedClubIdRef = useRef(selectedClubId)
   selectedClubIdRef.current = selectedClubId
 
@@ -528,6 +539,15 @@ export default function HostEventScreen() {
 
         if (bringDrafts.length > 0 && insertedEvents) {
           await saveBringList(insertedEvents.map(e => e.id), false)
+        }
+
+        // Answered a club poll (#175): link the first game to it, so the poll shows "Game posted".
+        const pollId = pollIdRef.current
+        if (pollId && insertedEvents?.[0] && selectedClubId && selectedClubId === clubIdParam) {
+          const { error: linkError } = await supabase.rpc('link_poll_event', { p_post_id: pollId, p_event_id: insertedEvents[0].id })
+          if (linkError) Sentry.captureException(linkError)
+          else invalidate(queryKey('club', selectedClubId))
+          pollIdRef.current = null
         }
 
         if (saveAsTemplate && (templateName.trim() || form.title)) {

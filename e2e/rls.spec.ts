@@ -479,6 +479,34 @@ test.describe('new game alerts (#170)', () => {
 })
 
 /**
+ * Club polls (#175): members read polls, options and votes; nobody writes the
+ * tables directly; the RPCs check ownership and membership themselves.
+ */
+test.describe('club polls (#175)', () => {
+  test('guests read nothing and can call nothing', async () => {
+    for (const table of ['club_polls', 'club_poll_options', 'club_poll_votes'] as const) {
+      const res = await q(() => anon.from(table).select('post_id').limit(1), `anon ${table}`)
+      expect(res.data ?? [], table).toEqual([])
+    }
+    const create = await q(() => anon.rpc('create_club_poll', { p_club_id: crypto.randomUUID(), p_question: 'Q?', p_kind: 'text', p_options: [{ label: 'a' }, { label: 'b' }] }), 'anon create_club_poll')
+    expect(create.error?.code).toBe(RLS_DENIED)
+    const vote = await q(() => anon.rpc('vote_club_poll', { p_post_id: crypto.randomUUID(), p_option_ids: [] }), 'anon vote_club_poll')
+    expect(vote.error?.code).toBe(RLS_DENIED)
+    const link = await q(() => anon.rpc('link_poll_event', { p_post_id: crypto.randomUUID(), p_event_id: crypto.randomUUID() }), 'anon link_poll_event')
+    expect(link.error?.code).toBe(RLS_DENIED)
+  })
+
+  test('a signed-in user cannot write the tables or post a poll in a club they do not own', async () => {
+    const ins = await q(() => me.from('club_polls').insert({ post_id: crypto.randomUUID(), kind: 'text' }), 'insert club_polls')
+    expect(ins.error?.code).toBe(RLS_DENIED)
+    const vote = await q(() => me.from('club_poll_votes').insert({ option_id: crypto.randomUUID(), post_id: crypto.randomUUID(), user_id: myId }), 'insert club_poll_votes')
+    expect(vote.error?.code).toBe(RLS_DENIED)
+    const create = await q(() => me.rpc('create_club_poll', { p_club_id: crypto.randomUUID(), p_question: 'Q?', p_kind: 'text', p_options: [{ label: 'a' }, { label: 'b' }] }), 'create_club_poll not owner')
+    expect(create.error?.code).toBe(RLS_DENIED)
+  })
+})
+
+/**
  * #111: signed-in RPCs are no longer executable by anon. Skips while the
  * migration is not on beta (anon can still call them then).
  * TODO(#111): drop the skip once 20261028160000_definer_search_path is applied.

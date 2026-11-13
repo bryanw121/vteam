@@ -773,6 +773,26 @@ export const shared = StyleSheet.create({
   recapStats: { flexDirection: 'row', gap: theme.spacing.md, marginTop: theme.spacing.sm },
   recapStat: { flex: 1, minWidth: 0 },
   recapStatValue: { fontFamily: theme.fonts.display, fontSize: theme.font.size.xl, fontWeight: theme.font.weight.bold, color: theme.colors.text },
+  // Club polls (#175): the block inside a post, its option rows and the composer rows.
+  pollBlock: { marginTop: theme.spacing.sm, gap: theme.spacing.xs },
+  pollMetaRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flexWrap: 'wrap' },
+  pollTag: {
+    fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText,
+    backgroundColor: theme.colors.primarySoft, borderRadius: theme.radius.sm, paddingHorizontal: theme.spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
+  pollRowWrap: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs, marginTop: theme.spacing.xs },
+  pollRow: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, minHeight: 44,
+    paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.border, overflow: 'hidden',
+  },
+  pollRowMine: { borderColor: theme.colors.primary },
+  pollRowWinner: { borderColor: theme.colors.medalGold },
+  pollBar: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: theme.colors.primarySoft },
+  pollCount: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  pollAction: { minHeight: 44, justifyContent: 'center' },
+  pollDraftRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+  pollSwitchRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, minHeight: 44 },
   chipRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs, marginTop: theme.spacing.xs, marginBottom: theme.spacing.xs },
   // Settings → Notifications: example of the reminder a player will get.
   reminderPreview: {
