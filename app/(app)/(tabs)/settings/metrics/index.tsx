@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router'
 import { Text } from '../../../../../components/ui/Text'
 import { EmptyState, ScreenContainer, Spinner } from '../../../../../components/ui'
 import { MetricsTabs } from '../../../../../components/metrics/MetricsTabs'
+import { ReportsPanel } from '../../../../../components/metrics/ReportsPanel'
 import { OverviewPanel } from '../../../../../components/metrics/OverviewPanel'
 import { LivePanel } from '../../../../../components/metrics/LivePanel'
 import { PeoplePanel } from '../../../../../components/metrics/PeoplePanel'
@@ -51,6 +52,7 @@ export default function AdminMetricsScreen() {
               {tab === 'live' && <LivePanel active onOpenPerson={openPerson} />}
               {tab === 'people' && <PeoplePanel active onOpenPerson={openPerson} />}
               {tab === 'retention' && <RetentionPanel active />}
+              {tab === 'reports' && <ReportsPanel active />}
             </View>
           )}
         </ScreenContainer>

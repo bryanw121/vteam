@@ -54,4 +54,6 @@ export const ANALYTICS_EVENTS = {
   scorekeeperMatch: 'scorekeeper_match',
   /** A Share button sent or copied a screen's link. props: { screen (tournament, tournaments, leagues, events, profile), how: share | copy, filtered } */
   linkShared: 'link_shared',
+  /** A player was reported (#243): { kind, reason }, never ids. */
+  reportSent: 'report_sent',
 } as const

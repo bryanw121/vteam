@@ -109,6 +109,8 @@ export const NOTIFICATION_TYPES = [
   'tournament_free_agent_assigned',
   'tournament_mention',
   'chat_mention',
+  'report_resolved',
+  'moderation_warning',
 ] as const
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number]
@@ -2163,3 +2165,52 @@ export type UrlCodec<T> = {
 
 /** Field errors on the feedback form (#228: shown under each field, not as an alert). */
 export type FeedbackFieldErrors = { title?: string; description?: string; platform?: string }
+
+/** Report a player (#243): why, and where it happened. Match `user_reports`' checks. */
+export type ReportReason = 'harassment' | 'hate' | 'spam' | 'unsafe_play' | 'fake_profile' | 'other'
+export type ReportContextKind = 'profile' | 'dm' | 'message' | 'event_comment' | 'club_post'
+export type ReportStatus = 'open' | 'dismissed' | 'warned' | 'suspended'
+export type ReportAction = 'dismiss' | 'warn' | 'suspend'
+
+export type ReportUserInput = {
+  targetId: string
+  kind: ReportContextKind
+  contextId?: string | null
+  reason: ReportReason
+  details?: string
+}
+
+/** A row of `admin_reports()`. */
+export type AdminReport = {
+  id: string
+  created_at: string
+  status: ReportStatus
+  reason: ReportReason
+  details: string | null
+  context_kind: ReportContextKind
+  context_id: string | null
+  context_snapshot: string | null
+  target_id: string
+  target_username: string | null
+  target_name: string | null
+  reporter_id: string | null
+  reporter_username: string | null
+  resolved_at: string | null
+  resolution_note: string | null
+  target_open_reports: number
+}
+
+export type ReportSheetTarget = { id: string; name: string }
+
+/** components/ReportSheet (#243). */
+export type ReportSheetProps = {
+  visible: boolean
+  onDismiss: () => void
+  target: ReportSheetTarget
+  kind: ReportContextKind
+  contextId?: string | null
+  /** Offer "Also silence <name>"; its starting value (on for DMs). */
+  offerSilence?: boolean
+  silenceByDefault?: boolean
+  onSilence?: () => Promise<void> | void
+}

@@ -13,6 +13,7 @@ const TABS: { id: MetricsTab; label: string }[] = [
   { id: 'live', label: 'Live' },
   { id: 'people', label: 'People' },
   { id: 'retention', label: 'Retention' },
+  { id: 'reports', label: 'Reports' },
 ]
 
 /** The Metrics sections, as a segmented control. */

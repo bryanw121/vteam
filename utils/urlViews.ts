@@ -47,7 +47,7 @@ export const VIEW = {
   badges: { badge: text(40) },
   feedback: { type: oneOf<FeedbackKind>(['feature', 'bug'], 'feature') },
   metrics: {
-    tab: oneOf<MetricsTab>(['overview', 'live', 'people', 'retention'], 'overview'),
+    tab: oneOf<MetricsTab>(['overview', 'live', 'people', 'retention', 'reports'], 'overview'),
     range: {
       parse: raw => (raw === '7' ? 7 : raw === '90' ? 90 : 30),
       format: v => (v === 30 ? undefined : String(v)),

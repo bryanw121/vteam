@@ -4,7 +4,7 @@
  * `Json`, so hooks cast to these.
  */
 
-export type MetricsTab = 'overview' | 'live' | 'people' | 'retention'
+export type MetricsTab = 'overview' | 'live' | 'people' | 'retention' | 'reports'
 
 export type MetricsRangeDays = 7 | 30 | 90
 
