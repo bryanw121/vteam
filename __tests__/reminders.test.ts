@@ -68,7 +68,7 @@ describe('event reminders migration', () => {
   }
 
   // Friends (#15, migration 20261028203837_friends) was applied after this one and adds its own two types.
-  const LATER_TYPES: readonly string[] = ['friend_request', 'friend_accepted']
+  const LATER_TYPES: readonly string[] = ['friend_request', 'friend_accepted', 'report_resolved', 'moderation_warning']
   const typesBefore = NOTIFICATION_TYPES.filter(t => !LATER_TYPES.includes(t))
 
   it('widens the type constraint to exactly NOTIFICATION_TYPES of the time', () => {

@@ -13,7 +13,7 @@ export async function reportUser(input: ReportUserInput): Promise<string> {
   const { data, error } = await supabase.rpc('report_user', {
     p_target: input.targetId,
     p_kind: input.kind,
-    p_context_id: input.contextId ?? undefined,
+    p_context_id: (input.contextId ?? null) as string,
     p_reason: input.reason,
     p_details: input.details?.trim() || undefined,
   })
