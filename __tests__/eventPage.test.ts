@@ -3,7 +3,8 @@
  * adds link-preview tags to the web app's index.html. PostgREST and the file
  * read are mocked; nothing hits the network.
  */
-import handler, { escapeHtml, injectHeadTags, loadIndexHtml, resetIndexHtmlCache } from '../api/event-page'
+import handler, { escapeHtml, eventSeedScript, EVENT_SEED_MAX_BYTES, injectHeadTags, loadIndexHtml, resetIndexHtmlCache } from '../api/event-page'
+import { usableEventSeed } from '../lib/eventSeed.web'
 import { fetchEventPreview, parseContentRangeTotal, requestOrigin, supabaseRestConfig } from '../api/_lib/eventPreview'
 import { EVENT_PREVIEW_COLUMNS } from '../constants/selects'
 
@@ -17,10 +18,12 @@ const SHELL = `<!DOCTYPE html><html  lang="en"><head><title data-rh="true"></tit
 
 type Row = Record<string, unknown>
 
-function mockPostgrest({ rows = [] as Row[], attending = 0, guests = 0, status = 200 } = {}) {
+function mockPostgrest({ rows = [] as Row[], attending = 0, guests = 0, status = 200, seedGuests = [] as Row[] } = {}) {
   const fetchMock = jest.fn(async (url: string, init?: RequestInit) => {
     if (status !== 200) return new Response('{"message":"boom"}', { status })
     if (url.includes('/rest/v1/events?')) return new Response(JSON.stringify(rows), { status: 200 })
+    // The page seed (#244) reads co-hosts and name-free guests with GET.
+    if (init?.method !== 'HEAD') return new Response(JSON.stringify(url.includes('event_guests_attending') ? seedGuests : []), { status: 200 })
     const total = url.includes('event_attendees_attending') ? attending : guests
     expect(init?.method).toBe('HEAD')
     return new Response(null, { status: 200, headers: { 'content-range': `*/${total}` } })
@@ -229,5 +232,49 @@ describe('helpers', () => {
   it('fetchEventPreview counts nobody for an event anon cannot see', async () => {
     mockPostgrest({ rows: [], attending: 3 })
     await expect(fetchEventPreview(ID, { url: 'https://p.co', anonKey: 'k' })).resolves.toEqual({ event: null, attending: 0 })
+  })
+})
+
+describe('event seed (#244)', () => {
+  const seedOf = (html: string) => {
+    const m = html.match(/<script type="application\/json" id="vteam-event-seed">([\s\S]*?)<\/script>/)
+    return m ? JSON.parse(m[1]) : null
+  }
+
+  it('puts the event, co-hosts and name-free guests in the head, the body untouched', async () => {
+    mockPostgrest({ rows: [EVENT], attending: 3, seedGuests: [{ id: 'g1', event_id: ID, team_number: null, joined_at: 'x', host_user_id: 'u1' }] })
+    const res = await call()
+    const seed = seedOf(head(res.body!))
+    expect(seed).toMatchObject({ v: 1, id: ID, event: { title: 'Sand Doubles' }, cohosts: [] })
+    expect(seed.guests).toHaveLength(1)
+    expect(seed.at).toBe(Date.now())
+    expect(res.body!.endsWith(BODY)).toBe(true)
+  })
+
+  it('no seed for an unknown event or when Supabase fails', async () => {
+    mockPostgrest({ rows: [] })
+    expect(seedOf((await call()).body!)).toBeNull()
+    mockPostgrest({ status: 500 })
+    expect(seedOf((await call()).body!)).toBeNull()
+  })
+
+  it('escapes so the JSON can never close the script tag', () => {
+    const html = eventSeedScript({ v: 1, id: ID, at: 1, event: { title: '</script><img src=x onerror=alert(1)>&' }, cohosts: [], guests: [] })
+    expect(html.match(/<\/script>/g)).toHaveLength(1)
+    expect(html).not.toContain('<img')
+    expect(JSON.parse(html.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, '')).event.title).toBe('</script><img src=x onerror=alert(1)>&')
+  })
+
+  it('leaves out a seed that is too big', () => {
+    expect(eventSeedScript({ v: 1, id: ID, at: 1, event: { description: 'x'.repeat(EVENT_SEED_MAX_BYTES) }, cohosts: [], guests: [] })).toBe('')
+  })
+
+  it('the app takes a seed only for its own event and while it is fresh', () => {
+    const seed = { v: 1, id: ID, at: 1_000_000, event: EVENT, cohosts: [], guests: [] }
+    expect(usableEventSeed(seed, ID, 1_000_000 + 60_000)).toMatchObject({ id: ID })
+    expect(usableEventSeed(seed, 'other-id', 1_000_000)).toBeNull()
+    expect(usableEventSeed(seed, ID, 1_000_000 + 31 * 60_000)).toBeNull()
+    expect(usableEventSeed({ ...seed, v: 2 }, ID, 1_000_000)).toBeNull()
+    expect(usableEventSeed(null, ID)).toBeNull()
   })
 })

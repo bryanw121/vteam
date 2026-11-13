@@ -2163,3 +2163,18 @@ export type UrlCodec<T> = {
 
 /** Field errors on the feedback form (#228: shown under each field, not as an alert). */
 export type FeedbackFieldErrors = { title?: string; description?: string; platform?: string }
+
+/**
+ * #244: the event a shared /event/<id> link's HTML carries (anon-visible data only), read by
+ * `lib/eventSeed.web.ts` and seeded into the query cache as stale entries.
+ */
+export type EventSeed = {
+  v: 1
+  id: string
+  /** When the server read it (ms). The CDN can serve it for up to ~15 minutes. */
+  at: number
+  event: unknown
+  cohosts: unknown[]
+  /** Rows of `event_guests_attending` (name-free). */
+  guests: unknown[]
+}
