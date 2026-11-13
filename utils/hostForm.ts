@@ -9,7 +9,7 @@ import { DEFAULT_DURATION_MINUTES } from '../constants'
 import { cleanDate, isSurface, parsePrice } from './index'
 import { parsePrefillDate } from './clubPoll'
 import { generateEventDates } from './recurrence'
-import type { CreateEventForm, EventEditSource, HostFormParams, HostRecurrence, TablesInsert } from '../types'
+import type { CreateEventForm, EventEditSource, HostFormParams, HostRecurrence, LocationValue, TablesInsert, UserEventTemplate } from '../types'
 
 /** Now, rounded up to the next 5 minutes: the default start of a new game. */
 export function roundToNearest5(now: Date = new Date()): Date {
@@ -115,4 +115,30 @@ export function eventColumns(form: CreateEventForm, clubId: string | null): Even
 export function newEventRows(form: CreateEventForm, dates: Date[], host: { userId: string; clubId: string | null }): TablesInsert<'events'>[] {
   const columns = eventColumns(form, host.clubId)
   return dates.map(d => ({ ...columns, event_date: cleanDate(d), created_by: host.userId }))
+}
+
+/** Up to five distinct venues from the host's latest events (newest first), for the location field's quick picks. */
+export function recentVenuesFrom(rows: { location: string | null; latitude: number | null; longitude: number | null }[]): LocationValue[] {
+  const seen = new Set<string>()
+  const unique: LocationValue[] = []
+  for (const e of rows) {
+    if (e.location && !seen.has(e.location)) {
+      seen.add(e.location)
+      unique.push({ display: e.location, latitude: e.latitude ?? null, longitude: e.longitude ?? null })
+    }
+  }
+  return unique.slice(0, 5)
+}
+
+/** A saved template applied to the form: its text and cap; the template has no coordinates, so they clear. */
+export function formWithTemplate(form: CreateEventForm, t: Pick<UserEventTemplate, 'title' | 'description' | 'location' | 'max_attendees'>): CreateEventForm {
+  return {
+    ...form,
+    title: t.title,
+    description: t.description ?? '',
+    location: t.location ?? '',
+    locationLatitude: null,
+    locationLongitude: null,
+    maxAttendees: t.max_attendees,
+  }
 }

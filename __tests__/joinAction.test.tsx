@@ -204,7 +204,7 @@ describe('host form persists the approval choice', () => {
   })
 
   it('renders a switch bound to the form field', () => {
-    expect(host).toMatch(/value=\{form\.requiresApproval\}/)
-    expect(host).toMatch(/setField\('requiresApproval'/)
+    expect(host).toMatch(/<ApprovalSection value=\{form\.requiresApproval\} onChange=\{v => setField\('requiresApproval', v\)\}/)
+    expect(source('components/host/ApprovalSection.tsx')).toMatch(/value=\{value\}\s*onValueChange=\{onChange\}/)
   })
 })

@@ -1623,6 +1623,7 @@ export * from './tournament'
 export * from './scoresheet'
 export * from './metrics'
 export * from './sheetScores'
+export * from './host'
 
 // ─── Schedule generator ───────────────────────────────────────────────────────
 

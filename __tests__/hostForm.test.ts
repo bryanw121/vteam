@@ -1,5 +1,5 @@
 /** #188 part 1: the host form's pure core, without the screen. */
-import { emptyForm, eventColumns, eventDates, formFromEvent, formFromParams, hostFormProblem, newEventRows, roundToNearest5 } from '../utils/hostForm'
+import { emptyForm, eventColumns, formWithTemplate, recentVenuesFrom, eventDates, formFromEvent, formFromParams, hostFormProblem, newEventRows, roundToNearest5 } from '../utils/hostForm'
 import { localDate } from './helpers/clock'
 import type { CreateEventForm, EventEditSource, HostRecurrence } from '../types'
 
@@ -82,5 +82,19 @@ describe('eventColumns / newEventRows', () => {
     const rows = newEventRows(form(), dates, { userId: 'u1', clubId: null })
     expect(rows.map(r => r.event_date)).toEqual(dates.map(d => d.toISOString()))
     expect(rows.every(r => r.created_by === 'u1' && r.title === 'Tuesday 6s')).toBe(true)
+  })
+})
+
+describe('recentVenuesFrom / formWithTemplate', () => {
+  it('keeps the first five distinct venues, newest first', () => {
+    const row = (location: string | null, latitude: number | null = null) => ({ location, latitude, longitude: null })
+    const rows = [row('Zilker', 1), row(null), row('Zilker', 2), row('A'), row('B'), row('C'), row('D'), row('E')]
+    expect(recentVenuesFrom(rows).map(v => v.display)).toEqual(['Zilker', 'A', 'B', 'C', 'D'])
+    expect(recentVenuesFrom(rows)[0].latitude).toBe(1)
+  })
+
+  it('applies a template and clears coordinates it does not have', () => {
+    const f = formWithTemplate(form({ locationLatitude: 1, locationLongitude: 2, priceText: '5' }), { title: 'Sand 4s', description: null, location: 'Zilker', max_attendees: 8 })
+    expect(f).toMatchObject({ title: 'Sand 4s', description: '', location: 'Zilker', maxAttendees: 8, locationLatitude: null, priceText: '5' })
   })
 })
