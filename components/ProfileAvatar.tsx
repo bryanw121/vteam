@@ -11,7 +11,7 @@ import { Spinner } from './ui/Spinner'
 
 const RING = 3
 /** Elemental frames have a deliberate, photo-safe outer band. */
-const ELEMENTAL_RING = 12
+const elementalRing = (size: number) => Math.max(2, Math.min(6, Math.round(size * 0.05)))
 
 type Props = {
   uri: string | null
@@ -76,13 +76,13 @@ function GoldBorder({ children, outerSize }: { children: React.ReactNode; outerS
 }
 
 /** Wind and storm currents — earned for top-tier communication cheers. */
-function StormBorder({ children, outerSize }: { children: React.ReactNode; outerSize: number }) {
-  return <ElementalBorderFrame type="storm" size={outerSize} ring={ELEMENTAL_RING}>{children}</ElementalBorderFrame>
+function StormBorder({ children, outerSize, ring }: { children: React.ReactNode; outerSize: number; ring: number }) {
+  return <ElementalBorderFrame type="storm" size={outerSize} ring={ring}>{children}</ElementalBorderFrame>
 }
 
 /** A precise, crystal-guided energy ring — earned for top-tier setting cheers. */
-function AetherBorder({ children, outerSize }: { children: React.ReactNode; outerSize: number }) {
-  return <ElementalBorderFrame type="aether" size={outerSize} ring={ELEMENTAL_RING}>{children}</ElementalBorderFrame>
+function AetherBorder({ children, outerSize, ring }: { children: React.ReactNode; outerSize: number; ring: number }) {
+  return <ElementalBorderFrame type="aether" size={outerSize} ring={ring}>{children}</ElementalBorderFrame>
 }
 
 /**
@@ -91,7 +91,7 @@ function AetherBorder({ children, outerSize }: { children: React.ReactNode; oute
  * `onDelete` to make the picture changeable and removable.
  */
 export function ProfileAvatar({ uri, border, size, loading = false, onPress, onDelete }: Props) {
-  const ring = border === 'storm' || border === 'aether' ? ELEMENTAL_RING : RING
+  const ring = border === 'storm' || border === 'aether' ? elementalRing(size) : RING
   const outerSize = size + ring * 2
 
   const picture = (
@@ -113,8 +113,8 @@ export function ProfileAvatar({ uri, border, size, loading = false, onPress, onD
 
   let bordered: React.ReactNode
   if (border === 'gradient') bordered = <LegendBorder outerSize={outerSize} ring={ring}>{inner}</LegendBorder>
-  else if (border === 'storm') bordered = <StormBorder outerSize={outerSize}>{inner}</StormBorder>
-  else if (border === 'aether') bordered = <AetherBorder outerSize={outerSize}>{inner}</AetherBorder>
+  else if (border === 'storm') bordered = <StormBorder outerSize={outerSize} ring={ring}>{inner}</StormBorder>
+  else if (border === 'aether') bordered = <AetherBorder outerSize={outerSize} ring={ring}>{inner}</AetherBorder>
   else if (border === 'gold') bordered = <GoldBorder outerSize={outerSize}>{inner}</GoldBorder>
   else if (border === 'bronze') bordered = <BronzeBorder outerSize={outerSize}>{inner}</BronzeBorder>
   else bordered = <View style={{ width: outerSize, height: outerSize, alignItems: 'center', justifyContent: 'center' }}>{inner}</View>

@@ -24,7 +24,7 @@ export function ElementalBorderFrame({ type, size, ring, children, centreColor =
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', opacity: dimmed ? 0.3 : 1 }}>
       {isStorm ? (
-        <View style={{ position: 'absolute', inset: 0, borderRadius: size / 2, backgroundColor: '#18324D' }} />
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: size / 2, backgroundColor: '#18324D' }} />
       ) : (
         <LinearGradient
           colors={['#6F47E9', '#F0D9FF', '#9E6CFF', '#6F47E9'] as [string, string, string, string]}
