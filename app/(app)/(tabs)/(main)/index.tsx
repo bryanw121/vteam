@@ -26,7 +26,7 @@ import { track } from '../../../../lib/analytics'
 import { ANALYTICS_EVENTS } from '../../../../constants/analytics'
 import { TourTarget } from '../../../../components/tour/TourTarget'
 import { useTourWants } from '../../../../contexts/tour'
-import { OneTimeBanner } from '../../../../components/ui'
+import { IconButton, OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
 import type { EventCardRsvpHandler, FeedCardContext, FeedFilter, FeedFilterChip, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
 import { buildFeedSections } from '../../../../utils/feedSections'
@@ -277,12 +277,14 @@ export default function EventsScreen() {
     />
   ) : null
   const accountButton = isGuest ? <SignInButton /> : notifs.button
-  const headerRight = shareButton ? (
+  // Search (#176): games, places, hosts and clubs.
+  const headerRight = (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
       {shareButton}
+      <IconButton icon="search-outline" label="Search" size={44} onPress={() => router.push(routes.search())} testID="events-search-button" />
       {accountButton}
     </View>
-  ) : accountButton
+  )
 
   // A refresh failed while older events are on screen (cache or last visit's
   // saved feed): say so rather than silently showing what may be out of date.

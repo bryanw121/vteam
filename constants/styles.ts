@@ -773,6 +773,39 @@ export const shared = StyleSheet.create({
   recapStats: { flexDirection: 'row', gap: theme.spacing.md, marginTop: theme.spacing.sm },
   recapStat: { flex: 1, minWidth: 0 },
   recapStatValue: { fontFamily: theme.fonts.display, fontSize: theme.font.size.xl, fontWeight: theme.font.weight.bold, color: theme.colors.text },
+  // Club polls (#175): the block inside a post, its option rows and the composer rows.
+  pollBlock: { marginTop: theme.spacing.sm, gap: theme.spacing.xs },
+  pollMetaRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flexWrap: 'wrap' },
+  pollTag: {
+    fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText,
+    backgroundColor: theme.colors.primarySoft, borderRadius: theme.radius.sm, paddingHorizontal: theme.spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
+  pollRowWrap: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs, marginTop: theme.spacing.xs },
+  pollRow: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, minHeight: 44,
+    paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.border, overflow: 'hidden',
+  },
+  pollRowMine: { borderColor: theme.colors.primary },
+  pollRowWinner: { borderColor: theme.colors.medalGold },
+  pollBar: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: theme.colors.primarySoft },
+  pollCount: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  pollAction: { minHeight: 44, justifyContent: 'center' },
+  pollDraftRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+  pollSwitchRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, minHeight: 44 },
+  // Search (#176): the box at the top, and host / club / recent rows.
+  searchField: {
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm,
+    borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing.md, minHeight: 44, backgroundColor: theme.colors.card,
+  },
+  // minWidth 0: a web <input> otherwise keeps ~20 characters of width and pushes a 320px page sideways.
+  searchFieldInput: { flex: 1, minWidth: 0, fontFamily: theme.fonts.body, fontSize: theme.font.size.base, color: theme.colors.text, paddingVertical: theme.spacing.sm },
+  searchResultRow: {
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, minHeight: 56,
+    paddingVertical: theme.spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.colors.border,
+  },
+  searchRecentRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, minHeight: 44 },
   chipRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs, marginTop: theme.spacing.xs, marginBottom: theme.spacing.xs },
   // Settings → Notifications: example of the reminder a player will get.
   reminderPreview: {
@@ -1098,4 +1131,43 @@ export const shared = StyleSheet.create({
   bringStepperValue: { minWidth: 20, textAlign: 'center', fontFamily: fonts.bodySemiBold, fontSize: font.size.md, color: colors.text },
   bringToggleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' },
   bringAddRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
+  // ── Host form (app/(app)/host.tsx and components/host/*Section, #188) ──
+  hostFieldCard: {
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 10,
+  },
+  hostFieldLabel: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: font.size.xs,
+    fontWeight: '700',
+    color: colors.subtext,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  hostSwitchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  hostFieldInput: {
+    fontFamily: fonts.body,
+    fontSize: font.size.lgs,
+    color: colors.text,
+    fontWeight: '500',
+    paddingVertical: 2,
+    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : {}),
+  },
+  hostChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: theme.radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+  },
+  hostChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  hostChipText: { fontFamily: fonts.bodyMedium, fontSize: font.size.sm, color: colors.subtext },
+  hostChipTextActive: { fontFamily: fonts.bodySemiBold, color: colors.white },
 })

@@ -71,7 +71,17 @@ export function buildFixtures(now) {
     { id: id('c2000000', 2), club_id: C.eastside, created_by: P.priyap, body: 'Anyone want to partner for the Halloween Sand Classic? Looking for a blocker.', created_at: t.ago(60 * 26) },
     { id: id('c2000000', 3), club_id: C.eastside, created_by: P.jordanr, body: 'Great turnout yesterday, 18 people! Photos in the group chat.', created_at: t.ago(60 * 24 * 3) },
     { id: id('c2000000', 4), club_id: C.indoor, created_by: P.jordanr, body: 'Spring season registration opens next week. Same divisions as fall.', created_at: t.ago(60 * 30) },
+    // Club polls (#175): an open time poll the viewer has voted in.
+    { id: id('c2000000', 5), club_id: C.eastside, created_by: ME, body: 'Which night works for sand next week?', created_at: t.ago(60 * 2) },
   ]
+  const club_polls = [{ post_id: id('c2000000', 5), kind: 'time', multi: true, closes_at: t.iso(2, 20, 0), event_id: null, created_at: t.ago(60 * 2) }]
+  const club_poll_options = [
+    { id: id('c4000000', 1), post_id: id('c2000000', 5), position: 0, label: 'Tue · 6:30 PM', starts_at: t.iso(5, 18, 30) },
+    { id: id('c4000000', 2), post_id: id('c2000000', 5), position: 1, label: 'Thu · 7:00 PM', starts_at: t.iso(7, 19, 0) },
+    { id: id('c4000000', 3), post_id: id('c2000000', 5), position: 2, label: 'Sat · 4:00 PM', starts_at: t.iso(9, 16, 0) },
+  ]
+  const club_poll_votes = [[1, ME], [1, P.jordanr], [2, P.priyap], [2, P.marcusw], [2, P.sofiag], [3, P.emmat]]
+    .map(([n, user_id]) => ({ option_id: id('c4000000', n), post_id: id('c2000000', 5), user_id, created_at: t.ago(60) }))
   const club_post_likes = [
     [1, P.jordanr], [1, P.priyap], [1, P.sofiag], [2, ME], [3, ME], [3, P.marcusw], [3, P.zoeyl], [3, P.emmat], [4, ME],
   ].map(([n, user_id]) => ({ club_post_id: id('c2000000', n), user_id, created_at: t.ago(60) }))
@@ -368,7 +378,7 @@ export function buildFixtures(now) {
 
   return {
     profiles: profiles(t),
-    tags, major_cities, clubs, club_members, club_posts, club_post_likes, club_post_comments,
+    tags, major_cities, clubs, club_members, club_posts, club_post_likes, club_post_comments, club_polls, club_poll_options, club_poll_votes,
     events, event_tags, event_attendees, event_guests, event_payments, event_cohosts, event_comments, cheers, user_event_templates, external_sessions, external_programs,
     tournaments, tournament_rules, tournament_prizes, tournament_teams, tournament_team_members, tournament_pools, tournament_pool_teams,
     tournament_matches, tournament_sets, tournament_comments, tournament_team_invitations: [], tournament_team_join_requests: [],

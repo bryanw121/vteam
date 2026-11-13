@@ -9,6 +9,7 @@
 
 import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database'
 import type { TabKey } from '../constants/navigation'
+import type { RecurrenceCadence } from '../constants/events'
 import type { ReactElement, ReactNode } from 'react'
 import type { ActivityIndicatorProps, LayoutChangeEvent, RefreshControlProps, SectionList, ViewInstance } from 'react-native'
 import type { BracketMatchInsert, SetScore, TiebreakerKey } from './tournament'
@@ -99,6 +100,7 @@ export const NOTIFICATION_PREF_TYPES = [
   'late_dropout',
   'bring_item_uncovered',
   'new_game',
+  'club_poll',
 ] as const
 
 /** Must match the `notifications_notification_type_check` constraint in Supabase exactly. */
@@ -454,6 +456,24 @@ export type ExternalSession = Pick<
   | 'starts_at' | 'ends_at' | 'signup_url' | 'signup_label' | 'note' | 'verified_at' | 'region'
 >
 
+/** Search (#176): what to search. `mine_past` = the viewer's own attended games of the last year. */
+export type SearchScope = 'upcoming' | 'mine_past'
+
+/** A host with upcoming games, as `search_feed` returns them (public profile columns only). */
+export type SearchHost = Pick<Profile, 'id' | 'username' | 'first_name' | 'last_name' | 'avatar_url'> & { upcoming: number }
+
+/** A club, as `search_feed` returns it. */
+export type SearchClub = { id: string; name: string; avatar_url: string | null; location_name: string | null; membership_type: string; members: number }
+
+/** `search_feed` as returned: event ids, best first (the cards load separately). */
+export type SearchFeedResult = { events: string[]; external: ExternalSession[]; hosts: SearchHost[]; clubs: SearchClub[] }
+
+export type SearchHostRowProps = { host: SearchHost; onPress: () => void }
+export type SearchClubRowProps = { club: SearchClub; onPress: () => void }
+
+/** What the Search screen shows. */
+export type SearchResults = { events: EventWithDetails[]; external: ExternalSession[]; hosts: SearchHost[]; clubs: SearchClub[] }
+
 /** One division of an outside league or tournament: its cap and, where the organizer lists it, how many teams are confirmed (counts only). */
 export type ProgramDivision = { name: string; cap?: number; confirmed?: number }
 
@@ -528,6 +548,24 @@ export type ProgramsForRegion = {
 // Represent the local state of input forms before data is sent to the database.
 
 /** State used by the Create Event screen */
+/** The Repeat section of the host form (#188). */
+export type HostRecurrence = {
+  enabled: boolean
+  /** Weekdays, 0 = Sunday (weekly and bi-weekly). */
+  days: number[]
+  cadence: RecurrenceCadence
+  endDate: Date
+}
+
+/** What a link can prefill on a new event (Book a court, a club poll's winning time). Raw search params. */
+export type HostFormParams = {
+  maxAttendees?: string
+  location?: string
+  surface?: string
+  date?: string
+  title?: string
+}
+
 export type CreateEventForm = {
   title: string
   description: string
@@ -847,6 +885,56 @@ export type ClubPostWithFeed = ClubPost & {
   profiles: Pick<Profile, 'id' | 'username' | 'first_name' | 'last_name' | 'avatar_url' | 'selected_border'> | null
   club_post_likes: { count: number }[]
   club_post_comments: ClubPostCommentWithAuthor[]
+  /** Set when the post is a poll (#175). PostgREST may embed a one-to-one as an object or a one-row list. */
+  club_polls?: ClubPoll | ClubPoll[] | null
+}
+
+/** Club polls (#175): 'time' options carry a start time and can become an event. */
+export type ClubPollKind = 'text' | 'time'
+
+/** One option with the members who picked it (votes are visible to members). */
+export type ClubPollOption = {
+  id: string
+  position: number
+  label: string
+  starts_at: string | null
+  club_poll_votes: { user_id: string }[]
+}
+
+/** A poll as embedded on its post. */
+export type ClubPoll = {
+  kind: ClubPollKind
+  multi: boolean
+  closes_at: string | null
+  event_id: string | null
+  club_poll_options: ClubPollOption[]
+}
+
+/** One option's tally for display. */
+export type ClubPollOptionTally = { option: ClubPollOption; count: number; share: number; mine: boolean; winner: boolean }
+
+/** A poll's tally: options in order, the viewer's picks, whether it is closed, and the winners once it is. */
+export type ClubPollTally = { options: ClubPollOptionTally[]; myOptionIds: string[]; voters: number; closed: boolean; winners: ClubPollOption[] }
+
+/** A draft option in the poll composer. */
+export type ClubPollDraftOption = { label: string; startsAt: Date | null }
+
+export type PollBlockProps = {
+  postId: string
+  clubId: string
+  poll: ClubPoll
+  question: string
+  currentUserId: string | null
+  isOwner: boolean
+  /** A member's display name, from the club's member list. */
+  memberName: (userId: string) => string
+}
+
+export type PollComposerProps = {
+  visible: boolean
+  clubId: string
+  onClose: () => void
+  onCreated: () => void
 }
 
 // ─── Derived / Computed Types ─────────────────────────────────────────────────
@@ -1535,6 +1623,7 @@ export * from './tournament'
 export * from './scoresheet'
 export * from './metrics'
 export * from './sheetScores'
+export * from './host'
 
 // ─── Schedule generator ───────────────────────────────────────────────────────
 

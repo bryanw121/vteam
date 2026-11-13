@@ -427,6 +427,123 @@ export type Database = {
           },
         ]
       }
+      club_poll_options: {
+        Row: {
+          id: string
+          label: string
+          position: number
+          post_id: string
+          starts_at: string | null
+        }
+        Insert: {
+          id?: string
+          label: string
+          position: number
+          post_id: string
+          starts_at?: string | null
+        }
+        Update: {
+          id?: string
+          label?: string
+          position?: number
+          post_id?: string
+          starts_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_poll_options_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "club_polls"
+            referencedColumns: ["post_id"]
+          },
+        ]
+      }
+      club_poll_votes: {
+        Row: {
+          created_at: string
+          option_id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          option_id: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          option_id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "club_poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_poll_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "club_polls"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "club_poll_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_polls: {
+        Row: {
+          closes_at: string | null
+          created_at: string
+          event_id: string | null
+          kind: string
+          multi: boolean
+          post_id: string
+        }
+        Insert: {
+          closes_at?: string | null
+          created_at?: string
+          event_id?: string | null
+          kind: string
+          multi?: boolean
+          post_id: string
+        }
+        Update: {
+          closes_at?: string | null
+          created_at?: string
+          event_id?: string | null
+          kind?: string
+          multi?: boolean
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_polls_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_polls_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "club_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       club_post_comments: {
         Row: {
           body: string
@@ -3107,6 +3224,18 @@ export type Database = {
         Args: { p_podium: Json; p_tournament_id: string }
         Returns: number
       }
+      create_club_poll: {
+        Args: {
+          p_closes_at?: string
+          p_club_id: string
+          p_kind: string
+          p_multi?: boolean
+          p_notify?: boolean
+          p_options: Json
+          p_question: string
+        }
+        Returns: string
+      }
       current_user_is_admin: { Args: never; Returns: boolean }
       delete_account: {
         Args: { p_plan_hash: string; p_user: string }
@@ -3235,6 +3364,10 @@ export type Database = {
           ok: boolean
         }[]
       }
+      link_poll_event: {
+        Args: { p_event_id: string; p_post_id: string }
+        Returns: undefined
+      }
       mark_all_notifications_read: { Args: never; Returns: undefined }
       mark_conversation_read: {
         Args: { p_conversation_id: string }
@@ -3292,6 +3425,15 @@ export type Database = {
       rollup_app_events: { Args: { p_days?: number }; Returns: number }
       rollup_app_online: { Args: { p_days?: number }; Returns: number }
       sample_app_online: { Args: never; Returns: undefined }
+      save_event: {
+        Args: {
+          p_dates: string[]
+          p_edit_id: string
+          p_event: Json
+          p_tag_ids?: string[]
+        }
+        Returns: string[]
+      }
       save_event_bring_items: {
         Args: { p_event_id: string; p_items: Json }
         Returns: undefined
@@ -3299,6 +3441,10 @@ export type Database = {
       schelagg_safe_date: { Args: { v: string }; Returns: string }
       schema_fingerprint: { Args: never; Returns: Json }
       schema_pending_changes: { Args: never; Returns: Json }
+      search_feed: {
+        Args: { q: string; region?: string; scope?: string }
+        Returns: Json
+      }
       search_members: {
         Args: { p_limit?: number; p_query: string }
         Returns: {
@@ -3313,6 +3459,7 @@ export type Database = {
           username: string
         }[]
       }
+      search_score: { Args: { p_q: string; p_text: string }; Returns: number }
       send_event_reminders: { Args: never; Returns: number }
       send_friend_request: { Args: { p_user_id: string }; Returns: string }
       send_kudos_reminders: { Args: never; Returns: undefined }
@@ -3334,6 +3481,10 @@ export type Database = {
           p_player: string
           p_tournament: Database["public"]["Tables"]["tournaments"]["Row"]
         }
+        Returns: undefined
+      }
+      vote_club_poll: {
+        Args: { p_option_ids: string[]; p_post_id: string }
         Returns: undefined
       }
     }

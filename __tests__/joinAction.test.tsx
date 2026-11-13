@@ -184,23 +184,26 @@ describe('wiring: approval comes from the column, never from price', () => {
 
 describe('host form persists the approval choice', () => {
   const host = source('app/(app)/host.tsx')
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { emptyForm, eventColumns, formFromEvent } = require('../utils/hostForm') as typeof import('../utils/hostForm')
 
-  it('writes requires_approval on both create and edit', () => {
-    expect(host.match(/requires_approval: form\.requiresApproval/g) ?? []).toHaveLength(2)
+  it('writes requires_approval on both create and edit (one column builder for both)', () => {
+    expect(eventColumns({ ...emptyForm(), title: 't', requiresApproval: true }, null).requires_approval).toBe(true)
+    expect(source('hooks/host/useSaveEvent.ts')).toMatch(/p_event: eventColumns\(input\.form, input\.clubId\)/)
   })
 
   it('selects and hydrates it when editing', () => {
     expect(EVENT_EDIT_SELECT).toMatch(/\brequires_approval\b/)
-    expect(host).toMatch(/\.select\(EVENT_EDIT_SELECT\)/)
-    expect(host).toMatch(/requiresApproval: data\.requires_approval/)
+    expect(source('hooks/host/useHostForm.ts')).toMatch(/\.select\(EVENT_EDIT_SELECT\)/)
+    expect(formFromEvent({ title: 't', event_date: '2026-11-20T00:00:00Z', requires_approval: true } as never).requiresApproval).toBe(true)
   })
 
   it('defaults new events to no approval, independent of price', () => {
-    expect(host).toMatch(/requiresApproval: false/)
+    expect(emptyForm().requiresApproval).toBe(false)
   })
 
   it('renders a switch bound to the form field', () => {
-    expect(host).toMatch(/value=\{form\.requiresApproval\}/)
-    expect(host).toMatch(/setField\('requiresApproval'/)
+    expect(host).toMatch(/<ApprovalSection value=\{form\.requiresApproval\} onChange=\{v => setField\('requiresApproval', v\)\}/)
+    expect(source('components/host/ApprovalSection.tsx')).toMatch(/value=\{value\}\s*onValueChange=\{onChange\}/)
   })
 })

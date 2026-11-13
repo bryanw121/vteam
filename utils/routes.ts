@@ -61,6 +61,14 @@ export type HostRouteOptions = {
   location?: string
   /** Prefill the surface. */
   surface?: Surface
+  /** Prefill the club (one the host owns). */
+  clubId?: string
+  /** Prefill the start (ISO instant), e.g. a club poll's winning time. */
+  date?: string
+  /** Prefill the title. */
+  title?: string
+  /** The club poll this event answers (#175): linked to it once saved. */
+  pollId?: string
 }
 
 export const routes = {
@@ -68,6 +76,8 @@ export const routes = {
   /** Events tab; `view` puts filters and a day in the link (`/?type=tournament&day=2026-11-14`). */
   events: (view: ViewOf<'feed'> = {}) => href(withView('/', VIEW.feed, view)),
   clubs: (view: ViewOf<'clubs'> = {}) => href(withView('/clubs', VIEW.clubs, view)),
+  /** Search games, hosts and clubs (#176); public. */
+  search: (view: ViewOf<'search'> = {}) => href(withView('/search', VIEW.search, view)),
   chat: () => href('/chat'),
   /** Your own Profile tab; `{ edit: true }` opens the profile editor. */
   profile: (view: ViewOf<'profile'> = {}) => href(withView('/profile', VIEW.profile, view)),
@@ -100,6 +110,10 @@ export const routes = {
     if (opts.mode !== undefined) query.push(`mode=${opts.mode}`)
     if (opts.location) query.push(`location=${encodeURIComponent(opts.location)}`)
     if (opts.surface !== undefined) query.push(`surface=${opts.surface}`)
+    if (opts.clubId) query.push(`clubId=${encodeURIComponent(opts.clubId)}`)
+    if (opts.date) query.push(`date=${encodeURIComponent(opts.date)}`)
+    if (opts.title) query.push(`title=${encodeURIComponent(opts.title)}`)
+    if (opts.pollId) query.push(`pollId=${encodeURIComponent(opts.pollId)}`)
     return href(query.length ? `/host?${query.join('&')}` : '/host')
   },
 
