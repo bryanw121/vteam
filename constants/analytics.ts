@@ -36,8 +36,14 @@ export const ANALYTICS_EVENTS = {
   playerSetupCompleted: 'player_setup_completed',
   /** The Events feed's first rows were in hand (#184). props: { ms (since navigation start), source: snapshot | prefetch | fetch, cold } */
   feedFirstPaint: 'feed_first_paint',
-  /** The startup config was read (#216). props: { arm: cdn | direct, source: cdn | direct | fallback, ms } */
+  /** The startup config was read (#216). props: { arm: cdn | direct, source: cdn | direct | fallback, part: version | ads, ms } */
   startupTiming: 'startup_timing',
+  /** The web push card rendered (#189). props: { state: unsupported | needs-install | ask | on | blocked } */
+  webPushState: 'web_push_state',
+  /** Web push turned on for this browser (#189). */
+  webPushEnabled: 'web_push_enabled',
+  /** The permission prompt was refused or dismissed (#189). props: { permission } */
+  webPushBlocked: 'web_push_blocked',
   /** A guest tapped Join / Join waitlist / Request and was sent to sign up (#229). props: { action } */
   joinIntentSaved: 'join_intent_saved',
   /** Back on the game after signing in. props: { outcome: joined | not_now | skipped | expired, offer? } */

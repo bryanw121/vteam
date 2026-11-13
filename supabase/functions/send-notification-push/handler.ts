@@ -21,6 +21,10 @@
  *   Headers: x-webhook-secret: <WEBHOOK_SECRET>
  *            (or Authorization: Bearer <service-role-key>)
  *
+ * Web tokens (platform 'web', #189) get standard Web Push through
+ * _shared/webpush.ts (VAPID secrets; skipped when they are not set); a 404/410
+ * deletes the subscription.
+ *
  * Same delivery rules as send-chat-push: chunks of 100, DeviceNotRegistered
  * tokens deleted, ticket ids stored in push_receipts for check-push-receipts.
  * chat_mention rows are not pushed (send-chat-push already delivered the
@@ -37,7 +41,8 @@
 import { requireWebhookAuth } from '../_shared/webhook.ts'
 import { chunk, EXPO_BATCH_SIZE, EXPO_PUSH_URL } from '../_shared/expo.ts'
 import type { DbClient, Deps } from '../_shared/deps.ts'
-import { buildPushMessages, parseNotificationWebhook, shouldPush, type NotificationPrefsJson } from '../_shared/notificationPush.ts'
+import { buildPushMessages, parseNotificationWebhook, safeDeepLink, shouldPush, type NotificationPrefsJson } from '../_shared/notificationPush.ts'
+import { sendToWebTokens, vapidFromEnv, type WebToken } from '../_shared/webpush.ts'
 
 type ExpoTicket =
   | { status: 'ok'; id: string }
@@ -101,7 +106,7 @@ export function createHandler(deps: Deps) {
     const [settingsRes, profileRes, tokensRes] = await Promise.all([
       supabase.from('user_settings').select('notification_prefs').eq('user_id', record.user_id).maybeSingle(),
       supabase.from('profiles').select('notification_prefs').eq('id', record.user_id).maybeSingle(),
-      supabase.from('push_tokens').select('token').eq('user_id', record.user_id),
+      supabase.from('push_tokens').select('token, platform, web_keys').eq('user_id', record.user_id),
     ])
     if (settingsRes.error) return fail('prefs lookup', settingsRes.error)
     if (profileRes.error) return fail('prefs lookup', profileRes.error)
@@ -113,12 +118,31 @@ export function createHandler(deps: Deps) {
       ?? undefined
     if (!shouldPush(record, prefs)) return new Response('Not pushed for this type', { status: 200 })
 
-    const tokens = ((tokensRes.data ?? []) as { token: string }[]).map(r => r.token)
+    type TokenRow = { token: string; platform?: string | null; web_keys?: unknown }
+    const rows = (tokensRes.data ?? []) as TokenRow[]
+    const tokens = rows.filter(r => r.platform !== 'web').map(r => r.token)
+    const webTokens: WebToken[] = rows.filter(r => r.platform === 'web').map(r => ({ token: r.token, web_keys: r.web_keys }))
     const messages = buildPushMessages(record, tokens)
-    if (!messages.length) return new Response('No tokens', { status: 200 })
+    const vapid = webTokens.length ? vapidFromEnv(deps.env) : null
+    if (webTokens.length && !vapid) console.warn('web push skipped: VAPID secrets are not set')
+    if (!messages.length && !vapid) return new Response('No tokens', { status: 200 })
 
     const deadTokens: string[] = []
     const receipts: { ticket_id: string; token: string }[] = []
+    let webSent = 0
+
+    // Web Push (#189): one encrypted POST per browser subscription.
+    if (vapid) {
+      const deepLink = safeDeepLink(record.data.deep_link)
+      const web = await sendToWebTokens(deps.fetch, vapid, webTokens, {
+        title: record.title,
+        body: record.body,
+        ...(deepLink ? { deep_link: deepLink } : {}),
+        tag: record.notification_type,
+      }, deps.now())
+      webSent = web.sent
+      deadTokens.push(...web.dead)
+    }
 
     for (const batch of chunk(messages, EXPO_BATCH_SIZE)) {
       try {
@@ -151,7 +175,7 @@ export function createHandler(deps: Deps) {
       if (error) console.warn('push_receipts insert skipped:', error.message)
     }
 
-    return new Response(JSON.stringify({ sent: receipts.length, removedTokens: deadTokens.length }), {
+    return new Response(JSON.stringify({ sent: receipts.length, ...(webTokens.length ? { webSent } : {}), removedTokens: deadTokens.length }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
