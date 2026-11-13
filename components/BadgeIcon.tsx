@@ -6,6 +6,7 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { badgeTierLabel, BADGE_CATEGORY_GRADIENTS, type BadgeDef } from '../constants/badges'
 import { BADGE_ARTWORK } from '../constants/badgeArtwork'
 import { theme } from '../constants/theme'
+import { useBadgeArt } from '../hooks/useBadgeArt'
 
 type Props = {
   def: BadgeDef
@@ -35,12 +36,17 @@ export function BadgeIcon({ def, tier, size = 'sm', showLabel = false, slotNumbe
   const [topColor, bottomColor] = BADGE_CATEGORY_GRADIENTS[def.type] ?? ['#888', '#444']
   const label = earned ? badgeTierLabel(def, tier!) : def.tiers[0].label
 
-  // Resolve image URI: per-tier image takes precedence over a single imageUri
+  // Resolve the image: generated art for the earned tier (badge_art, #10), then the
+  // bundled artwork (constants/badgeArtwork), then a definition URL, else the gradient icon.
+  const art = useBadgeArt()
+  const generatedUri = earned ? art[def.type]?.[tier!] : undefined
   const resolvedImageUri = (earned && def.tierImageUris?.[tier!]) || def.imageUri
   const bundledArtwork = BADGE_ARTWORK[def.type]?.[earned ? tier! : def.tiers[0].tier]
-  const resolvedImageSource = bundledArtwork ?? (resolvedImageUri ? { uri: resolvedImageUri } : undefined)
+  const resolvedImageSource = generatedUri
+    ? { uri: generatedUri }
+    : bundledArtwork ?? (resolvedImageUri ? { uri: resolvedImageUri } : undefined)
   // The bundled PNGs share a padded canvas; keep the art inside the label gap.
-  const imageScale = bundledArtwork ? 1.15 : def.tierImageUris ? 1.4 : 1.2
+  const imageScale = generatedUri ? 1.4 : bundledArtwork ? 1.15 : def.tierImageUris ? 1.4 : 1.2
 
   return (
     <View style={{ alignItems: 'center', gap }}>

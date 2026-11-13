@@ -17,6 +17,12 @@
  * is closed without merging, beta must be rolled back (beta_meta.rollback_pr).
  *
  * Runs in CI on every PR/push (Web build job) and daily (schema-drift.yml).
+ *
+ * `--ready <sha>` (#245) answers one question for a deploy: is every migration that
+ * this commit's merged PRs brought already on live? It looks only at ledger PRs that
+ * are merged and whose merge commit is in <sha>'s history, compares just their
+ * objects, and with `--wait <minutes>` polls every 2 minutes until live has them
+ * (schema-ready.yml, the "Live schema ready" check Vercel waits on). Read-only.
  * See CLAUDE.md, "Schema migrations".
  *
  * The anon keys are public by design (they ship in every client bundle).
@@ -143,6 +149,101 @@ export function evaluate({ live, beta, pending = [], states = {}, allowed = ALLO
   return { errors, notes, drift }
 }
 
+/**
+ * Pure (#245): the merged PRs, in this commit's history, whose migration is not (fully) on live.
+ * `merged` maps PR number -> true when it is merged into the commit being deployed.
+ */
+export function readiness({ live, beta, pending = [], merged = {} }) {
+  const missing = []
+  for (const p of pending) {
+    if (!merged[p.pr]) continue
+    const differs = p.keys.filter(k => live[k] !== beta[k])
+    if (differs.length) missing.push({ pr: p.pr, migration: p.migration, objects: differs.length })
+  }
+  return { ready: missing.length === 0, missing }
+}
+
+/** PR number -> true when it is merged and its merge commit is in `sha`'s history. */
+async function mergedInto(prs, sha) {
+  const headers = { accept: 'application/vnd.github+json' }
+  if (process.env.GITHUB_TOKEN) headers.authorization = `Bearer ${process.env.GITHUB_TOKEN}`
+  const get = async path => {
+    const res = await fetch(`https://api.github.com/repos/${REPO}/${path}`, { headers, signal: AbortSignal.timeout(15_000) })
+    if (!res.ok) throw new Error(`GitHub ${path}: HTTP ${res.status}`)
+    return res.json()
+  }
+  const out = {}
+  for (const pr of prs) {
+    const j = await get(`pulls/${pr}`)
+    if (!j.merged_at || !j.merge_commit_sha) { out[pr] = false; continue }
+    const cmp = await get(`compare/${j.merge_commit_sha}...${sha}`)
+    out[pr] = cmp.status === 'ahead' || cmp.status === 'identical'
+  }
+  return out
+}
+
+/**
+ * Pure: PR number -> true when its migration file is in this checkout. A ledger PR's
+ * migration lands in the tree only when the PR merges, so a build of any commit can tell
+ * which PRs it contains without calling GitHub (Vercel builds have no token for this
+ * private repo). `exists(file)` says whether supabase/migrations/<file> is present.
+ */
+export function mergedByTree(pending, exists) {
+  const out = {}
+  for (const p of pending) out[p.pr] = Boolean(out[p.pr]) || exists(p.migration)
+  return out
+}
+
+export function treeResolver(dir = 'supabase/migrations') {
+  return async pending => {
+    const { existsSync } = await import('node:fs')
+    const { join } = await import('node:path')
+    return mergedByTree(pending, file => typeof file === 'string' && existsSync(join(dir, file)))
+  }
+}
+
+function summary(lines) {
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    import('node:fs').then(fs => fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n'))
+  }
+}
+
+export async function ready(sha, waitMinutes, resolveMerged = pending => mergedInto([...new Set(pending.map(p => p.pr))], sha)) {
+  const deadline = Date.now() + waitMinutes * 60_000
+  let announced = false
+  for (;;) {
+    const [live, beta, pending] = await Promise.all([rpc('live', 'schema_fingerprint'), rpc('beta', 'schema_fingerprint'), rpc('beta', 'schema_pending_changes')])
+    const merged = await resolveMerged(pending)
+    const { ready: ok, missing } = readiness({ live, beta, pending, merged })
+    if (ok) {
+      console.log(`Live schema ready for ${sha.slice(0, 7)}: ${Object.values(merged).filter(Boolean).length} merged migration(s) checked, all on live.`)
+      if (announced) summary(['', `**Live now has it.** Passed at ${new Date().toISOString()}; Vercel can promote this deploy.`])
+      return
+    }
+    if (!announced) {
+      announced = true
+      const rows = missing.map(m => `| #${m.pr} | \`${m.migration}\` | ${m.objects} |`)
+      summary([
+        '### Live schema not ready',
+        '',
+        'This commit includes merged PRs whose migration is not on live yet. The production deploy waits (the Vercel build gate, scripts/vercel-schema-gate.mjs) until it is.',
+        '',
+        '| PR | Migration | Objects that differ |', '|---|---|---|', ...rows,
+        '',
+        `Apply each to live (Supabase MCP \`apply_migration\` on rmelsdqgrpfjzqisycdl), then \`select beta_meta.complete_pr(<PR>);\` on beta. This check polls every 2 minutes for ${waitMinutes} minutes and passes by itself; after that, re-run the job.`,
+      ])
+      for (const m of missing) console.log(`::warning title=Live schema not ready::Apply ${m.migration} from #${m.pr} to live (${m.objects} object(s) differ)`)
+    }
+    if (Date.now() >= deadline) {
+      console.error(`Still missing on live after ${waitMinutes} min: ${missing.map(m => `#${m.pr} ${m.migration}`).join(', ')}`)
+      process.exitCode = 1
+      return
+    }
+    console.log(`Waiting for live: ${missing.map(m => `#${m.pr}`).join(', ')}; checking again in 2 minutes`)
+    await new Promise(r => setTimeout(r, 120_000))
+  }
+}
+
 async function main() {
   const [live, beta, pending] = await Promise.all([rpc('live', 'schema_fingerprint'), rpc('beta', 'schema_fingerprint'), rpc('beta', 'schema_pending_changes')])
   const states = await prStates([...new Set(pending.map(p => p.pr))])
@@ -162,5 +263,15 @@ async function main() {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(e => { console.error(e.message); process.exitCode = 1 })
+  const args = process.argv.slice(2)
+  const at = args.indexOf('--ready')
+  const wait = Number(args[args.indexOf('--wait') + 1]) || (args.includes('--wait') ? 180 : 0)
+  // --ready-local: decide which ledger PRs this checkout contains from its migration files
+  // (no GitHub call), for the Vercel production build (scripts/vercel-schema-gate.mjs).
+  const run = args.includes('--ready-local')
+    ? ready(process.env.VERCEL_GIT_COMMIT_SHA || 'checkout', wait, treeResolver())
+    : at >= 0
+      ? ready(args[at + 1] || process.env.GITHUB_SHA, wait)
+      : main()
+  run.catch(e => { console.error(e.message); process.exitCode = 1 })
 }

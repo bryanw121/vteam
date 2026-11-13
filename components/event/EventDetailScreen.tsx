@@ -401,6 +401,7 @@ export default function EventDetail() {
                   onManageCohosts={cohostsApi.open}
                   payments={paymentAccess.canToggle ? payments : null}
                   noShow={isViewerNoShow(roster.rows, userId)}
+                  isHostOrCohost={isHostOrCohost}
                 />
               ) : placeholder}
 
@@ -455,7 +456,7 @@ export default function EventDetail() {
               ) : placeholder}
             </Pager>
 
-            {activeTab === DETAILS_TAB && (
+            {activeTab === DETAILS_TAB && !data.seedOnly && (
               <JoinFooter
                 eventDate={event.event_date}
                 eventStatus={eventStatus}

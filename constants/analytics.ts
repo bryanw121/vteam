@@ -56,4 +56,10 @@ export const ANALYTICS_EVENTS = {
   linkShared: 'link_shared',
   /** A player was reported (#243): { kind, reason }, never ids. */
   reportSent: 'report_sent',
+  /** Said they'll bring something to a game (#256). props: { surface (indoor | sand | grass | unknown), required } */
+  bringItemClaimed: 'bring_item_claimed',
+  /** Let go of something they said they'd bring. props: { surface } */
+  bringItemReleased: 'bring_item_released',
+  /** A host saved a game's "What to bring" list. props: { items (count), surface } */
+  bringListSaved: 'bring_list_saved',
 } as const

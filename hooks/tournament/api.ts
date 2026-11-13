@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabase'
 import { getQueryData, queryKey } from '../../lib/query'
 import { DEFAULT_TIEBREAKERS } from '../../lib/tournamentStandings'
 import { COMMENTS_PAGE, keepLoadedOlder, mergeComments, missingParentIds, pageFromNewestFirst } from '../../utils/commentPages'
+import { searchMembers } from '../../lib/memberSearch'
 import type {
   GeneratedSchedule, MyRegistration, PendingInvite, Podium, SetScore, UserTrophy, TablesInsert, TimedBracketMatch, Tournament, TournamentCommentWithAuthor,
   TournamentCommentsPage, TournamentCore, TournamentInviteCandidate, TournamentJoinRequestWithRequester, TournamentMatchRow,
@@ -223,13 +224,9 @@ export async function fetchMyRegistration(id: string, userId: string): Promise<M
   }
 }
 
-export async function searchProfiles(filter: string, excludeUserId: string | null): Promise<TournamentInviteCandidate[]> {
-  const rows = await ok(
-    supabase.from('profiles').select('id, username, first_name, last_name, avatar_url')
-      .or(filter).neq('id', excludeUserId ?? '').limit(20),
-  )
-  // `username` is nullable in the schema but always set by the signup trigger.
-  return (rows ?? []) as TournamentInviteCandidate[]
+export async function searchProfiles(term: string, excludeUserId: string | null): Promise<TournamentInviteCandidate[]> {
+  const rows = await searchMembers(term, { limit: 20, exclude: [excludeUserId] })
+  return rows.map(r => ({ id: r.id, username: r.username, first_name: r.first_name, last_name: r.last_name, avatar_url: r.avatar_url }))
 }
 
 // ─── Registration & teams ─────────────────────────────────────────────────────

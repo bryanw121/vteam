@@ -9,6 +9,7 @@
 | `send-feedback-email` | the app, after inserting `feedback_submissions` (`lib/feedback.ts`) | user JWT checked by the gateway; the function emails only a fresh row the caller owns | `true` |
 | `login-with-username` | the signed-out app, via `supabase.functions.invoke('login-with-username')` | none (it is a sign-in); rate limited per username and IP | `false` |
 | `delete-account` | the app (Settings → Account → Delete account, `hooks/useAccountDeletion.ts`) | user JWT checked by the gateway and again with `auth.getUser`; recent sign-in required | `true` |
+| `generate-badge-art` | an admin, via `scripts/generate-badge-art.mjs` | user JWT checked by the gateway; the function checks the caller is an admin | `true` |
 
 `verify_jwt` is declared in [`../config.toml`](../config.toml) and applied on deploy.
 Shared code lives in `_shared/` (`supabase.ts`: service-role client and `defaultDeps`;
@@ -217,3 +218,29 @@ deploy, when live's `verify_jwt` differs from `config.toml`, or when a function 
 not `ACTIVE`. It only reads. It needs a Supabase personal access token in the
 `SUPABASE_ACCESS_TOKEN` repository secret; until that exists it prints a notice and
 passes. `node --test scripts/functions-drift.test.mjs` covers the comparison.
+
+## `generate-badge-art`
+
+Generates the art for one badge tier (#10) with OpenAI's Images API, stores the PNG
+in the public `badges` bucket under `generated/<badge>/tier<n>-<ms>.png` (a new file
+each time, cached for a year) and upserts its URL into `public.badge_art`. The app
+reads that table (`hooks/useBadgeArt`) and falls back to the built-in art; nothing
+generates on the render path.
+
+- **Admins only.** The function resolves the caller from the JWT and checks
+  `app_admins` (after #102) or else `profiles.is_admin`, with the service role.
+- **Consistent set.** The prompt is built from the tier spec and the style tokens in
+  `_shared/badgeArt.ts` (the only place the look is defined), so the same spec always
+  gives the same prompt. Change the look there and regenerate.
+- **Secrets.** `OPENAI_API_KEY` (required; without it: `503 not configured`).
+  Optional `OPENAI_IMAGE_MODEL` (default `gpt-image-1.5`) and `OPENAI_IMAGE_QUALITY`
+  (`low` | `medium` | `high`, default `medium`).
+- **Trigger.** `node scripts/generate-badge-art.mjs serve_cheer 2` (one tier),
+  `... serve_cheer` (every tier of a badge), `... --missing` (every tier without art),
+  plus `--dry-run` to print prompts without generating. It reads the project URL and
+  anon key from `.env` and signs in with `BADGE_ADMIN_EMAIL` / `BADGE_ADMIN_PASSWORD`
+  (or `BADGE_ADMIN_TOKEN`).
+- **Cost.** One 1024x1024 image per call: about $0.03 at `medium` quality on
+  `gpt-image-1.5` ($0.01 `low`, $0.13 `high`). The full catalog today is 36 tiers (about $1.20 at medium).
+- **Undo a tier.** Delete its `badge_art` row (SQL editor); the app falls back to the
+  built-in art. Old PNGs stay in the bucket.

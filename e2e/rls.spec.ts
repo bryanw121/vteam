@@ -84,6 +84,17 @@ test.describe('anon (guest browsing)', () => {
     expect(dm.data ?? []).toEqual([])
   })
 
+  test('reads generated badge art but cannot write it (#10)', async () => {
+    const read = await q(() => anon.from('badge_art').select('badge_type, tier, image_url').limit(1), 'anon badge_art')
+    // Until the migration is on beta (draft PR) the table does not exist.
+    test.skip(read.error?.code === 'PGRST205', 'badge_art not applied on beta yet')
+    expect(read.error).toBeNull()
+    const prompt = await q(() => anon.from('badge_art').select('prompt').limit(1), 'anon badge_art prompt')
+    expect(prompt.error?.code, 'prompt column is not granted to clients').toBe(RLS_DENIED)
+    const write = await q(() => anon.from('badge_art').insert({ badge_type: 'e2e_rls', tier: 1, image_url: 'https://x', prompt: 'x', model: 'x' }), 'anon insert badge_art')
+    expect(write.error?.code).toBe(RLS_DENIED)
+  })
+
   test('sees no friend data and cannot call the friend RPCs (#15)', async () => {
     const probe = await q(() => anon.from('friendships').select('user_id').limit(1), 'anon friendships')
     // Until the migration is on beta (draft PR) the tables do not exist.
@@ -474,5 +485,43 @@ test.describe('admin usage metrics (#232 part 2)', () => {
       expect(res.error, `anon ${fn}`).not.toBeNull()
       expect(res.data, `${fn} returned data to a guest`).toBeNull()
     }
+  })
+})
+
+test.describe('what to bring (#256)', () => {
+  // Writes go only through SECURITY DEFINER functions; guests read coverage through
+  // get_event_bring_list (counts, no names) and never the claims table.
+  const NO_EVENT = '00000000-0000-4000-8000-000000000000'
+
+  test('guests read the list function but not who is bringing what', async () => {
+    const listRes = await q(() => anon.rpc('get_event_bring_list' as never, { p_event_id: NO_EVENT } as never), 'anon get_event_bring_list')
+    expect(listRes.error).toBeNull()
+    expect(listRes.data).toEqual([])
+    const items = await q(() => anon.from('event_bring_items' as never).select('id', { count: 'exact', head: true }), 'anon event_bring_items')
+    expect(items.error).toBeNull()
+    const claims = await q(() => anon.from('event_bring_claims' as never).select('item_id').limit(1), 'anon event_bring_claims')
+    expect(claims.error?.code ?? null, 'anon must not read claims').toBe(RLS_DENIED)
+  })
+
+  test('guests cannot claim, release or save a list', async () => {
+    for (const [fn, args] of [
+      ['claim_bring_item', { p_item_id: NO_EVENT, p_quantity: 1 }],
+      ['release_bring_item', { p_item_id: NO_EVENT }],
+      ['save_event_bring_items', { p_event_id: NO_EVENT, p_items: [] }],
+    ] as const) {
+      const res = await q(() => anon.rpc(fn as never, args as never), `anon ${fn}`)
+      expect(res.error, `anon ${fn}`).not.toBeNull()
+    }
+  })
+
+  test('a signed-in player cannot write the tables directly or edit someone else\'s list', async () => {
+    const ins = await q(() => me.from('event_bring_items' as never).insert({ event_id: NO_EVENT, label: 'x' } as never), 'me insert item')
+    expect(ins.error).not.toBeNull()
+    const claim = await q(() => me.from('event_bring_claims' as never).insert({ item_id: NO_EVENT, event_id: NO_EVENT, user_id: BUDDY_ID } as never), 'me insert claim as buddy')
+    expect(claim.error).not.toBeNull()
+    const save = await q(() => me.rpc('save_event_bring_items' as never, { p_event_id: NO_EVENT, p_items: [] } as never), 'me save missing event')
+    expect(save.error?.message).toMatch(/Event not found/)
+    const alert = await q(() => me.from('event_bring_alert_log' as never).select('event_id').limit(1), 'me alert log')
+    expect(alert.error ?? (alert.data as unknown[] | null)?.length === 0, 'alert log is service-only').toBeTruthy()
   })
 })

@@ -7,7 +7,6 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { Sentry } from '../../lib/sentry'
 import { getQueryData, invalidate, queryKey, useQuery } from '../../lib/query'
-import { eventKeys } from '../../hooks/event/keys'
 import { HostFormSkeleton } from '../../components/host/HostFormSkeleton'
 import { DatePickerField } from '../../components/DatePickerField'
 import { LocationPickerField } from '../../components/LocationPickerField'
@@ -20,13 +19,20 @@ import { routes } from '../../utils/routes'
 import { useSession } from '../../contexts/session'
 import { useTags } from '../../hooks/useTags'
 import { cleanDate, diffTagIds, isSurface, normalizePriceText, parsePrice, sanitizePriceInput } from '../../utils'
+import { bringDraftsChanged, draftsFromItems, draftsFromTemplate, saveBringArgs, templateBringItems } from '../../utils/bringList'
+import { BringItemsSection } from '../../components/host/BringItemsSection'
+import { fetchBringList } from '../../hooks/event/useEventBringList'
+import { eventKeys } from '../../hooks/event/keys'
+import { track } from '../../lib/analytics'
+import { toast } from '../../lib/toast'
+import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import { defaultRecurrenceEndDate, generateEventDates } from '../../utils/recurrence'
-import type { CreateEventForm, EventEditSource, EventWithDetails, OwnedClubOption, Tag, UserEventTemplate } from '../../types'
+import type { BringItem, BringItemDraft, CreateEventForm, EventEditSource, EventWithDetails, OwnedClubOption, Tag, UserEventTemplate } from '../../types'
 import { Spinner } from '../../components/ui/Spinner'
 
 const EMPTY_TAGS: Tag[] = []
 const EMPTY_CLUBS: OwnedClubOption[] = []
-const TEMPLATE_SELECT = 'id, user_id, name, title, description, location, max_attendees, created_at'
+const TEMPLATE_SELECT = 'id, user_id, name, title, description, location, max_attendees, created_at, bring_items'
 
 function roundToNearest5(): Date {
   const d = new Date()
@@ -137,6 +143,14 @@ export default function HostEventScreen() {
   const [successMessage, setSuccessMessage] = useState('')
   /** Drives the result modal's body copy and whether it reads as a failure. */
   const [saveOutcome, setSaveOutcome] = useState<'saved' | 'tags-failed' | 'tags-uncertain' | 'failed'>('saved')
+  // What to bring (#256): the form's list, and what is saved on the event being edited.
+  const [bringDrafts, setBringDrafts] = useState<BringItemDraft[]>([])
+  const bringTouchedRef = useRef(false)
+  const savedBringRef = useRef<BringItemDraft[]>([])
+  const changeBringDrafts = useCallback((next: BringItemDraft[]) => {
+    bringTouchedRef.current = true
+    setBringDrafts(next)
+  }, [])
   // Save as template
   const [saveAsTemplate, setSaveAsTemplate] = useState(false)
   const [templateName, setTemplateName] = useState('')
@@ -209,7 +223,8 @@ export default function HostEventScreen() {
         .eq('user_id', userId as string)
         .order('created_at', { ascending: false })
       if (error) throw error
-      return (data ?? []) as UserEventTemplate[]
+      // TEMPORARY double cast: bring_items isn't in types/database.ts until it is regenerated from live after merge (#256).
+      return (data ?? []) as unknown as UserEventTemplate[]
     },
     { staleMs: STALE.feed, enabled: !!userId && view === 'templates' },
   )
@@ -272,6 +287,37 @@ export default function HostEventScreen() {
     void loadEdit()
   }, [editId, userId, sessionLoading, loadEdit])
 
+  // Editing: the event's saved "What to bring" list fills the section once, unless the host already changed it.
+  const savedBringQuery = useQuery<BringItem[]>(
+    editId ? eventKeys.bring(editId, userId ?? null) : null,
+    () => fetchBringList(editId as string),
+    { staleMs: STALE.detail, enabled: !!editId && !!userId },
+  )
+  useEffect(() => {
+    const items = savedBringQuery.data
+    if (!items || bringTouchedRef.current) return
+    const drafts = draftsFromItems(items, userId ?? null)
+    savedBringRef.current = drafts
+    setBringDrafts(drafts)
+  }, [savedBringQuery.data, userId])
+
+  /** Writes the list after the event row; a failure here says so but doesn't undo the event. */
+  async function saveBringList(eventIds: string[], keepIds: boolean): Promise<void> {
+    if (eventIds.length === 0) return
+    try {
+      for (const id of eventIds) {
+        // TEMPORARY cast: save_event_bring_items isn't in types/database.ts until it is regenerated from live after merge (#256).
+        const { error } = await supabase.rpc('save_event_bring_items' as never, saveBringArgs(id, bringDrafts, keepIds) as never)
+        if (error) throw error
+        invalidate(eventKeys.root(id))
+      }
+      track(ANALYTICS_EVENTS.bringListSaved, { items: bringDrafts.length, surface: form.surface ?? 'unknown' })
+    } catch (e) {
+      Sentry.captureException(e)
+      toast.error("Event saved, but What to bring wasn't", e)
+    }
+  }
+
   // Only the edit row gates the form: tags, clubs and venues fill in when they land.
   const initialLoading = editState === 'loading' || (isEdit && sessionLoading && !seed)
 
@@ -301,6 +347,7 @@ export default function HostEventScreen() {
       locationLongitude: null,
       maxAttendees: t.max_attendees,
     }))
+    changeBringDrafts(draftsFromTemplate(t.bring_items))
     setView('form')
   }
 
@@ -433,6 +480,11 @@ export default function HostEventScreen() {
         invalidate('feed')
         invalidate('club')
 
+        if (bringDraftsChanged(savedBringRef.current, bringDrafts)) {
+          await saveBringList([editId], true)
+          bringTouchedRef.current = false
+        }
+
         setSuccessMessage('Event updated!')
         setSuccessModal(true)
       } else {
@@ -474,6 +526,10 @@ export default function HostEventScreen() {
           if (tagError) throw tagError
         }
 
+        if (bringDrafts.length > 0 && insertedEvents) {
+          await saveBringList(insertedEvents.map(e => e.id), false)
+        }
+
         if (saveAsTemplate && (templateName.trim() || form.title)) {
           await supabase.from('user_event_templates').insert({
             user_id: userId,
@@ -482,6 +538,8 @@ export default function HostEventScreen() {
             description: form.description || null,
             location: form.location || null,
             max_attendees: form.maxAttendees,
+            // TEMPORARY cast: bring_items isn't in types/database.ts until it is regenerated from live after merge (#256).
+            ...({ bring_items: templateBringItems(bringDrafts) } as object),
           })
         }
 
@@ -497,6 +555,8 @@ export default function HostEventScreen() {
         setTemplateName('')
         setSelectedTagIds([])
         setSelectedClubId(null)
+        setBringDrafts([])
+        bringTouchedRef.current = false
       }
     } catch (e: any) {
       Sentry.captureException(e)
@@ -887,6 +947,15 @@ export default function HostEventScreen() {
           </View>
           <Text style={shared.caption}>Players can filter the Events feed by surface.</Text>
         </View>
+
+        {/* ── What to bring (#256) ── */}
+        <BringItemsSection
+          drafts={bringDrafts}
+          onChange={changeBringDrafts}
+          surface={form.surface}
+          cardStyle={hostStyles.fieldCard}
+          labelStyle={hostStyles.fieldLabel}
+        />
 
         {/* ── Approval ──
             Its own card right after Price: approval used to be implied by

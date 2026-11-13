@@ -13,7 +13,7 @@ import { BEST_FRIEND_LIMIT, FRIEND_COPY, FRIEND_REQUESTS_PER_DAY } from '../cons
 import { NOTIFICATION_TYPES } from '../types'
 
 /** Notification types later migrations added (reports, #243). */
-const ADDED_AFTER_FRIENDS: readonly string[] = ['report_resolved', 'moderation_warning']
+const ADDED_AFTER_FRIENDS: readonly string[] = ['bring_item_uncovered', 'report_resolved', 'moderation_warning']
 import { USER_SCOPED_PREFIXES } from '../hooks/useCacheUserScope'
 import type { Friend, FriendGoing, FriendRequest, FriendsData, ProfileBrief } from '../types'
 

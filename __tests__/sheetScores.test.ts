@@ -50,6 +50,14 @@ describe('sheetScoresUrl', () => {
       delete process.env.EXPO_PUBLIC_TEXASAO_SCORES_URL
     })
   })
+
+  it('uses the deployed Sheet when no env var is set (web and native builds alike)', () => {
+    jest.isolateModules(() => {
+      delete process.env.EXPO_PUBLIC_TEXASAO_SCORES_URL
+      const { sheetScoresUrl: fresh } = require('../utils/sheetScores')
+      expect(fresh('texasao-2026-11-14')).toMatch(/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec\?format=json$/)
+    })
+  })
 })
 
 describe('parseSheetState', () => {
