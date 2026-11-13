@@ -189,13 +189,12 @@ describe('host form persists the approval choice', () => {
 
   it('writes requires_approval on both create and edit (one column builder for both)', () => {
     expect(eventColumns({ ...emptyForm(), title: 't', requiresApproval: true }, null).requires_approval).toBe(true)
-    expect(host.match(/eventColumns\(form, selectedClubId\)/g) ?? []).toHaveLength(1)
-    expect(host).toMatch(/newEventRows\(form, dates/)
+    expect(source('hooks/host/useSaveEvent.ts')).toMatch(/p_event: eventColumns\(input\.form, input\.clubId\)/)
   })
 
   it('selects and hydrates it when editing', () => {
     expect(EVENT_EDIT_SELECT).toMatch(/\brequires_approval\b/)
-    expect(host).toMatch(/\.select\(EVENT_EDIT_SELECT\)/)
+    expect(source('hooks/host/useHostForm.ts')).toMatch(/\.select\(EVENT_EDIT_SELECT\)/)
     expect(formFromEvent({ title: 't', event_date: '2026-11-20T00:00:00Z', requires_approval: true } as never).requiresApproval).toBe(true)
   })
 

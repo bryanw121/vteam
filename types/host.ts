@@ -61,7 +61,17 @@ export type HostSaveTemplateSectionProps = {
   placeholder: string
 }
 
-export type HostSaveOutcome = 'saved' | 'tags-failed' | 'tags-uncertain' | 'failed'
+/** Since save_event (#188 part 4) a save either fully lands or writes nothing. */
+export type HostSaveOutcome = 'saved' | 'failed'
+
+/** What `saveEvent` sends: the form, the series settings (create), the picked tags and club. */
+export type SaveEventInput = {
+  editId: string | null
+  form: CreateEventForm
+  recurrence: HostRecurrence
+  tagIds: string[]
+  clubId: string | null
+}
 
 export type HostResultModalProps = {
   visible: boolean

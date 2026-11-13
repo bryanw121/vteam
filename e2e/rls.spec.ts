@@ -124,6 +124,11 @@ test.describe('anon (guest browsing)', () => {
     expect(rsvp.error?.code).toBe(RLS_DENIED)
   })
 
+  test('cannot call save_event (#188)', async () => {
+    const res = await q(() => anon.rpc('save_event', { p_edit_id: null, p_event: { title: '[e2e rls] must fail' }, p_dates: [new Date().toISOString()], p_tag_ids: [] } as never), 'anon save_event')
+    expect(res.error).not.toBeNull()
+  })
+
   test('cannot create a club', async () => {
     const club = await q(() => anon.from('clubs').insert({ name: '[e2e rls] must fail', created_by: BUDDY_ID }).select('id'), 'anon insert club')
     expect(club.error?.code).toBe(RLS_DENIED)
@@ -205,6 +210,17 @@ test.describe('signed in as the e2e account', () => {
     const profile = await q(() => me.from('profiles').update({ first_name: 'E2E' }).eq('id', BUDDY_ID).select('id'), "update buddy's profile")
     // UPDATE with a USING policy filters the row out: no error, zero rows changed.
     expect(profile.data ?? []).toEqual([])
+  })
+
+  test("save_event (#188) can't edit an event it doesn't host, and writes nothing", async () => {
+    const res = await q(() => me.rpc('save_event', {
+      p_edit_id: crypto.randomUUID(), p_event: { title: '[e2e rls] must fail' }, p_dates: [new Date().toISOString()], p_tag_ids: [],
+    } as never), 'save_event on someone else')
+    expect(res.error?.code).toBe('42501')
+    const tooMany = await q(() => me.rpc('save_event', {
+      p_edit_id: null, p_event: { title: '[e2e rls] must fail' }, p_dates: Array.from({ length: 53 }, (_, i) => new Date(Date.now() + i * 86_400_000).toISOString()), p_tag_ids: [],
+    } as never), 'save_event 53 dates')
+    expect(tooMany.error?.code).toBe('22023')
   })
 
   test('cannot rename itself; other columns of its own row still update (#223)', async () => {

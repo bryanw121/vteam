@@ -3425,6 +3425,15 @@ export type Database = {
       rollup_app_events: { Args: { p_days?: number }; Returns: number }
       rollup_app_online: { Args: { p_days?: number }; Returns: number }
       sample_app_online: { Args: never; Returns: undefined }
+      save_event: {
+        Args: {
+          p_dates: string[]
+          p_edit_id: string
+          p_event: Json
+          p_tag_ids?: string[]
+        }
+        Returns: string[]
+      }
       save_event_bring_items: {
         Args: { p_event_id: string; p_items: Json }
         Returns: undefined

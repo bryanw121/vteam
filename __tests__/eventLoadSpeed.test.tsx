@@ -258,6 +258,8 @@ describe('prefetchQuery', () => {
 
 describe('host edit form', () => {
   const host = readFileSync(resolve(__dirname, '../app/(app)/host.tsx'), 'utf8')
+  // The form's state and edit loading live in useHostForm since #188 part 4.
+  const hostForm = readFileSync(resolve(__dirname, '../hooks/host/useHostForm.ts'), 'utf8')
 
   it('the cached detail row carries every field the edit form reads', () => {
     const detail = new Set(EVENT_DETAIL_COLUMNS.split(',').map(c => c.trim()))
@@ -266,7 +268,7 @@ describe('host edit form', () => {
   })
 
   it('seeds from event:<id> and is gated only by the edit row, not tags/clubs/venues', () => {
-    expect(host).toMatch(/getQueryData<EventWithDetails \| null>\(eventKeys\.root\(editId\)\)/)
+    expect(hostForm).toMatch(/getQueryData<EventWithDetails \| null>\(eventKeys\.root\(editId\)\)/)
     const gate = host.match(/const initialLoading = (.*)/)?.[1] ?? ''
     expect(gate).not.toMatch(/tagsQuery|ownedClubsQuery|venuesQuery/)
     expect(host).not.toMatch(/ActivityIndicator size="large"/)
@@ -274,6 +276,6 @@ describe('host edit form', () => {
   })
 
   it('a background refresh never overwrites a form the host has started editing', () => {
-    expect(host).toMatch(/if \(!untouched && !opts\?\.force\) return true/)
+    expect(hostForm).toMatch(/if \(!untouched && !opts\?\.force\) return true/)
   })
 })
