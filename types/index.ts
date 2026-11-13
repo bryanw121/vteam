@@ -2304,3 +2304,28 @@ export type SaveBringItemsArgs = {
 }
 export type ClaimBringItemArgs = { p_item_id: string; p_quantity: number }
 export type ReleaseBringItemArgs = { p_item_id: string }
+
+/** "Your game" on a finished game (#227): `pointsPaid` null until `award_event_points()` has run. */
+export type MyGameRecap = { pointsPaid: number | null; cheers: number; gamesThisYear: number }
+
+export type YourGameCardProps = {
+  points: number
+  pointsLine: string
+  cheers: number
+  gamesThisYear: number
+  onShare: () => void
+  sharing: boolean
+}
+
+export type RecapFooterProps = {
+  attended: boolean
+  onShare: () => void
+  onGiveCheers: () => void
+  sharing: boolean
+  docScrollActive: boolean
+  bottomInset: number
+  onHeightChange?: (h: number) => void
+}
+
+/** How a recap left the device. */
+export type RecapShareTarget = 'native' | 'web-share' | 'download'

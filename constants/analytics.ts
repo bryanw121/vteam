@@ -58,6 +58,12 @@ export const ANALYTICS_EVENTS = {
   reportSent: 'report_sent',
   /** Said they'll bring something to a game (#256). props: { surface (indoor | sand | grass | unknown), required } */
   bringItemClaimed: 'bring_item_claimed',
+  /** "Your game" shown on a finished game the viewer played (#227). */
+  recapShown: 'recap_shown',
+  /** A game recap was shared. props: { target: native | web-share | download } */
+  recapShared: 'recap_shared',
+  /** An event page was opened from a shared recap link (`?r=1`). */
+  recapLinkOpened: 'recap_link_opened',
   /** Let go of something they said they'd bring. props: { surface } */
   bringItemReleased: 'bring_item_released',
   /** A host saved a game's "What to bring" list. props: { items (count), surface } */
