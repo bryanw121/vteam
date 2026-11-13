@@ -17,6 +17,7 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationPrefType, string> = {
   request_denied: 'Request denied',
   event_reminder: 'Event reminders',
   late_dropout: 'Late dropouts (hosts)',
+  bring_item_uncovered: 'Gear still needed (hosts)',
   friend_request: 'Friend requests',
   friend_accepted: 'Friend request accepted',
 }

@@ -71,6 +71,9 @@ export const SCREENS = {
   // The leave sheet (#171) on a full, paid game that starts tonight: every line, plus the reason chips.
   'event-leave-sheet': { route: `/event/${E.fridayNight}`, ready: 'Austin Sports Center', actions: [{ tap: 'leave-event' }, { wait: 400 }], sources: [...EVENT_DETAIL, 'components/ui/BottomSheet.tsx', 'components/ui/ConfirmDialog.tsx', 'components/ui/Chip.tsx', 'utils/leaveConsequences.ts', 'constants/copy.ts'] },
   'event-guest': { route: `/event/${E.fridayNight}`, signedIn: false, ready: 'Austin Sports Center', sources: EVENT_DETAIL },
+  'event-bring-list': { route: `/event/${E.sundaySand}`, ready: 'What to bring', actions: [{ scroll: 700 }, { wait: 300 }], sources: [...EVENT_DETAIL, 'components/event/BringListCard.tsx', 'hooks/event/useEventBringList.ts', 'utils/bringList.ts'] },
+  'event-bring-list-guest': { route: `/event/${E.sundaySand}`, signedIn: false, ready: 'What to bring', actions: [{ scroll: 700 }, { wait: 300 }], sources: [...EVENT_DETAIL, 'components/event/BringListCard.tsx', 'utils/bringList.ts'] },
+  'host-create-bring': { route: '/host', ready: 'Title', actions: [{ tap: 'event-surface-sand' }, { tap: 'host-bring-suggest-Net + antennas' }, { tap: 'host-bring-suggest-Game balls' }, { tap: 'host-bring-mine' }, { scroll: 900 }, { wait: 300 }], sources: ['app/(app)/host.tsx', 'components/host/BringItemsSection.tsx', 'utils/bringList.ts', 'constants/bringItems.ts'] },
   'host-create': { route: '/host', ready: 'Title', sources: ['app/(app)/host.tsx', 'components/host/**', 'components/DatePickerField*.tsx', 'components/LocationPickerField.tsx', 'components/Input.tsx'] },
   'host-edit': { route: `/host?edit=${E.sundaySand}`, sources: ['app/(app)/host.tsx', 'components/host/**'] },
   // Player setup after sign-up (#156): the three steps.
