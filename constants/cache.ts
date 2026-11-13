@@ -26,6 +26,8 @@ export const STALE = {
   forecast: 30 * 60_000,
   /** Outside leagues and tournaments (useExternalPrograms): Schelagg refreshes them twice a day. */
   programs: 30 * 60_000,
+  /** Live scores from a tournament's Google Sheet (useSheetScores); the open screen also polls. */
+  liveScores: 10_000,
   /** Whether the viewer is an admin (Profile's Admin metrics row). Changes only by hand in app_admins. */
   adminCheck: 30 * 60_000,
   /** Admin metrics screens (Overview, People, Retention, one person): computed on demand, a minute is fresh enough. */

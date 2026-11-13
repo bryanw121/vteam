@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router'
 import { Dimensions, Platform, View, ScrollView, SectionList, TouchableOpacity, PanResponder, Animated, StyleSheet } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { DocPullToRefresh, RefreshControl } from '../../../../components/RefreshControl'
+import { DocScrollView } from '../../../../components/DocScrollView'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFeedRsvp, useMonthEvents } from '../../../../hooks/useMonthEvents'
 import { useDocScrollMemory } from '../../../../hooks/useDocScrollMemory'
@@ -33,7 +34,7 @@ import { TourTarget } from '../../../../components/tour/TourTarget'
 import { useTourWants } from '../../../../contexts/tour'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
-import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, Notification, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
+import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, NotificationItem, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
 import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters } from '../../../../utils/feedFilters'
 import { useUrlParam } from '../../../../hooks/useUrlParam'
 import { feedDay } from '../../../../utils/urlState'
@@ -231,7 +232,6 @@ export default function EventsScreen() {
   const blockPager   = useCallback(() => { pagerBlocked.current = true  }, [pagerBlocked])
   const unblockPager = useCallback(() => { pagerBlocked.current = false }, [pagerBlocked])
 
-  const scrollRef   = useRef<ScrollView>(null)
   const sectionListRef = useRef<SectionList<EventWithDetails, DateSection>>(null)
   const sectionYRef = useRef<Record<string, number>>({})
   const lastScrollY = useRef(0)
@@ -244,7 +244,9 @@ export default function EventsScreen() {
   const feedContentRef      = useRef<View>(null)
   // Narrow web: come back to the same place in the feed after an event page
   // (the browser's back remounts this screen; see hooks/useDocScrollMemory).
-  const feedDocLayout       = useDocScrollMemory('tab:events', docScrollActive, feedContentRef)
+  // The whole screen stays hidden until the offset is back, header included (#254).
+  const screenRootRef       = useRef<View>(null)
+  const feedDocLayout       = useDocScrollMemory('tab:events', docScrollActive, feedContentRef, undefined, screenRootRef)
 
   useEffect(() => {
     if (!docScrollActive || typeof window === 'undefined') return
@@ -423,10 +425,10 @@ export default function EventsScreen() {
   const goNextMonth = useCallback(() => setCurMonthPage(p => p + 1), [])
 
   const openNotifItem = useCallback(
-    async (item: Notification) => {
+    async (item: NotificationItem) => {
       setNotifOpen(false)
       try {
-        if (!item.read_at) await markRead(item.id)
+        if (!item.read_at) await markRead(item.id, item.groupIds)
       } catch {
         /* ignore */
       }
@@ -567,8 +569,11 @@ export default function EventsScreen() {
       <View style={{ flex: 1, flexDirection: 'row', backgroundColor: theme.colors.background }}>
 
         {/* Main content */}
-        <ScrollView
-          ref={scrollRef}
+        {/* Remembers its offset under the same key as narrow web, so the browser's
+            Back from an event page returns to the same place (#254). */}
+        <DocScrollView
+          docScroll={false}
+          memoryKey="tab:events"
           style={{ flex: 1 }}
           contentContainerStyle={{ padding: 28, paddingBottom: 48 }}
           scrollEventThrottle={200}
@@ -669,7 +674,7 @@ export default function EventsScreen() {
             </>
           )}
           </View>
-        </ScrollView>
+        </DocScrollView>
 
         {/* Right rail */}
         <View style={{
@@ -726,7 +731,7 @@ export default function EventsScreen() {
   // ── Mobile layout ─────────────────────────────────────────────────────────
   return (
     // Doc-scroll mode: auto height so the feed extends the document (body scrolls)
-    <View style={docScrollActive ? [shared.screen, { flex: undefined } as any] : shared.screen}>
+    <View ref={screenRootRef} style={docScrollActive ? [shared.screen, { flex: undefined } as any] : shared.screen}>
       <View
         onTouchStart={blockPager}
         onTouchEnd={unblockPager}

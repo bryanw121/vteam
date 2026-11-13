@@ -21,6 +21,8 @@
     "shots:compare": "node scripts/shots/compare.mjs",
     "a11y": "node scripts/shots/a11y.mjs",
     "a11y:baseline": "node scripts/shots/a11y.mjs --update-baseline",
+    "stability": "node scripts/shots/stability-flow.mjs --dist dist-mock",
+    "stability:baseline": "node scripts/shots/stability-flow.mjs --dist dist-mock --update-baseline",
     "og:render": "tsx scripts/render-og.tsx"
   },
   "jest": {

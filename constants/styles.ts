@@ -202,6 +202,12 @@ export const shared = StyleSheet.create({
   // ─── Team / player grid (shared by the event People & Cheers tabs) ───────
   playerGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   playerCell: { width: Platform.OS === 'web' ? '33.33%' : '50%', padding: 3 },
+  // Grouped cheers notifications (#194).
+  notificationChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
+  notificationChip: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.timeInk, backgroundColor: colors.primarySoft,
+    borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
   // Player setup after sign-up (#156).
   welcomeBody: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl, gap: spacing.sm },
   welcomeTitle: { fontFamily: fonts.display, fontSize: font.heading.lg, fontWeight: font.weight.bold, color: colors.text },
@@ -427,6 +433,34 @@ export const shared = StyleSheet.create({
   externalSignupLabel: {
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: theme.font.size.sm,
+    color: theme.colors.text,
+  },
+  /** ExternalProgramCard with a Scores & brackets strip under it: the card's bottom edge joins the strip. */
+  externalCardJoined: {
+    marginBottom: 0,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  /** LiveScoresLink: the strip under an outside tournament's card that opens its scores in vteam. */
+  programScoresLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    marginBottom: theme.spacing.sm,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: theme.colors.border,
+    borderStyle: 'dashed',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    backgroundColor: theme.colors.primarySoft,
+  },
+  programScoresLinkLabel: {
+    flex: 1,
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.smd,
     color: theme.colors.text,
   },
   // ── Guest mode (SignInPrompt, SignInButton) ──────────────────────────────
