@@ -16,7 +16,8 @@ export const CLUB_POST_FEED_SELECT = `
   club_post_comments (
     id, body, created_at, user_id,
     profiles:user_id (${MEMBER_PROFILE})
-  )
+  ),
+  club_polls (kind, multi, closes_at, event_id, club_poll_options (id, position, label, starts_at, club_poll_votes (user_id)))
 `
 
 /** The viewer's own like rows, embedded per post so no second round trip is needed. */

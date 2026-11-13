@@ -23,6 +23,7 @@ import { ClubLocationField } from '../../../components/ClubLocationField'
 import { ClubLocationCard } from '../../../components/ClubLocationCard'
 import { clubLocationFromPicker, pickerFromClubLocation } from '../../../utils/clubLocation'
 import { ClubPostCard, ClubPostComposerModal } from '../../../components/ClubPostCard'
+import { PollComposerSheet } from '../../../components/club/PollComposerSheet'
 import { ScreenState } from '../../../components/ui'
 import type { ClubDetailData, ClubWithDetails, LocationValue, MajorCity, Profile } from '../../../types'
 import { Spinner } from '../../../components/ui/Spinner'
@@ -87,6 +88,7 @@ export default function ClubDetailScreen() {
   const [deleting, setDeleting] = useState(false)
   const [pullRefreshing, setPullRefreshing] = useState(false)
   const [showPostComposer, setShowPostComposer] = useState(false)
+  const [showPollComposer, setShowPollComposer] = useState(false)
 
   const coverPath = club?.cover_url ?? null
   const avatarPath = club?.avatar_url ?? null
@@ -121,6 +123,11 @@ export default function ClubDetailScreen() {
   }
 
   const owner = !!club && !!userId && club.club_members.some(m => m.user_id === userId && m.role === 'owner')
+  // Who picked a poll option (#175): names from the member list already on the page.
+  const memberName = useMemo(() => {
+    const names = new Map((club?.club_members ?? []).map(m => [m.user_id, m.profiles ? profileDisplayName(m.profiles) : 'Member']))
+    return (uid: string) => names.get(uid) ?? 'Member'
+  }, [club])
   const member = !!club && !!userId && club.club_members.some(m => m.user_id === userId)
 
   // Join / leave: flips membership in the cached club at once and rolls back if the write fails.
@@ -562,15 +569,18 @@ export default function ClubDetailScreen() {
               }}>
                 <Text style={shared.subheading}>Club updates</Text>
                 {owner && (
-                  <TouchableOpacity onPress={() => setShowPostComposer(true)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                    <Text style={{
-                      fontSize: theme.font.size.sm,
-                      fontWeight: theme.font.weight.semibold,
-                      color: theme.colors.primaryText,
-                    }}>
-                      New post
-                    </Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: theme.spacing.lg }}>
+                    <TouchableOpacity onPress={() => setShowPollComposer(true)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityRole="button" testID="club-new-poll">
+                      <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }}>
+                        New poll
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setShowPostComposer(true)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} accessibilityRole="button">
+                      <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }}>
+                        New post
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
               {postsQuery.isLoading ? (
@@ -605,11 +615,19 @@ export default function ClubDetailScreen() {
                       likedByMe={likedPostIds.has(p.id)}
                       currentUserId={userId}
                       isClubMember={member}
+                      isClubOwner={owner}
+                      memberName={memberName}
                       onDataChanged={() => { void postsQuery.refetch({ force: true }) }}
                     />
                   ))}
                 </View>
               )}
+              <PollComposerSheet
+                visible={showPollComposer}
+                clubId={club.id}
+                onClose={() => setShowPollComposer(false)}
+                onCreated={() => { void postsQuery.refetch({ force: true }) }}
+              />
               <ClubPostComposerModal
                 visible={showPostComposer}
                 clubId={club.id}
