@@ -9,6 +9,7 @@
 
 import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database'
 import type { TabKey } from '../constants/navigation'
+import type { RecurrenceCadence } from '../constants/events'
 import type { ReactElement, ReactNode } from 'react'
 import type { ActivityIndicatorProps, LayoutChangeEvent, RefreshControlProps, SectionList, ViewInstance } from 'react-native'
 import type { BracketMatchInsert, SetScore, TiebreakerKey } from './tournament'
@@ -529,6 +530,24 @@ export type ProgramsForRegion = {
 // Represent the local state of input forms before data is sent to the database.
 
 /** State used by the Create Event screen */
+/** The Repeat section of the host form (#188). */
+export type HostRecurrence = {
+  enabled: boolean
+  /** Weekdays, 0 = Sunday (weekly and bi-weekly). */
+  days: number[]
+  cadence: RecurrenceCadence
+  endDate: Date
+}
+
+/** What a link can prefill on a new event (Book a court, a club poll's winning time). Raw search params. */
+export type HostFormParams = {
+  maxAttendees?: string
+  location?: string
+  surface?: string
+  date?: string
+  title?: string
+}
+
 export type CreateEventForm = {
   title: string
   description: string

@@ -18,8 +18,8 @@ import type { RecurrenceCadence } from '../../constants'
 import { routes } from '../../utils/routes'
 import { useSession } from '../../contexts/session'
 import { useTags } from '../../hooks/useTags'
-import { cleanDate, diffTagIds, isSurface, normalizePriceText, parsePrice, sanitizePriceInput } from '../../utils'
-import { parsePrefillDate } from '../../utils/clubPoll'
+import { cleanDate, diffTagIds, normalizePriceText, parsePrice, sanitizePriceInput } from '../../utils'
+import { emptyForm, eventColumns, eventDates, formFromEvent, formFromParams, newEventRows } from '../../utils/hostForm'
 import { bringDraftsChanged, draftsFromItems, draftsFromTemplate, saveBringArgs, templateBringItems } from '../../utils/bringList'
 import { BringItemsSection } from '../../components/host/BringItemsSection'
 import { fetchBringList } from '../../hooks/event/useEventBringList'
@@ -27,7 +27,7 @@ import { eventKeys } from '../../hooks/event/keys'
 import { track } from '../../lib/analytics'
 import { toast } from '../../lib/toast'
 import { ANALYTICS_EVENTS } from '../../constants/analytics'
-import { defaultRecurrenceEndDate, generateEventDates } from '../../utils/recurrence'
+import { defaultRecurrenceEndDate } from '../../utils/recurrence'
 import type { BringItem, BringItemDraft, CreateEventForm, EventEditSource, EventWithDetails, OwnedClubOption, Tag, UserEventTemplate } from '../../types'
 import { Spinner } from '../../components/ui/Spinner'
 
@@ -35,45 +35,8 @@ const EMPTY_TAGS: Tag[] = []
 const EMPTY_CLUBS: OwnedClubOption[] = []
 const TEMPLATE_SELECT = 'id, user_id, name, title, description, location, max_attendees, created_at, bring_items'
 
-function roundToNearest5(): Date {
-  const d = new Date()
-  d.setSeconds(0, 0)
-  d.setMinutes(Math.ceil(d.getMinutes() / 5) * 5)
-  return d
-}
-
-const EMPTY_FORM: CreateEventForm = {
-  title: '',
-  description: '',
-  location: '',
-  locationLatitude: null,
-  locationLongitude: null,
-  date: roundToNearest5(),
-  durationMinutes: DEFAULT_DURATION_MINUTES,
-  maxAttendees: null,
-  priceText: '',
-  venmoHandle: '',
-  requiresApproval: false,
-  surface: null,
-}
-
-/** The edit form's fields from an event row (the edit fetch, or the cached detail row). */
-function formFromEvent(data: EventEditSource): CreateEventForm {
-  return {
-    title: data.title,
-    description: data.description ?? '',
-    location: data.location ?? '',
-    locationLatitude: data.latitude ?? null,
-    locationLongitude: data.longitude ?? null,
-    date: new Date(data.event_date),
-    durationMinutes: data.duration_minutes ?? DEFAULT_DURATION_MINUTES,
-    maxAttendees: data.max_attendees,
-    priceText: data.price != null ? Number(data.price).toFixed(2) : '',
-    venmoHandle: data.venmo_handle ?? '',
-    requiresApproval: data.requires_approval ?? false,
-    surface: isSurface(data.surface) ? data.surface : null,
-  }
-}
+// Built once, like before: the reset after a create goes back to it.
+const EMPTY_FORM = emptyForm()
 
 /**
  * The event detail page caches EVENT_DETAIL_SELECT under `event:<id>`, which
@@ -122,22 +85,15 @@ export default function HostEventScreen() {
     mode?: string; edit?: string; maxAttendees?: string; location?: string; surface?: string
     clubId?: string; date?: string; title?: string; pollId?: string
   }>()
-  // A club poll's winning time (#175) opens Host with the club, start and question filled in.
-  const prefillDate = parsePrefillDate(dateParam)
+  // A club poll's winning time (#175) opens Host with the club, start and question filled in (formFromParams).
   const isEdit = !!editId
   // Read once on mount: the cached detail row seeds the form's initial state.
   const [seed] = useState(() => cachedEditSource(editId))
 
   const [view, setView] = useState<'form' | 'templates'>(modeParam === 'templates' ? 'templates' : 'form')
-  const [form, setForm] = useState<CreateEventForm>(() => seed ? formFromEvent(seed) : {
-    ...EMPTY_FORM,
-    maxAttendees: (() => { const n = parseInt(maxAttendeesParam ?? '', 10); return Number.isFinite(n) && n > 0 ? n : null })(),
-    // "Already booked? Create a vteam event for it" (Book a court) passes the venue and its surface.
-    location: typeof locationParam === 'string' ? locationParam.slice(0, 200) : '',
-    surface: isSurface(surfaceParam) ? surfaceParam : null,
-    ...(prefillDate ? { date: prefillDate } : {}),
-    ...(typeof titleParam === 'string' && titleParam.trim() ? { title: titleParam.trim().slice(0, 100) } : {}),
-  })
+  const [form, setForm] = useState<CreateEventForm>(() => seed ? formFromEvent(seed) : formFromParams(EMPTY_FORM, {
+    maxAttendees: maxAttendeesParam, location: locationParam, surface: surfaceParam, date: dateParam, title: titleParam,
+  }))
   const formRef = useRef(form)
   formRef.current = form
   const [recurrence, setRecurrence] = useState({
@@ -386,29 +342,11 @@ export default function HostEventScreen() {
       setSaveOutcome('saved')
       if (!userId) throw new Error('Not logged in')
 
-      // Text → number happens once, here at the write boundary. Keeping the
-      // form state as raw text is what lets a host type "5.50" at all.
-      const parsedPrice = parsePrice(form.priceText)
-
       if (isEdit && editId) {
         // ── Update existing event ──────────────────────────────
         const { error } = await supabase
           .from('events')
-          .update({
-            title: form.title,
-            description: form.description || null,
-            location: form.location || null,
-            latitude: form.locationLatitude,
-            longitude: form.locationLongitude,
-            event_date: cleanDate(form.date),
-            duration_minutes: form.durationMinutes,
-            max_attendees: form.maxAttendees,
-            club_id: selectedClubId,
-            price: parsedPrice,
-            venmo_handle: parsedPrice && parsedPrice > 0 ? (form.venmoHandle.trim() || null) : null,
-            requires_approval: form.requiresApproval,
-            surface: form.surface,
-          })
+          .update({ ...eventColumns(form, selectedClubId), event_date: cleanDate(form.date) })
           .eq('id', editId)
         if (error) throw error
         eventRowsSaved = true
@@ -500,30 +438,13 @@ export default function HostEventScreen() {
         setSuccessModal(true)
       } else {
         // ── Create new event(s) ────────────────────────────────
-        const dates = generateEventDates(
-          form.date, recurrence.enabled, recurrence.days, recurrence.cadence, recurrence.endDate,
-        )
+        const dates = eventDates(form, recurrence)
         if (dates.length === 0) {
           setSuccessMessage('The recurrence settings produced no valid dates. Check the end date.')
           return
         }
 
-        const rows = dates.map(d => ({
-          title: form.title,
-          description: form.description || null,
-          location: form.location || null,
-          latitude: form.locationLatitude,
-          longitude: form.locationLongitude,
-          event_date: cleanDate(d),
-          duration_minutes: form.durationMinutes,
-          max_attendees: form.maxAttendees,
-          created_by: userId,
-          club_id: selectedClubId,
-          price: parsedPrice,
-          venmo_handle: parsedPrice && parsedPrice > 0 ? (form.venmoHandle.trim() || null) : null,
-          requires_approval: form.requiresApproval,
-          surface: form.surface,
-        }))
+        const rows = newEventRows(form, dates, { userId, clubId: selectedClubId })
 
         const { data: insertedEvents, error } = await supabase.from('events').insert(rows).select('id')
         if (error) throw error
@@ -601,9 +522,7 @@ export default function HostEventScreen() {
     }
   }
 
-  const eventCount = recurrence.enabled
-    ? generateEventDates(form.date, true, recurrence.days, recurrence.cadence, recurrence.endDate).length
-    : 1
+  const eventCount = recurrence.enabled ? eventDates(form, recurrence).length : 1
 
   const showDayPicker = recurrence.enabled && recurrence.cadence !== 'monthly'
 
