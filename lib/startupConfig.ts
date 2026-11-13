@@ -9,12 +9,11 @@ import type { StartupArm, StartupConfig } from '../types'
 
 /**
  * The startup config (#216): update-check rows and the feed's ads, read once per
- * open. Half of page loads read them from the CDN-cached `/api/startup` (a cold
+ * open (each by the screen that needs it). Half of page loads read them from the CDN-cached `/api/startup` (a cold
  * database then only has to answer the feed), half straight from Supabase, and
  * `startup_timing` records how long each took so we can keep or revert it.
  * Any CDN failure falls back to the direct reads, so it never costs an open.
  */
-export const STARTUP_KEY = queryKey('ads', 'startup')
 const CDN_TIMEOUT_MS = 1500
 
 let arm: StartupArm | null = null
@@ -26,20 +25,33 @@ function startupArm(): StartupArm {
   return arm
 }
 
-async function readDirect(): Promise<StartupConfig> {
-  const [appConfig, banners, sponsored] = await Promise.all([
-    supabase.from('app_config').select('platform, min_version, store_url, message'),
+/** What each reader needs. The update check reads on every screen; the ads only on the feed. */
+export type StartupPart = 'version' | 'ads'
+
+async function readDirect(part: StartupPart): Promise<StartupConfig> {
+  if (part === 'version') {
+    const appConfig = await supabase.from('app_config').select('platform, min_version, store_url, message')
+    return { appConfig: appConfig.error ? [] : (appConfig.data ?? []) as StartupConfig['appConfig'], banners: [], sponsored: [] }
+  }
+  const [banners, sponsored] = await Promise.all([
     supabase.from('ad_banners')
       .select('id, title, body, image_url, link_url, display_order, starts_at, ends_at, is_active')
       .order('display_order').order('created_at'),
     supabase.from('sponsored_events').select('event_id, starts_at, ends_at'),
   ])
-  // A missing update check must never block the ads, and the other way round.
+  // One failed table never hides the other.
   return {
-    appConfig: appConfig.error ? [] : (appConfig.data ?? []) as StartupConfig['appConfig'],
+    appConfig: [],
     banners: banners.error ? [] : (banners.data ?? []) as StartupConfig['banners'],
     sponsored: sponsored.error ? [] : (sponsored.data ?? []) as StartupConfig['sponsored'],
   }
+}
+
+/** One CDN request per page load serves both parts (it is one cached response anyway). */
+let cdnRequest: Promise<StartupConfig | null> | null = null
+function readCdnOnce(): Promise<StartupConfig | null> {
+  if (!cdnRequest) cdnRequest = readCdn().then(r => { if (!r) cdnRequest = null; return r })
+  return cdnRequest
 }
 
 async function readCdn(): Promise<StartupConfig | null> {
@@ -57,25 +69,33 @@ async function readCdn(): Promise<StartupConfig | null> {
   }
 }
 
-export async function fetchStartupConfig(): Promise<StartupConfig> {
+export async function fetchStartupConfig(part: StartupPart): Promise<StartupConfig> {
   const which = startupArm()
   const started = Date.now()
   let source: 'cdn' | 'direct' | 'fallback' = 'direct'
   let config: StartupConfig | null = null
   if (which === 'cdn') {
-    config = await readCdn()
+    config = await readCdnOnce()
     source = config ? 'cdn' : 'fallback'
   }
-  if (!config) config = await readDirect()
-  track(ANALYTICS_EVENTS.startupTiming, { arm: which, source, ms: Date.now() - started })
+  if (!config) config = await readDirect(part)
+  track(ANALYTICS_EVENTS.startupTiming, { arm: which, source, part, ms: Date.now() - started })
   return config
 }
 
-/** One read for everything that needs the startup config (deduped by key). */
-export function useStartupConfig(enabled = true): StartupConfig | null {
-  const { data } = useQuery<StartupConfig>(enabled ? STARTUP_KEY : null, fetchStartupConfig, { staleMs: STALE.feed, enabled })
+/**
+ * The startup config for one reader. The update check (`version`, every screen)
+ * and the feed's ads (`ads`, only while the feed shows ads) are separate reads, so
+ * a screen without ads never asks for them (#225's budget caught that).
+ */
+export function useStartupConfig(part: StartupPart, enabled = true): StartupConfig | null {
+  const { data } = useQuery<StartupConfig>(
+    enabled ? queryKey(part === 'ads' ? 'ads' : 'startup', part === 'ads' ? 'feed' : 'version') : null,
+    () => fetchStartupConfig(part),
+    { staleMs: STALE.feed, enabled },
+  )
   return enabled ? data ?? null : null
 }
 
 /** Tests only. */
-export function __resetStartupArm(): void { arm = null }
+export function __resetStartupArm(): void { arm = null; cdnRequest = null }

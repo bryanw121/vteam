@@ -35,6 +35,7 @@
 
 import { requireWebhookAuth } from '../_shared/webhook.ts'
 import { chunk, EXPO_BATCH_SIZE, EXPO_PUSH_URL } from '../_shared/expo.ts'
+import { sendToWebTokens, vapidFromEnv, type WebToken } from '../_shared/webpush.ts'
 import type { DbClient, Deps } from '../_shared/deps.ts'
 
 interface MessagePayload {
@@ -148,11 +149,16 @@ export function createHandler(deps: Deps) {
     const recipientIds = memberIds.filter((id) => !muted.has(id))
     if (!recipientIds.length) return new Response('All recipients muted the sender', { status: 200 })
 
-    const tokensRes = await supabase.from('push_tokens').select('token').in('user_id', recipientIds)
+    const tokensRes = await supabase.from('push_tokens').select('token, platform, web_keys').in('user_id', recipientIds)
     if (tokensRes.error) return fail('token lookup', tokensRes.error)
 
-    const tokens = [...new Set(((tokensRes.data ?? []) as { token: string }[]).map((r) => r.token))]
-    if (!tokens.length) return new Response('No tokens', { status: 200 })
+    type TokenRow = { token: string; platform?: string | null; web_keys?: unknown }
+    const rows = (tokensRes.data ?? []) as TokenRow[]
+    const tokens = [...new Set(rows.filter((r) => r.platform !== 'web').map((r) => r.token))]
+    const webTokens: WebToken[] = rows.filter((r) => r.platform === 'web').map((r) => ({ token: r.token, web_keys: r.web_keys }))
+    const vapid = webTokens.length ? vapidFromEnv(deps.env) : null
+    if (webTokens.length && !vapid) console.warn('web push skipped: VAPID secrets are not set')
+    if (!tokens.length && !vapid) return new Response('No tokens', { status: 200 })
 
     const senderName = sender
       ? ([sender.first_name, sender.last_name].filter(Boolean).join(' ') || sender.username)
@@ -164,6 +170,19 @@ export function createHandler(deps: Deps) {
 
     const deadTokens: string[] = []
     const receipts: { ticket_id: string; token: string }[] = []
+    let webSent = 0
+
+    // Web Push (#189): browser subscriptions open the conversation on tap.
+    if (vapid) {
+      const web = await sendToWebTokens(deps.fetch, vapid, webTokens, {
+        title: notifTitle,
+        body: notifBody,
+        deep_link: `/chat/${message.conversation_id}`,
+        tag: 'chat',
+      }, deps.now())
+      webSent = web.sent
+      deadTokens.push(...web.dead)
+    }
 
     for (const batch of chunk(tokens, EXPO_BATCH_SIZE)) {
       const notifications = batch.map((token) => ({
@@ -207,7 +226,7 @@ export function createHandler(deps: Deps) {
       if (error) console.warn('push_receipts insert skipped:', error.message)
     }
 
-    return new Response(JSON.stringify({ sent: receipts.length, removedTokens: deadTokens.length, muted: muted.size }), {
+    return new Response(JSON.stringify({ sent: receipts.length, ...(webTokens.length ? { webSent } : {}), removedTokens: deadTokens.length, muted: muted.size }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })
