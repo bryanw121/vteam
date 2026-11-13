@@ -391,18 +391,21 @@ export type Database = {
       club_members: {
         Row: {
           club_id: string
+          game_alerts: boolean
           joined_at: string
           role: string
           user_id: string
         }
         Insert: {
           club_id: string
+          game_alerts?: boolean
           joined_at?: string
           role?: string
           user_id: string
         }
         Update: {
           club_id?: string
+          game_alerts?: boolean
           joined_at?: string
           role?: string
           user_id?: string
@@ -1490,6 +1493,39 @@ export type Database = {
           },
           {
             foreignKeyName: "friendships_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_alert_log: {
+        Row: {
+          event_id: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_alert_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_alert_log_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -2809,6 +2845,7 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          game_alerts: Json
           hidden_feed: Json
           home_city_id: string | null
           notification_prefs: Json | null
@@ -2818,6 +2855,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          game_alerts?: Json
           hidden_feed?: Json
           home_city_id?: string | null
           notification_prefs?: Json | null
@@ -2827,6 +2865,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          game_alerts?: Json
           hidden_feed?: Json
           home_city_id?: string | null
           notification_prefs?: Json | null
@@ -3095,6 +3134,15 @@ export type Database = {
         Args: { p_a: string; p_b: string }
         Returns: undefined
       }
+      game_alert_matches: {
+        Args: {
+          p_levels: string[]
+          p_prefs: Json
+          p_starts_at: string
+          p_surface: string
+        }
+        Returns: boolean
+      }
       get_account_deletion_preview: { Args: never; Returns: Json }
       get_ad_free_status: { Args: never; Returns: Json }
       get_chat_unread_count: { Args: never; Returns: number }
@@ -3193,6 +3241,22 @@ export type Database = {
         Args: { p_notification_id: string }
         Returns: undefined
       }
+      new_game_alert_text: {
+        Args: {
+          p_count: number
+          p_going: number
+          p_location: string
+          p_max: number
+          p_source: string
+          p_source_name: string
+          p_starts_at: string
+          p_title: string
+        }
+        Returns: {
+          body: string
+          title: string
+        }[]
+      }
       notification_pref_enabled: {
         Args: {
           p_channel: string
@@ -3254,9 +3318,14 @@ export type Database = {
       send_event_reminders: { Args: never; Returns: number }
       send_friend_request: { Args: { p_user_id: string }; Returns: string }
       send_kudos_reminders: { Args: never; Returns: undefined }
+      send_new_game_alerts: { Args: never; Returns: number }
       set_best_friend: {
         Args: { p_best: boolean; p_user_id: string }
         Returns: boolean
+      }
+      set_club_game_alerts: {
+        Args: { p_club_id: string; p_on: boolean }
+        Returns: undefined
       }
       set_no_show: {
         Args: { p_event_id: string; p_user_id: string; p_value: boolean }

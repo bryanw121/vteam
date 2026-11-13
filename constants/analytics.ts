@@ -58,6 +58,10 @@ export const ANALYTICS_EVENTS = {
   reportSent: 'report_sent',
   /** Said they'll bring something to a game (#256). props: { surface (indoor | sand | grass | unknown), required } */
   bringItemClaimed: 'bring_item_claimed',
+  /** Opened a new game alert (#170) from the inbox or a push. props: { source: club | host | unknown (pushes don't say), via: inbox | push } */
+  gameAlertOpened: 'game_alert_opened',
+  /** Changed New game alerts settings (#170). props: { field: clubs | hosts | surfaces | levels | times | club } */
+  gameAlertsChanged: 'game_alerts_changed',
   /** A search ran from the Search screen (#176): never the text. props: { len, scope, results } */
   searchSubmitted: 'search_submitted',
   /** Let go of something they said they'd bring. props: { surface } */
