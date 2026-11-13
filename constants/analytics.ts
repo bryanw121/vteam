@@ -44,6 +44,8 @@ export const ANALYTICS_EVENTS = {
   webPushEnabled: 'web_push_enabled',
   /** The permission prompt was refused or dismissed (#189). props: { permission } */
   webPushBlocked: 'web_push_blocked',
+  /** The "Get a reminder?" line under You're going (#189). props: { action: shown | enable | install | dismiss, state } */
+  webPushNudge: 'web_push_nudge',
   /** A guest tapped Join / Join waitlist / Request and was sent to sign up (#229). props: { action } */
   joinIntentSaved: 'join_intent_saved',
   /** Back on the game after signing in. props: { outcome: joined | not_now | skipped | expired, offer? } */

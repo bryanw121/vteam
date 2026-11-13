@@ -947,6 +947,19 @@ export type MyUpcomingEvent = {
 export type FeedFilter = 'all' | 'open_play' | 'tournament'
 
 export type FeedFilterChip = { id: FeedFilter; label: string }
+/** One day of the Events feed. `hiddenCount` counts that day's hidden items; `revealed` = they're shown (dimmed) in `data`. */
+export type FeedDaySection = { date: string; data: EventWithDetails[]; hiddenCount: number; revealed: boolean }
+/** What `buildFeedSections` needs besides the rows (#217). */
+export type FeedSectionOptions = {
+  filter: FeedFilter
+  surface: SurfaceFilter
+  /** The viewer's region: outside sessions from elsewhere never show. */
+  region: string
+  /** Hidden for this viewer (already false for games they're going to or hosting). */
+  isHidden: (event: EventWithDetails) => boolean
+  /** Days (`YYYY-MM-DD`) or months (`YYYY-MM`) whose hidden items are shown. */
+  revealed: ReadonlySet<string>
+}
 
 /** Events-tab surface filter: combines (AND) with the chip filter above. */
 export type SurfaceFilter = 'any' | Surface
