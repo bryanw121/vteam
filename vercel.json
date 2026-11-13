@@ -11,6 +11,8 @@
       "headers": { "cache-control": "public, max-age=604800, stale-while-revalidate=86400" },
       "continue": true
     },
+    { "src": "/sw.js", "headers": { "cache-control": "no-cache", "service-worker-allowed": "/" }, "continue": true },
+    { "src": "/manifest.webmanifest", "headers": { "content-type": "application/manifest+json", "cache-control": "public, max-age=3600" }, "continue": true },
     { "handle": "filesystem" },
     { "src": "/event/(?<id>[0-9a-fA-F-]{36})/?", "dest": "/api/event-page?id=$id" },
     { "src": "/.*", "dest": "/index.html" }
