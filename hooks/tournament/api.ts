@@ -428,6 +428,16 @@ export async function recordResult(args: {
     supabase.from('tournament_matches').update({ [a.column]: a.teamId }).eq('id', a.matchId).select('id'),
     'Moving the winner on',
   )))
+  // Double elimination: the grand-final reset is added when the losers-bracket champion
+  // wins the grand final, and removed again if that result is corrected.
+  if (writes.reset?.removeId) {
+    await ok(supabase.from('tournament_matches').delete().eq('id', writes.reset.removeId).eq('tournament_id', tournamentId))
+  }
+  if (writes.reset?.add) {
+    await ok(supabase.from('tournament_matches').insert({
+      tournament_id: tournamentId, stage: 'bracket', is_losers_bracket: false, ...writes.reset.add,
+    }))
+  }
   if (writes.podium?.first) await completeTournament(tournamentId, writes.podium)
   else if (writes.nextStatus) await setTournamentStatus(tournamentId, writes.nextStatus)
 }

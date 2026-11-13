@@ -44,6 +44,15 @@ import { EventTabBar } from '../../components/event/EventTabBar'
 import { useUrlParam } from '../../hooks/useUrlParam'
 import { VIEW } from '../../utils/urlViews'
 import { JoinFooter } from '../../components/event/JoinFooter'
+import { RecapFooter } from '../../components/event/RecapFooter'
+import { YourGameCard } from '../../components/event/YourGameCard'
+import { EventCard } from '../../components/EventCard'
+import { Text } from '../../components/ui/Text'
+import { useMyGameRecap } from '../../hooks/useMyGameRecap'
+import { useHostNextGame } from '../../hooks/useHostNextGame'
+import { pointsForEvent, pointsLine, recapEligible, recapImagePath } from '../../utils/recap'
+import { shareRecap } from '../../utils/shareRecap'
+import { shareUrl } from '../../constants/share'
 import { DragGhost } from '../../components/event/DragGhost'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { AddGuestDialog } from '../../components/event/AddGuestDialog'
@@ -56,7 +65,7 @@ import { JoinIntentSheet } from '../../components/event/JoinIntentSheet'
 import { usePlayerSetupNeeded } from '../../hooks/usePlayerSetupGate'
 import { shouldOfferJoin, takePendingAction } from '../../utils/pendingAction'
 import { ANALYTICS_EVENTS } from '../../constants/analytics'
-import { LEAVE_COPY, LEAVE_REASONS, theme, SWIPE_NAVIGATION } from '../../constants'
+import { LEAVE_COPY, LEAVE_REASONS, shared, theme, SWIPE_NAVIGATION } from '../../constants'
 import { track } from '../../lib/analytics'
 import { hostWillBeTold, leaveConsequences, leaveDmText, leaveSubtitle } from '../../utils/leaveConsequences'
 import type { JoinIntentOutcome, JoinOffer, LeaveConsequence, LeaveReason, MentionUser, Profile } from '../../types'
@@ -286,6 +295,61 @@ export default function EventDetail() {
   const host = event?.profiles ?? null
   const hostName = host ? profileDisplayName(host) : 'the host'
 
+  // ── Game recap (#227): a finished game shows "Your game" and the host's next one ──
+  const myRow = roster.rows.find(r => r.user_id === userId) ?? null
+  const attended = eventOver && recapEligible(myRow)
+  const recapData = useMyGameRecap(id, userId, event?.event_date ?? null, attended)
+  const hostNext = useHostNextGame(event?.created_by ?? null, eventOver && !event?.cancelled_at)
+  const [sharingRecap, setSharingRecap] = useState(false)
+  const recapPoints = event ? pointsForEvent((event.event_tags ?? []).map(t => t.tags?.name ?? '')) : 0
+  const recapShownFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (attended && recapShownFor.current !== id) { recapShownFor.current = id; track(ANALYTICS_EVENTS.recapShown, {}) }
+  }, [attended, id])
+  const [fromRecap] = useUrlParam('r', VIEW.event.r)
+  const recapOpenCounted = useRef(false)
+  useEffect(() => {
+    if (fromRecap && !recapOpenCounted.current) { recapOpenCounted.current = true; track(ANALYTICS_EVENTS.recapLinkOpened, {}) }
+  }, [fromRecap])
+
+  async function shareMyRecap() {
+    if (!event || !userId || sharingRecap) return
+    setSharingRecap(true)
+    try {
+      const target = await shareRecap({
+        imageUrl: shareUrl(recapImagePath(event.id, userId, String(recapData.data?.cheers ?? 0))),
+        text: `I played ${event.title || 'volleyball'} on vteam.`,
+        link: shareUrl(routes.event(event.id, { r: true })),
+      })
+      if (target) track(ANALYTICS_EVENTS.recapShared, { target })
+    } catch (e) {
+      toast.error("Couldn't share your game", e)
+    } finally {
+      setSharingRecap(false)
+    }
+  }
+
+  const recapCards = eventOver && event ? (
+    <>
+      {attended ? (
+        <YourGameCard
+          points={recapPoints}
+          pointsLine={pointsLine(recapPoints, eventDateMs(event.event_date) + (event.duration_minutes ?? 120) * 60_000, recapData.data?.pointsPaid != null, Date.now())}
+          cheers={recapData.data?.cheers ?? 0}
+          gamesThisYear={recapData.data?.gamesThisYear ?? 1}
+          onShare={() => { void shareMyRecap() }}
+          sharing={sharingRecap}
+        />
+      ) : null}
+      {hostNext.data && hostNext.data.id !== event.id ? (
+        <View style={{ marginBottom: theme.spacing.md }} testID="host-next-game">
+          <Text style={[shared.subheading, { marginBottom: theme.spacing.sm }]}>{host?.first_name ? `${host.first_name} plays again` : 'The host plays again'}</Text>
+          <EventCard event={hostNext.data} currentUserId={userId ?? undefined} />
+        </View>
+      ) : null}
+    </>
+  ) : null
+
   function openLeaveSheet() {
     if (!event) return
     const now = Date.now()
@@ -402,6 +466,7 @@ export default function EventDetail() {
                   payments={paymentAccess.canToggle ? payments : null}
                   noShow={isViewerNoShow(roster.rows, userId)}
                   isHostOrCohost={isHostOrCohost}
+                  recap={recapCards}
                 />
               ) : placeholder}
 
@@ -456,7 +521,18 @@ export default function EventDetail() {
               ) : placeholder}
             </Pager>
 
-            {activeTab === DETAILS_TAB && !data.seedOnly && (
+            {activeTab === DETAILS_TAB && !data.seedOnly && eventOver && !event.cancelled_at && (
+              <RecapFooter
+                attended={attended}
+                onShare={() => { void shareMyRecap() }}
+                onGiveCheers={() => selectTab(CHEERS_TAB)}
+                sharing={sharingRecap}
+                docScrollActive={docScrollActive}
+                bottomInset={insets.bottom}
+                onHeightChange={setFooterHeight}
+              />
+            )}
+            {activeTab === DETAILS_TAB && !data.seedOnly && !(eventOver && !event.cancelled_at) && (
               <JoinFooter
                 eventDate={event.event_date}
                 eventStatus={eventStatus}

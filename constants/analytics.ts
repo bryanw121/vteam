@@ -70,6 +70,12 @@ export const ANALYTICS_EVENTS = {
   gameAlertOpened: 'game_alert_opened',
   /** Changed New game alerts settings (#170). props: { field: clubs | hosts | surfaces | levels | times | club } */
   gameAlertsChanged: 'game_alerts_changed',
+  /** "Your game" shown on a finished game the viewer played (#227). */
+  recapShown: 'recap_shown',
+  /** A game recap was shared. props: { target: native | web-share | download } */
+  recapShared: 'recap_shared',
+  /** An event page was opened from a shared recap link (`?r=1`). */
+  recapLinkOpened: 'recap_link_opened',
   /** A search ran from the Search screen (#176): never the text. props: { len, scope, results } */
   searchSubmitted: 'search_submitted',
   /** Let go of something they said they'd bring. props: { surface } */
