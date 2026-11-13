@@ -3,7 +3,7 @@ import type {
   TournamentResultWrites, TournamentStatus,
 } from '../types'
 import {
-  advanceFrom, bracketComplete, bracketPodium, keyedRows, planFromRows, rowKey, slotColumn,
+  advanceFrom, bracketComplete, bracketPodium, keyedRows, planFromRows, resetChange, rowKey, slotColumn,
 } from './tournamentBracket'
 import { computeStandings, DEFAULT_TIEBREAKERS, standingsPodium } from './tournamentStandings'
 
@@ -76,12 +76,18 @@ export function resultWrites(args: {
   }
   const loserId = winnerId === match.team_a_id ? match.team_b_id : match.team_a_id
   const advances: TournamentResultWrites['advances'] = []
+  let reset: TournamentResultWrites['reset']
 
   if (match.stage === 'bracket') {
     const plan = bracketPlanFor(matches, tournament)
     if (plan) {
       const rows = bracketRows(matches)
       const byKey = keyedRows(rows, plan)
+      if (rowKey(match, plan) === 'GF') {
+        const change = resetChange(plan, byKey, match, winnerId)
+        if (change.blocked) return { advances: [], nextStatus: null, podium: null, blocked: change.blocked }
+        if (change.add || change.removeId) reset = { add: change.add, removeId: change.removeId }
+      }
       for (const adv of advanceFrom(plan, new Set(byKey.keys()), rowKey(match, plan), winnerId, loserId)) {
         const target = byKey.get(adv.key)
         if (!target) continue
@@ -95,11 +101,18 @@ export function resultWrites(args: {
   }
 
   // Status after this result, on a copy of the matches with it (and its advances) applied.
-  const after = matches.map(m => {
+  let after = matches.map(m => {
     let row = m.id === match.id ? { ...m, winner_id: winnerId, status: 'completed' as const } : m
     for (const a of advances) if (a.matchId === m.id) row = { ...row, [a.column]: a.teamId }
     return row
   })
+  if (reset?.removeId) after = after.filter(m => m.id !== reset?.removeId)
+  if (reset?.add) {
+    after = [...after, {
+      ...match, ...reset.add, id: 'grand-final-reset', is_losers_bracket: false,
+      winner_id: null, status: 'scheduled', scheduled_at: null, court: null, ref_team_id: null,
+    }]
+  }
   const decided = tournament.status !== 'cancelled' && isTournamentDecided(after, tournament)
   let nextStatus: TournamentStatus | null = null
   if (decided && tournament.status !== 'completed') nextStatus = 'completed'
@@ -107,7 +120,7 @@ export function resultWrites(args: {
   // Whenever the result stands decided (also when a final is corrected after
   // completion) the podium goes along, so trophies are (re)written to match.
   const podium = decided ? tournamentPodium(after, tournament, args.teamIds ?? [], args.tiebreakers) : null
-  return { advances, nextStatus, podium, blocked: null }
+  return { advances, nextStatus, podium, blocked: null, ...(reset ? { reset } : {}) }
 }
 
 /** Pool tables, in pool order; teams in each pool keep their pool order for full ties. */

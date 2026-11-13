@@ -136,6 +136,8 @@ type Props = {
   noShow?: boolean
   /** Host or co-host: may claim "What to bring" items without being on the roster (#256). */
   isHostOrCohost?: boolean
+  /** Finished game (#227): "Your game" and the host's next game, at the top. */
+  recap?: React.ReactNode
 }
 
 export function DetailsTab({
@@ -152,6 +154,7 @@ export function DetailsTab({
   payments,
   noShow = false,
   isHostOrCohost = false,
+  recap = null,
 }: Props) {
   const { refreshing, refresh: onRefresh, cohosts, userId } = data
   const requireSignIn = useRequireSignIn()
@@ -174,6 +177,7 @@ export function DetailsTab({
       contentContainerStyle={[shared.scrollContent, { paddingBottom: descFooterHeight + Math.max(bottomInset, theme.spacing.md) }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
     >
+      {recap}
 
       {/* ── The viewer was marked as a no-show (#151) ── */}
       {noShow && (

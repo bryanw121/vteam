@@ -758,6 +758,15 @@ export const shared = StyleSheet.create({
   },
 
   // ── Wrapping row of Chips (forms) ─────────────────────────
+  // Game recap (#227): the footer on a finished game and the "Your game" card.
+  recapFooter: {
+    bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.sm,
+    backgroundColor: theme.colors.background, borderTopWidth: 1, borderTopColor: theme.colors.border,
+  },
+  recapStats: { flexDirection: 'row', gap: theme.spacing.md, marginTop: theme.spacing.sm },
+  recapStat: { flex: 1, minWidth: 0 },
+  recapStatValue: { fontFamily: theme.fonts.display, fontSize: theme.font.size.xl, fontWeight: theme.font.weight.bold, color: theme.colors.text },
   chipRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs, marginTop: theme.spacing.xs, marginBottom: theme.spacing.xs },
   // Settings → Notifications: example of the reminder a player will get.
   reminderPreview: {

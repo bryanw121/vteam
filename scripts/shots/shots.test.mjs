@@ -150,3 +150,34 @@ test('affected: specific files pick their screens, shared files the defaults, te
   assert.ok(affectedScreens(['components/SomethingNew.tsx']).includes('events-feed'))
   for (const s of DEFAULT_SCREENS) assert.ok(SCREENS[s], `default screen ${s} exists`)
 })
+
+// ── Startup guard (#225) ───────────────────────────────────────────────────
+import { compareStartup, describeRequest, duplicates, newReads } from './lib/startupBudget.mjs'
+
+test('startup: a read is named by table and select, not by its filters', () => {
+  assert.equal(describeRequest('GET', 'https://x.supabase.co/rest/v1/profiles?select=id,username&id=eq.1'), 'GET profiles select=id,username')
+  assert.equal(describeRequest('POST', 'https://x.supabase.co/rest/v1/rpc/get_feed_span'), 'POST rpc/get_feed_span')
+})
+
+test('startup: duplicates and new reads', () => {
+  assert.deepEqual(duplicates(['a', 'b', 'a', 'c', 'a']), ['a'])
+  assert.deepEqual(newReads(['a', 'b'], ['a', 'b', 'b', 'c']), ['b', 'c'])
+})
+
+test('startup: over budget, a new duplicate and slow paint fail; fewer reads only suggest lowering', () => {
+  const budget = { events: { paintMs: 1000, requests: 2, allowedDuplicates: ['GET tags'], requestList: ['GET tags', 'GET tags'] } }
+  const ok = compareStartup(budget, { events: { paintMs: 500, requests: 2, duplicates: ['GET tags'], requestList: ['GET tags', 'GET tags'] } })
+  assert.deepEqual(ok.failures, [])
+  const more = compareStartup(budget, { events: { paintMs: 500, requests: 3, duplicates: ['GET tags'], requestList: ['GET tags', 'GET tags', 'GET profiles'] } })
+  assert.match(more.failures[0], /3 reads, budget 2\. New: GET profiles/)
+  const dupe = compareStartup(budget, { events: { paintMs: 500, requests: 2, duplicates: ['GET x'], requestList: ['GET x', 'GET x'] } })
+  assert.match(dupe.failures.join(), /sent twice: GET x/)
+  const slow = compareStartup(budget, { events: { paintMs: 1500, requests: 2, duplicates: ['GET tags'], requestList: ['GET tags', 'GET tags'] } })
+  assert.match(slow.failures[0], /1500 ms, budget 1000 ms/)
+  const never = compareStartup(budget, { events: { paintMs: null, requests: 2, duplicates: ['GET tags'], requestList: ['GET tags', 'GET tags'] } })
+  assert.match(never.failures[0], /never painted/)
+  const fewer = compareStartup(budget, { events: { paintMs: 500, requests: 1, duplicates: [], requestList: ['GET tags'] } })
+  assert.deepEqual(fewer.failures, [])
+  assert.match(fewer.notes[0], /lower it/)
+  assert.match(compareStartup({}, { x: { paintMs: 1, requests: 1, duplicates: [], requestList: [] } }).notes[0], /no budget yet/)
+})

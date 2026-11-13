@@ -152,6 +152,15 @@ export type SetScoreDraft = { a: string; b: string }
 /** A pool with its team ids (tournament_pools + tournament_pool_teams). */
 export type TournamentPoolWithTeams = { id: string; name: string; display_order: number; team_ids: string[] }
 
+/** Double elimination's grand-final reset after a grand-final result (lib/tournamentBracket `resetChange`). */
+export type BracketResetChange = {
+  /** The reset match to add (same two teams as the grand final). */
+  add: { round: number; match_number: number; team_a_id: string | null; team_b_id: string | null; bracket_round_name: string } | null
+  /** A reset no longer needed after a corrected grand final. */
+  removeId: string | null
+  blocked: string | null
+}
+
 /** What recording one result has to write (lib/tournamentResults `resultWrites`). */
 export type TournamentResultWrites = {
   advances: { matchId: string; column: 'team_a_id' | 'team_b_id'; teamId: string }[]
@@ -160,6 +169,8 @@ export type TournamentResultWrites = {
   podium: Podium | null
   /** Why the result can't be recorded as is, or null. */
   blocked: string | null
+  /** Double elimination: add the grand-final reset, or remove one a correction made unneeded. */
+  reset?: Pick<BracketResetChange, 'add' | 'removeId'>
 }
 
 /** A tournament row as the Tournaments list shows it. */
