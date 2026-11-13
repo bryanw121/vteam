@@ -8,6 +8,8 @@ import { join } from 'path'
  */
 
 const host = readFileSync(join(__dirname, '..', 'app/(app)/host.tsx'), 'utf8')
+// The result modal's copy and buttons live in their own component since #188 part 3.
+const resultModal = readFileSync(join(__dirname, '..', 'components/host/HostResultModal.tsx'), 'utf8')
 
 describe('host.tsx no longer deletes every tag before re-inserting', () => {
   it('has no unscoped delete on event_tags', () => {
@@ -58,7 +60,7 @@ describe('host.tsx surfaces tag-write failures distinctly', () => {
   it('tells the user the event itself saved when only tags failed', () => {
     expect(host).toMatch(/e instanceof TagWriteError/)
     expect(host).toMatch(/Event saved — tags not updated/)
-    expect(host).toMatch(/Your event details were saved, but its tags were left unchanged\./)
+    expect(resultModal).toMatch(/Your event details were saved, but its tags were left unchanged\./)
   })
 
   it('compensates successful additions if the following removal fails', () => {
@@ -67,12 +69,13 @@ describe('host.tsx surfaces tag-write failures distinctly', () => {
 
   it('does not claim tags are unchanged if the compensation also fails', () => {
     expect(host).toMatch(/tagsMayHaveChanged/)
-    expect(host).toMatch(/tags may not match your changes/)
+    expect(resultModal).toMatch(/tags may not match your changes/)
   })
 
   it('keeps every failure on the form behind a Close action', () => {
-    expect(host).toMatch(/onPress=\{saveOutcome === 'saved' \? goBack : \(\) => setSuccessModal\(false\)\}/)
-    expect(host).toMatch(/saveOutcome === 'saved' \? 'Done' : 'Close'/)
+    expect(host).toMatch(/onClose=\{\(\) => setSuccessModal\(false\)\}\s*onDone=\{goBack\}/)
+    expect(resultModal).toMatch(/onPress=\{outcome === 'saved' \? onDone : onClose\}/)
+    expect(resultModal).toMatch(/outcome === 'saved' \? 'Done' : 'Close'/)
   })
 
   it('opens the result modal on failure — otherwise the error is invisible', () => {

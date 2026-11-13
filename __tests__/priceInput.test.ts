@@ -180,8 +180,9 @@ describe('form wiring', () => {
   const host: string = readFileSync(resolve(__dirname, '../app/(app)/host.tsx'), 'utf8')
 
   it('binds the input to raw text, not a parsed number', () => {
-    expect(host).toMatch(/value=\{form\.priceText\}/)
-    expect(host).not.toMatch(/setField\('price',/)
+    const details: string = readFileSync(resolve(__dirname, '../components/host/DetailsSection.tsx'), 'utf8')
+    expect(details).toMatch(/value=\{form\.priceText\}/)
+    expect(details + host).not.toMatch(/setField\('price',/)
   })
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports

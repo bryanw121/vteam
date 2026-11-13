@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ScrollView, View, TouchableOpacity, Switch, Modal, StyleSheet, Platform } from 'react-native'
-import { Text, TextInput } from '../../components/ui/Text'
+import { ScrollView, View, TouchableOpacity } from 'react-native'
+import { Text } from '../../components/ui/Text'
 import { RefreshControl } from '../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
@@ -8,18 +8,25 @@ import { supabase } from '../../lib/supabase'
 import { Sentry } from '../../lib/sentry'
 import { getQueryData, invalidate, queryKey, useQuery } from '../../lib/query'
 import { HostFormSkeleton } from '../../components/host/HostFormSkeleton'
-import { DatePickerField } from '../../components/DatePickerField'
-import { LocationPickerField } from '../../components/LocationPickerField'
-import type { LocationValue } from '../../types'
 import { TemplatesView } from '../../components/host/TemplatesView'
-import { Chip, ScreenState } from '../../components/ui'
-import { shared, theme, STALE, EVENT_EDIT_SELECT, SURFACE_OPTIONS, DAY_LABELS_SHORT, DURATION_OPTIONS, DEFAULT_DURATION_MINUTES, GENERIC_ERROR_MESSAGE } from '../../constants'
+import { TypeSection } from '../../components/host/TypeSection'
+import { BasicsSection } from '../../components/host/BasicsSection'
+import { PlayersSection } from '../../components/host/PlayersSection'
+import { DetailsSection } from '../../components/host/DetailsSection'
+import { ApprovalSection } from '../../components/host/ApprovalSection'
+import { RepeatSection } from '../../components/host/RepeatSection'
+import { ClubSection } from '../../components/host/ClubSection'
+import { SaveTemplateSection } from '../../components/host/SaveTemplateSection'
+import { HostResultModal } from '../../components/host/HostResultModal'
+import { HostSubmitButton } from '../../components/host/HostSubmitButton'
+import { ScreenState } from '../../components/ui'
+import { shared, theme, STALE, EVENT_EDIT_SELECT, GENERIC_ERROR_MESSAGE } from '../../constants'
 import type { RecurrenceCadence } from '../../constants'
 import { routes } from '../../utils/routes'
 import { useSession } from '../../contexts/session'
-import { useTags } from '../../hooks/useTags'
-import { cleanDate, diffTagIds, normalizePriceText, parsePrice, sanitizePriceInput } from '../../utils'
-import { emptyForm, eventColumns, eventDates, formFromEvent, formFromParams, newEventRows } from '../../utils/hostForm'
+import { useHostContext } from '../../hooks/host/useHostContext'
+import { cleanDate, diffTagIds } from '../../utils'
+import { emptyForm, eventColumns, formWithTemplate, eventDates, formFromEvent, formFromParams, newEventRows } from '../../utils/hostForm'
 import { bringDraftsChanged, draftsFromItems, draftsFromTemplate, saveBringArgs, templateBringItems } from '../../utils/bringList'
 import { BringItemsSection } from '../../components/host/BringItemsSection'
 import { fetchBringList } from '../../hooks/event/useEventBringList'
@@ -28,12 +35,8 @@ import { track } from '../../lib/analytics'
 import { toast } from '../../lib/toast'
 import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import { defaultRecurrenceEndDate } from '../../utils/recurrence'
-import type { BringItem, BringItemDraft, CreateEventForm, EventEditSource, EventWithDetails, OwnedClubOption, Tag, UserEventTemplate } from '../../types'
-import { Spinner } from '../../components/ui/Spinner'
+import type { BringItem, BringItemDraft, CreateEventForm, EventEditSource, EventWithDetails, HostSaveOutcome, UserEventTemplate } from '../../types'
 
-const EMPTY_TAGS: Tag[] = []
-const EMPTY_CLUBS: OwnedClubOption[] = []
-const TEMPLATE_SELECT = 'id, user_id, name, title, description, location, max_attendees, created_at, bring_items'
 
 // Built once, like before: the reset after a create goes back to it.
 const EMPTY_FORM = emptyForm()
@@ -50,11 +53,6 @@ function cachedEditSource(editId: string | undefined): EventEditSource | null {
   return row as unknown as EventEditSource
 }
 
-const CADENCE_OPTIONS: { value: RecurrenceCadence; label: string }[] = [
-  { value: 'weekly',   label: 'Weekly'    },
-  { value: 'biweekly', label: 'Bi-weekly' },
-  { value: 'monthly',  label: 'Monthly'   },
-]
 
 /**
  * The event row saved but its tags did not. Distinguished from a generic
@@ -107,7 +105,7 @@ export default function HostEventScreen() {
   const [successModal, setSuccessModal] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   /** Drives the result modal's body copy and whether it reads as a failure. */
-  const [saveOutcome, setSaveOutcome] = useState<'saved' | 'tags-failed' | 'tags-uncertain' | 'failed'>('saved')
+  const [saveOutcome, setSaveOutcome] = useState<HostSaveOutcome>('saved')
   // What to bring (#256): the form's list, and what is saved on the event being edited.
   const [bringDrafts, setBringDrafts] = useState<BringItemDraft[]>([])
   const bringTouchedRef = useRef(false)
@@ -120,9 +118,9 @@ export default function HostEventScreen() {
   const [saveAsTemplate, setSaveAsTemplate] = useState(false)
   const [templateName, setTemplateName] = useState('')
 
-  // Tags (shared, cached) and the form's selection of them
-  const tagsQuery = useTags()
-  const availableTags = tagsQuery.data ?? EMPTY_TAGS
+  // Tags, owned clubs, recent venues and templates (hooks/host/useHostContext).
+  const { tags: availableTags, tagsLoading, ownedClubs, recentVenues, templatesQuery, refetchAll } = useHostContext(userId, view === 'templates')
+  // The form's selection of tags
   const seedTagIds = seed ? seed.event_tags.map(et => et.tag_id) : []
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(seedTagIds)
   const selectedTagIdsRef = useRef(selectedTagIds)
@@ -131,70 +129,11 @@ export default function HostEventScreen() {
   // than against mutated UI state. Set on load, refreshed after each save.
   const originalTagIdsRef = useRef<string[]>(seedTagIds)
 
-  // Clubs the host owns can be attached to the event
-  const ownedClubsQuery = useQuery<OwnedClubOption[]>(
-    userId ? queryKey('clubs', 'owned', userId) : null,
-    async () => {
-      const { data, error } = await supabase
-        .from('club_members')
-        .select('club_id, clubs (id, name)')
-        .eq('user_id', userId as string)
-        .eq('role', 'owner')
-      if (error) throw error
-      return ((data ?? []) as { clubs: OwnedClubOption | null }[])
-        .map(m => m.clubs)
-        .filter((c): c is OwnedClubOption => !!c)
-    },
-    { staleMs: STALE.feed, enabled: !!userId },
-  )
-  const ownedClubs = ownedClubsQuery.data ?? EMPTY_CLUBS
   const [selectedClubId, setSelectedClubId] = useState<string | null>(seed?.club_id ?? (typeof clubIdParam === 'string' && clubIdParam ? clubIdParam : null))
   /** The poll this new event answers; cleared once linked (or if the club changes). */
   const pollIdRef = useRef(!isEdit && typeof pollIdParam === 'string' && pollIdParam ? pollIdParam : null)
   const selectedClubIdRef = useRef(selectedClubId)
   selectedClubIdRef.current = selectedClubId
-
-  // Venues from the host's past events, offered as quick picks in the location field
-  const venuesQuery = useQuery<LocationValue[]>(
-    userId ? queryKey('host', 'venues', userId) : null,
-    async () => {
-      const { data, error } = await supabase
-        .from('events')
-        .select('location, latitude, longitude')
-        .eq('created_by', userId as string)
-        .not('location', 'is', null)
-        .order('event_date', { ascending: false })
-        .limit(20)
-      if (error) throw error
-      const seen = new Set<string>()
-      const unique: LocationValue[] = []
-      for (const e of data ?? []) {
-        if (e.location && !seen.has(e.location)) {
-          seen.add(e.location)
-          unique.push({ display: e.location, latitude: e.latitude ?? null, longitude: e.longitude ?? null })
-        }
-      }
-      return unique.slice(0, 5)
-    },
-    { staleMs: STALE.feed, enabled: !!userId },
-  )
-  const recentVenues = venuesQuery.data ?? []
-
-  // Saved templates (only fetched once the picker is opened)
-  const templatesQuery = useQuery<UserEventTemplate[]>(
-    userId ? queryKey('templates', userId) : null,
-    async () => {
-      const { data, error } = await supabase
-        .from('user_event_templates')
-        .select(TEMPLATE_SELECT)
-        .eq('user_id', userId as string)
-        .order('created_at', { ascending: false })
-      if (error) throw error
-      // TEMPORARY double cast: bring_items isn't in types/database.ts until it is regenerated from live after merge (#256).
-      return (data ?? []) as unknown as UserEventTemplate[]
-    },
-    { staleMs: STALE.feed, enabled: !!userId && view === 'templates' },
-  )
 
   // Editing: the event being edited is loaded into the form once
   const [editState, setEditState] = useState<'idle' | 'loading' | 'loaded' | 'error'>(seed ? 'loaded' : isEdit ? 'loading' : 'idle')
@@ -206,7 +145,6 @@ export default function HostEventScreen() {
   const filledRef = useRef<{ form: CreateEventForm; tags: string[]; club: string | null } | null>(
     seed ? { form, tags: selectedTagIds, club: selectedClubId } : null,
   )
-  const [durationModalOpen, setDurationModalOpen] = useState(false)
   const [hostPullRefreshing, setHostPullRefreshing] = useState(false)
 
   const loadEventForEdit = useCallback(async (id: string, opts?: { force?: boolean }): Promise<boolean> => {
@@ -292,10 +230,7 @@ export default function HostEventScreen() {
     setHostPullRefreshing(true)
     try {
       await Promise.all([
-        tagsQuery.refetch({ force: true }),
-        ownedClubsQuery.refetch({ force: true }),
-        venuesQuery.refetch({ force: true }),
-        view === 'templates' ? templatesQuery.refetch({ force: true }) : undefined,
+        refetchAll(),
         // Pull to refresh is an explicit ask for the server's copy.
         editId && userId ? loadEventForEdit(editId, { force: true }) : undefined,
       ])
@@ -305,15 +240,7 @@ export default function HostEventScreen() {
   }
 
   function applyUserTemplate(t: UserEventTemplate) {
-    setForm(prev => ({
-      ...prev,
-      title: t.title,
-      description: t.description ?? '',
-      location: t.location ?? '',
-      locationLatitude: null,
-      locationLongitude: null,
-      maxAttendees: t.max_attendees,
-    }))
+    setForm(prev => formWithTemplate(prev, t))
     changeBringDrafts(draftsFromTemplate(t.bring_items))
     setView('form')
   }
@@ -326,12 +253,6 @@ export default function HostEventScreen() {
     setSelectedTagIds(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id])
   }
 
-  function toggleRecurrenceDay(dayIdx: number) {
-    setRecurrence(prev => {
-      const already = prev.days.includes(dayIdx)
-      return { ...prev, days: already ? prev.days.filter(d => d !== dayIdx) : [...prev.days, dayIdx] }
-    })
-  }
 
   async function handleSubmit() {
     // Set once an events row is written: from then on readers must be told,
@@ -524,8 +445,6 @@ export default function HostEventScreen() {
 
   const eventCount = recurrence.enabled ? eventDates(form, recurrence).length : 1
 
-  const showDayPicker = recurrence.enabled && recurrence.cadence !== 'monthly'
-
   // ── Templates view ────────────────────────────────────────────────────────
   if (view === 'templates') {
     return (
@@ -574,29 +493,14 @@ export default function HostEventScreen() {
   return (
     <>
       <Stack.Screen options={backHeaderOptions} />
-      <Modal visible={successModal} transparent animationType="none" onRequestClose={() => setSuccessModal(false)}>
-        <TouchableOpacity style={shared.modalOverlay} onPress={() => setSuccessModal(false)}>
-          <View style={shared.modalCard}>
-            <Text style={shared.modalEmoji}>{saveOutcome === 'saved' ? '🏐' : '⚠️'}</Text>
-            <Text style={shared.modalTitle}>{successMessage}</Text>
-            <Text style={shared.modalBody}>
-              {saveOutcome === 'tags-failed'
-                ? 'Your event details were saved, but its tags were left unchanged.'
-                : saveOutcome === 'tags-uncertain'
-                  ? 'Your event details were saved, but its tags may not match your changes. Reopen the event and review them.'
-                : saveOutcome === 'failed'
-                  ? 'Nothing was saved. Check your connection and try again.'
-                  : isEdit ? 'Your changes have been saved.' : 'Your event is now live for members to join.'}
-            </Text>
-            <TouchableOpacity
-              style={shared.modalButton}
-              onPress={saveOutcome === 'saved' ? goBack : () => setSuccessModal(false)}
-            >
-              <Text style={shared.modalButtonText}>{saveOutcome === 'saved' ? 'Done' : 'Close'}</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      <HostResultModal
+        visible={successModal}
+        outcome={saveOutcome}
+        message={successMessage}
+        isEdit={isEdit}
+        onClose={() => setSuccessModal(false)}
+        onDone={goBack}
+      />
 
       <ScrollView
         style={shared.screen}
@@ -616,507 +520,47 @@ export default function HostEventScreen() {
           </Text>
         </View>
 
-        {/* ── Event type toggle ── */}
-        {(() => {
-          // Tags load beside the form: hold their space so the fields below don't jump.
-          if (tagsQuery.isLoading) {
-            return (
-              <View testID="host-tags-loading" style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-                <View style={[shared.skeletonBlock, { flex: 1, height: 64, borderRadius: 18 }]} />
-              </View>
-            )
-          }
-          const typeTags = availableTags.filter(t => t.category === 'event_type' && t.name !== 'Tournament')
-          if (typeTags.length === 0) return null
-          const TYPE_META: Record<string, { color: string; subtitle: string }> = {
-            'Open Play': { color: theme.colors.primary, subtitle: 'casual' },
-          }
-          return (
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-              {typeTags.map(tag => {
-                const meta = TYPE_META[tag.name] ?? { color: theme.colors.primary, subtitle: '' }
-                const selected = selectedTagIds.includes(tag.id)
-                return (
-                  <TouchableOpacity
-                    key={tag.id}
-                    onPress={() => {
-                      setSelectedTagIds(prev => {
-                        const otherTypeIds = typeTags.filter(t => t.id !== tag.id).map(t => t.id)
-                        const withoutTypes = prev.filter(id => !otherTypeIds.includes(id))
-                        return withoutTypes.includes(tag.id)
-                          ? withoutTypes.filter(id => id !== tag.id)
-                          : [...withoutTypes, tag.id]
-                      })
-                    }}
-                    activeOpacity={0.75}
-                    style={{
-                      flex: 1, padding: 14, borderRadius: 18,
-                      backgroundColor: selected ? meta.color : theme.colors.card,
-                      borderWidth: selected ? 0 : 1.5,
-                      borderColor: theme.colors.border,
-                    }}
-                  >
-                    <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lgm, letterSpacing: -0.3, color: selected ? theme.colors.white : theme.colors.text }}>
-                      {tag.name}
-                    </Text>
-                    {meta.subtitle ? (
-                      <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: selected ? 'rgba(255,255,255,0.75)' : theme.colors.subtext, marginTop: 2 }}>
-                        {meta.subtitle}
-                      </Text>
-                    ) : null}
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
-          )
-        })()}
-
-        {/* ── Title ── */}
-        <View style={hostStyles.fieldCard}>
-          <Text style={hostStyles.fieldLabel}>Title</Text>
-          <TextInput
-            value={form.title}
-            onChangeText={v => setField('title', v)}
-            placeholder="Friday Night Round Robin"
-            placeholderTextColor={theme.colors.subtext}
-            style={hostStyles.fieldInput}
-          />
-        </View>
-
-        {/* ── Location ── */}
-        <View style={hostStyles.fieldCard}>
-          <Text style={hostStyles.fieldLabel}>Location</Text>
-          <LocationPickerField
-            value={form.location ? { display: form.location, latitude: form.locationLatitude, longitude: form.locationLongitude } : null}
-            onChange={loc => {
-              setField('location', loc.display)
-              setField('locationLatitude', loc.latitude)
-              setField('locationLongitude', loc.longitude)
-            }}
-            userId={userId}
-            recentVenues={recentVenues}
-          />
-        </View>
-
-        {/* ── Date + Time (DatePickerField handles both) ── */}
-        <View style={hostStyles.fieldCard}>
-          <Text style={hostStyles.fieldLabel}>Date & Time</Text>
-          <DatePickerField
-            value={form.date}
-            onChange={d => {
-              setField('date', d)
-              if (!recurrence.enabled) setRecurrence(prev => ({ ...prev, endDate: defaultRecurrenceEndDate(d) }))
-            }}
-          />
-        </View>
-
-        {/* ── Duration ── */}
-        <View style={hostStyles.fieldCard}>
-          <Text style={hostStyles.fieldLabel}>Duration</Text>
-          <TouchableOpacity
-            onPress={() => setDurationModalOpen(true)}
-            activeOpacity={0.7}
-            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}
-          >
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.lgs, color: theme.colors.text, fontWeight: '500' }}>
-              {DURATION_OPTIONS.find(o => o.minutes === form.durationMinutes)?.label ?? 'Select'}
-            </Text>
-            <Ionicons name="chevron-down" size={16} color={theme.colors.subtext} />
-          </TouchableOpacity>
-          <Modal visible={durationModalOpen} transparent animationType="fade" onRequestClose={() => setDurationModalOpen(false)}>
-            <TouchableOpacity style={shared.modalOverlay} activeOpacity={1} onPress={() => setDurationModalOpen(false)}>
-              <View style={[shared.modalCard, { paddingVertical: 0, paddingHorizontal: 0, overflow: 'hidden', minWidth: 200 }]}>
-                {DURATION_OPTIONS.map((opt, i) => {
-                  const active = form.durationMinutes === opt.minutes
-                  return (
-                    <TouchableOpacity
-                      key={opt.minutes}
-                      onPress={() => { setField('durationMinutes', opt.minutes); setDurationModalOpen(false) }}
-                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: theme.colors.border }}
-                    >
-                      <Text style={{ fontSize: theme.font.size.md, color: active ? theme.colors.primary : theme.colors.text, fontWeight: active ? theme.font.weight.semibold : theme.font.weight.regular }}>
-                        {opt.label}
-                      </Text>
-                      {active && <Ionicons name="checkmark" size={16} color={theme.colors.primary} />}
-                    </TouchableOpacity>
-                  )
-                })}
-              </View>
-            </TouchableOpacity>
-          </Modal>
-        </View>
-
-        {/* ── Max players ── */}
-        <View style={hostStyles.fieldCard}>
-          <Text style={hostStyles.fieldLabel}>Max players</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 }}>
-            <TextInput
-              value={form.maxAttendees != null ? String(form.maxAttendees) : ''}
-              onChangeText={v => {
-                const digits = v.replace(/[^0-9]/g, '')
-                if (digits === '') { setField('maxAttendees', null); return }
-                const n = parseInt(digits, 10)
-                if (Number.isFinite(n) && n > 0) setField('maxAttendees', n)
-              }}
-              placeholder="e.g. 18"
-              placeholderTextColor={theme.colors.subtext}
-              keyboardType="number-pad"
-              style={[hostStyles.fieldInput, { flex: 1 }]}
-            />
-            <TouchableOpacity
-              onPress={() => setField('maxAttendees', form.maxAttendees === null ? 18 : null)}
-              style={[hostStyles.chip, form.maxAttendees === null && hostStyles.chipActive]}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityState={{ selected: form.maxAttendees === null }}
-              accessibilityLabel="Unlimited players"
-            >
-              <Text style={[hostStyles.chipText, form.maxAttendees === null && hostStyles.chipTextActive]}>
-                Unlimited
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* ── Skill level tags ── */}
-        {(() => {
-          const byCategory = availableTags.reduce<Record<string, Tag[]>>((acc, tag) => {
-            if (tag.category === 'event_type') return acc
-            ;(acc[tag.category] ??= []).push(tag)
-            return acc
-          }, {})
-          const entries = Object.entries(byCategory)
-          if (entries.length === 0) return null
-          return entries.map(([category, tags]) => (
-            <View key={category} style={hostStyles.fieldCard}>
-              <Text style={hostStyles.fieldLabel}>
-                {category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-              </Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                {tags.map(tag => {
-                  const active = selectedTagIds.includes(tag.id)
-                  return (
-                    <TouchableOpacity
-                      key={tag.id}
-                      onPress={() => toggleTag(tag.id)}
-                      style={{
-                        paddingHorizontal: 13, paddingVertical: 6, borderRadius: 999,
-                        backgroundColor: active ? theme.colors.text : theme.colors.border,
-                      }}
-                    >
-                      <Text style={{
-                        fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.smd,
-                        color: active ? theme.colors.background : theme.colors.text,
-                      }}>{tag.name}</Text>
-                    </TouchableOpacity>
-                  )
-                })}
-              </View>
-            </View>
-          ))
-        })()}
-
-        {/* ── Description ── */}
-        <View style={hostStyles.fieldCard}>
-          <Text style={hostStyles.fieldLabel}>Description (optional)</Text>
-          <TextInput
-            value={form.description}
-            onChangeText={v => setField('description', v)}
-            placeholder="What's this event about?"
-            placeholderTextColor={theme.colors.subtext}
-            multiline
-            numberOfLines={3}
-            style={[hostStyles.fieldInput, { minHeight: 64, textAlignVertical: 'top' }]}
-          />
-        </View>
-
-        {/* ── Price + Venmo ── */}
-        <View style={hostStyles.fieldCard}>
-          <Text style={hostStyles.fieldLabel}>Price (optional)</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.subtext }}>$</Text>
-            <TextInput
-              testID="event-price-input"
-              // Bound to raw text. Never round-trip through parseFloat on
-              // keystroke — that erases a trailing "." and any trailing zero,
-              // which is why "5.50" was impossible to type.
-              value={form.priceText}
-              onChangeText={v => setField('priceText', sanitizePriceInput(v))}
-              onBlur={() => setField('priceText', normalizePriceText(form.priceText))}
-              placeholder="0.00 — leave blank for free"
-              placeholderTextColor={theme.colors.subtext}
-              keyboardType="decimal-pad"
-              inputMode="decimal"
-              style={[hostStyles.fieldInput, { flex: 1 }]}
-            />
-          </View>
-          {(parsePrice(form.priceText) ?? 0) > 0 && (
-            <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: theme.colors.border, paddingTop: 12 }}>
-              <Text style={hostStyles.fieldLabel}>Venmo handle (optional)</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.subtext }}>@</Text>
-                <TextInput
-                  value={form.venmoHandle}
-                  onChangeText={v => setField('venmoHandle', v.replace(/^@/, ''))}
-                  placeholder="your-venmo-username"
-                  placeholderTextColor={theme.colors.subtext}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={[hostStyles.fieldInput, { flex: 1 }]}
-                />
-              </View>
-            </View>
-          )}
-        </View>
-
-        {/* ── Surface ── optional; lets the Events feed's surface filter include this event. */}
-        <View style={hostStyles.fieldCard}>
-          <Text style={hostStyles.fieldLabel}>Surface</Text>
-          <View style={shared.chipRowWrap}>
-            {SURFACE_OPTIONS.map(opt => (
-              <Chip
-                key={opt.id}
-                testID={`event-surface-${opt.id}`}
-                label={opt.label}
-                active={form.surface === opt.id}
-                // Tap the selected surface again to clear it.
-                onPress={() => setField('surface', form.surface === opt.id ? null : opt.id)}
-              />
-            ))}
-          </View>
-          <Text style={shared.caption}>Players can filter the Events feed by surface.</Text>
-        </View>
-
+        <TypeSection loading={tagsLoading} tags={availableTags} selectedTagIds={selectedTagIds} onChangeTags={setSelectedTagIds} />
+        <BasicsSection
+          form={form}
+          setField={setField}
+          userId={userId}
+          recentVenues={recentVenues}
+          onChangeDate={d => {
+            setField('date', d)
+            if (!recurrence.enabled) setRecurrence(prev => ({ ...prev, endDate: defaultRecurrenceEndDate(d) }))
+          }}
+        />
+        <PlayersSection form={form} setField={setField} tags={availableTags} selectedTagIds={selectedTagIds} onToggleTag={toggleTag} />
+        <DetailsSection form={form} setField={setField} />
         {/* ── What to bring (#256) ── */}
         <BringItemsSection
           drafts={bringDrafts}
           onChange={changeBringDrafts}
           surface={form.surface}
-          cardStyle={hostStyles.fieldCard}
-          labelStyle={hostStyles.fieldLabel}
+          cardStyle={shared.hostFieldCard}
+          labelStyle={shared.hostFieldLabel}
         />
-
-        {/* ── Approval ──
-            Its own card right after Price: approval used to be implied by
-            `price > 0`, and the two are now independent (a free event can be
-            screened, a paid one can be open). */}
-        <View style={hostStyles.fieldCard}>
-          <View style={hostStyles.switchRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={hostStyles.fieldLabel}>Require approval to join</Text>
-              <Text style={shared.caption}>
-                {form.requiresApproval
-                  ? 'Players request a spot and you approve each one.'
-                  : 'Anyone can join instantly until the event is full.'}
-              </Text>
-            </View>
-            <Switch
-              testID="event-requires-approval-switch"
-              value={form.requiresApproval}
-              onValueChange={v => setField('requiresApproval', v)}
-              accessibilityLabel="Require approval to join this event"
-              trackColor={{ false: theme.colors.border, true: theme.colors.primary + '80' }}
-              thumbColor={form.requiresApproval ? theme.colors.primary : theme.colors.subtext}
-            />
-          </View>
-        </View>
-
-        {/* ── Recurrence (create only) ── */}
+        <ApprovalSection value={form.requiresApproval} onChange={v => setField('requiresApproval', v)} />
+        {!isEdit && <RepeatSection recurrence={recurrence} onChange={setRecurrence} eventCount={eventCount} />}
+        <ClubSection clubs={ownedClubs} selectedClubId={selectedClubId} onSelect={setSelectedClubId} />
         {!isEdit && (
-          <View style={hostStyles.fieldCard}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={hostStyles.fieldLabel}>Repeat</Text>
-              <Switch
-                accessibilityLabel="Repeat this event"
-                value={recurrence.enabled}
-                onValueChange={v => setRecurrence(prev => ({ ...prev, enabled: v }))}
-                trackColor={{ false: theme.colors.border, true: theme.colors.primary + '80' }}
-                thumbColor={recurrence.enabled ? theme.colors.primary : theme.colors.subtext}
-              />
-            </View>
-            {recurrence.enabled && (
-              <View style={{ marginTop: 14, gap: 12 }}>
-                <View style={{ flexDirection: 'row', borderRadius: theme.radius.md, overflow: 'hidden', borderWidth: 1, borderColor: theme.colors.border, alignSelf: 'flex-start' }}>
-                  {CADENCE_OPTIONS.map(opt => (
-                    <TouchableOpacity
-                      key={opt.value}
-                      onPress={() => setRecurrence(prev => ({ ...prev, cadence: opt.value }))}
-                      style={{ paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.xs, backgroundColor: recurrence.cadence === opt.value ? theme.colors.primary : 'transparent' }}
-                    >
-                      <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.medium, color: recurrence.cadence === opt.value ? theme.colors.white : theme.colors.subtext }}>
-                        {opt.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-                {showDayPicker && (
-                  <View>
-                    <Text style={[shared.caption, { marginBottom: theme.spacing.xs }]}>On these days</Text>
-                    <View style={{ flexDirection: 'row', gap: theme.spacing.xs }}>
-                      {DAY_LABELS_SHORT.map((label, i) => {
-                        const active = recurrence.days.includes(i)
-                        return (
-                          <TouchableOpacity
-                            key={i}
-                            onPress={() => toggleRecurrenceDay(i)}
-                            style={{
-                              width: 36, height: 36, borderRadius: 18,
-                              borderWidth: 1.5,
-                              borderColor: active ? theme.colors.primary : theme.colors.border,
-                              backgroundColor: active ? theme.colors.primary : 'transparent',
-                              alignItems: 'center', justifyContent: 'center',
-                            }}
-                          >
-                            <Text style={{ fontSize: theme.font.size.xs, fontWeight: theme.font.weight.semibold, color: active ? theme.colors.white : theme.colors.subtext }}>
-                              {label}
-                            </Text>
-                          </TouchableOpacity>
-                        )
-                      })}
-                    </View>
-                  </View>
-                )}
-                <View>
-                  <Text style={[shared.caption, { marginBottom: theme.spacing.xs }]}>Until</Text>
-                  <DatePickerField value={recurrence.endDate} onChange={d => setRecurrence(prev => ({ ...prev, endDate: d }))} />
-                </View>
-                {eventCount > 0 && (
-                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.primaryText }}>
-                    {eventCount} event{eventCount !== 1 ? 's' : ''} will be created
-                  </Text>
-                )}
-              </View>
-            )}
-          </View>
+          <SaveTemplateSection
+            enabled={saveAsTemplate}
+            onToggle={setSaveAsTemplate}
+            name={templateName}
+            onChangeName={setTemplateName}
+            placeholder={form.title || 'Template name'}
+          />
         )}
 
-        {/* ── Club ── */}
-        {ownedClubs.length > 0 && (
-          <View style={hostStyles.fieldCard}>
-            <Text style={hostStyles.fieldLabel}>Club (optional)</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-              {ownedClubs.map(club => {
-                const active = selectedClubId === club.id
-                return (
-                  <TouchableOpacity
-                    key={club.id}
-                    onPress={() => setSelectedClubId(active ? null : club.id)}
-                    style={{
-                      paddingHorizontal: 13, paddingVertical: 6, borderRadius: 999,
-                      backgroundColor: active ? theme.colors.primary : theme.colors.border,
-                    }}
-                  >
-                    <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: active ? theme.colors.white : theme.colors.text }}>
-                      {club.name}
-                    </Text>
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
-          </View>
-        )}
-
-        {/* ── Save as template ── */}
-        {!isEdit && (
-          <View style={hostStyles.fieldCard}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={hostStyles.fieldLabel}>Save as template</Text>
-              <Switch
-                accessibilityLabel="Save as template"
-                value={saveAsTemplate}
-                onValueChange={setSaveAsTemplate}
-                trackColor={{ false: theme.colors.border, true: theme.colors.primary + '80' }}
-                thumbColor={saveAsTemplate ? theme.colors.primary : theme.colors.subtext}
-              />
-            </View>
-            {saveAsTemplate && (
-              <TextInput
-                value={templateName}
-                onChangeText={setTemplateName}
-                placeholder={form.title || 'Template name'}
-                placeholderTextColor={theme.colors.subtext}
-                style={[hostStyles.fieldInput, { marginTop: 10 }]}
-              />
-            )}
-          </View>
-        )}
-
-        {/* ── Submit ── */}
-        <TouchableOpacity
+        <HostSubmitButton
           onPress={handleSubmit}
-          disabled={!form.title || !userId || loading}
-          activeOpacity={0.85}
-          style={{
-            marginTop: 8,
-            padding: 15, borderRadius: 14,
-            backgroundColor: (!form.title || !userId) ? theme.colors.border : theme.colors.text,
-            alignItems: 'center',
-          }}
-        >
-          {loading
-            ? <Spinner color={theme.colors.background} />
-            : <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lgs, letterSpacing: 0.2, color: theme.colors.background }}>
-                {isEdit ? 'Save changes' : (eventCount > 1 ? `Publish ${eventCount} events` : 'Publish event')}
-              </Text>
-          }
-        </TouchableOpacity>
+          disabled={!form.title || !userId}
+          busy={loading}
+          label={isEdit ? 'Save changes' : (eventCount > 1 ? `Publish ${eventCount} events` : 'Publish event')}
+        />
       </ScrollView>
     </>
   )
 }
-
-const hostStyles = StyleSheet.create({
-  fieldCard: {
-    backgroundColor: theme.colors.card,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    marginBottom: 10,
-  },
-  fieldLabel: {
-    fontFamily: theme.fonts.bodySemiBold,
-    fontSize: theme.font.size.xs,
-    fontWeight: '700',
-    color: theme.colors.subtext,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginBottom: 2,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: theme.spacing.md,
-  },
-  fieldInput: {
-    fontFamily: theme.fonts.body,
-    fontSize: theme.font.size.lgs,
-    color: theme.colors.text,
-    fontWeight: '500',
-    paddingVertical: 2,
-    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}),
-  },
-  chip: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs + 2,
-    borderRadius: theme.radius.full,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.card,
-  },
-  chipActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  chipText: {
-    fontFamily: theme.fonts.bodyMedium,
-    fontSize: theme.font.size.sm,
-    color: theme.colors.subtext,
-  },
-  chipTextActive: {
-    fontFamily: theme.fonts.bodySemiBold,
-    color: theme.colors.white,
-  },
-})
