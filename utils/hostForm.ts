@@ -6,7 +6,7 @@
  * same rules.
  */
 import { DEFAULT_DURATION_MINUTES } from '../constants'
-import { cleanDate, isSurface, parsePrice } from './index'
+import { isSurface, parsePrice } from './index'
 import { parsePrefillDate } from './clubPoll'
 import { generateEventDates } from './recurrence'
 import type { CreateEventForm, EventEditSource, HostFormParams, HostRecurrence, LocationValue, TablesInsert, UserEventTemplate } from '../types'
@@ -111,11 +111,6 @@ export function eventColumns(form: CreateEventForm, clubId: string | null): Even
   }
 }
 
-/** One `events` row per start time, for a create. */
-export function newEventRows(form: CreateEventForm, dates: Date[], host: { userId: string; clubId: string | null }): TablesInsert<'events'>[] {
-  const columns = eventColumns(form, host.clubId)
-  return dates.map(d => ({ ...columns, event_date: cleanDate(d), created_by: host.userId }))
-}
 
 /** Up to five distinct venues from the host's latest events (newest first), for the location field's quick picks. */
 export function recentVenuesFrom(rows: { location: string | null; latitude: number | null; longitude: number | null }[]): LocationValue[] {

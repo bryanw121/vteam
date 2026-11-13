@@ -1,5 +1,5 @@
 /** #188 part 1: the host form's pure core, without the screen. */
-import { emptyForm, eventColumns, formWithTemplate, recentVenuesFrom, eventDates, formFromEvent, formFromParams, hostFormProblem, newEventRows, roundToNearest5 } from '../utils/hostForm'
+import { emptyForm, eventColumns, formWithTemplate, recentVenuesFrom, eventDates, formFromEvent, formFromParams, hostFormProblem, roundToNearest5 } from '../utils/hostForm'
 import { localDate } from './helpers/clock'
 import type { CreateEventForm, EventEditSource, HostRecurrence } from '../types'
 
@@ -65,7 +65,7 @@ describe('eventDates / hostFormProblem', () => {
   })
 })
 
-describe('eventColumns / newEventRows', () => {
+describe('eventColumns', () => {
   it('keeps Venmo only for a paid game, and empty text as null', () => {
     expect(eventColumns(form({ priceText: '5.5', venmoHandle: ' ana ' }), 'c1')).toMatchObject({ price: 5.5, venmo_handle: 'ana', club_id: 'c1', description: null, location: null })
     expect(eventColumns(form({ priceText: '', venmoHandle: 'ana' }), null)).toMatchObject({ price: null, venmo_handle: null })
@@ -77,12 +77,6 @@ describe('eventColumns / newEventRows', () => {
     expect(cols).toMatchObject({ max_attendees: null, latitude: 1, longitude: 2 })
   })
 
-  it('one row per start time, by the host', () => {
-    const dates = [localDate(2026, 11, 17, 18), localDate(2026, 11, 24, 18)]
-    const rows = newEventRows(form(), dates, { userId: 'u1', clubId: null })
-    expect(rows.map(r => r.event_date)).toEqual(dates.map(d => d.toISOString()))
-    expect(rows.every(r => r.created_by === 'u1' && r.title === 'Tuesday 6s')).toBe(true)
-  })
 })
 
 describe('recentVenuesFrom / formWithTemplate', () => {
