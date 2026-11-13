@@ -13,7 +13,8 @@ import { useSilencedUsers } from '../../../../hooks/useSilencedUsers'
 import { useOpenDm } from '../../../../hooks/useOpenDm'
 import { useTabsActive, useTabsShell } from '../../../../contexts/tabs'
 import { timeAgo, lastMessagePreview } from '../../../../utils/chatUtils'
-import { profileAvatarSmallUri, buildMemberSearchFilter, profileDisplayName, confirmDestructive } from '../../../../utils'
+import { profileAvatarSmallUri, profileDisplayName, confirmDestructive } from '../../../../utils'
+import { searchMembers } from '../../../../lib/memberSearch'
 import { routes } from '../../../../utils/routes'
 import type { ConversationRow, Profile } from '../../../../types'
 import { useSession } from '../../../../contexts/session'
@@ -47,18 +48,14 @@ function NewDMModal({ visible, onDismiss, onSelect, silencedUserIds, myId }: {
 
   useEffect(() => {
     if (!query.trim()) { setResults([]); return }
-    const searchFilter = buildMemberSearchFilter(query)
-    if (!searchFilter) { setResults([]); return }
     const t = setTimeout(async () => {
       setSearching(true)
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, first_name, last_name, avatar_url')
-        .or(searchFilter)
-        .neq('id', myId)
-        .limit(20)
-      if (error) console.error('[NewDMModal] search', error.message)
-      setResults((data ?? []) as Profile[])
+      try {
+        setResults(await searchMembers(query, { limit: 20, exclude: [myId] }) as Profile[])
+      } catch (e) {
+        console.error('[NewDMModal] search', (e as Error)?.message)
+        setResults([])
+      }
       setSearching(false)
     }, 300)
     return () => clearTimeout(t)

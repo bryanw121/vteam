@@ -87,6 +87,11 @@ export const routes = {
   tournaments: (view: ViewOf<'tournaments'> = {}) => href(withView('/tournaments', VIEW.tournaments, view)),
   /** Leagues around town open for sign-up (Schelagg's programs feed). Public. */
   leagues: (view: ViewOf<'leagues'> = {}) => href(withView('/leagues', VIEW.leagues, view)),
+  /** Live scores and brackets of an outside tournament that runs on the Google Sheet app (`programId`: Schelagg id). Public. */
+  programScores: (programId: string, view: ViewOf<'scores'> = {}) =>
+    href(withView(`/scores/${encodeURIComponent(programId)}`, VIEW.scores, view)),
+  /** Scorekeeping for that tournament: PIN, pick a game, score it into the Sheet. Public (the Sheet checks the PIN). */
+  programScorekeeper: (programId: string) => href(`/scores/${encodeURIComponent(programId)}/keep`),
 
   host: (opts: HostRouteOptions = {}) => {
     const query: string[] = []

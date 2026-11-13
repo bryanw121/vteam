@@ -1,0 +1,5 @@
+# Which files `maestro test e2e/android/flows` runs; _ready.yaml is a shared subflow.
+flows:
+  - "0*.yaml"
+executionOrder:
+  continueOnFailure: true

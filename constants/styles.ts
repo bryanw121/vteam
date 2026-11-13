@@ -202,6 +202,12 @@ export const shared = StyleSheet.create({
   // ─── Team / player grid (shared by the event People & Cheers tabs) ───────
   playerGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   playerCell: { width: Platform.OS === 'web' ? '33.33%' : '50%', padding: 3 },
+  // Grouped cheers notifications (#194).
+  notificationChips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
+  notificationChip: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.timeInk, backgroundColor: colors.primarySoft,
+    borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
   // Player setup after sign-up (#156).
   welcomeBody: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl, gap: spacing.sm },
   welcomeTitle: { fontFamily: fonts.display, fontSize: font.heading.lg, fontWeight: font.weight.bold, color: colors.text },
@@ -427,6 +433,34 @@ export const shared = StyleSheet.create({
   externalSignupLabel: {
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: theme.font.size.sm,
+    color: theme.colors.text,
+  },
+  /** ExternalProgramCard with a Scores & brackets strip under it: the card's bottom edge joins the strip. */
+  externalCardJoined: {
+    marginBottom: 0,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  /** LiveScoresLink: the strip under an outside tournament's card that opens its scores in vteam. */
+  programScoresLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    marginBottom: theme.spacing.sm,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: theme.colors.border,
+    borderStyle: 'dashed',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    backgroundColor: theme.colors.primarySoft,
+  },
+  programScoresLinkLabel: {
+    flex: 1,
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.smd,
     color: theme.colors.text,
   },
   // ── Guest mode (SignInPrompt, SignInButton) ──────────────────────────────
@@ -1022,4 +1056,31 @@ export const shared = StyleSheet.create({
   leaveReasonLabel: { fontFamily: fonts.body, fontSize: font.size.sm, color: colors.subtextStrong, marginBottom: spacing.xs },
   leaveNote: { marginTop: spacing.sm, marginBottom: spacing.md, fontSize: font.size.base, minHeight: 44 },
   leaveActions: { gap: spacing.sm },
+
+  // ── What to bring (#256): event card and host form section ─────────────
+  bringCard: {
+    backgroundColor: colors.card, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, marginBottom: spacing.md,
+  },
+  bringHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm },
+  bringTitle: { fontFamily: fonts.bodyBold, fontSize: font.size.xs, fontWeight: '700', color: colors.subtext, letterSpacing: 0.8, textTransform: 'uppercase' },
+  bringCount: { fontFamily: fonts.bodySemiBold, fontSize: font.size.sm, color: colors.primaryText },
+  bringRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 56,
+    paddingVertical: spacing.sm, borderTopWidth: 1, borderTopColor: colors.borderSoft,
+  },
+  bringIcon: { width: 36, height: 36, borderRadius: radius.sm, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  bringLabel: { fontFamily: fonts.bodySemiBold, fontSize: font.size.lgs, fontWeight: '600', color: colors.text },
+  bringStatusOk: { fontSize: font.size.smd, color: colors.success, marginTop: 2 },
+  bringStatusNeed: { fontSize: font.size.smd, color: colors.warning, marginTop: 2 },
+  bringStatusMuted: { fontSize: font.size.smd, color: colors.subtextStrong, marginTop: 2 },
+  bringHint: { fontSize: font.size.sm, color: colors.subtext, paddingVertical: spacing.sm },
+  bringDraftRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 52,
+    paddingVertical: spacing.xs, borderTopWidth: 1, borderTopColor: colors.borderSoft,
+  },
+  bringStepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  bringStepperValue: { minWidth: 20, textAlign: 'center', fontFamily: fonts.bodySemiBold, fontSize: font.size.md, color: colors.text },
+  bringToggleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flexWrap: 'wrap' },
+  bringAddRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
 })

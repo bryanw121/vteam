@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useMutation } from '../../lib/query'
-import { COHOST_SELECT, GENERIC_ERROR_MESSAGE, PROFILE_BRIEF } from '../../constants'
+import { COHOST_SELECT, GENERIC_ERROR_MESSAGE } from '../../constants'
 import type { EventCohostWithProfile, Profile } from '../../types'
-import { buildMemberSearchFilter } from '../../utils'
+import { searchMembers } from '../../lib/memberSearch'
 import { eventKeys, patchQuery } from './keys'
 import { reportEventError } from './telemetry'
 import type { EventData } from '../../types'
@@ -29,17 +29,10 @@ export function useCohosts(data: EventData) {
   async function search(q: string) {
     setQuery(q)
     const trimmed = q.trim()
-    const filter = trimmed.length >= 2 ? buildMemberSearchFilter(trimmed) : null
     const seq = ++searchSeq.current
-    if (!filter) { setResults([]); setSearching(false); return }
+    if (trimmed.length < 2) { setResults([]); setSearching(false); return }
     setSearching(true)
-    const { data: rows } = await supabase
-      .from('profiles')
-      .select(`${PROFILE_BRIEF}, position, created_at`)
-      .or(filter)
-      .neq('id', userId ?? '')
-      .neq('id', event?.created_by ?? '')
-      .limit(10)
+    const rows = await searchMembers(trimmed, { limit: 10, exclude: [userId, event?.created_by] }).catch(() => [])
     if (seq !== searchSeq.current) return
     const existing = new Set(cohosts.map(c => c.user_id))
     setResults(((rows ?? []) as Profile[]).filter(p => !existing.has(p.id)))

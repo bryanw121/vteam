@@ -326,6 +326,8 @@ export function buildFixtures(now) {
 
   // ─── Viewer's own stuff ────────────────────────────────────────────────────
   const notifications = [
+    // A grouped cheers row as the server writes it since #194.
+    { id: id('f3000000', 8), user_id: ME, notification_type: 'cheers_received', title: '4 cheers from Halloween Warm-up Scrimmage', body: 'Emma, Marcus and Sofia cheered you · Pass ×2, Block, Serve', data: { event_id: E.pastHosted, deep_link: `/event/${E.pastHosted}`, giver_names: ['Emma', 'Marcus', 'Sofia'], giver_count: 3, cheer_counts: { pass: 2, block: 1, serve: 1 } }, read_at: null, created_at: t.ago(30) },
     { id: id('f3000000', 1), user_id: ME, notification_type: 'kudos_received', title: 'You received a cheer', body: 'Emma cheered your digging at Halloween Warm-up Scrimmage', data: { event_id: E.pastHosted }, read_at: null, created_at: t.ago(60 * 2) },
     { id: id('f3000000', 2), user_id: ME, notification_type: 'event_announcement', title: 'Announcement: Rec Center 6s Night', body: 'Court 3 tonight, enter through the side door.', data: { event_id: E.fridayNight }, read_at: null, created_at: t.ago(60 * 3) },
     { id: id('f3000000', 3), user_id: ME, notification_type: 'event_comment', title: 'New comment on Sand Doubles at Butler', body: 'Marcus: Running 10 minutes late, save me a spot', data: { event_id: E.sundaySand }, read_at: null, created_at: t.ago(45) },
@@ -349,6 +351,18 @@ export function buildFixtures(now) {
     { kind: 'type', key: 'tag:league', label: 'League' },
     { kind: 'item', key: 'shots-hidden-event', label: 'Thursday Night Sixes', until: t.iso(5, 19, 0) },
   ]
+  // What to bring (#256) on the Sunday sand game: the net covered, one of two balls, lines and a pump still needed.
+  const bringItem = (n, label, quantity, required) => ({ id: id('e3000000', n), event_id: E.sundaySand, label, quantity, required, position: n - 1, created_at: t.iso(-2) })
+  const event_bring_items = [
+    bringItem(1, 'Net + antennas', 1, true),
+    bringItem(2, 'Game balls', 2, false),
+    bringItem(3, 'Boundary lines', 1, true),
+    bringItem(4, 'Ball pump', 1, false),
+  ]
+  const event_bring_claims = [
+    { item_id: id('e3000000', 1), event_id: E.sundaySand, user_id: P.priyap, quantity: 1, created_at: t.iso(-1) },
+    { item_id: id('e3000000', 2), event_id: E.sundaySand, user_id: P.jordanr, quantity: 1, created_at: t.iso(-1) },
+  ]
   const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, hidden_feed, updated_at: t.iso(-3) }]
   const chat_silences = [{ user_id: ME, silenced_user_id: P.hannahs, created_at: t.iso(-8) }]
 
@@ -359,7 +373,7 @@ export function buildFixtures(now) {
     tournaments, tournament_rules, tournament_prizes, tournament_teams, tournament_team_members, tournament_pools, tournament_pool_teams,
     tournament_matches, tournament_sets, tournament_comments, tournament_team_invitations: [], tournament_team_join_requests: [],
     conversations, conversation_members, messages, message_reactions,
-    notifications, user_badges, user_settings, chat_silences,
+    notifications, user_badges, user_settings, chat_silences, event_bring_items, event_bring_claims,
     app_config: [], push_tokens: [], feedback_submissions: [], app_events: [],
   }
 }

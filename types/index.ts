@@ -97,6 +97,7 @@ export const NOTIFICATION_PREF_TYPES = [
   'friend_accepted',
   'event_reminder',
   'late_dropout',
+  'bring_item_uncovered',
 ] as const
 
 /** Must match the `notifications_notification_type_check` constraint in Supabase exactly. */
@@ -131,9 +132,19 @@ export type NotificationData = {
   badge_type?: string
   /** late_dropout: the player who left; friend_request / friend_accepted: the other person. */
   user_id?: string
+  /** cheers_received groups (#194): distinct givers (first 10), their usernames, how many in all, count per cheer type. */
+  givers?: string[]
+  giver_names?: string[]
+  giver_count?: number
+  cheer_counts?: Record<string, number>
+  /** event_material_change groups (#194): what changed (title, time, location, spots, length). */
+  changed?: string[]
   /** friend_request / friend_accepted: the request. */
   request_id?: string
 }
+
+/** A row in the inbox. Rows written before #194 can be collapsed client-side; `groupIds` then lists every row it stands for. */
+export type NotificationItem = Notification & { groupIds?: string[] }
 
 /** The `data` of a push as the app receives it (send-notification-push / send-chat-push). */
 export type PushData = {
@@ -448,6 +459,23 @@ export type ExternalProgramCardProps = {
   menuInset?: boolean
 }
 
+/** Props of SheetTeamsView. `team` '' shows the list; onSelectTeam('') goes back to it. */
+export type SheetTeamsViewProps = { state: import('./sheetScores').SheetState; team: string; onSelectTeam: (team: string) => void }
+
+/** Props of SheetScoringPanel. `latest` is the Sheet's current copy of the game (polled), adopted when nothing of ours is waiting. */
+export type SheetScoringPanelProps = {
+  execUrl: string
+  keeper: { pin: string; by: string }
+  match: import('./sheetScores').SheetMatch
+  latest: import('./sheetScores').SheetMatch | null
+  rules: import('./sheetScores').SheetState['settings']
+  /** `changed`: something was saved as final or cancelled, so the lists should refresh. */
+  onClose: (changed: boolean) => void
+}
+
+/** Props of LiveScoresLink. */
+export type LiveScoresLinkProps = { programId: string; title: string }
+
 /** Props of ProgramHostChips. */
 export type ProgramHostChipsProps = {
   programs: ExternalProgram[]
@@ -515,7 +543,10 @@ export type Tag = Override<Tables<'tags'>, {
 export type UserEventTemplate = Override<Tables<'user_event_templates'>, {
   /** Nullable in the schema; defaults to now(). */
   created_at: string
-}>
+}> & {
+  /** What to bring (#256): the host's list, saved with the template. Null on older templates. */
+  bring_items?: BringItemDraft[] | null
+}
 
 // ─── Club Types ───────────────────────────────────────────────────────────────
 
@@ -1357,6 +1388,7 @@ export type OwnedClubOption = { id: string; name: string }
 export * from './tournament'
 export * from './scoresheet'
 export * from './metrics'
+export * from './sheetScores'
 
 // ─── Schedule generator ───────────────────────────────────────────────────────
 
@@ -2135,3 +2167,80 @@ export type UrlCodec<T> = {
 
 /** Field errors on the feedback form (#228: shown under each field, not as an alert). */
 export type FeedbackFieldErrors = { title?: string; description?: string; platform?: string }
+
+/**
+ * #244: the event a shared /event/<id> link's HTML carries (anon-visible data only), read by
+ * `lib/eventSeed.web.ts` and seeded into the query cache as stale entries.
+ */
+export type EventSeed = {
+  v: 1
+  id: string
+  /** When the server read it (ms). The CDN can serve it for up to ~15 minutes. */
+  at: number
+  event: unknown
+  cohosts: unknown[]
+  /** Rows of `event_guests_attending` (name-free). */
+  guests: unknown[]
+}
+
+/** A row of the `search_members` RPC (lib/memberSearch.ts). */
+export type MemberSearchResult = Pick<Profile, 'id' | 'username' | 'first_name' | 'last_name' | 'avatar_url' | 'position' | 'created_at'>
+  & Pick<Partial<Profile>, 'selected_border' | 'skill_level'>
+
+// ─── What to bring (#256) ─────────────────────────────────────────────────────
+
+/** One person bringing (part of) an item. Names come back only for signed-in viewers. */
+export type BringClaimer = {
+  user_id: string
+  quantity: number
+  username: string | null
+  first_name: string | null
+  last_name: string | null
+  avatar_url: string | null
+}
+
+/** A row of `get_event_bring_list(p_event_id)`: the item, how much is covered, and by whom. */
+export type BringItem = {
+  id: string
+  label: string
+  quantity: number
+  required: boolean
+  position: number
+  claimed: number
+  claimers: BringClaimer[]
+}
+
+/** An item in the host form (and in a template). `id` is set for items already saved on the event. */
+export type BringItemDraft = {
+  id?: string
+  label: string
+  quantity: number
+  required: boolean
+  /** The host is bringing it. */
+  mine: boolean
+}
+
+/** What the viewer can do with one item on the event page. */
+export type BringItemAction =
+  | { kind: 'claim'; quantity: number; label: string }
+  | { kind: 'release'; label: string }
+  | { kind: 'covered' }
+  | { kind: 'join' }
+  | { kind: 'signIn' }
+  | { kind: 'closed' }
+
+/** Who is looking at the list (derived on the event page). */
+export type BringViewer = {
+  userId: string | null
+  /** Attending, or the host / a co-host. */
+  canClaim: boolean
+  /** The game has started or was cancelled. */
+  closed: boolean
+}
+
+export type SaveBringItemsArgs = {
+  p_event_id: string
+  p_items: { id?: string; label: string; quantity: number; required: boolean; mine: boolean }[]
+}
+export type ClaimBringItemArgs = { p_item_id: string; p_quantity: number }
+export type ReleaseBringItemArgs = { p_item_id: string }
