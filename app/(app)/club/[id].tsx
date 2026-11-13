@@ -518,17 +518,15 @@ export default function ClubDetailScreen() {
                 </View>
               )}
               {member ? (
-                <View role="switch" aria-checked={myAlerts}>
-                  <IconButton
-                    icon={myAlerts ? 'notifications-outline' : 'notifications-off-outline'}
-                    label={`Game alerts for ${club.name}`}
-                    size={44}
-                    active={myAlerts}
-                    busy={clubAlerts.isPending}
-                    onPress={() => void clubAlerts.mutate(!myAlerts)}
-                    testID="club-game-alerts"
-                  />
-                </View>
+                <IconButton
+                  icon={myAlerts ? 'notifications-outline' : 'notifications-off-outline'}
+                  label={myAlerts ? `Game alerts for ${club.name}: on. Turn off` : `Game alerts for ${club.name}: off. Turn on`}
+                  size={44}
+                  active={myAlerts}
+                  busy={clubAlerts.isPending}
+                  onPress={() => void clubAlerts.mutate(!myAlerts)}
+                  testID="club-game-alerts"
+                />
               ) : null}
             </View>
           )}
