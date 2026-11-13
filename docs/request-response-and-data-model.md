@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `7bc4023bea02`
+> Inventory fingerprint: `22f2241c54a3`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -450,9 +450,9 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 
 | Table or view | Frontend/server call sites |
 |---|---|
-| `ad_banners` | [`hooks/useFeedAds.ts:18`](../hooks/useFeedAds.ts#L18) |
+| `ad_banners` | [`lib/startupConfig.ts:32`](../lib/startupConfig.ts#L32) |
 | `app_admins` | [`supabase/functions/generate-badge-art/index.ts:82`](../supabase/functions/generate-badge-art/index.ts#L82) |
-| `app_config` | [`hooks/useMinVersion.ts:19`](../hooks/useMinVersion.ts#L19) |
+| `app_config` | [`lib/startupConfig.ts:31`](../lib/startupConfig.ts#L31) |
 | `app_events` | [`lib/analytics.ts:159`](../lib/analytics.ts#L159) |
 | `badge_art` | [`hooks/useBadgeArt.ts:26`](../hooks/useBadgeArt.ts#L26)<br>[`supabase/functions/generate-badge-art/index.ts:130`](../supabase/functions/generate-badge-art/index.ts#L130) |
 | `chat_silences` | [`hooks/useSilencedUsers.ts:27`](../hooks/useSilencedUsers.ts#L27)<br>[`supabase/functions/send-chat-push/handler.ts:142`](../supabase/functions/send-chat-push/handler.ts#L142) |
@@ -488,7 +488,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `push_receipts` | [`supabase/functions/check-push-receipts/handler.ts:42`](../supabase/functions/check-push-receipts/handler.ts#L42)<br>[`supabase/functions/send-chat-push/handler.ts:206`](../supabase/functions/send-chat-push/handler.ts#L206)<br>[`supabase/functions/send-notification-push/handler.ts:150`](../supabase/functions/send-notification-push/handler.ts#L150) |
 | `push_tokens` | [`supabase/functions/check-push-receipts/handler.ts:87`](../supabase/functions/check-push-receipts/handler.ts#L87)<br>[`supabase/functions/send-chat-push/handler.ts:151`](../supabase/functions/send-chat-push/handler.ts#L151)<br>[`supabase/functions/send-notification-push/handler.ts:104`](../supabase/functions/send-notification-push/handler.ts#L104)<br>[`utils/pushNotifications.ts:115`](../utils/pushNotifications.ts#L115) |
 | `rate_limits` | [`supabase/functions/login-with-username/handler.ts:67`](../supabase/functions/login-with-username/handler.ts#L67) |
-| `sponsored_events` | [`hooks/useFeedAds.ts:19`](../hooks/useFeedAds.ts#L19) |
+| `sponsored_events` | [`lib/startupConfig.ts:35`](../lib/startupConfig.ts#L35) |
 | `tags` | [`hooks/useTags.ts:14`](../hooks/useTags.ts#L14) |
 | `tournament_comments` | [`hooks/tournament/api.ts:141`](../hooks/tournament/api.ts#L141) |
 | `tournament_matches` | [`hooks/tournament/api.ts:170`](../hooks/tournament/api.ts#L170) |
@@ -630,7 +630,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Public profile, history, cheers summary (#185) | [`UserProfileData`](../types/index.ts#L2143), [`EventHistoryKind`](../types/index.ts#L2152), [`CheersReceived`](../types/index.ts#L2155), [`CheersSummary`](../types/index.ts#L2161), [`RecoveryLink`](../types/index.ts#L2169) |
 | Join intent (#229) | [`PendingAction`](../types/index.ts#L2179), [`PendingActionTake`](../types/index.ts#L2182), [`JoinOffer`](../types/index.ts#L2185), [`JoinIntentOutcome`](../types/index.ts#L2188) |
 | View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2193), [`FeedbackFieldErrors`](../types/index.ts#L2199), [`ReportReason`](../types/index.ts#L2202), [`ReportContextKind`](../types/index.ts#L2203), [`ReportStatus`](../types/index.ts#L2204), [`ReportAction`](../types/index.ts#L2205), [`ReportUserInput`](../types/index.ts#L2207), [`AdminReport`](../types/index.ts#L2216), [`ReportSheetTarget`](../types/index.ts#L2235), [`ReportSheetProps`](../types/index.ts#L2238), [`EventSeed`](../types/index.ts#L2254), [`MemberSearchResult`](../types/index.ts#L2266) |
-| What to bring (#256) | [`BringClaimer`](../types/index.ts#L2272), [`BringItem`](../types/index.ts#L2282), [`BringItemDraft`](../types/index.ts#L2293), [`BringItemAction`](../types/index.ts#L2303), [`BringViewer`](../types/index.ts#L2312), [`SaveBringItemsArgs`](../types/index.ts#L2320), [`ClaimBringItemArgs`](../types/index.ts#L2324), [`ReleaseBringItemArgs`](../types/index.ts#L2325), [`MyGameRecap`](../types/index.ts#L2328), [`YourGameCardProps`](../types/index.ts#L2330), [`RecapFooterProps`](../types/index.ts#L2339), [`RecapShareTarget`](../types/index.ts#L2350) |
+| What to bring (#256) | [`BringClaimer`](../types/index.ts#L2272), [`BringItem`](../types/index.ts#L2282), [`BringItemDraft`](../types/index.ts#L2293), [`BringItemAction`](../types/index.ts#L2303), [`BringViewer`](../types/index.ts#L2312), [`SaveBringItemsArgs`](../types/index.ts#L2320), [`ClaimBringItemArgs`](../types/index.ts#L2324), [`ReleaseBringItemArgs`](../types/index.ts#L2325), [`StartupConfig`](../types/index.ts#L2328), [`StartupArm`](../types/index.ts#L2335), [`MyGameRecap`](../types/index.ts#L2338), [`YourGameCardProps`](../types/index.ts#L2340), [`RecapFooterProps`](../types/index.ts#L2349), [`RecapShareTarget`](../types/index.ts#L2360) |
 
 ### Constrained string values
 
@@ -674,7 +674,7 @@ TypeScript `enum` keyword.
 | `MyEventStatus` | `hosting`, `attending`, `waitlisted`, `requested` | [`types/index.ts:863`](../types/index.ts#L863) |
 | `NOTIFICATION_TYPES / NotificationType` | `tournament_team_invite`, `tournament_join_request`, `tournament_join_accepted`, `tournament_join_declined`, `tournament_free_agent_assigned`, `tournament_mention`, `chat_mention`, `report_resolved`, `moderation_warning` | [`types/index.ts:105`](../types/index.ts#L105) |
 | `ProfileBorder` | `bronze`, `gold`, `gradient`, `storm`, `aether` | [`types/index.ts:66`](../types/index.ts#L66) |
-| `RecapShareTarget` | `native`, `web-share`, `download` | [`types/index.ts:2350`](../types/index.ts#L2350) |
+| `RecapShareTarget` | `native`, `web-share`, `download` | [`types/index.ts:2360`](../types/index.ts#L2360) |
 | `RecoveryLink` | `recovery`, `expired` | [`types/index.ts:2169`](../types/index.ts#L2169) |
 | `RecurrenceCadence` | `weekly`, `biweekly`, `monthly` | [`constants/events.ts:90`](../constants/events.ts#L90) |
 | `ReportAction` | `dismiss`, `warn`, `suspend` | [`types/index.ts:2205`](../types/index.ts#L2205) |
@@ -685,6 +685,7 @@ TypeScript `enum` keyword.
 | `ScheduleMatch.stage` | `pool_play`, `bracket`, `round_robin` | [`types/index.ts:1470`](../types/index.ts#L1470) |
 | `SelfAttendanceAction` | `join`, `leave`, `joinWaitlist`, `leaveWaitlist`, `requestToJoin`, `cancelRequest`, `rerequest` | [`types/index.ts:1606`](../types/index.ts#L1606) |
 | `SessionCheckStatus` | `scheduled`, `canceled`, `changed`, `gone`, `unknown` | [`types/index.ts:1963`](../types/index.ts#L1963) |
+| `StartupArm` | `cdn`, `direct` | [`types/index.ts:2335`](../types/index.ts#L2335) |
 | `Surface` | `indoor`, `sand`, `grass` | [`types/index.ts:211`](../types/index.ts#L211) |
 | `TeamMode` | `random`, `balanced` | [`types/index.ts:1549`](../types/index.ts#L1549) |
 | `TextSizeId` | `small`, `default`, `large`, `xlarge` | [`types/index.ts:2039`](../types/index.ts#L2039) |
