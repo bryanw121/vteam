@@ -3,12 +3,13 @@ import { join } from 'path'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { DEFAULT_WEB_ORIGIN } from '../constants/share'
 import { buildEventMeta, GENERIC_PREVIEW } from '../utils/eventShare'
-import type { EventPreviewMeta } from '../types'
+import type { EventPreviewMeta, EventSeed } from '../types'
 import {
   EVENT_ID_RE,
   PREVIEW_CACHE_CONTROL,
   PREVIEW_ERROR_CACHE_CONTROL,
   fetchEventPreview,
+  fetchEventSeed,
   requestOrigin,
   shortHash,
   supabaseRestConfig,
@@ -100,6 +101,22 @@ export function injectHeadTags(html: string, tags: string): string {
   return head + rest
 }
 
+/** Biggest seed worth inlining; a larger event just loads as before. */
+export const EVENT_SEED_MAX_BYTES = 64 * 1024
+
+/**
+ * `<script type="application/json" id="vteam-event-seed">` for the <head> (#244), or '' when
+ * there is no seed or it is too big. JSON escaped so it can't close the tag or start markup.
+ */
+export function eventSeedScript(seed: EventSeed | null): string {
+  if (!seed) return ''
+  const json = JSON.stringify(seed)
+    .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')
+  if (json.length > EVENT_SEED_MAX_BYTES) return ''
+  return `<script type="application/json" id="vteam-event-seed">${json}</script>`
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.setHeader('allow', 'GET, HEAD')
@@ -124,12 +141,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }, DEFAULT_WEB_ORIGIN)
 
   let meta = GENERIC_PREVIEW
+  let seed: EventSeed | null = null
   let cacheControl = PREVIEW_CACHE_CONTROL
   const cfg = supabaseRestConfig(process.env)
   if (id && cfg) {
     try {
-      const { event, attending } = await fetchEventPreview(id, cfg)
+      const [{ event, attending }, seeded] = await Promise.all([
+        fetchEventPreview(id, cfg),
+        fetchEventSeed(id, cfg, Date.now()).catch(err => {
+          console.error('event-page: could not read the event seed', err)
+          return null
+        }),
+      ])
       meta = buildEventMeta(event, attending, new Date())
+      seed = seeded
     } catch (err) {
       console.error('event-page: could not read the event', err)
       cacheControl = PREVIEW_ERROR_CACHE_CONTROL
@@ -145,7 +170,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ? `${origin}/api/og/event`
     : `${origin}/api/og/event?id=${id}&v=${shortHash(meta.imageAlt + meta.state)}`
 
-  const html = injectHeadTags(shell, previewHeadTags(meta, pageUrl, imageUrl))
+  const html = injectHeadTags(shell, previewHeadTags(meta, pageUrl, imageUrl) + eventSeedScript(seed))
   res.setHeader('content-type', 'text/html; charset=utf-8')
   res.setHeader('cache-control', cacheControl)
   res.status(200).send(req.method === 'HEAD' ? '' : html)
