@@ -212,3 +212,135 @@ Deno.test('client setup failure is a 500', async () => {
   const { result } = await quietly(() => handler(webhookRequest(webhook())))
   assert.equal(result.status, 500)
 })
+
+// ─── Web Push (#189) ─────────────────────────────────────────────────────────
+import { b64urlDecode, b64urlEncode, type Bytes, encryptPayload, vapidAuthorization, webPushBody, WEB_PUSH_MAX_PAYLOAD } from '../_shared/webpush.ts'
+
+const ENDPOINT = 'https://push.example.test/send/abc'
+
+async function browserSubscription() {
+  const ua = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']) as CryptoKeyPair
+  const p256dh = b64urlEncode(new Uint8Array(await crypto.subtle.exportKey('raw', ua.publicKey)))
+  const auth = b64urlEncode(crypto.getRandomValues(new Uint8Array(16)))
+  return { ua, keys: { p256dh, auth } }
+}
+
+async function vapidKeys() {
+  const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']) as CryptoKeyPair
+  const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey)
+  const publicKey = b64urlEncode(new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey)))
+  return { pair, env: { VAPID_PUBLIC_KEY: publicKey, VAPID_PRIVATE_KEY: jwk.d!, VAPID_SUBJECT: 'https://vteam.test' } }
+}
+
+/** What a browser does with an aes128gcm body (RFC 8291), to prove we encrypt correctly. */
+async function decrypt(ua: CryptoKeyPair, authB64: string, body: Bytes): Promise<string> {
+  const salt = body.slice(0, 16)
+  const idlen = body[20]
+  const asPublic = body.slice(21, 21 + idlen)
+  const sealed = body.slice(21 + idlen)
+  const uaPublic = new Uint8Array(await crypto.subtle.exportKey('raw', ua.publicKey))
+  const asKey = await crypto.subtle.importKey('raw', asPublic, { name: 'ECDH', namedCurve: 'P-256' }, false, [])
+  const shared = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: asKey }, ua.privateKey, 256))
+  const enc = (s: string) => new TextEncoder().encode(s)
+  const hk = async (salt: Bytes, ikm: Bytes, info: Bytes, n: number) => {
+    const k = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits'])
+    return new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info }, k, n * 8))
+  }
+  const info = new Uint8Array([...enc('WebPush: info\0'), ...uaPublic, ...asPublic])
+  const ikm = await hk(b64urlDecode(authB64), shared, info, 32)
+  const cek = await hk(salt, ikm, enc('Content-Encoding: aes128gcm\0'), 16)
+  const nonce = await hk(salt, ikm, enc('Content-Encoding: nonce\0'), 12)
+  const aes = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['decrypt'])
+  const plain = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: nonce }, aes, sealed))
+  assert.equal(plain[plain.length - 1], 2, 'last-record delimiter')
+  return new TextDecoder().decode(plain.slice(0, -1))
+}
+
+Deno.test('web push: the payload decrypts with the browser keys', async () => {
+  const { ua, keys } = await browserSubscription()
+  const body = await encryptPayload(keys, new TextEncoder().encode('{"title":"hi"}'))
+  assert.equal(await decrypt(ua, keys.auth, body), '{"title":"hi"}')
+})
+
+Deno.test('web push: the VAPID JWT is signed for the push origin', async () => {
+  const { pair, env } = await vapidKeys()
+  const header = await vapidAuthorization({ publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY, subject: env.VAPID_SUBJECT }, ENDPOINT, 1_800_000_000_000)
+  const m = header.match(/^vapid t=([^.]+)\.([^.]+)\.([^,]+), k=(.+)$/)
+  assert.ok(m)
+  const claims = JSON.parse(new TextDecoder().decode(b64urlDecode(m[2])))
+  assert.equal(claims.aud, 'https://push.example.test')
+  assert.equal(claims.sub, 'https://vteam.test')
+  assert.equal(claims.exp, 1_800_000_000 + 12 * 3600)
+  assert.equal(m[4], env.VAPID_PUBLIC_KEY)
+  const ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, pair.publicKey, b64urlDecode(m[3]), new TextEncoder().encode(`${m[1]}.${m[2]}`))
+  assert.ok(ok)
+})
+
+Deno.test('web push: long text is clipped under the payload cap', () => {
+  const bytes = webPushBody({ title: 't'.repeat(500), body: 'b'.repeat(5000), deep_link: '/event/x' })
+  assert.ok(bytes.length <= WEB_PUSH_MAX_PAYLOAD)
+})
+
+function webSetup(opts: { env?: Record<string, string>; status?: number; tokens: { token: string; platform: string; web_keys?: unknown }[] }) {
+  const db = fakeSupabase({
+    results: {
+      'user_settings.select': { data: null },
+      'profiles.select': { data: { notification_prefs: { push: {}, in_app: {} } } },
+      'push_tokens.select': { data: opts.tokens },
+    },
+  })
+  const net = stubFetch([
+    { url: EXPO_PUSH_URL, respond: expo() },
+    { url: 'https://push.example.test/', respond: () => new Response(null, { status: opts.status ?? 201 }) },
+  ])
+  const handler = createHandler(testDeps({ db, net, env: opts.env }))
+  const send = async () => (await quietly(() => handler(webhookRequest(webhook())))).result
+  return { db, net, send }
+}
+
+Deno.test('web push: web tokens get an encrypted POST, Expo tokens still go to Expo', async () => {
+  const { ua, keys } = await browserSubscription()
+  const { env } = await vapidKeys()
+  const { send, net } = webSetup({ env, tokens: [{ token: 'tok-a', platform: 'ios' }, { token: ENDPOINT, platform: 'web', web_keys: keys }] })
+  const res = await send()
+  assert.deepEqual(await res.json(), { sent: 1, webSent: 1, removedTokens: 0 })
+  const [web] = net.callsTo(ENDPOINT)
+  const headers = web.init?.headers as Record<string, string>
+  assert.equal(headers['Content-Encoding'], 'aes128gcm')
+  assert.match(headers.Authorization, /^vapid t=/)
+  const payload = JSON.parse(await decrypt(ua, keys.auth, web.init?.body as Bytes))
+  assert.deepEqual(payload, { title: 'Open play at 4:00 PM', body: 'Starts in 2 hours', deep_link: '/event/abc', tag: 'event_reminder' })
+  assert.equal((net.callsTo(EXPO_PUSH_URL)[0].body as Msg[]).length, 1)
+})
+
+Deno.test('web push: a 410 deletes the subscription', async () => {
+  const { keys } = await browserSubscription()
+  const { env } = await vapidKeys()
+  const { send, db } = webSetup({ env, status: 410, tokens: [{ token: ENDPOINT, platform: 'web', web_keys: keys }] })
+  assert.deepEqual(await (await send()).json(), { sent: 0, webSent: 0, removedTokens: 1 })
+  assert.deepEqual(filterValue(db.callsTo('push_tokens', 'delete')[0], 'in'), [ENDPOINT])
+})
+
+Deno.test('web push: skipped without VAPID secrets, nothing deleted', async () => {
+  const { keys } = await browserSubscription()
+  const { send, net, db } = webSetup({ tokens: [{ token: ENDPOINT, platform: 'web', web_keys: keys }] })
+  assert.equal((await send()).status, 200)
+  assert.equal(net.calls.length, 0)
+  assert.equal(db.callsTo('push_tokens', 'delete').length, 0)
+})
+
+Deno.test('web push: prefs off sends nothing', async () => {
+  const { keys } = await browserSubscription()
+  const { env } = await vapidKeys()
+  const db = fakeSupabase({
+    results: {
+      'user_settings.select': { data: { notification_prefs: { push: { event_reminder: false } } } },
+      'push_tokens.select': { data: [{ token: ENDPOINT, platform: 'web', web_keys: keys }] },
+    },
+  })
+  const net = stubFetch([])
+  const handler = createHandler(testDeps({ db, net, env }))
+  const res = (await quietly(() => handler(webhookRequest(webhook())))).result
+  assert.equal(res.status, 200)
+  assert.equal(net.calls.length, 0)
+})

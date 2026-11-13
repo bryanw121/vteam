@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createHandler } from './handler.ts'
 import { EXPO_PUSH_URL } from '../_shared/expo.ts'
+import { b64urlEncode } from '../_shared/webpush.ts'
 import {
   fakeSupabase,
   filterValue,
@@ -150,4 +151,31 @@ Deno.test('a mute lookup error is a 500 before anything is sent, and the retry i
   fail = false
   assert.equal((await send()).status, 200)
   assert.equal(net.calls.length, 1)
+})
+
+Deno.test('web push (#189): browser subscriptions get the message with a link to the chat', async () => {
+  const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign']) as CryptoKeyPair
+  const ua = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']) as CryptoKeyPair
+  const env = {
+    VAPID_PUBLIC_KEY: b64urlEncode(new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey))),
+    VAPID_PRIVATE_KEY: (await crypto.subtle.exportKey('jwk', pair.privateKey)).d!,
+    VAPID_SUBJECT: 'https://vteam.test',
+  }
+  const keys = { p256dh: b64urlEncode(new Uint8Array(await crypto.subtle.exportKey('raw', ua.publicKey))), auth: b64urlEncode(crypto.getRandomValues(new Uint8Array(16))) }
+  const endpoint = 'https://push.example.test/send/bob'
+  const db = fakeSupabase({
+    results: {
+      'profiles.select': { data: { username: 'pat', first_name: 'Pat', last_name: 'Lee' } },
+      'conversations.select': { data: { type: 'dm', clubs: null } },
+      'conversation_members.select': { data: [{ user_id: 'bob' }] },
+      'chat_silences.select': { data: [] },
+      'push_tokens.select': { data: [{ token: endpoint, platform: 'web', web_keys: keys }] },
+    },
+  })
+  const net = stubFetch([{ url: 'https://push.example.test/', respond: () => new Response(null, { status: 201 }) }])
+  const handler = createHandler(testDeps({ db, net, env }))
+  const res = (await quietly(() => handler(webhookRequest(webhook())))).result
+  assert.deepEqual(await res.json(), { sent: 0, webSent: 1, removedTokens: 0, muted: 0 })
+  assert.equal(net.callsTo(endpoint).length, 1)
+  assert.equal(net.callsTo(EXPO_PUSH_URL).length, 0)
 })
