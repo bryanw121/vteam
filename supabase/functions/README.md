@@ -192,8 +192,17 @@ supabase functions deploy delete-account
 supabase functions deploy
 ```
 
-Deploys are still manual (an approved deploy workflow is planned in #172). Deploy
-from an up-to-date `main`: the daily drift check compares live with `main`.
+Deploys happen from `.github/workflows/deploy-functions.yml` (#172): a push to
+`main` that changes `supabase/functions/**` or `config.toml` works out which
+functions changed (`scripts/changed-functions.mjs`: a `_shared/`, `deno.json`,
+`deno.lock` or `config.toml` change means all of them; tests and READMEs none),
+waits for approval on the `production` environment, deploys them and writes
+function → commit to the job summary. Run it by hand from Actions → Deploy edge
+functions (optionally naming functions). It needs, once: Settings → Environments →
+`production` with Bryan as required reviewer, and a `SUPABASE_ACCESS_TOKEN` secret
+(a Supabase personal access token) in that environment; until then it deploys
+nothing and says so. The commands above are only for recovery; deploy from an
+up-to-date `main`, since the daily drift check compares live with `main`.
 
 Deploy applies `verify_jwt` from `config.toml`. After the first deploy from this
 config, check Dashboard → Edge Functions that the three push functions show JWT
