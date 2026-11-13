@@ -1,0 +1,46 @@
+name: Server health
+
+# Every 30 minutes: is live answering, and does it have headroom? Probes the
+# REST API with the public anon key and, when the SUPABASE_METRICS_KEY secret
+# is set (a dedicated Supabase Secret API key, Project Settings → API Keys),
+# reads Supabase's Metrics API for memory commitment, RAM, swap, disk and
+# connections (scripts/server-health.mjs, #290). Live froze for 3 h 40 min on
+# 2026-11-12 after a week with committed memory just under its limit; this
+# fails (and GitHub emails the repo owner) well before that point, and within
+# 30 minutes of the server stopping to answer.
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server-health
+  cancel-in-progress: false
+
+jobs:
+  headroom:
+    name: Live headroom and REST probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check live
+        env:
+          SUPABASE_METRICS_KEY: ${{ secrets.SUPABASE_METRICS_KEY }}
+        run: |
+          if [ -n "$SUPABASE_METRICS_KEY" ]; then echo "::add-mask::$SUPABASE_METRICS_KEY"; fi
+          node scripts/server-health.mjs --project live
+      - name: Keep the numbers
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: headroom
+          path: headroom.json
+          retention-days: 90
+          if-no-files-found: ignore
