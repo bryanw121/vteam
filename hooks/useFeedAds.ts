@@ -10,6 +10,6 @@ import type { FeedAds } from '../types'
  * (`enabled`); a failure just means no ads, never a broken feed.
  */
 export function useFeedAds(enabled: boolean): FeedAds | null {
-  const config = useStartupConfig(enabled)
+  const config = useStartupConfig('ads', enabled)
   return useMemo(() => (enabled && config ? feedAdsFrom(config, Date.now()) : null), [enabled, config])
 }

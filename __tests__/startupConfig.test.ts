@@ -88,6 +88,7 @@ describe('api/startup', () => {
 
 describe('lib/startupConfig loader', () => {
   const tables: Record<string, { data: unknown[] | null; error: unknown }> = {}
+  const fromCalls: string[] = []
   jest.doMock('../lib/supabase', () => {
     const chain = (table: string) => {
       const result = Promise.resolve(tables[table] ?? { data: [], error: null })
@@ -96,7 +97,7 @@ describe('lib/startupConfig loader', () => {
       q.order = () => q
       return q
     }
-    return { supabase: { from: (t: string) => chain(t) } }
+    return { supabase: { from: (t: string) => { fromCalls.push(t); return chain(t) } } }
   })
   const tracked: Record<string, unknown>[] = []
   jest.doMock('../lib/analytics', () => ({ track: (_n: string, p: Record<string, unknown>) => tracked.push(p) }))
@@ -106,13 +107,13 @@ describe('lib/startupConfig loader', () => {
   const g = globalThis as { localStorage?: unknown }
   beforeAll(() => { g.localStorage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, v), clear: () => store.clear() } })
   afterAll(() => { delete g.localStorage })
-  afterEach(() => { global.fetch = realFetch; tracked.length = 0; store.clear() })
+  afterEach(() => { global.fetch = realFetch; tracked.length = 0; fromCalls.length = 0; store.clear() })
 
-  async function load(armOverride: 'cdn' | 'direct') {
+  async function load(armOverride: 'cdn' | 'direct', part: 'version' | 'ads' = 'version') {
     store.set('vteam.startupArm', armOverride)
     let mod!: typeof import('../lib/startupConfig')
     jest.isolateModules(() => { mod = require('../lib/startupConfig') })
-    return mod.fetchStartupConfig()
+    return mod.fetchStartupConfig(part)
   }
 
   it('cdn arm uses /api/startup when it answers', async () => {
@@ -130,13 +131,22 @@ describe('lib/startupConfig loader', () => {
     expect(tracked).toEqual([expect.objectContaining({ arm: 'cdn', source: 'fallback' })])
   })
 
-  it('direct arm never calls the CDN, and one failed table leaves the others', async () => {
+  it('direct arm never calls the CDN, and one failed table leaves the other', async () => {
     tables.ad_banners = { data: null, error: new Error('missing') }
+    tables.sponsored_events = { data: [{ event_id: 'e1', starts_at: null, ends_at: null }], error: null }
     global.fetch = jest.fn() as unknown as typeof fetch
-    const res = await load('direct')
+    const res = await load('direct', 'ads')
     expect(global.fetch).not.toHaveBeenCalled()
     expect(res.banners).toEqual([])
+    expect(res.sponsored).toHaveLength(1)
+    expect(tracked).toEqual([expect.objectContaining({ arm: 'direct', source: 'direct', part: 'ads' })])
+  })
+
+  it('the update check reads only app_config, never the ad tables (#225)', async () => {
+    tables.ad_banners = { data: [{ id: 'b' }], error: null }
+    const res = await load('direct', 'version')
     expect(res.appConfig).toHaveLength(1)
-    expect(tracked).toEqual([expect.objectContaining({ arm: 'direct', source: 'direct' })])
+    expect(res.banners).toEqual([])
+    expect(fromCalls).toEqual(['app_config'])
   })
 })
