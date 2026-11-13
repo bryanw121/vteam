@@ -34,7 +34,7 @@ import { TourTarget } from '../../../../components/tour/TourTarget'
 import { useTourWants } from '../../../../contexts/tour'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
-import type { EventWithDetails, FeedDaySection, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, NotificationItem, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
+import type { EventWithDetails, FeedDaySection, FeedFilter, FeedFilterChip, NotificationItem, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
 import { buildFeedSections } from '../../../../utils/feedSections'
 import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters } from '../../../../utils/feedFilters'
 import { useUrlParam } from '../../../../hooks/useUrlParam'
@@ -56,10 +56,8 @@ import { planFeedAds } from '../../../../utils/feedAds'
 import { FeedBanner } from '../../../../components/ads/FeedBanner'
 import { SponsoredLabel } from '../../../../components/ads/SponsoredLabel'
 import { Spinner } from '../../../../components/ui/Spinner'
-import { toast } from '../../../../lib/toast'
 import { FeedItemShell, HiddenCountRow, HideFeedSheet } from '../../../../components/events/FeedHiding'
-import { useHiddenFeed } from '../../../../hooks/useHiddenFeed'
-import { hiddenIndex, hideOptions, isHidden, matchingEntries } from '../../../../utils/hiddenFeed'
+import { useFeedHiding } from '../../../../hooks/useFeedHiding'
 import { ShareLinkButton } from '../../../../components/ShareLinkButton'
 import type { ViewInstance } from 'react-native'
 import { MonthGridContent, WeekPager, weekNavStyles } from '../../../../components/events/CalendarPagers'
@@ -104,16 +102,11 @@ export default function EventsScreen() {
     tab: 'events', fallback: () => feedFiltersNow()?.surface ?? DEFAULT_FEED_FILTERS.surface,
   })
   const feedRegion = useFeedRegion()
-  // What this player hid from the feed (Settings → Hidden in feed). Days (mobile)
-  // or months (desktop) in `revealedKeys` show their hidden items, dimmed.
-  const hiddenFeed = useHiddenFeed()
-  const hiddenIdx = useMemo(() => hiddenIndex(hiddenFeed.entries), [hiddenFeed.entries])
-  const [revealedKeys, setRevealedKeys] = useState<ReadonlySet<string>>(() => new Set())
-  const [hideTarget, setHideTarget] = useState<EventWithDetails | null>(null)
-  // "Hidden: …" with Undo (shared toast, #228).
-  const showHideToast = (message: string, undo: HiddenFeedEntry[]) => {
-    toast.show({ message, variant: 'info', duration: 5000, action: { label: 'Undo', onPress: () => hiddenFeed.restore(undo) } })
-  }
+  // What this player hid from the feed (Settings → Hidden in feed), the ⋯ menu and revealed days.
+  const {
+    anyHidden, isHiddenForMe, revealedKeys, toggleReveal,
+    hideTarget, hideOptionsFor, openHideMenu, closeHideMenu, pickHideOption, unhideItem,
+  } = useFeedHiding()
   const [notifOpen, setNotifOpen] = useState(false)
   const [curWeekPage, setCurWeekPage] = useState(() => idxForWeek(getWeekStart(new Date(selectedDate + 'T00:00:00'))))
   const [curMonthPage, setCurMonthPage] = useState(() => idxForMonth(selectedDate.substring(0, 7)))
@@ -257,51 +250,11 @@ export default function EventsScreen() {
     return items.length ? [...events, ...items] : events
   }, [events, programs.data, lastLoadedMonth, tournamentsOnly])
 
-  const isHiddenForMe = useCallback(
-    (event: EventWithDetails) =>
-      isHidden(event, hiddenIdx) && !(currentUserId && myStatusFor(event, currentUserId) !== null),
-    [hiddenIdx, currentUserId],
-  )
-
   const { sections, hiddenItemIds } = useMemo(
     () => buildFeedSections(feedEvents, {
       filter: activeFilter, surface: surfaceFilter, region: feedRegion, isHidden: isHiddenForMe, revealed: revealedKeys,
     }),
     [feedEvents, activeFilter, surfaceFilter, feedRegion, isHiddenForMe, revealedKeys],
-  )
-
-  const toggleReveal = useCallback((key: string) => {
-    setRevealedKeys(prev => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }, [])
-
-  const openHideMenu = useCallback((event: EventWithDetails) => {
-    if (!currentUserId) { requireSignIn(); return }
-    setHideTarget(event)
-  }, [currentUserId, requireSignIn])
-
-  const pickHideOption = useCallback((option: HideFeedOption) => {
-    const before = hiddenFeed.entries
-    setHideTarget(null)
-    hiddenFeed.hide(option.entry)
-    showHideToast(`Hidden: ${option.entry.label}`, before)
-  }, [hiddenFeed])
-
-  const unhideItem = useCallback((event: EventWithDetails) => {
-    const before = hiddenFeed.entries
-    const matches = matchingEntries(event, before)
-    if (matches.length === 0) return
-    hiddenFeed.restore(before.filter(e => !matches.includes(e)))
-    showHideToast(`Showing again: ${matches.map(m => m.label).join(', ')}`, before)
-  }, [hiddenFeed])
-
-  const hideOptionsFor = useMemo(
-    () => (hideTarget ? hideOptions(hideTarget, currentUserId) : []),
-    [hideTarget, currentUserId],
   )
 
   // "Ana and 2 friends going" on cards (#15): one RPC for the loaded RSVP-able events.
@@ -317,8 +270,8 @@ export default function EventsScreen() {
 
   // Calendar dots leave out what this player hid.
   const markedDates = useMemo(
-    () => buildMarkedDates(hiddenIdx.size ? feedEvents.filter(e => !isHiddenForMe(e)) : feedEvents, selectedDate),
-    [feedEvents, selectedDate, hiddenIdx, isHiddenForMe],
+    () => buildMarkedDates(anyHidden ? feedEvents.filter(e => !isHiddenForMe(e)) : feedEvents, selectedDate),
+    [feedEvents, selectedDate, anyHidden, isHiddenForMe],
   )
 
   const selectDate = useCallback((dateStr: string) => {
@@ -675,7 +628,7 @@ export default function EventsScreen() {
           itemTitle={hideTarget?.title}
           options={hideOptionsFor}
           onPick={pickHideOption}
-          onDismiss={() => setHideTarget(null)}
+          onDismiss={closeHideMenu}
         />
       </View>
     )
@@ -892,7 +845,7 @@ export default function EventsScreen() {
         itemTitle={hideTarget?.title}
         options={hideOptionsFor}
         onPick={pickHideOption}
-        onDismiss={() => setHideTarget(null)}
+        onDismiss={closeHideMenu}
       />
     </View>
   )

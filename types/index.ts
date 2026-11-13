@@ -949,6 +949,21 @@ export type FeedFilter = 'all' | 'open_play' | 'tournament'
 export type FeedFilterChip = { id: FeedFilter; label: string }
 /** One day of the Events feed. `hiddenCount` counts that day's hidden items; `revealed` = they're shown (dimmed) in `data`. */
 export type FeedDaySection = { date: string; data: EventWithDetails[]; hiddenCount: number; revealed: boolean }
+/** `useFeedHiding()`: hiding on the Events feed (#217). */
+export type FeedHiding = {
+  /** The player hid something (calendar dots then skip hidden items). */
+  anyHidden: boolean
+  isHiddenForMe: (event: EventWithDetails) => boolean
+  revealedKeys: ReadonlySet<string>
+  toggleReveal: (key: string) => void
+  /** The item whose ⋯ menu is open. */
+  hideTarget: EventWithDetails | null
+  hideOptionsFor: HideFeedOption[]
+  openHideMenu: (event: EventWithDetails) => void
+  closeHideMenu: () => void
+  pickHideOption: (option: HideFeedOption) => void
+  unhideItem: (event: EventWithDetails) => void
+}
 /** What `buildFeedSections` needs besides the rows (#217). */
 export type FeedSectionOptions = {
   filter: FeedFilter
