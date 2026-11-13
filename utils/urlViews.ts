@@ -23,7 +23,8 @@ export const VIEW = {
     surface: oneOf<SurfaceFilter>(SURFACES, 'any'),
     day: text(10),
   },
-  event: { tab: tabIndexCodec(EVENT_TAB_LABELS) },
+  /** `r=1`: opened from a shared game recap (#227), counted once as `recap_link_opened`. */
+  event: { tab: tabIndexCodec(EVENT_TAB_LABELS), r: flag },
   tournament: { tab: tabIndexCodec(TOURNAMENT_TAB_LABELS) },
   tournaments: {
     view: oneOf(['upcoming', 'past'] as const, 'upcoming'),
