@@ -256,7 +256,7 @@ function EventCardInner({
               <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lgs, letterSpacing: -0.2, color: theme.colors.white }}>
                 {attendeeCount}
                 {event.max_attendees
-                  ? <Text style={{ opacity: 0.4, fontSize: theme.font.size.smd }}>/{event.max_attendees}</Text>
+                  ? <Text style={{ opacity: 0.6, fontSize: theme.font.size.smd }}>/{event.max_attendees}</Text>
                   : null}
               </Text>
               <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: 'rgba(255,255,255,0.5)', fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' }}>
