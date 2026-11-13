@@ -101,8 +101,12 @@ test.describe('usage metrics', () => {
     const captured = await captureInserts(page)
     await page.goto(`${BASE_URL}/`)
     await expect.poll(() => captured.heartbeats.length, { timeout: 20_000 }).toBeGreaterThan(0)
+    const before = captured.heartbeats.length
     await page.goto(`${BASE_URL}/privacy`)
     await expect(page.getByText('Usage data.', { exact: false }).first()).toBeVisible({ timeout: 20_000 })
+    // The new page starts tracking a moment after it renders. Hiding it before that makes tracking
+    // see a hidden page and open no session at all, so wait for this page's first heartbeat.
+    await expect.poll(() => captured.heartbeats.length, { timeout: 20_000 }).toBeGreaterThan(before)
     await hidePage(page)
 
     await expect.poll(() => named(captured.rows, E.screenView).length, { timeout: 15_000 }).toBeGreaterThan(0)
