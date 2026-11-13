@@ -12,6 +12,9 @@ import { isShown, recallScroll, rememberScroll, restoreWhenReady } from '../util
  * class check keeps that 0 from being recorded.
  *
  * Returns the `onLayout` to put on the screen's root view (`nodeRef`).
+ * `hideRef` (optional) is what stays hidden until the offset is back: by default
+ * `nodeRef`, but a screen whose header sits above `nodeRef` passes its whole root,
+ * or the header paints at the top for a frame before the jump (#254).
  * A no-op on native, without a key, or when `active` is false.
  */
 export function useDocScrollMemory(
@@ -19,6 +22,7 @@ export function useDocScrollMemory(
   active: boolean,
   nodeRef: React.RefObject<View | null>,
   onLayout?: (e: LayoutChangeEvent) => void,
+  hideRef?: React.RefObject<View | null>,
 ): (e: LayoutChangeEvent) => void {
   const enabled = Platform.OS === 'web' && !!key && active
   const wasShown = useRef(false)
@@ -28,6 +32,7 @@ export function useDocScrollMemory(
   // offset with a smaller one (#193 made the remount fast enough to hit it).
   const restoring = useRef(true)
   const node = () => nodeRef.current as unknown as HTMLElement | null
+  const hideNode = () => ((hideRef ?? nodeRef).current as unknown as HTMLElement | null)
   const docScrollOn = () => document.body.classList.contains('doc-scroll')
 
   useEffect(() => {
@@ -47,13 +52,13 @@ export function useDocScrollMemory(
   const hiddenUntil = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reveal = () => {
     if (hiddenUntil.current) { clearTimeout(hiddenUntil.current); hiddenUntil.current = null }
-    const el = node()
+    const el = hideNode()
     if (el?.style) el.style.visibility = ''
   }
   useLayoutEffect(() => {
     if (!enabled || !key || typeof window === 'undefined') return
     if (recallScroll(key) <= 0) return
-    const el = node()
+    const el = hideNode()
     if (!el?.style) return
     el.style.visibility = 'hidden'
     hiddenUntil.current = setTimeout(reveal, 400)

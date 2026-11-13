@@ -159,7 +159,7 @@ jobs:
   a11y:
     name: Accessibility (axe)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     needs: [build-web]
     steps:
       - uses: actions/checkout@v4
@@ -194,11 +194,20 @@ jobs:
         run: node scripts/shots/chat-unread-flow.mjs --dist dist-mock --out a11y-report/chat-unread
       - name: axe scan vs baseline
         run: npm run a11y -- --dist dist-mock --out a11y-report
+      # Tours never skip a step, no jump or layout shift on refresh/Back, every
+      # VIEW link round-trips (#255). After axe so a failure in either still
+      # reports the other; findings beyond stability-baseline.json fail.
+      - name: Stability check (tours, refresh/Back, links)
+        if: success() || failure()
+        run: node scripts/shots/stability-flow.mjs --dist dist-mock --out a11y-report/stability
       - name: Job summary
         if: always() && hashFiles('a11y-report/summary.md') != ''
         run: cat a11y-report/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Stability summary
+        if: always() && hashFiles('a11y-report/stability/summary.md') != ''
+        run: cat a11y-report/stability/summary.md >> "$GITHUB_STEP_SUMMARY"
       - name: Upload a11y report
-        if: always() && hashFiles('a11y-report/a11y-report.json') != ''
+        if: always() && hashFiles('a11y-report/**') != ''
         uses: actions/upload-artifact@v4
         with:
           name: a11y-report

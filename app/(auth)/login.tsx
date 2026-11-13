@@ -319,6 +319,7 @@ export default function Login() {
               value={identifier}
               onChangeText={setIdentifier}
               placeholder="you@example.com or yourname"
+              testID="login-identifier"
               autoCapitalize="none"
               autoCorrect={false}
               returnKeyType="next"
@@ -332,6 +333,7 @@ export default function Login() {
               value={password}
               onChangeText={setPassword}
               placeholder="••••••••"
+              testID="login-password"
               secureTextEntry
               showPasswordToggle
               autoCapitalize="none"
@@ -340,7 +342,7 @@ export default function Login() {
               error={errors.password}
             />
 
-            <Button label="Sign in" onPress={handleLogin} loading={loading} disabled={!identifier || !password} />
+            <Button label="Sign in" onPress={handleLogin} loading={loading} disabled={!identifier || !password} testID="login-submit" />
 
             {/* ── Social sign-in ── */}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: theme.spacing.md, gap: theme.spacing.sm }}>
