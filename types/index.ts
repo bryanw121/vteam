@@ -99,6 +99,7 @@ export const NOTIFICATION_PREF_TYPES = [
   'late_dropout',
   'bring_item_uncovered',
   'new_game',
+  'club_poll',
 ] as const
 
 /** Must match the `notifications_notification_type_check` constraint in Supabase exactly. */
@@ -865,6 +866,56 @@ export type ClubPostWithFeed = ClubPost & {
   profiles: Pick<Profile, 'id' | 'username' | 'first_name' | 'last_name' | 'avatar_url' | 'selected_border'> | null
   club_post_likes: { count: number }[]
   club_post_comments: ClubPostCommentWithAuthor[]
+  /** Set when the post is a poll (#175). PostgREST may embed a one-to-one as an object or a one-row list. */
+  club_polls?: ClubPoll | ClubPoll[] | null
+}
+
+/** Club polls (#175): 'time' options carry a start time and can become an event. */
+export type ClubPollKind = 'text' | 'time'
+
+/** One option with the members who picked it (votes are visible to members). */
+export type ClubPollOption = {
+  id: string
+  position: number
+  label: string
+  starts_at: string | null
+  club_poll_votes: { user_id: string }[]
+}
+
+/** A poll as embedded on its post. */
+export type ClubPoll = {
+  kind: ClubPollKind
+  multi: boolean
+  closes_at: string | null
+  event_id: string | null
+  club_poll_options: ClubPollOption[]
+}
+
+/** One option's tally for display. */
+export type ClubPollOptionTally = { option: ClubPollOption; count: number; share: number; mine: boolean; winner: boolean }
+
+/** A poll's tally: options in order, the viewer's picks, whether it is closed, and the winners once it is. */
+export type ClubPollTally = { options: ClubPollOptionTally[]; myOptionIds: string[]; voters: number; closed: boolean; winners: ClubPollOption[] }
+
+/** A draft option in the poll composer. */
+export type ClubPollDraftOption = { label: string; startsAt: Date | null }
+
+export type PollBlockProps = {
+  postId: string
+  clubId: string
+  poll: ClubPoll
+  question: string
+  currentUserId: string | null
+  isOwner: boolean
+  /** A member's display name, from the club's member list. */
+  memberName: (userId: string) => string
+}
+
+export type PollComposerProps = {
+  visible: boolean
+  clubId: string
+  onClose: () => void
+  onCreated: () => void
 }
 
 // ─── Derived / Computed Types ─────────────────────────────────────────────────

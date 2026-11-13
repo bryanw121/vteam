@@ -479,39 +479,30 @@ test.describe('new game alerts (#170)', () => {
 })
 
 /**
- * Search (#176): search_feed runs as the caller (SECURITY INVOKER), so a guest
- * gets only what the guest feed already shows, and never past games.
+ * Club polls (#175): members read polls, options and votes; nobody writes the
+ * tables directly; the RPCs check ownership and membership themselves.
  */
-test.describe('search (#176)', () => {
-  test('guests can search; every game id is one they can already read', async () => {
-    const res = await q(() => anon.rpc('search_feed', { q: 'e2e' }), 'anon search_feed')
-    expect(res.error).toBeNull()
-    const found = res.data as { events: string[]; hosts: Record<string, unknown>[] }
-    if (found.events.length) {
-      const direct = await q(() => anon.from('events').select('id').in('id', found.events), 'anon events by id')
-      expect((direct.data ?? []).length).toBe(found.events.length)
+test.describe('club polls (#175)', () => {
+  test('guests read nothing and can call nothing', async () => {
+    for (const table of ['club_polls', 'club_poll_options', 'club_poll_votes'] as const) {
+      const res = await q(() => anon.from(table).select('post_id').limit(1), `anon ${table}`)
+      expect(res.data ?? [], table).toEqual([])
     }
-    // Hosts carry public profile columns only.
-    for (const h of found.hosts) expect(Object.keys(h).sort()).toEqual(['avatar_url', 'first_name', 'id', 'last_name', 'upcoming', 'username'])
+    const create = await q(() => anon.rpc('create_club_poll', { p_club_id: crypto.randomUUID(), p_question: 'Q?', p_kind: 'text', p_options: [{ label: 'a' }, { label: 'b' }] }), 'anon create_club_poll')
+    expect(create.error?.code).toBe(RLS_DENIED)
+    const vote = await q(() => anon.rpc('vote_club_poll', { p_post_id: crypto.randomUUID(), p_option_ids: [] }), 'anon vote_club_poll')
+    expect(vote.error?.code).toBe(RLS_DENIED)
+    const link = await q(() => anon.rpc('link_poll_event', { p_post_id: crypto.randomUUID(), p_event_id: crypto.randomUUID() }), 'anon link_poll_event')
+    expect(link.error?.code).toBe(RLS_DENIED)
   })
 
-  test('past games are for signed-in players only, and only their own', async () => {
-    const guest = await q(() => anon.rpc('search_feed', { q: 'e2e', scope: 'mine_past' }), 'anon mine_past')
-    expect((guest.data as { events: string[] }).events).toEqual([])
-    const mine = await q(() => me.rpc('search_feed', { q: 'e2e', scope: 'mine_past' }), 'my past games')
-    expect(mine.error).toBeNull()
-    const ids = (mine.data as { events: string[] }).events
-    if (ids.length) {
-      const attended = await q(() => me.from('event_attendees').select('event_id').eq('user_id', myId).in('event_id', ids), 'attended')
-      expect(new Set((attended.data ?? []).map(r => r.event_id)).size).toBe(ids.length)
-    }
-  })
-
-  test('too short or too long a search is refused', async () => {
-    for (const text of ['a', 'x'.repeat(200)]) {
-      const res = await q(() => anon.rpc('search_feed', { q: text }), `search ${text.length} chars`)
-      expect(res.error?.code).toBe('22023')
-    }
+  test('a signed-in user cannot write the tables or post a poll in a club they do not own', async () => {
+    const ins = await q(() => me.from('club_polls').insert({ post_id: crypto.randomUUID(), kind: 'text' }), 'insert club_polls')
+    expect(ins.error?.code).toBe(RLS_DENIED)
+    const vote = await q(() => me.from('club_poll_votes').insert({ option_id: crypto.randomUUID(), post_id: crypto.randomUUID(), user_id: myId }), 'insert club_poll_votes')
+    expect(vote.error?.code).toBe(RLS_DENIED)
+    const create = await q(() => me.rpc('create_club_poll', { p_club_id: crypto.randomUUID(), p_question: 'Q?', p_kind: 'text', p_options: [{ label: 'a' }, { label: 'b' }] }), 'create_club_poll not owner')
+    expect(create.error?.code).toBe(RLS_DENIED)
   })
 })
 
@@ -602,5 +593,42 @@ test.describe('what to bring (#256)', () => {
     expect(save.error?.message).toMatch(/Event not found/)
     const alert = await q(() => me.from('event_bring_alert_log' as never).select('event_id').limit(1), 'me alert log')
     expect(alert.error ?? (alert.data as unknown[] | null)?.length === 0, 'alert log is service-only').toBeTruthy()
+  })
+})
+
+/**
+ * Search (#176): search_feed runs as the caller (SECURITY INVOKER), so a guest
+ * gets only what the guest feed already shows, and never past games.
+ */
+test.describe('search (#176)', () => {
+  test('guests can search; every game id is one they can already read', async () => {
+    const res = await q(() => anon.rpc('search_feed', { q: 'e2e' }), 'anon search_feed')
+    expect(res.error).toBeNull()
+    const found = res.data as { events: string[]; hosts: Record<string, unknown>[] }
+    if (found.events.length) {
+      const direct = await q(() => anon.from('events').select('id').in('id', found.events), 'anon events by id')
+      expect((direct.data ?? []).length).toBe(found.events.length)
+    }
+    // Hosts carry public profile columns only.
+    for (const h of found.hosts) expect(Object.keys(h).sort()).toEqual(['avatar_url', 'first_name', 'id', 'last_name', 'upcoming', 'username'])
+  })
+
+  test('past games are for signed-in players only, and only their own', async () => {
+    const guest = await q(() => anon.rpc('search_feed', { q: 'e2e', scope: 'mine_past' }), 'anon mine_past')
+    expect((guest.data as { events: string[] }).events).toEqual([])
+    const mine = await q(() => me.rpc('search_feed', { q: 'e2e', scope: 'mine_past' }), 'my past games')
+    expect(mine.error).toBeNull()
+    const ids = (mine.data as { events: string[] }).events
+    if (ids.length) {
+      const attended = await q(() => me.from('event_attendees').select('event_id').eq('user_id', myId).in('event_id', ids), 'attended')
+      expect(new Set((attended.data ?? []).map(r => r.event_id)).size).toBe(ids.length)
+    }
+  })
+
+  test('too short or too long a search is refused', async () => {
+    for (const text of ['a', 'x'.repeat(200)]) {
+      const res = await q(() => anon.rpc('search_feed', { q: text }), `search ${text.length} chars`)
+      expect(res.error?.code).toBe('22023')
+    }
   })
 })

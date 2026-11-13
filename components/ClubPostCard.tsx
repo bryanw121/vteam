@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { PollBlock } from './club/PollBlock'
+import { pollOf } from '../utils/clubPoll'
 import { View, TouchableOpacity, ScrollView, StyleSheet, Platform, Modal, Pressable, KeyboardAvoidingView } from 'react-native'
 import { isNetworkError, toast } from '../lib/toast'
 import { getSessionUser } from '../lib/sessionUser'
@@ -32,6 +34,9 @@ type ClubPostCardProps = {
   currentUserId: string | null
   isClubMember: boolean
   onDataChanged: () => void
+  /** Club polls (#175): the viewer owns the club (Create event), and member names for "who picked". */
+  isClubOwner?: boolean
+  memberName?: (userId: string) => string
 }
 
 export function ClubPostCard({
@@ -40,7 +45,10 @@ export function ClubPostCard({
   currentUserId,
   isClubMember,
   onDataChanged,
+  isClubOwner = false,
+  memberName = () => 'Member',
 }: ClubPostCardProps) {
+  const poll = pollOf(post)
   const router = useRouter()
   const [likeBusy, setLikeBusy] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
@@ -124,6 +132,17 @@ export function ClubPostCard({
       </View>
 
       <LinkedText text={post.body} style={styles.body} />
+      {poll ? (
+        <PollBlock
+          postId={post.id}
+          clubId={post.club_id}
+          poll={poll}
+          question={post.body}
+          currentUserId={isClubMember ? currentUserId : null}
+          isOwner={isClubOwner}
+          memberName={memberName}
+        />
+      ) : null}
 
       <View style={styles.actions}>
         <TouchableOpacity
