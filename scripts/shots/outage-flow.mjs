@@ -8,7 +8,7 @@
  * - a returning viewer keeps the saved feed and sees "vteam isn't answering"
  *   within 17 s (two reads time out at 15 s);
  * - while it's down, the app sends almost nothing (only the backed-off probe);
- * - when the server answers again, Retry clears the bar;
+ * - when the server answers again, the bar goes by itself (Retry probes at once);
  * - a first visit sees the bar and "vteam isn't answering right now" (with Try
  *   again) within 20 s instead of a spinner for 90 s.
  *
@@ -93,10 +93,13 @@ try {
     const sent = hang.count() - before
     check('quiet while down', sent <= MAX_REQUESTS_WHILE_DOWN, `${sent} Supabase requests in ${QUIET_WINDOW_MS / 1000} s (at most ${MAX_REQUESTS_WHILE_DOWN}: the backed-off probe)`)
 
+    // The server answers again: requests still waiting get their answers (only the 60 s hard limit
+    // gives up on them), which brings it back by itself; Retry is there for when nothing is waiting.
     await hang.release()
-    await page.getByTestId('server-status-retry').click()
+    const retry = page.getByTestId('server-status-retry')
+    if (await retry.isVisible().catch(() => false)) await retry.click().catch(() => {})
     const gone = await page.getByTestId('server-status-bar').waitFor({ state: 'detached', timeout: 10_000 }).then(() => true, () => false)
-    check('recovers on Retry', gone, gone ? 'bar gone once the server answers' : 'bar still up 10 s after Retry')
+    check('recovers when the server answers', gone, gone ? 'bar gone once the server answers' : 'bar still up 10 s after the server answered')
     await context.close()
   }
 
@@ -108,7 +111,7 @@ try {
     await page.goto(server.url + '/', { waitUntil: 'load' })
     const ms = await msUntilBar(page, start)
     check('bar on a first visit', ms !== null && ms <= BAR_WITHIN_MS, ms === null ? 'no bar within 30 s' : `${ms} ms (budget ${BAR_WITHIN_MS})`)
-    const stateMs = await page.getByTestId('screen-state-server-down').waitFor({ timeout: 30_000 }).then(() => Date.now() - start, () => null)
+    const stateMs = await page.getByTestId('screen-state-server-down').filter({ visible: true }).first().waitFor({ timeout: 30_000 }).then(() => Date.now() - start, () => null)
     check('first visit says the server is down', stateMs !== null && stateMs <= STATE_WITHIN_MS, stateMs === null ? 'still a spinner after 30 s' : `${stateMs} ms (budget ${STATE_WITHIN_MS})`)
     await page.screenshot({ path: join(out, 'first-visit-down.png') })
     await context.close()

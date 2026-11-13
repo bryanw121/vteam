@@ -2,7 +2,7 @@ import React from 'react'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import {
   classifyRequest, DOWN_AFTER_SECOND_FAILURE_MS, HEALTHY, nextHealth, nextProbeDelay, offlineHealth,
-  READ_TIMEOUT_MS, requestTimeoutMs, WRITE_TIMEOUT_MS,
+  HARD_TIMEOUT_MS, READ_TIMEOUT_MS, requestTimeoutMs, WRITE_TIMEOUT_MS,
 } from '../utils/serverHealth'
 import {
   __resetServerHealth, isServerDown, onServerRecovered, reportRequest, serverHealth, timedFetch, TIMEOUT_MESSAGE,
@@ -74,15 +74,29 @@ describe('lib/serverHealth (#289)', () => {
   const realFetch = global.fetch
   afterEach(() => { global.fetch = realFetch })
 
-  it('timedFetch gives up at the limit with TIMEOUT_MESSAGE and reports it', async () => {
+  it('timedFetch counts a slow read as a timeout at 15 s but keeps waiting, and gives up at the hard limit', async () => {
     global.fetch = jest.fn((_input: unknown, init?: RequestInit) => new Promise<Response>((_, reject) => {
       init?.signal?.addEventListener('abort', () => reject(new Error('aborted')))
     })) as unknown as typeof fetch
     const p = timedFetch('https://x.supabase.co/rest/v1/events', { method: 'GET' })
-    const assertion = expect(p).rejects.toThrow(TIMEOUT_MESSAGE)
+    let settled = false
+    p.then(() => { settled = true }, () => { settled = true })
     await act(async () => { jest.advanceTimersByTime(READ_TIMEOUT_MS) })
-    await assertion
     expect(serverHealth()).toMatchObject({ status: 'degraded', cause: 'server' })
+    expect(settled).toBe(false)
+    const assertion = expect(p).rejects.toThrow(TIMEOUT_MESSAGE)
+    await act(async () => { jest.advanceTimersByTime(HARD_TIMEOUT_MS - READ_TIMEOUT_MS) })
+    await assertion
+  })
+
+  it('a slow server that does answer gets its answer used (#289: no turning slow into failed)', async () => {
+    global.fetch = jest.fn(() => new Promise<Response>(resolve => {
+      setTimeout(() => resolve({ status: 200 } as Response), 18_000)
+    })) as unknown as typeof fetch
+    const p = timedFetch('https://x.supabase.co/rest/v1/events', { method: 'GET' })
+    await act(async () => { jest.advanceTimersByTime(18_000) })
+    await expect(p).resolves.toMatchObject({ status: 200 })
+    expect(serverHealth()).toBe(HEALTHY)
   })
 
   it("the caller's own abort is not an outage", async () => {
@@ -152,5 +166,14 @@ describe('ServerStatusBar and ScreenState (#289)', () => {
     expect(getByText(SERVER_DOWN_COPY.stateTitle)).toBeTruthy()
     fireEvent.press(getByText('Try again'))
     expect(onRetry).toHaveBeenCalled()
+  })
+
+  it('ScreenState shows the server-down state instead of a spinner while a first load waits on a down server', () => {
+    const { getByTestId, queryByTestId, rerender } = render(<ScreenState loading />)
+    expect(getByTestId('screen-state-loading')).toBeTruthy()
+    act(() => { reportRequest('timeout'); reportRequest('timeout') })
+    rerender(<ScreenState loading />)
+    expect(queryByTestId('screen-state-loading')).toBeNull()
+    expect(getByTestId('screen-state-server-down')).toBeTruthy()
   })
 })

@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { Platform } from 'react-native'
-import { classifyRequest, HEALTHY, nextHealth, nextProbeDelay, offlineHealth, READ_TIMEOUT_MS, requestTimeoutMs, type RequestOutcome, type ServerHealth } from '../utils/serverHealth'
+import { classifyRequest, HARD_TIMEOUT_MS, HEALTHY, nextHealth, nextProbeDelay, offlineHealth, READ_TIMEOUT_MS, requestTimeoutMs, type RequestOutcome, type ServerHealth } from '../utils/serverHealth'
 
 /**
  * Whether vteam's server is answering (#289), fed by every request the
@@ -136,18 +136,24 @@ function ensureStarted(): void {
 export const TIMEOUT_MESSAGE = 'vteam request timed out'
 
 /**
- * The Supabase client's fetch (lib/supabase `global.fetch`): the same request
- * with a time limit (utils/serverHealth `requestTimeoutMs`, or `timeoutMs`),
- * reporting how it went. The caller's own abort still works and counts as
- * nothing. A timeout rejects with TIMEOUT_MESSAGE.
+ * The Supabase client's fetch (lib/supabase `global.fetch`): the same request,
+ * reporting how it went. Two limits: past the soft one (utils/serverHealth
+ * `requestTimeoutMs`: 15 s reads, 20 s writes) it counts as a timeout, so the
+ * bar can show, but the request keeps waiting: a slow server that answers at
+ * 18 s still gets its answer used. Past the hard one (`HARD_TIMEOUT_MS`, or
+ * `hardMs`) it is cut off and rejects with TIMEOUT_MESSAGE. Storage uploads
+ * have neither. The caller's own abort still works and counts as nothing.
  */
-export async function timedFetch(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs?: number | null): Promise<Response> {
+export async function timedFetch(input: RequestInfo | URL, init: RequestInit = {}, hardMs?: number): Promise<Response> {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
   const method = init.method ?? (typeof input === 'object' && 'method' in input ? input.method : 'GET')
-  const limit = timeoutMs === undefined ? requestTimeoutMs(url, method) : timeoutMs
+  const soft = requestTimeoutMs(url, method)
+  const hard = soft === null ? null : hardMs ?? HARD_TIMEOUT_MS
   const ours = new AbortController()
   let timedOut = false
-  const timer = limit === null ? null : setTimeout(() => { timedOut = true; ours.abort() }, limit)
+  let reportedSlow = false
+  const softTimer = soft === null || (hard !== null && soft >= hard) ? null : setTimeout(() => { reportedSlow = true; reportRequest('timeout') }, soft)
+  const timer = hard === null ? null : setTimeout(() => { timedOut = true; ours.abort() }, hard)
   const theirs = init.signal
   const onTheirAbort = () => ours.abort()
   if (theirs) {
@@ -160,13 +166,15 @@ export async function timedFetch(input: RequestInfo | URL, init: RequestInit = {
     return res
   } catch (e) {
     if (timedOut) {
-      reportRequest('timeout')
+      if (!reportedSlow) reportRequest('timeout')
       throw new Error(TIMEOUT_MESSAGE)
     }
-    if (!theirs?.aborted) reportRequest(classifyRequest({ status: null }))
+    // An abort we didn't start (the caller's, or the page going away) says nothing about the server.
+    if (!theirs?.aborted && (e as { name?: string })?.name !== 'AbortError') reportRequest(classifyRequest({ status: null }))
     throw e
   } finally {
     if (timer) clearTimeout(timer)
+    if (softTimer) clearTimeout(softTimer)
     theirs?.removeEventListener('abort', onTheirAbort)
   }
 }

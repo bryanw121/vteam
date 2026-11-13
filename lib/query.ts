@@ -477,13 +477,14 @@ function refetchIfStale(key: string): void {
 
 /**
  * The server answered again after being down (#289): refetch, once, every query
- * a mounted screen reads that failed or went stale meanwhile.
+ * a mounted screen reads that failed meanwhile. Stale-but-loaded ones wait for
+ * their usual focus refetch, so a recovering server isn't hit with every read at once.
  */
 export function refetchAfterRecovery(): void {
   cache.forEach((entry, key) => {
     const fetcher = activeFetcher(entry)
     if (!fetcher) return
-    if (entry.error || !entry.hasData || isEntryStale(entry, entry.staleMs, Date.now())) void runFetch(key, fetcher, false)
+    if (entry.error && !entry.promise) void runFetch(key, fetcher, false)
   })
 }
 onServerRecovered(() => refetchAfterRecovery())

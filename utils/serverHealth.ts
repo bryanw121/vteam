@@ -31,9 +31,15 @@ export const HEALTHY: ServerHealth = { status: 'ok', cause: null, since: null, l
 /** A second failure within this window after the first makes it `down`. */
 export const DOWN_AFTER_SECOND_FAILURE_MS = 60_000
 
-/** Reads (GET/HEAD and RPCs) give up after this; writes and token refreshes after WRITE_TIMEOUT_MS. */
+/**
+ * Soft limits: a read (GET/HEAD) slower than READ_TIMEOUT_MS, or a write, RPC or
+ * token refresh slower than WRITE_TIMEOUT_MS, counts as a timeout for the
+ * health state (the bar can show) but keeps waiting. Only HARD_TIMEOUT_MS cuts
+ * a request off: a slow server that does answer is never turned into a failure.
+ */
 export const READ_TIMEOUT_MS = 15_000
 export const WRITE_TIMEOUT_MS = 20_000
+export const HARD_TIMEOUT_MS = 60_000
 
 /** Probe delays while down: 15 s, 30 s, 60 s, 2 min, then every 5 min. */
 const PROBE_DELAYS_MS = [15_000, 30_000, 60_000, 120_000, 300_000]
@@ -76,7 +82,7 @@ export function offlineHealth(prev: ServerHealth, now: number): ServerHealth {
   return { status: 'down', cause: 'network', since: prev.since ?? now, lastFailureAt: now }
 }
 
-/** How long a request may take: no limit for Storage uploads, the write limit for writes and token refreshes, the read limit otherwise. */
+/** The soft limit for a request: none for Storage uploads, the write limit for writes, RPCs and token refreshes, the read limit otherwise. */
 export function requestTimeoutMs(url: string, method: string): number | null {
   const m = method.toUpperCase()
   if (/\/storage\/v1\/object/.test(url) && m !== 'GET' && m !== 'HEAD') return null

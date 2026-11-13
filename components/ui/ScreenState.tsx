@@ -22,16 +22,8 @@ export function ScreenState({
   emptyActionLabel, onEmptyAction, children,
 }: ScreenStateProps) {
   const health = useServerHealth()
-  if (loading && !ready) {
-    return (
-      <View style={shared.screenStateCenter} testID="screen-state-loading">
-        <Spinner color={theme.colors.primary} />
-      </View>
-    )
-  }
-
-  // Nothing to show and the server (or the connection) is down: say so instead of a generic error (#289).
-  if (error && !ready && health.status === 'down') {
+  // Nothing to show and the server (or the connection) is down: say so instead of a spinner or a generic error (#289).
+  if ((error || loading) && !ready && health.status === 'down') {
     const offline = health.cause === 'network'
     return (
       <EmptyState
@@ -42,6 +34,14 @@ export function ScreenState({
         actionLabel={onRetry ? 'Try again' : undefined}
         onAction={onRetry}
       />
+    )
+  }
+
+  if (loading && !ready) {
+    return (
+      <View style={shared.screenStateCenter} testID="screen-state-loading">
+        <Spinner color={theme.colors.primary} />
+      </View>
     )
   }
 
