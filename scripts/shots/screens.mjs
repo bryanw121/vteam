@@ -59,6 +59,9 @@ export const SCREENS = {
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/SignInButton.tsx', 'hooks/useMonthEvents.ts', 'utils/feed*.ts'],
   },
   'event-details': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', sources: EVENT_DETAIL },
+  // Game recap (#227): a finished game the viewer played (Your game, Share), and a guest's view of it (the host's next game).
+  'event-past-recap': { route: `/event/${E.pastIndoor}`, ready: 'Your game', sources: [...EVENT_DETAIL, 'components/event/RecapFooter.tsx', 'components/event/YourGameCard.tsx', 'hooks/useMyGameRecap.ts', 'hooks/useHostNextGame.ts', 'utils/recap.ts'] },
+  'event-past-guest': { route: `/event/${E.pastIndoor}`, signedIn: false, ready: 'plays again', sources: [...EVENT_DETAIL, 'components/event/RecapFooter.tsx', 'hooks/useHostNextGame.ts'] },
   // No-show flag (#151): what a flagged player sees on Details.
   'event-details-noshow': { route: `/event/${E.pastIndoor}`, ready: 'Marked as a no-show', sources: EVENT_DETAIL },
   'event-people': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', actions: [{ tap: 'event-tab-people', text: 'People' }], sources: [...EVENT_DETAIL, 'components/ProfileAvatar.tsx'] },

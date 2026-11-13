@@ -191,7 +191,7 @@ function AppLayoutInner() {
                     <Text style={{
                       fontSize: theme.font.size.md,
                       fontWeight: active ? theme.font.weight.semibold : theme.font.weight.regular,
-                      color: active ? theme.colors.primary : theme.colors.subtext,
+                      color: active ? theme.colors.primaryText : theme.colors.subtext,
                     }}>
                       {tab.name}
                     </Text>
