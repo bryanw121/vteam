@@ -147,12 +147,17 @@ const SAMPLER = () => {
   }
   const tick = () => {
     const t = performance.now()
-    if (t - st.lastScan > 300) { scan(); st.lastScan = t }
+    // Rescan for the inner scroll area every 300 ms, and at once while none of the known ones is on
+    // screen early on: after Back the screen that comes back has its own scroller, and reading the old
+    // (hidden) one would report 0 px for a screen already restored to its offset (#288).
+    const noneShown = !st.scrollers.some(d => d.isConnected && d.offsetParent !== null)
+    if (t - st.lastScan > 300 || (noneShown && t - st.t0 < 800)) { scan(); st.lastScan = t }
     let inner = 0
     for (const d of st.scrollers) if (d.isConnected && d.offsetParent !== null && d.scrollTop > inner) inner = d.scrollTop
     const splash = [...document.querySelectorAll('div')].some(d => d.childElementCount === 0 && d.textContent === 'BETA' && d.offsetParent !== null)
     const hit = document.elementFromPoint(innerWidth / 2, innerHeight / 2)
-    const painted = !splash && !!hit && hit !== document.body && hit !== document.documentElement && (hit.innerText || '').trim().length > 0
+    // The child screen being left can stay up for a frame after Back; that is the browser finishing the old page, not this screen painting at the wrong offset.
+    const painted = !splash && !!hit && hit !== document.body && hit !== document.documentElement && !hit.closest('[data-stability-leaving]') && (hit.innerText || '').trim().length > 0
     const spinners = [...document.querySelectorAll('[role=progressbar]')].filter(e => e.offsetParent !== null).length
     st.samples.push({ t: Math.round(t - st.t0), y: Math.round(scrollY), inner: Math.round(inner), text: document.body.innerText.length, splash, painted, spinners })
     if (t - st.t0 < 4000) setTimeout(tick, 60)
@@ -208,6 +213,20 @@ async function recordFrames(page, ms, action) {
   return frames.filter(f => f.at >= t0).map(f => ({ t: f.at - t0, data: f.data }))
 }
 
+/**
+ * Runs in the page on the child screen, before Back: marks the child screen's root (the
+ * highest ancestor of what is in the middle of the screen that doesn't also hold the parent
+ * screen) so the sampler doesn't count the frame or two the leaving screen stays up as the
+ * parent "painting at 0 px" (#288). Marks nothing when the parent isn't in the page.
+ */
+function markLeavingScreen() {
+  const parent = window.__stabilityParent
+  let el = document.elementFromPoint(innerWidth / 2, innerHeight / 2)
+  if (!parent?.isConnected || !el || el.contains(parent) || parent.contains(el)) return
+  while (el.parentElement && !el.parentElement.contains(parent)) el = el.parentElement
+  if (el.parentElement) el.setAttribute('data-stability-leaving', '')
+}
+
 async function scrollCase(c, delay, skipped) {
   const { context, page } = await newPage(c.viewport, { signedIn: c.signedIn, delay })
   const who = c.signedIn ? 'in' : 'guest'
@@ -222,14 +241,18 @@ async function scrollCase(c, delay, skipped) {
     if (c.nav === 'back' && !at.target) { skipped.push(`${c.screen} (${c.viewport}, ${who}): Back not exercised, no child link partway down`); return [] }
     let frames
     if (c.nav === 'reload') {
+      if (c.fresh) await page.addInitScript(() => { try { localStorage.removeItem('vteam.querySnapshot') } catch { /* ignore */ } })
       await page.addInitScript(SAMPLER)
       frames = await recordFrames(page, 3000 + delay, () => page.reload({ waitUntil: 'commit' }))
     } else {
       const before = new URL(page.url()).pathname
+      // Remember what the parent screen shows, to tell the child screen apart from it after Back.
+      await page.evaluate(() => { window.__stabilityParent = document.elementFromPoint(innerWidth / 2, innerHeight / 2) })
       await at.target.click({ timeout: 5000 })
       await page.waitForURL(u => u.pathname !== before, { timeout: 5000 }).catch(() => {})
       if (new URL(page.url()).pathname === before) { skipped.push(`${c.screen} (${c.viewport}, ${who}): the child link didn't navigate`); return [] }
       await page.waitForTimeout(1000 + delay)
+      await page.evaluate(markLeavingScreen)
       await page.evaluate(SAMPLER)
       await page.evaluate(() => { const st = window.__stability; st.t0 = performance.now(); st.samples = []; st.shifts = [] })
       frames = await recordFrames(page, 3000 + delay, () => page.goBack({ waitUntil: 'commit' }))
