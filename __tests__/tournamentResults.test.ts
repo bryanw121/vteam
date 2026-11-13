@@ -22,13 +22,35 @@ function poolMatch(id: string, poolId: string, a: string, b: string, winner: str
   }
 }
 
-/** Apply writes the way recordResult does. */
+/** Apply writes the way recordResult does (a grand-final reset is added or removed too). */
 function apply(matches: TournamentMatchRow[], matchId: string, winnerId: string, writes: ReturnType<typeof resultWrites>) {
-  return matches.map(m => {
+  let out = matches.map(m => {
     let row = m.id === matchId ? { ...m, winner_id: winnerId, status: 'completed' as const } : m
     for (const a of writes.advances) if (a.matchId === m.id) row = { ...row, [a.column]: a.teamId }
     return row
   })
+  if (writes.reset?.removeId) out = out.filter(m => m.id !== writes.reset?.removeId)
+  const add = writes.reset?.add
+  if (add) {
+    out = [...out, {
+      id: 'reset', tournament_id: 't', pool_id: null, stage: 'bracket', ...add, is_losers_bracket: false,
+      court: null, scheduled_at: null, status: 'scheduled', winner_id: null, ref_team_id: null, sets: [],
+    }]
+  }
+  return out
+}
+
+/** Play every match that has both teams and no result, top seed (team a) winning unless `pick` says otherwise. */
+function playAll(matches: TournamentMatchRow[], tournament: ReturnType<typeof T>, pick: (m: TournamentMatchRow) => string | null = () => null) {
+  for (let guard = 0; guard < 50; guard++) {
+    const next = matches.find(m => m.team_a_id && m.team_b_id && !m.winner_id && m.bracket_round_name !== 'Grand final' && m.bracket_round_name !== 'Grand final reset')
+    if (!next) return matches
+    const winner = pick(next) ?? (next.team_a_id as string)
+    const w = resultWrites({ match: next, winnerId: winner, matches, tournament })
+    expect(w.blocked).toBeNull()
+    matches = apply(matches, next.id, winner, w)
+  }
+  return matches
 }
 
 describe('parseSets / winnerFromSets', () => {
@@ -102,6 +124,51 @@ describe('resultWrites', () => {
     const w = resultWrites({ match: w1, winnerId: 's1', matches, tournament: T({ bracket_type: 'double' }) })
     const lb = matches.find(m => m.is_losers_bracket && m.round === 1) as TournamentMatchRow
     expect(w.advances).toContainEqual({ matchId: lb.id, column: 'team_a_id', teamId: 's4' })
+  })
+
+  describe('double elimination grand final reset', () => {
+    const tournament = T({ bracket_type: 'double', status: 'in_progress' })
+    const toFinal = () => playAll(bracketMatches(4, 'double'), tournament)
+    const gfOf = (ms: TournamentMatchRow[]) => ms.find(m => m.bracket_round_name === 'Grand final') as TournamentMatchRow
+
+    it('winners-bracket champion wins the grand final: done, no reset', () => {
+      let matches = toFinal()
+      const gf = gfOf(matches)
+      const w = resultWrites({ match: gf, winnerId: gf.team_a_id as string, matches, tournament })
+      expect(w.reset).toBeUndefined()
+      expect(w.nextStatus).toBe('completed')
+      matches = apply(matches, gf.id, gf.team_a_id as string, w)
+      expect(tournamentPodium(matches, tournament, [])?.first).toBe(gf.team_a_id)
+    })
+
+    it('losers-bracket champion wins: a reset between the same two teams decides it', () => {
+      let matches = toFinal()
+      const gf = gfOf(matches)
+      const w = resultWrites({ match: gf, winnerId: gf.team_b_id as string, matches, tournament })
+      expect(w.reset?.add).toMatchObject({ team_a_id: gf.team_a_id, team_b_id: gf.team_b_id, match_number: 2, bracket_round_name: 'Grand final reset' })
+      expect(w.nextStatus).toBeNull()
+      expect(w.podium).toBeNull()
+      matches = apply(matches, gf.id, gf.team_b_id as string, w)
+      expect(isTournamentDecided(matches, tournament)).toBe(false)
+
+      const reset = matches.find(m => m.id === 'reset') as TournamentMatchRow
+      const r = resultWrites({ match: reset, winnerId: reset.team_a_id as string, matches, tournament })
+      expect(r.nextStatus).toBe('completed')
+      expect(r.podium).toMatchObject({ first: gf.team_a_id, second: gf.team_b_id })
+    })
+
+    it('correcting the grand final removes an unplayed reset, and refuses once it is played', () => {
+      let matches = toFinal()
+      const gf = gfOf(matches)
+      matches = apply(matches, gf.id, gf.team_b_id as string, resultWrites({ match: gf, winnerId: gf.team_b_id as string, matches, tournament }))
+      const fix = resultWrites({ match: gfOf(matches), winnerId: gf.team_a_id as string, matches, tournament })
+      expect(fix.reset).toEqual({ add: null, removeId: 'reset' })
+      expect(fix.nextStatus).toBe('completed')
+
+      const reset = matches.find(m => m.id === 'reset') as TournamentMatchRow
+      matches = apply(matches, reset.id, reset.team_b_id as string, resultWrites({ match: reset, winnerId: reset.team_b_id as string, matches, tournament }))
+      expect(resultWrites({ match: gfOf(matches), winnerId: gf.team_a_id as string, matches, tournament }).blocked).toMatch(/already been played/)
+    })
   })
 
   it('refuses to change a result whose next match is already played', () => {
