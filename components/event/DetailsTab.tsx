@@ -17,10 +17,14 @@ import { PaidToggle } from './PaidToggle'
 import { Button } from '../Button'
 import { NO_SHOW_MESSAGE_HOST, NO_SHOW_PLAYER_BODY, NO_SHOW_PLAYER_TITLE } from '../../constants/copy'
 import { ForecastRow } from './ForecastRow'
+import { BringListCard } from './BringListCard'
+import { useEventBringList } from '../../hooks/event/useEventBringList'
+import { eventDateMs } from '../../hooks/event/derive'
+import { useRequireSignIn } from '../../hooks/useRequireSignIn'
 import { shared, theme, LOCATIONS } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
 import type { EventData, EventPaymentsApi } from '../../types'
-import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, profileAvatarSmallUri } from '../../utils'
+import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, profileAvatarSmallUri, isSurface } from '../../utils'
 import { profilePrefetchProps } from '../../hooks/useUserProfile'
 import { toast } from '../../lib/toast'
 
@@ -130,6 +134,8 @@ type Props = {
   payments: EventPaymentsApi | null
   /** The host flagged the viewer as a no-show (#151): show them why they get no points. */
   noShow?: boolean
+  /** Host or co-host: may claim "What to bring" items without being on the roster (#256). */
+  isHostOrCohost?: boolean
 }
 
 export function DetailsTab({
@@ -145,8 +151,16 @@ export function DetailsTab({
   onManageCohosts,
   payments,
   noShow = false,
+  isHostOrCohost = false,
 }: Props) {
   const { refreshing, refresh: onRefresh, cohosts, userId } = data
+  const requireSignIn = useRequireSignIn()
+  const bring = useEventBringList(event.id, userId ?? null, { surface: isSurface(event.surface) ? event.surface : null })
+  const bringViewer = useMemo(() => ({
+    userId: userId ?? null,
+    canClaim: eventStatus.isAttending || isHostOrCohost,
+    closed: !!event.cancelled_at || Date.now() >= eventDateMs(event.event_date),
+  }), [userId, eventStatus.isAttending, isHostOrCohost, event.cancelled_at, event.event_date])
   const totalAttending = eventStatus.count
   const { data: myFriends } = useFriends()
   const friendsGoing = useMemo(
@@ -452,6 +466,16 @@ export function DetailsTab({
         )}
 
       </View>
+
+      {/* ── What to bring (#256) ── */}
+      <BringListCard
+        items={bring.items}
+        viewer={bringViewer}
+        pending={bring.pending}
+        onClaim={bring.claim}
+        onRelease={bring.release}
+        onSignIn={() => { requireSignIn() }}
+      />
 
       {/* ── About / description card ── */}
       {event.description ? (
