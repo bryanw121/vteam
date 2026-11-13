@@ -61,3 +61,4 @@ supabase/.temp/
 yarn.lock
 coverage/
 stability-report/
+headroom.json
