@@ -117,3 +117,24 @@ test('ignores open PRs, closed PRs and merges not in this commit', () => {
   assert.equal(readiness({ live, beta, pending: readyLedger, merged: { 301: false } }).ready, true)
   assert.equal(readiness({ live, beta, pending: readyLedger, merged: {} }).ready, true)
 })
+
+test('mergedByTree: a ledger PR is in the commit exactly when its migration file is in the tree', async () => {
+  const { mergedByTree } = await import('./schema-drift.mjs')
+  const pending = [
+    { pr: 120, migration: '20261028203031_badge_art.sql', keys: ['table:badge_art'] },
+    { pr: 264, migration: '20261113010000_user_reports.sql', keys: ['table:user_reports'] },
+    { pr: 264, migration: '20261113020000_more.sql', keys: ['function:x()'] },
+  ]
+  const tree = new Set(['20261028203031_badge_art.sql', '20261113020000_more.sql'])
+  assert.deepEqual(mergedByTree(pending, f => tree.has(f)), { 120: true, 264: true })
+  assert.deepEqual(mergedByTree(pending, () => false), { 120: false, 264: false })
+})
+
+test('mergedByTree feeds readiness: an unmerged PR never blocks, a merged one missing on live does', async () => {
+  const { mergedByTree } = await import('./schema-drift.mjs')
+  const live = { 'table:a': '1' }
+  const beta = { 'table:a': '1', 'table:b': '2' }
+  const pending = [{ pr: 7, migration: 'm7.sql', keys: ['table:b'] }]
+  assert.equal(readiness({ live, beta, pending, merged: mergedByTree(pending, () => false) }).ready, true)
+  assert.deepEqual(readiness({ live, beta, pending, merged: mergedByTree(pending, () => true) }).missing, [{ pr: 7, migration: 'm7.sql', objects: 1 }])
+})

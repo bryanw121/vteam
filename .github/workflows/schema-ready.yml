@@ -1,12 +1,13 @@
 name: Live schema ready
 
 # Every push to main: is every migration this commit's merged PRs brought already
-# on live? Vercel's Deployment Checks hold the production deploy until this check
-# ("Live schema ready") passes, so the web app never runs code against a schema
-# that doesn't have what it calls (#245). Code-only commits pass in seconds; a
-# missing migration is named in the job summary and the job polls every 2 minutes
-# for up to 3 hours, passing by itself once it's applied. Read-only on both
-# Supabase projects (public anon keys, the same functions as the drift check).
+# on live? (#245) Shown on GitHub as "Live schema ready". The Vercel production build
+# runs the same check itself (scripts/vercel-schema-gate.mjs, from vercel.json) and
+# waits for it, so the web app never runs code against a schema that doesn't have
+# what it calls. Code-only commits pass in seconds; a missing migration is named in
+# the job summary and the job polls every 2 minutes for up to 3 hours, passing by
+# itself once it's applied. Read-only on both Supabase projects (public anon keys,
+# the same functions as the drift check).
 on:
   push:
     branches: [main]
