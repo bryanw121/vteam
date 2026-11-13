@@ -33,9 +33,13 @@ const HOUR = 60 * MIN
 export const EXPECTATIONS = {
   'award-event-points': { maxAgeMs: 45 * MIN, what: 'points after games (every 15 min)' },
   'event-reminders': { maxAgeMs: 30 * MIN, what: 'event reminders (every 10 min)' },
+  'new-game-alerts': { maxAgeMs: 30 * MIN, what: 'new game alerts (every 10 min)' },
   'ingest-schelagg-feed': { maxAgeMs: 2.5 * HOUR, what: 'outside sessions import (hourly)' },
   'ingest-schelagg-programs': { maxAgeMs: 4.5 * HOUR, what: 'leagues and tournaments import (every 2 h)' },
   'kudos-reminders': { maxAgeMs: 30 * MIN, what: 'kudos reminders (every 10 min)', only: 'live' },
+  // This beta-only cron was added outside the app migration stream. Keep it
+  // visible to the health check until its migration is backfilled here.
+  'new-game-alerts': { maxAgeMs: 26 * HOUR, what: 'new game alerts (daily)', only: 'beta' },
   'prune-app-events': { maxAgeMs: 26 * HOUR, what: 'usage metrics rollup and prune (daily)' },
   'prune-app-online': { maxAgeMs: 26 * HOUR, what: 'online-now rollup and prune (daily)' },
   'prune-rate-limits': { maxAgeMs: 2.5 * HOUR, what: 'rate limit cleanup (hourly)' },
