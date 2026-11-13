@@ -1,4 +1,5 @@
 {
+  "buildCommand": "node scripts/vercel-schema-gate.mjs && npm run build:web",
   "routes": [
     {
       "src": "/(_expo/static|assets)/(.*)",
