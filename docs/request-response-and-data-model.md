@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `d9d1de735b11`
+> Inventory fingerprint: `1653d14a81bb`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -450,9 +450,9 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 
 | Table or view | Frontend/server call sites |
 |---|---|
-| `ad_banners` | [`hooks/useFeedAds.ts:18`](../hooks/useFeedAds.ts#L18) |
+| `ad_banners` | [`lib/startupConfig.ts:32`](../lib/startupConfig.ts#L32) |
 | `app_admins` | [`supabase/functions/generate-badge-art/index.ts:82`](../supabase/functions/generate-badge-art/index.ts#L82) |
-| `app_config` | [`hooks/useMinVersion.ts:19`](../hooks/useMinVersion.ts#L19) |
+| `app_config` | [`lib/startupConfig.ts:31`](../lib/startupConfig.ts#L31) |
 | `app_events` | [`lib/analytics.ts:159`](../lib/analytics.ts#L159) |
 | `badge_art` | [`hooks/useBadgeArt.ts:26`](../hooks/useBadgeArt.ts#L26)<br>[`supabase/functions/generate-badge-art/index.ts:130`](../supabase/functions/generate-badge-art/index.ts#L130) |
 | `chat_silences` | [`hooks/useSilencedUsers.ts:27`](../hooks/useSilencedUsers.ts#L27)<br>[`supabase/functions/send-chat-push/handler.ts:142`](../supabase/functions/send-chat-push/handler.ts#L142) |
@@ -487,7 +487,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `push_receipts` | [`supabase/functions/check-push-receipts/handler.ts:42`](../supabase/functions/check-push-receipts/handler.ts#L42)<br>[`supabase/functions/send-chat-push/handler.ts:206`](../supabase/functions/send-chat-push/handler.ts#L206)<br>[`supabase/functions/send-notification-push/handler.ts:150`](../supabase/functions/send-notification-push/handler.ts#L150) |
 | `push_tokens` | [`supabase/functions/check-push-receipts/handler.ts:87`](../supabase/functions/check-push-receipts/handler.ts#L87)<br>[`supabase/functions/send-chat-push/handler.ts:151`](../supabase/functions/send-chat-push/handler.ts#L151)<br>[`supabase/functions/send-notification-push/handler.ts:104`](../supabase/functions/send-notification-push/handler.ts#L104)<br>[`utils/pushNotifications.ts:115`](../utils/pushNotifications.ts#L115) |
 | `rate_limits` | [`supabase/functions/login-with-username/handler.ts:67`](../supabase/functions/login-with-username/handler.ts#L67) |
-| `sponsored_events` | [`hooks/useFeedAds.ts:19`](../hooks/useFeedAds.ts#L19) |
+| `sponsored_events` | [`lib/startupConfig.ts:35`](../lib/startupConfig.ts#L35) |
 | `tags` | [`hooks/useTags.ts:14`](../hooks/useTags.ts#L14) |
 | `tournament_comments` | [`hooks/tournament/api.ts:141`](../hooks/tournament/api.ts#L141) |
 | `tournament_matches` | [`hooks/tournament/api.ts:170`](../hooks/tournament/api.ts#L170) |
@@ -632,7 +632,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Public profile, history, cheers summary (#185) | [`UserProfileData`](../types/index.ts#L2194), [`EventHistoryKind`](../types/index.ts#L2203), [`CheersReceived`](../types/index.ts#L2206), [`CheersSummary`](../types/index.ts#L2212), [`RecoveryLink`](../types/index.ts#L2220) |
 | Join intent (#229) | [`PendingAction`](../types/index.ts#L2230), [`PendingActionTake`](../types/index.ts#L2233), [`JoinOffer`](../types/index.ts#L2236), [`JoinIntentOutcome`](../types/index.ts#L2239) |
 | View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2244), [`FeedbackFieldErrors`](../types/index.ts#L2250), [`ReportReason`](../types/index.ts#L2253), [`ReportContextKind`](../types/index.ts#L2254), [`ReportStatus`](../types/index.ts#L2255), [`ReportAction`](../types/index.ts#L2256), [`ReportUserInput`](../types/index.ts#L2258), [`AdminReport`](../types/index.ts#L2267), [`ReportSheetTarget`](../types/index.ts#L2286), [`ReportSheetProps`](../types/index.ts#L2289), [`EventSeed`](../types/index.ts#L2305), [`MemberSearchResult`](../types/index.ts#L2317) |
-| What to bring (#256) | [`BringClaimer`](../types/index.ts#L2323), [`BringItem`](../types/index.ts#L2333), [`BringItemDraft`](../types/index.ts#L2344), [`BringItemAction`](../types/index.ts#L2354), [`BringViewer`](../types/index.ts#L2363), [`SaveBringItemsArgs`](../types/index.ts#L2371), [`ClaimBringItemArgs`](../types/index.ts#L2375), [`ReleaseBringItemArgs`](../types/index.ts#L2376) |
+| What to bring (#256) | [`BringClaimer`](../types/index.ts#L2323), [`BringItem`](../types/index.ts#L2333), [`BringItemDraft`](../types/index.ts#L2344), [`BringItemAction`](../types/index.ts#L2354), [`BringViewer`](../types/index.ts#L2363), [`SaveBringItemsArgs`](../types/index.ts#L2371), [`ClaimBringItemArgs`](../types/index.ts#L2375), [`ReleaseBringItemArgs`](../types/index.ts#L2376), [`StartupConfig`](../types/index.ts#L2379), [`StartupArm`](../types/index.ts#L2386) |
 
 ### Constrained string values
 
@@ -687,6 +687,7 @@ TypeScript `enum` keyword.
 | `ScheduleMatch.stage` | `pool_play`, `bracket`, `round_robin` | [`types/index.ts:1521`](../types/index.ts#L1521) |
 | `SelfAttendanceAction` | `join`, `leave`, `joinWaitlist`, `leaveWaitlist`, `requestToJoin`, `cancelRequest`, `rerequest` | [`types/index.ts:1657`](../types/index.ts#L1657) |
 | `SessionCheckStatus` | `scheduled`, `canceled`, `changed`, `gone`, `unknown` | [`types/index.ts:2014`](../types/index.ts#L2014) |
+| `StartupArm` | `cdn`, `direct` | [`types/index.ts:2386`](../types/index.ts#L2386) |
 | `Surface` | `indoor`, `sand`, `grass` | [`types/index.ts:212`](../types/index.ts#L212) |
 | `TeamMode` | `random`, `balanced` | [`types/index.ts:1600`](../types/index.ts#L1600) |
 | `TextSizeId` | `small`, `default`, `large`, `xlarge` | [`types/index.ts:2090`](../types/index.ts#L2090) |

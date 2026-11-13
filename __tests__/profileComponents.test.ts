@@ -10,6 +10,8 @@ function badge(type: string, tier: number, displayOrder: number | null = null): 
 }
 
 describe('PROFILE_BORDERS drive the swatches', () => {
+  // Actual picker rendering for every border is exercised in borderPreview.test.tsx.
+
   it('every border has gradient stops for its swatch', () => {
     expect(PROFILE_BORDERS.length).toBeGreaterThan(0)
     for (const border of PROFILE_BORDERS) {
