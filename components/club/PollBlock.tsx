@@ -43,8 +43,9 @@ export function PollBlock({ postId, clubId, poll, question, currentUserId, isOwn
             <TouchableOpacity
               disabled={!canVote}
               onPress={() => vote(postId, nextPicks(tally.myOptionIds, t.option.id, poll.multi))}
-              accessibilityRole={poll.multi ? 'checkbox' : 'radio'}
-              accessibilityState={{ checked: t.mine, disabled: !canVote }}
+              role={poll.multi ? 'checkbox' : 'radio'}
+              aria-checked={t.mine}
+              aria-disabled={!canVote}
               accessibilityLabel={`${t.option.label}, ${t.count === 1 ? '1 vote' : `${t.count} votes`}${t.winner ? ', winner' : ''}`}
               style={[shared.pollRow, t.mine && shared.pollRowMine, t.winner && shared.pollRowWinner]}
               testID={`poll-option-${t.option.position}`}
