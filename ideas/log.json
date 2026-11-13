@@ -385,5 +385,29 @@
     "status": "approved",
     "summary": "TeamSnap Assignments / Spond event tasks for pickup gear: host lists items by surface, attending players claim them, claims release on leave, reminder line and a host alert when a required item is uncovered. New tables event_bring_items/claims + RPCs.",
     "issue": 256
+  },
+  {
+    "date": "2026-11-13",
+    "n": 1,
+    "title": "Tournaments stops jumping, and the club page comes back without a flash",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "Health-check fix: snapshot the per-viewer club tournament list (tournaments:list) and hold its space with 2 skeleton rows on first visit (CLS 0.247 / 294 px today); DocScrollView hideRef so the club page hides header+content until the Back offset is restored (nightly stability --full failing on club back:jump@slow)."
+  },
+  {
+    "date": "2026-11-13",
+    "n": 2,
+    "title": "When the server stalls: 15-second timeouts, saved screens that say so, and no request pile-up",
+    "bucket": "latency",
+    "status": "proposed",
+    "summary": "From the 11-12 outage (p50 origin 90 s, 1,868 heartbeats from one IP): timedFetch in lib/supabase (15 s reads / 20 s writes), serverHealth state machine with backoff probe, pause refetch/heartbeat/analytics while down, ServerStatusBar + server-down ScreenState, server-specific toast, outage-flow shots check."
+  },
+  {
+    "date": "2026-11-13",
+    "n": 3,
+    "title": "Server headroom watch: hear about memory, disk and connections days before the server freezes",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "30-min GitHub workflow reads Supabase Metrics API (dedicated secret key) for live: memory commitment, RAM, swap, disk, connections + REST probe; fails (emails) past limits or on a missing metric; replay fixture of the 11-12 outage must fail."
   }
 ]
