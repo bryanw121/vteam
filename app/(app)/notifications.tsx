@@ -13,6 +13,8 @@ import type { NotificationItem } from '../../types'
 import { NotificationCheerChips } from '../../components/NotificationCheerChips'
 import { inboxBody } from '../../utils/notificationGroups'
 import { Spinner } from '../../components/ui/Spinner'
+import { track } from '../../lib/analytics'
+import { ANALYTICS_EVENTS } from '../../constants/analytics'
 
 export default function NotificationsScreen() {
   const router = useRouter()
@@ -30,6 +32,10 @@ export default function NotificationsScreen() {
         if (!item.read_at) await markRead(item.id, item.groupIds)
       } catch {
         /* still navigate */
+      }
+      if (item.notification_type === 'new_game') {
+        const source = (item.data as { source?: unknown } | null)?.source
+        track(ANALYTICS_EVENTS.gameAlertOpened, { source: source === 'club' || source === 'host' ? source : 'unknown', via: 'inbox' })
       }
       const path = item.data?.deep_link
       if (isAppPath(path)) {

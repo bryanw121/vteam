@@ -33,6 +33,7 @@ const HOUR = 60 * MIN
 export const EXPECTATIONS = {
   'award-event-points': { maxAgeMs: 45 * MIN, what: 'points after games (every 15 min)' },
   'event-reminders': { maxAgeMs: 30 * MIN, what: 'event reminders (every 10 min)' },
+  'new-game-alerts': { maxAgeMs: 30 * MIN, what: 'new game alerts (every 10 min)' },
   'ingest-schelagg-feed': { maxAgeMs: 2.5 * HOUR, what: 'outside sessions import (hourly)' },
   'ingest-schelagg-programs': { maxAgeMs: 4.5 * HOUR, what: 'leagues and tournaments import (every 2 h)' },
   'kudos-reminders': { maxAgeMs: 30 * MIN, what: 'kudos reminders (every 10 min)', only: 'live' },

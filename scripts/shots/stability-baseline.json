@@ -2,7 +2,7 @@
   "_notes": {
     "about": "Accepted findings for scripts/shots/stability-flow.mjs (#255): check \u2192 screen \u2192 viewport \u2192 kind \u2192 largest value. Shrink-only: lower or remove an entry when a fix lands (npm run stability:baseline); never raise one to get a PR through.",
     "scroll/events": "#254: desktop Back lands Events at the top; phone Back paints one frame at the top before the restore. Desktop reload 0.011 is the sidebar settling.",
-    "scroll/club": "Club page: since the Expo 58 upgrade (#269) Back comes back to the same offset; the event page being left stays on screen for one frame at the top first, like Events (#254). Accepted by Bryan on 2026-11-13.",
+    "scroll/club": "Club page: Back now comes back to the same offset (scroll memory, #270/#269); the event page being left stays on screen for one frame at the top first, like Events (#254). Accepted by Bryan on 2026-11-13.",
     "scroll/tournaments": "Club tournaments load above Around Austin and push it down 250\u2013294 px (desktop ~0.11; phone 0.247 when the server is slow).",
     "scroll/event": "Event page: the header Share button arrives late (64 px) and the skeleton is replaced 8 px lower."
   },
@@ -40,7 +40,7 @@
     },
     "club": {
       "phone": {
-        "back:jump": 1262
+        "back:jump": 1322
       }
     }
   }
