@@ -1886,18 +1886,21 @@ export type Database = {
           token: string
           updated_at: string
           user_id: string
+          web_keys: Json | null
         }
         Insert: {
           platform: string
           token: string
           updated_at?: string
           user_id: string
+          web_keys?: Json | null
         }
         Update: {
           platform?: string
           token?: string
           updated_at?: string
           user_id?: string
+          web_keys?: Json | null
         }
         Relationships: [
           {
