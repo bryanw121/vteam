@@ -11,6 +11,7 @@ import { Sentry } from '../../lib/sentry'
 import { eventColumns, eventDates } from '../../utils/hostForm'
 import { cleanDate } from '../../utils'
 import type { SaveEventInput } from '../../types'
+import type { Database } from '../../types/database'
 
 /** The RPC's arguments for a save: pure, so tests check create, recurring create and edit. */
 export function saveEventArgs(input: SaveEventInput) {
@@ -26,10 +27,10 @@ export function saveEventArgs(input: SaveEventInput) {
 export async function saveEvent(input: SaveEventInput): Promise<string[]> {
   const args = saveEventArgs(input)
   if (args.p_dates.length === 0) throw new Error('save_event: no dates')
-  // TEMPORARY cast: save_event isn't in types/database.ts until it is regenerated from live after merge.
-  const { data, error } = await supabase.rpc('save_event' as never, args as never)
+  // Generated Args type p_edit_id as string, but the function takes null for a create.
+  const { data, error } = await supabase.rpc('save_event', args as Database['public']['Functions']['save_event']['Args'])
   if (error) throw error
-  return (data ?? []) as unknown as string[]
+  return data ?? []
 }
 
 export function useSaveEvent() {

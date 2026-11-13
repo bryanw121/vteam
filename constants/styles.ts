@@ -793,6 +793,19 @@ export const shared = StyleSheet.create({
   pollAction: { minHeight: 44, justifyContent: 'center' },
   pollDraftRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   pollSwitchRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, minHeight: 44 },
+  // Search (#176): the box at the top, and host / club / recent rows.
+  searchField: {
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm,
+    borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing.md, minHeight: 44, backgroundColor: theme.colors.card,
+  },
+  // minWidth 0: a web <input> otherwise keeps ~20 characters of width and pushes a 320px page sideways.
+  searchFieldInput: { flex: 1, minWidth: 0, fontFamily: theme.fonts.body, fontSize: theme.font.size.base, color: theme.colors.text, paddingVertical: theme.spacing.sm },
+  searchResultRow: {
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, minHeight: 56,
+    paddingVertical: theme.spacing.sm, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.colors.border,
+  },
+  searchRecentRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, minHeight: 44 },
   chipRowWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.xs, marginTop: theme.spacing.xs, marginBottom: theme.spacing.xs },
   // Settings → Notifications: example of the reminder a player will get.
   reminderPreview: {

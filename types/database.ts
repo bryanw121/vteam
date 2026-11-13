@@ -3425,6 +3425,15 @@ export type Database = {
       rollup_app_events: { Args: { p_days?: number }; Returns: number }
       rollup_app_online: { Args: { p_days?: number }; Returns: number }
       sample_app_online: { Args: never; Returns: undefined }
+      save_event: {
+        Args: {
+          p_dates: string[]
+          p_edit_id: string
+          p_event: Json
+          p_tag_ids?: string[]
+        }
+        Returns: string[]
+      }
       save_event_bring_items: {
         Args: { p_event_id: string; p_items: Json }
         Returns: undefined
@@ -3432,6 +3441,10 @@ export type Database = {
       schelagg_safe_date: { Args: { v: string }; Returns: string }
       schema_fingerprint: { Args: never; Returns: Json }
       schema_pending_changes: { Args: never; Returns: Json }
+      search_feed: {
+        Args: { q: string; region?: string; scope?: string }
+        Returns: Json
+      }
       search_members: {
         Args: { p_limit?: number; p_query: string }
         Returns: {
@@ -3446,6 +3459,7 @@ export type Database = {
           username: string
         }[]
       }
+      search_score: { Args: { p_q: string; p_text: string }; Returns: number }
       send_event_reminders: { Args: never; Returns: number }
       send_friend_request: { Args: { p_user_id: string }; Returns: string }
       send_kudos_reminders: { Args: never; Returns: undefined }

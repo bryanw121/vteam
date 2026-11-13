@@ -78,6 +78,8 @@ export const ANALYTICS_EVENTS = {
   recapShared: 'recap_shared',
   /** An event page was opened from a shared recap link (`?r=1`). */
   recapLinkOpened: 'recap_link_opened',
+  /** A search ran from the Search screen (#176): never the text. props: { len, scope, results } */
+  searchSubmitted: 'search_submitted',
   /** Let go of something they said they'd bring. props: { surface } */
   bringItemReleased: 'bring_item_released',
   /** A host saved a game's "What to bring" list. props: { items (count), surface } */

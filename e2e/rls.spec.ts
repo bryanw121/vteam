@@ -125,7 +125,7 @@ test.describe('anon (guest browsing)', () => {
   })
 
   test('cannot call save_event (#188)', async () => {
-    const res = await q(() => anon.rpc('save_event' as never, { p_edit_id: null, p_event: { title: '[e2e rls] must fail' }, p_dates: [new Date().toISOString()], p_tag_ids: [] } as never), 'anon save_event')
+    const res = await q(() => anon.rpc('save_event', { p_edit_id: null, p_event: { title: '[e2e rls] must fail' }, p_dates: [new Date().toISOString()], p_tag_ids: [] } as never), 'anon save_event')
     expect(res.error).not.toBeNull()
   })
 
@@ -213,11 +213,11 @@ test.describe('signed in as the e2e account', () => {
   })
 
   test("save_event (#188) can't edit an event it doesn't host, and writes nothing", async () => {
-    const res = await q(() => me.rpc('save_event' as never, {
+    const res = await q(() => me.rpc('save_event', {
       p_edit_id: crypto.randomUUID(), p_event: { title: '[e2e rls] must fail' }, p_dates: [new Date().toISOString()], p_tag_ids: [],
     } as never), 'save_event on someone else')
     expect(res.error?.code).toBe('42501')
-    const tooMany = await q(() => me.rpc('save_event' as never, {
+    const tooMany = await q(() => me.rpc('save_event', {
       p_edit_id: null, p_event: { title: '[e2e rls] must fail' }, p_dates: Array.from({ length: 53 }, (_, i) => new Date(Date.now() + i * 86_400_000).toISOString()), p_tag_ids: [],
     } as never), 'save_event 53 dates')
     expect(tooMany.error?.code).toBe('22023')
@@ -609,5 +609,42 @@ test.describe('what to bring (#256)', () => {
     expect(save.error?.message).toMatch(/Event not found/)
     const alert = await q(() => me.from('event_bring_alert_log' as never).select('event_id').limit(1), 'me alert log')
     expect(alert.error ?? (alert.data as unknown[] | null)?.length === 0, 'alert log is service-only').toBeTruthy()
+  })
+})
+
+/**
+ * Search (#176): search_feed runs as the caller (SECURITY INVOKER), so a guest
+ * gets only what the guest feed already shows, and never past games.
+ */
+test.describe('search (#176)', () => {
+  test('guests can search; every game id is one they can already read', async () => {
+    const res = await q(() => anon.rpc('search_feed', { q: 'e2e' }), 'anon search_feed')
+    expect(res.error).toBeNull()
+    const found = res.data as { events: string[]; hosts: Record<string, unknown>[] }
+    if (found.events.length) {
+      const direct = await q(() => anon.from('events').select('id').in('id', found.events), 'anon events by id')
+      expect((direct.data ?? []).length).toBe(found.events.length)
+    }
+    // Hosts carry public profile columns only.
+    for (const h of found.hosts) expect(Object.keys(h).sort()).toEqual(['avatar_url', 'first_name', 'id', 'last_name', 'upcoming', 'username'])
+  })
+
+  test('past games are for signed-in players only, and only their own', async () => {
+    const guest = await q(() => anon.rpc('search_feed', { q: 'e2e', scope: 'mine_past' }), 'anon mine_past')
+    expect((guest.data as { events: string[] }).events).toEqual([])
+    const mine = await q(() => me.rpc('search_feed', { q: 'e2e', scope: 'mine_past' }), 'my past games')
+    expect(mine.error).toBeNull()
+    const ids = (mine.data as { events: string[] }).events
+    if (ids.length) {
+      const attended = await q(() => me.from('event_attendees').select('event_id').eq('user_id', myId).in('event_id', ids), 'attended')
+      expect(new Set((attended.data ?? []).map(r => r.event_id)).size).toBe(ids.length)
+    }
+  })
+
+  test('too short or too long a search is refused', async () => {
+    for (const text of ['a', 'x'.repeat(200)]) {
+      const res = await q(() => anon.rpc('search_feed', { q: text }), `search ${text.length} chars`)
+      expect(res.error?.code).toBe('22023')
+    }
   })
 })

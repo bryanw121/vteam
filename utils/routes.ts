@@ -76,6 +76,8 @@ export const routes = {
   /** Events tab; `view` puts filters and a day in the link (`/?type=tournament&day=2026-11-14`). */
   events: (view: ViewOf<'feed'> = {}) => href(withView('/', VIEW.feed, view)),
   clubs: (view: ViewOf<'clubs'> = {}) => href(withView('/clubs', VIEW.clubs, view)),
+  /** Search games, hosts and clubs (#176); public. */
+  search: (view: ViewOf<'search'> = {}) => href(withView('/search', VIEW.search, view)),
   chat: () => href('/chat'),
   /** Your own Profile tab; `{ edit: true }` opens the profile editor. */
   profile: (view: ViewOf<'profile'> = {}) => href(withView('/profile', VIEW.profile, view)),

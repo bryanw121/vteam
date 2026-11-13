@@ -92,6 +92,11 @@ export const SCREENS = {
   'club-detail-guest': { route: `/club/${IDS.club.indoor}`, signedIn: false, ready: 'Austin Indoor League', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts'] },
   'club-create': { route: '/club/create', sources: ['app/(app)/club/create.tsx'] },
 
+  // ── Search (#176) ──────────────────────────────────────────────────────
+  'search': { route: '/search?q=sand', ready: 'Sand Doubles at Butler', sources: ['app/(app)/search.tsx', 'hooks/useSearch.ts', 'hooks/useRecentSearches.ts', 'utils/search.ts'] },
+  'search-empty': { route: '/search?q=zzzz', ready: 'Nothing matches', sources: ['app/(app)/search.tsx'] },
+  'search-guest': { route: '/search?q=zilker', signedIn: false, ready: 'Grass Triples at Zilker', sources: ['app/(app)/search.tsx', 'hooks/useSearch.ts'] },
+
   // ── Chat ────────────────────────────────────────────────────────────────
   'chat-list': { route: '/chat', ready: 'Jordan', sources: ['app/(app)/(tabs)/(main)/chat.tsx', 'hooks/useConversations.ts', 'hooks/useChatUnread.tsx', 'hooks/useOpenDm.ts'] },
   'chat-conversation': {
