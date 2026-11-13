@@ -99,6 +99,29 @@ function rpcHandlers(db, signedIn, now) {
       ])).rows
       return { events, tournaments, external, previews: previews(events.map(e => e.id)) }
     },
+    // Search (#176): plain substring matching over the fixtures (the real one adds typo tolerance).
+    search_feed: ({ q, scope = 'upcoming' }) => {
+      const needle = String(q ?? '').trim().toLowerCase()
+      const has = v => typeof v === 'string' && v.toLowerCase().includes(needle)
+      const nowIso = new Date(nowMs).toISOString()
+      const name = p => [p?.first_name, p?.last_name].filter(Boolean).join(' ')
+      const events = db.rowsOf('events').filter(e => !e.cancelled_at)
+      if (scope === 'mine_past') {
+        if (!signedIn) return { events: [], external: [], hosts: [], clubs: [] }
+        const mine = new Set(db.rowsOf('event_attendees').filter(a => a.user_id === ME && a.status === 'attending').map(a => a.event_id))
+        return { events: events.filter(e => mine.has(e.id) && e.event_date < nowIso && (has(e.title) || has(e.location))).map(e => e.id).slice(0, 20), external: [], hosts: [], clubs: [] }
+      }
+      const upcoming = events.filter(e => e.event_date >= nowIso)
+      const hostIds = [...new Set(upcoming.map(e => e.created_by).filter(Boolean))]
+      return {
+        events: upcoming.filter(e => has(e.title) || has(e.location) || has(name(profile(e.created_by))) || has(profile(e.created_by)?.username)).map(e => e.id).slice(0, 20),
+        external: db.rowsOf('external_sessions').filter(x => !x.canceled && x.starts_at >= nowIso && (has(x.title) || has(x.venue))).slice(0, 20),
+        hosts: hostIds.map(profile).filter(p => p && (has(name(p)) || has(p.username)))
+          .map(p => ({ id: p.id, username: p.username, first_name: p.first_name, last_name: p.last_name, avatar_url: p.avatar_url, upcoming: upcoming.filter(e => e.created_by === p.id).length })),
+        clubs: db.rowsOf('clubs').filter(c => has(c.name) || has(c.location_name))
+          .map(c => ({ id: c.id, name: c.name, avatar_url: c.avatar_url, location_name: c.location_name, membership_type: c.membership_type, members: db.rowsOf('club_members').filter(m => m.club_id === c.id).length })),
+      }
+    },
     get_event_card_attendee_previews: ({ p_event_ids }) => previews(p_event_ids ?? []),
     get_my_conversations: () => (signedIn ? myConversations() : []),
     get_chat_unread_count: () => (signedIn ? myConversations().reduce((n, c) => n + c.unread_count, 0) : 0),

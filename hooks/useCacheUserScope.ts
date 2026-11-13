@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { invalidate, removeQueries } from '../lib/query'
 import { clearPendingAction } from '../utils/pendingAction'
+import { clearRecentSearches } from './useRecentSearches'
 import { useSession } from '../contexts/session'
 import { clearScrollMemory } from '../utils/scrollMemory'
 import { resetChatReadState } from './useConversations'
@@ -11,7 +12,7 @@ import { discardSeededSnapshot, setSnapshotOwner, snapshotOwner } from '../lib/q
  * counts, the viewer's own profile...). 'feed' is not here: `useMonthEvents`
  * resets it on a user change itself. 'tags' is the same for everyone.
  */
-export const USER_SCOPED_PREFIXES = ['admin', 'event', 'tournament', 'club', 'conversations', 'conversation', 'profile', 'settings', 'history', 'cheersSummary', 'friends'] as const
+export const USER_SCOPED_PREFIXES = ['admin', 'event', 'tournament', 'club', 'conversations', 'conversation', 'profile', 'settings', 'history', 'cheersSummary', 'friends', 'search'] as const
 
 /**
  * Drop user-scoped cache entries whenever the signed-in user changes (sign in,
@@ -35,6 +36,8 @@ export function useCacheUserScope(): void {
     if (previous === undefined || previous === userId) return
     // A join a guest started belongs to whoever was signing in, not to the next person on this device (#229).
     if (previous && !userId) clearPendingAction()
+    // Their recent searches too (#176).
+    if (previous) clearRecentSearches(previous)
     USER_SCOPED_PREFIXES.forEach(p => removeQueries(p))
     USER_SCOPED_PREFIXES.forEach(p => invalidate(p))
     // Remembered scroll offsets belong to the previous user's screens too.

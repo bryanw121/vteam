@@ -456,6 +456,24 @@ export type ExternalSession = Pick<
   | 'starts_at' | 'ends_at' | 'signup_url' | 'signup_label' | 'note' | 'verified_at' | 'region'
 >
 
+/** Search (#176): what to search. `mine_past` = the viewer's own attended games of the last year. */
+export type SearchScope = 'upcoming' | 'mine_past'
+
+/** A host with upcoming games, as `search_feed` returns them (public profile columns only). */
+export type SearchHost = Pick<Profile, 'id' | 'username' | 'first_name' | 'last_name' | 'avatar_url'> & { upcoming: number }
+
+/** A club, as `search_feed` returns it. */
+export type SearchClub = { id: string; name: string; avatar_url: string | null; location_name: string | null; membership_type: string; members: number }
+
+/** `search_feed` as returned: event ids, best first (the cards load separately). */
+export type SearchFeedResult = { events: string[]; external: ExternalSession[]; hosts: SearchHost[]; clubs: SearchClub[] }
+
+export type SearchHostRowProps = { host: SearchHost; onPress: () => void }
+export type SearchClubRowProps = { club: SearchClub; onPress: () => void }
+
+/** What the Search screen shows. */
+export type SearchResults = { events: EventWithDetails[]; external: ExternalSession[]; hosts: SearchHost[]; clubs: SearchClub[] }
+
 /** One division of an outside league or tournament: its cap and, where the organizer lists it, how many teams are confirmed (counts only). */
 export type ProgramDivision = { name: string; cap?: number; confirmed?: number }
 

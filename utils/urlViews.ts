@@ -43,6 +43,8 @@ export const VIEW = {
     filter: oneOf(['joined', 'nearby', 'popular'] as const, 'joined'),
     q: text(60),
   },
+  /** Search (#176): `/search?q=zilker&scope=mine_past`. */
+  search: { q: text(60), scope: oneOf(['upcoming', 'mine_past'] as const, 'upcoming') },
   book: { day: text(10), surface: oneOf<SurfaceFilter>(SURFACES, 'any') },
   profile: { edit: flag },
   badges: { badge: text(40) },
