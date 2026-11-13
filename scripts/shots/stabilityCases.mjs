@@ -37,6 +37,7 @@ export const LINK_CASES = [
   { view: 'tournaments', path: '/tournaments?view=past', keep: { view: 'past' }, change: { testId: 'tournaments-upcoming' }, after: { view: null } },
   { view: 'tournaments', path: '/tournaments?host=NAGVA', keep: { host: 'NAGVA' }, change: { text: 'All hosts', exact: false }, after: { host: null } },
   { view: 'leagues', path: '/leagues?host=ACES', keep: { host: 'ACES' }, change: { text: 'All hosts', exact: false }, after: { host: null } },
+  { view: 'search', path: '/search?q=sand', keep: { q: 'sand' }, change: { testId: 'search-scope-mine_past' }, after: { scope: 'mine_past' } },
   { view: 'clubs', path: '/clubs?filter=popular&q=sand', keep: { filter: 'popular', q: 'sand' }, change: { text: 'Near me' }, after: { filter: 'nearby' }, tabSwitch: 'events' },
   // The mock has no court calendars, so Book draws no surface chips: the link is only checked to stay.
   { view: 'book', path: '/book?day={day2}&surface=sand', keep: { day: '{day2}', surface: 'sand' } },

@@ -485,12 +485,17 @@ export default function EventsScreen() {
       onPress={toggleNotifPanel}
     />
   )
-  const headerRight = shareButton ? (
+  // Search (#176): games, places, hosts and clubs; `/` opens it on desktop web.
+  const searchButton = (
+    <IconButton icon="search-outline" label="Search" size={44} onPress={() => router.push(routes.search())} testID="events-search-button" />
+  )
+  const headerRight = (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
       {shareButton}
+      {searchButton}
       {accountButton}
     </View>
-  ) : accountButton
+  )
 
   // A refresh failed while older events are on screen (cache or last visit's
   // saved feed): say so rather than silently showing what may be out of date.

@@ -437,6 +437,43 @@ test.describe('no-show flag (#151)', () => {
 })
 
 /**
+ * Search (#176): search_feed runs as the caller (SECURITY INVOKER), so a guest
+ * gets only what the guest feed already shows, and never past games.
+ */
+test.describe('search (#176)', () => {
+  test('guests can search; every game id is one they can already read', async () => {
+    const res = await q(() => anon.rpc('search_feed', { q: 'e2e' }), 'anon search_feed')
+    expect(res.error).toBeNull()
+    const found = res.data as { events: string[]; hosts: Record<string, unknown>[] }
+    if (found.events.length) {
+      const direct = await q(() => anon.from('events').select('id').in('id', found.events), 'anon events by id')
+      expect((direct.data ?? []).length).toBe(found.events.length)
+    }
+    // Hosts carry public profile columns only.
+    for (const h of found.hosts) expect(Object.keys(h).sort()).toEqual(['avatar_url', 'first_name', 'id', 'last_name', 'upcoming', 'username'])
+  })
+
+  test('past games are for signed-in players only, and only their own', async () => {
+    const guest = await q(() => anon.rpc('search_feed', { q: 'e2e', scope: 'mine_past' }), 'anon mine_past')
+    expect((guest.data as { events: string[] }).events).toEqual([])
+    const mine = await q(() => me.rpc('search_feed', { q: 'e2e', scope: 'mine_past' }), 'my past games')
+    expect(mine.error).toBeNull()
+    const ids = (mine.data as { events: string[] }).events
+    if (ids.length) {
+      const attended = await q(() => me.from('event_attendees').select('event_id').eq('user_id', myId).in('event_id', ids), 'attended')
+      expect(new Set((attended.data ?? []).map(r => r.event_id)).size).toBe(ids.length)
+    }
+  })
+
+  test('too short or too long a search is refused', async () => {
+    for (const text of ['a', 'x'.repeat(200)]) {
+      const res = await q(() => anon.rpc('search_feed', { q: text }), `search ${text.length} chars`)
+      expect(res.error?.code).toBe('22023')
+    }
+  })
+})
+
+/**
  * #111: signed-in RPCs are no longer executable by anon. Skips while the
  * migration is not on beta (anon can still call them then).
  * TODO(#111): drop the skip once 20261028160000_definer_search_path is applied.
