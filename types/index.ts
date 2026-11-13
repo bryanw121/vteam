@@ -2304,3 +2304,14 @@ export type SaveBringItemsArgs = {
 }
 export type ClaimBringItemArgs = { p_item_id: string; p_quantity: number }
 export type ReleaseBringItemArgs = { p_item_id: string }
+
+/** `/api/startup` (#216): the update check rows and ad lists, with windows so a stale copy can be filtered by time. */
+export type StartupConfig = {
+  appConfig: { platform: string; min_version: string; store_url: string | null; message: string | null }[]
+  banners: (AdBanner & { starts_at: string | null; ends_at: string | null; is_active: boolean })[]
+  sponsored: { event_id: string; starts_at: string | null; ends_at: string | null }[]
+}
+
+/** Which way this page load read the startup config (the #216 keep-or-revert experiment). */
+export type StartupArm = 'cdn' | 'direct'
+
