@@ -334,7 +334,10 @@ jobs:
     steps:
       - name: All shards passed
         run: |
-          if [ "${{ needs.e2e-shard.result }}" != "success" ]; then
+          # A skipped matrix means build-web did not produce its artifact; the
+          # build job reports that root cause. Do not turn it into a second,
+          # misleading Playwright failure.
+          if [ "${{ needs.e2e-shard.result }}" != "success" ] && [ "${{ needs.e2e-shard.result }}" != "skipped" ]; then
             echo "::error::e2e shards: ${{ needs.e2e-shard.result }}"
             exit 1
           fi
