@@ -98,6 +98,7 @@ export const NOTIFICATION_PREF_TYPES = [
   'event_reminder',
   'late_dropout',
   'bring_item_uncovered',
+  'new_game',
   'club_poll',
 ] as const
 
@@ -561,7 +562,25 @@ export type MembershipType = 'open' | 'invite'
 export type MajorCity = Tables<'major_cities'>
 
 /** The viewer's private settings (`user_settings`, owner-only RLS), with the home city embedded. */
+/** New game alerts (#170): when a game posted by a club or host may become an alert. */
+export type GameAlertSurface = 'indoor' | 'sand' | 'grass'
+export type GameAlertTime = 'weekday_evening' | 'weekday_day' | 'weekend'
+
+/** `user_settings.game_alerts` (jsonb), parsed. Empty filter lists mean any. */
+export type GameAlertPrefs = {
+  clubs: boolean
+  hosts: boolean
+  surfaces: GameAlertSurface[]
+  levels: string[]
+  times: GameAlertTime[]
+}
+
+/** The three "only when it's" filter rows on the New game alerts card. */
+export type GameAlertFilterKey = 'surfaces' | 'levels' | 'times'
+
 export type UserSettings = Pick<Tables<'user_settings'>, 'user_id' | 'home_city_id' | 'seen_banners' | 'reminder_lead_minutes'> & {
+  /** New game alerts (`user_settings.game_alerts`). Missing reads as the defaults. */
+  game_alerts?: GameAlertPrefs
   /** Notification switches (`useMyProfile` exposes them as `profile.notification_prefs`). Missing reads as the defaults. */
   notification_prefs?: NotificationPrefs | null
   home_city: MajorCity | null

@@ -77,6 +77,7 @@ export const RLS_MATRIX: Record<TableName, RlsExpectation> = {
   feedback_submissions: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true } },
   friend_requests: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'requester_id', ownRowsOnly: true, noInsertAsOther: true }, why: 'only the two people on a pending request see it; written only by the friend RPCs' },
   friendships: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true }, why: 'one row per direction, each person reads only their own; written only by the friend RPCs' },
+  game_alert_log: { anonSelect: 'none', anonInsert: 'none', signedInSelect: 'none', why: 'service-only: one new game alert per player and event (#170)' },
   major_cities: { anonSelect: 'all', anonInsert: 'none', why: 'reference list' },
   message_reactions: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: false, noInsertAsOther: true } },
   messages: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'sender_id', ownRowsOnly: false, noInsertAsOther: true } },

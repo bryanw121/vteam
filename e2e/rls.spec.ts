@@ -437,6 +437,48 @@ test.describe('no-show flag (#151)', () => {
 })
 
 /**
+ * New game alerts (#170): the ledger is service-only, the job can't be called
+ * by clients, and the per-club switch only changes the caller's own membership.
+ */
+test.describe('new game alerts (#170)', () => {
+  test('game_alert_log is closed to guests and signed-in users', async () => {
+    for (const [client, who] of [[anon, 'anon'], [me, 'signed in']] as const) {
+      const read = await q(() => client.from('game_alert_log').select('user_id').limit(1), `${who} read game_alert_log`)
+      expect(read.data ?? [], who).toEqual([])
+      const ins = await q(() => client.from('game_alert_log').insert({ user_id: myId, event_id: crypto.randomUUID() }), `${who} insert game_alert_log`)
+      expect(ins.error?.code, who).toBe(RLS_DENIED)
+    }
+  })
+
+  test('nobody but the cron job can run send_new_game_alerts', async () => {
+    for (const [client, who] of [[anon, 'anon'], [me, 'signed in']] as const) {
+      const res = await q(() => client.rpc('send_new_game_alerts'), `${who} send_new_game_alerts`)
+      expect(res.error?.code, who).toBe(RLS_DENIED)
+    }
+  })
+
+  test('set_club_game_alerts: guests cannot call it, members of nothing get 42501', async () => {
+    const guest = await q(() => anon.rpc('set_club_game_alerts', { p_club_id: crypto.randomUUID(), p_on: false }), 'anon set_club_game_alerts')
+    expect(guest.error?.code).toBe(RLS_DENIED)
+    const stranger = await q(() => me.rpc('set_club_game_alerts', { p_club_id: crypto.randomUUID(), p_on: false }), 'set_club_game_alerts not a member')
+    expect(stranger.error?.code).toBe(RLS_DENIED)
+  })
+
+  test('a user cannot write a new_game notification', async () => {
+    const ins = await q(
+      () => me.from('notifications').insert({ user_id: BUDDY_ID, notification_type: 'new_game', title: 'x', body: 'x', data: {} }),
+      'insert new_game notification',
+    )
+    expect(ins.error).not.toBeNull()
+  })
+
+  test("another player's game alert settings are not readable", async () => {
+    const res = await q(() => me.from('user_settings').select('game_alerts').eq('user_id', BUDDY_ID), "buddy's game_alerts")
+    expect(res.data ?? []).toEqual([])
+  })
+})
+
+/**
  * Club polls (#175): members read polls, options and votes; nobody writes the
  * tables directly; the RPCs check ownership and membership themselves.
  */

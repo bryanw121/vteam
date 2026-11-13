@@ -18,6 +18,7 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationPrefType, string> = {
   event_reminder: 'Event reminders',
   late_dropout: 'Late dropouts (hosts)',
   bring_item_uncovered: 'Gear still needed (hosts)',
+  new_game: 'New game posted',
   club_poll: 'Club polls',
   friend_request: 'Friend requests',
   friend_accepted: 'Friend request accepted',
