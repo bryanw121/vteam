@@ -3,7 +3,6 @@ import { FlatList, Modal, TouchableOpacity, View } from 'react-native'
 import { Text } from '../ui/Text'
 import { theme } from '../../constants'
 import { TOURNAMENT_GENERIC_ERROR } from '../../constants/tournamentCopy'
-import { buildMemberSearchFilter } from '../../utils'
 import { Button } from '../Button'
 import { Input } from '../Input'
 import type { Profile, TournamentTeamWithRoster } from '../../types'
@@ -28,12 +27,11 @@ export function InviteModal({ visible, onClose, viewerId, teams, invitingId, onI
   const close = () => { setQuery(''); onClose() }
 
   useEffect(() => {
-    const filter = query.trim() ? buildMemberSearchFilter(query) : null
-    if (!filter) { setResults([]); setError(null); return }
+    if (!query.trim()) { setResults([]); setError(null); return }
     let cancelled = false
     const t = setTimeout(async () => {
       try {
-        const data = await searchProfiles(filter, viewerId)
+        const data = await searchProfiles(query, viewerId)
         if (!cancelled) { setResults(data ?? []); setError(null) }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error && e.message ? e.message : TOURNAMENT_GENERIC_ERROR)

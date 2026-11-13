@@ -3097,6 +3097,20 @@ export type Database = {
       schelagg_safe_date: { Args: { v: string }; Returns: string }
       schema_fingerprint: { Args: never; Returns: Json }
       schema_pending_changes: { Args: never; Returns: Json }
+      search_members: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          first_name: string
+          id: string
+          last_name: string
+          position: string[]
+          selected_border: string
+          skill_level: string
+          username: string
+        }[]
+      }
       send_event_reminders: { Args: never; Returns: number }
       send_friend_request: { Args: { p_user_id: string }; Returns: string }
       send_kudos_reminders: { Args: never; Returns: undefined }

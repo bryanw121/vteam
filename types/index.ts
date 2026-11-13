@@ -2168,6 +2168,10 @@ export type UrlCodec<T> = {
 /** Field errors on the feedback form (#228: shown under each field, not as an alert). */
 export type FeedbackFieldErrors = { title?: string; description?: string; platform?: string }
 
+/** A row of the `search_members` RPC (lib/memberSearch.ts). */
+export type MemberSearchResult = Pick<Profile, 'id' | 'username' | 'first_name' | 'last_name' | 'avatar_url' | 'position' | 'created_at'>
+  & Pick<Partial<Profile>, 'selected_border' | 'skill_level'>
+
 // ─── What to bring (#256) ─────────────────────────────────────────────────────
 
 /** One person bringing (part of) an item. Names come back only for signed-in viewers. */

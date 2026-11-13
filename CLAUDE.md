@@ -318,6 +318,21 @@ Profile → **Experimental features** (`settings/experimental.tsx`) lists one ca
 ### Login accepts email or username
 If the login field doesn't look like an email, `login.tsx` calls `signInWithUsername` (`lib/usernameAuth.ts`), which invokes the `login-with-username` edge function: it resolves the username to an email server-side (service role; `get_email_by_username` is not executable by clients), signs in, and returns only a session (the app calls `setSession`) or a generic "Incorrect username or password" for an unknown username, a wrong password and any Auth-side failure (Auth's own 429 included: only real usernames reach Auth), padded to a minimum response time. It limits attempts with `check_rate_limit` per 15 minutes: 100 attempts per IP, and 30 failed attempts per username (read before every attempt, counted only on failure, so signing in never uses it up and the shared e2e account isn't locked out by CI), and forwards the caller's IP to Auth (`Sb-Forwarded-For` with the project's secret key; see `supabase/functions/README.md`). Never send an email address back to a signed-out caller. The email-code form treats "no account for this email" like a sent code.
 
+### Rate limiting
+Server-side, Postgres-backed (`public.rate_limits`, fixed windows). `check_rate_limit(key, max, window_seconds)` counts a hit and returns whether the key is under its limit (edge functions call it with the service role); `enforce_rate_limit(...)` raises SQLSTATE `PT429`, which PostgREST returns as HTTP 429 "Too many requests". Both are definer/service-role only. Current limits (keep them generous; CI signs `e2ebot` in and posts often):
+
+| Surface | Limit | Where |
+| --- | --- | --- |
+| Username sign-in | 30 / 15 min per username, 100 / 15 min per IP | `login-with-username` edge function |
+| New DM conversation | 30 / hour per user (opening an existing DM is free) | `find_or_create_dm` |
+| Member search | 120 / minute per user | `search_members` RPC (`lib/memberSearch.ts`) |
+| Messages | 60 / minute per user | trigger on `messages` |
+| Event / tournament / club-post comments | 20 / minute per user each | triggers |
+| Club posts | 10 / minute per user | trigger |
+| Feedback | 5 / hour per user | trigger on `feedback_submissions` |
+
+Add a limit to a new insert path with `create trigger ... before insert ... execute function public.rate_limit_insert('<bucket>', '<max>', '<window seconds>')`. Email sign-in, registration and password reset go straight to Supabase Auth, whose own per-IP limits apply (Dashboard → Authentication → Rate Limits). pg_cron `prune-rate-limits` deletes counters older than a day.
+
 ### Private data stays off public rows
 Everyone (including signed-out visitors) can read `profiles`, `event_attendees`, `cheers` rows, so private values live elsewhere:
 - notification switches: `user_settings.notification_prefs` (owner-only; `useMyProfile` reads and writes it). `profiles.notification_prefs` is legacy and always the default.
