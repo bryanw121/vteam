@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, Image, Modal, Pressable, Platform, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, Image, Modal, Pressable, Platform, StyleSheet } from 'react-native'
 import { toast } from '../../../lib/toast'
 import { Text, TextInput } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
+import { DocScrollView } from '../../../components/DocScrollView'
 import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
@@ -341,7 +342,9 @@ export default function ClubDetailScreen() {
           />
         </>
       ) : (
-        <ScrollView
+        <DocScrollView
+          docScroll={false}
+          memoryKey={`club:${id}`}
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: 40 }}
           refreshControl={
@@ -688,7 +691,7 @@ export default function ClubDetailScreen() {
             )}
           </View>
 
-        </ScrollView>
+        </DocScrollView>
       )}
 
       {/* Delete modal */}
