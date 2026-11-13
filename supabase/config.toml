@@ -40,3 +40,8 @@ verify_jwt = false
 # verifies the user JWT and the function reads the user id from it.
 [functions.delete-account]
 verify_jwt = true
+
+# Admin-only (#10): called by scripts/generate-badge-art.mjs with an admin's
+# session. The gateway verifies the JWT; the function checks admin itself.
+[functions.generate-badge-art]
+verify_jwt = true
