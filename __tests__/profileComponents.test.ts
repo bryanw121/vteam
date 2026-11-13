@@ -10,6 +10,12 @@ function badge(type: string, tier: number, displayOrder: number | null = null): 
 }
 
 describe('PROFILE_BORDERS drive the swatches', () => {
+  it('uses the actual elemental frame for elemental picker previews', () => {
+    const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'components', 'profile', 'BorderSwatch.tsx'), 'utf8')
+    expect(source).toContain("borderDef?.type === 'storm'")
+    expect(source).toContain('<ElementalBorderFrame')
+  })
+
   it('every border has gradient stops for its swatch', () => {
     expect(PROFILE_BORDERS.length).toBeGreaterThan(0)
     for (const border of PROFILE_BORDERS) {

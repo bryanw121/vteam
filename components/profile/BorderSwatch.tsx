@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../../constants/theme'
 import type { ProfileBorderDef } from '../../constants/badges'
+import { ElementalBorderFrame } from './ElementalBorderFrame'
 
 type Props = {
   label: string
@@ -30,7 +31,11 @@ export function BorderSwatch({ label, borderDef, selected, unlocked, onPress, si
   const outer = dim.swatch + dim.ring * 2
   const blocked = !unlocked || disabled
 
-  const ring = borderDef ? (
+  const ring = borderDef?.type === 'storm' || borderDef?.type === 'aether' ? (
+    <ElementalBorderFrame type={borderDef.type} size={outer} ring={Math.max(dim.ring * 2, 6)} dimmed={!unlocked}>
+      {!unlocked && <Ionicons name="lock-closed" size={dim.lockIcon} color={theme.colors.subtext} />}
+    </ElementalBorderFrame>
+  ) : borderDef ? (
     <View style={{ width: outer, height: outer, borderRadius: outer / 2, overflow: 'hidden', opacity: unlocked ? 1 : 0.3 }}>
       <LinearGradient colors={borderDef.ringColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <View style={{
