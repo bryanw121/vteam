@@ -125,7 +125,12 @@ Deno.serve(async (req) => {
     if (upload.error) throw upload.error
     const url = db.storage.from(BADGE_BUCKET).getPublicUrl(path).data.publicUrl
 
-    const { error: rowError } = await db.from('badge_art').upsert(
+    // The service client is untyped (no generated Database types in the functions), so
+    // supabase-js 2.99 types every table's rows as `never`: name the one call used here.
+    const badgeArt = db.from('badge_art') as unknown as {
+      upsert(row: Record<string, unknown>, options: { onConflict: string }): PromiseLike<{ error: { message: string } | null }>
+    }
+    const { error: rowError } = await badgeArt.upsert(
       {
         badge_type: spec.badge,
         tier: spec.tier,
