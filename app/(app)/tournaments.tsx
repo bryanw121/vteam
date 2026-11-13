@@ -26,6 +26,50 @@ import type { TournamentListItem } from '../../types'
 
 type Tab = 'upcoming' | 'past'
 
+// One row's layout, shared by the row and its loading placeholder so they are the same height (#288).
+const ROW_STYLE = [shared.card, { flexDirection: 'row' as const, alignItems: 'center' as const, gap: theme.spacing.md, marginBottom: theme.spacing.sm, minHeight: 72 }]
+const DATE_BLOCK_STYLE = { width: 52, alignItems: 'center' as const, paddingVertical: 6, borderRadius: theme.radius.md, backgroundColor: theme.colors.time, borderWidth: 1, borderColor: theme.colors.timeBorder }
+const MONTH_STYLE = { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.timeInk, textTransform: 'uppercase' as const }
+const DAY_STYLE = { fontFamily: theme.fonts.display, fontSize: theme.font.size.lg, color: theme.colors.timeInk }
+const TITLE_STYLE = { fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.text }
+const META_STYLE = { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext }
+const SMALL_STYLE = { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext }
+/** A blank line of text in a placeholder: the same font metrics as the real line, with a bar instead of words. */
+const BLANK = '\u00a0'
+/** About as long as a real format + teams line ("Pool Play + Bracket · 8/8 teams"). */
+const TYPICAL_META = 'Pool Play + Bracket · 8/8 teams'
+
+/**
+ * The club tournaments while they load on a first visit (returning viewers have them from the
+ * device): the section header and two rows in the final layout, so the outside tournaments below
+ * don't get pushed down when they arrive.
+ */
+function ClubTournamentsSkeleton({ showHeader }: { showHeader: boolean }) {
+  return (
+    <View testID="tournaments-club-loading" accessibilityLabel="Loading club tournaments">
+      {showHeader && <Text accessibilityRole="header" style={shared.programSectionTitle}>On vteam</Text>}
+      {[0, 1].map(i => (
+        <View key={i} style={ROW_STYLE} aria-hidden importantForAccessibility="no-hide-descendants">
+          <View style={[DATE_BLOCK_STYLE, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+            <Text style={MONTH_STYLE}>{BLANK}</Text>
+            <Text style={DAY_STYLE}>{BLANK}</Text>
+          </View>
+          <View style={{ flex: 1, gap: 4 }}>
+            <View style={{ alignSelf: 'flex-start', width: '70%', borderRadius: theme.radius.sm, backgroundColor: theme.colors.border }}><Text style={TITLE_STYLE}>{BLANK}</Text></View>
+            <View style={{ alignSelf: 'flex-start', width: '50%', borderRadius: theme.radius.sm, backgroundColor: theme.colors.borderSoft }}><Text style={META_STYLE}>{BLANK}</Text></View>
+            {/* The real badge line wraps on narrow phones; the same badge and a typical line, hidden, wrap the same way. */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
+              <View style={{ borderRadius: theme.radius.sm, backgroundColor: theme.colors.borderSoft }}><View style={{ opacity: 0 }}><TourneyStatusBadge status="published" /></View></View>
+              <View style={{ borderRadius: theme.radius.sm, backgroundColor: theme.colors.borderSoft }}><Text style={[SMALL_STYLE, { opacity: 0 }]}>{TYPICAL_META}</Text></View>
+            </View>
+          </View>
+          <View style={{ width: 18 }} />
+        </View>
+      ))}
+    </View>
+  )
+}
+
 function TournamentRow({ item, onPress }: { item: TournamentListItem; onPress: () => void }) {
   const d = new Date(item.start_date)
   const meta = [item.club_name, item.location].filter(Boolean).join(' · ')
@@ -34,21 +78,21 @@ function TournamentRow({ item, onPress }: { item: TournamentListItem; onPress: (
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${item.title}, ${d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`}
-      style={[shared.card, { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, marginBottom: theme.spacing.sm, minHeight: 72 }]}
+      style={ROW_STYLE}
       testID={`tournament-row-${item.id}`}
     >
-      <View style={{ width: 52, alignItems: 'center', paddingVertical: 6, borderRadius: theme.radius.md, backgroundColor: theme.colors.time, borderWidth: 1, borderColor: theme.colors.timeBorder }}>
-        <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.timeInk, textTransform: 'uppercase' }}>
+      <View style={DATE_BLOCK_STYLE}>
+        <Text style={MONTH_STYLE}>
           {d.toLocaleDateString('en-US', { month: 'short' })}
         </Text>
-        <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.lg, color: theme.colors.timeInk }}>{d.getDate()}</Text>
+        <Text style={DAY_STYLE}>{d.getDate()}</Text>
       </View>
       <View style={{ flex: 1, gap: 4 }}>
-        <Text numberOfLines={1} style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.text }}>{item.title}</Text>
-        {!!meta && <Text numberOfLines={1} style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext }}>{meta}</Text>}
+        <Text numberOfLines={1} style={TITLE_STYLE}>{item.title}</Text>
+        {!!meta && <Text numberOfLines={1} style={META_STYLE}>{meta}</Text>}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
           <TourneyStatusBadge status={item.status} />
-          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext }}>
+          <Text style={SMALL_STYLE}>
             {FORMAT_LABELS[item.format] ?? item.format} · {item.team_count}{item.max_teams ? `/${item.max_teams}` : ''} teams
           </Text>
         </View>
@@ -96,15 +140,14 @@ export default function TournamentsScreen() {
     : null
   const clubLoading = list.isLoading && !list.data
   const clubHeader = clubLoading ? (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, paddingVertical: theme.spacing.sm }} testID="tournaments-club-loading">
-      <Spinner label="Loading club tournaments" size="small" color={theme.colors.subtext} />
-      <Text style={shared.caption}>Checking your clubs…</Text>
-    </View>
+    // Same space the rows will take, so nothing below moves when they arrive (#288).
+    <ClubTournamentsSkeleton showHeader={tab === 'upcoming'} />
   ) : list.error && !list.data ? (
     <TouchableOpacity onPress={() => { void list.refetch({ force: true }) }} accessibilityRole="button" style={{ paddingVertical: theme.spacing.sm, minHeight: 44, justifyContent: 'center' }}>
       <Text style={shared.caption}>Couldn't load your clubs' tournaments. Tap to retry.</Text>
     </TouchableOpacity>
-  ) : outsideNode && items.length ? (
+  ) : tab === 'upcoming' && items.length ? (
+    // Shown whenever there are club tournaments on Upcoming, like its loading placeholder, so the list never gains a header after it painted.
     <Text accessibilityRole="header" style={shared.programSectionTitle}>On vteam · {items.length}</Text>
   ) : null
   // Empty only once both lists have answered and neither has anything.

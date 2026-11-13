@@ -39,7 +39,7 @@ export const SCREENS = {
   // ── Events ──────────────────────────────────────────────────────────────
   'events-feed': {
     route: '/', ready: 'Lunchtime Pepper',
-    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'app/(app)/(tabs)/(main)/_layout.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/ExternalProgramCard.tsx', 'hooks/useExternalPrograms.ts',
+    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'hooks/useFeedDay.ts', 'hooks/useFeedHiding.ts', 'hooks/useEventsNotifications.tsx', 'app/(app)/(tabs)/(main)/_layout.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/ExternalProgramCard.tsx', 'hooks/useExternalPrograms.ts',
       'components/MyEventsRail.tsx', 'components/Pager.tsx', 'hooks/useMonthEvents.ts', 'hooks/useMyUpcomingEvents.ts', 'hooks/useTags.ts', 'utils/feed*.ts', 'utils/eventCardPreviews.ts',
       'utils/monthKeys.ts', 'utils/calendar*.ts', 'constants/events.ts', 'components/RefreshControl*.tsx', 'lib/pullGesture.ts',
       'components/event/ForecastChip.tsx', 'hooks/useForecast.ts', 'utils/forecast.ts', 'constants/weather.ts', 'scripts/shots/fixtures/forecast.mjs',
@@ -56,7 +56,7 @@ export const SCREENS = {
   },
   'events-feed-guest': {
     route: '/', signedIn: false, ready: 'Lunchtime Pepper',
-    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/SignInButton.tsx', 'hooks/useMonthEvents.ts', 'utils/feed*.ts'],
+    sources: ['app/(app)/(tabs)/(main)/index.tsx', 'hooks/useFeedDay.ts', 'hooks/useFeedHiding.ts', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/SignInButton.tsx', 'hooks/useMonthEvents.ts', 'utils/feed*.ts'],
   },
   'event-details': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', sources: EVENT_DETAIL },
   // Game recap (#227): a finished game the viewer played (Your game, Share), and a guest's view of it (the host's next game).

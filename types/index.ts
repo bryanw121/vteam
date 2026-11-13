@@ -10,7 +10,7 @@
 import type { Database, Json, Tables, TablesInsert, TablesUpdate } from './database'
 import type { TabKey } from '../constants/navigation'
 import type { ReactElement, ReactNode } from 'react'
-import type { ActivityIndicatorProps } from 'react-native'
+import type { ActivityIndicatorProps, LayoutChangeEvent, RefreshControlProps, SectionList, ViewInstance } from 'react-native'
 import type { BracketMatchInsert, SetScore, TiebreakerKey } from './tournament'
 
 /** The client's database type. Kept as an alias so callers don't care how it's assembled. */
@@ -898,6 +898,76 @@ export type FeedFilter = 'all' | 'open_play' | 'tournament'
 export type FeedFilterChip = { id: FeedFilter; label: string }
 /** One day of the Events feed. `hiddenCount` counts that day's hidden items; `revealed` = they're shown (dimmed) in `data`. */
 export type FeedDaySection = { date: string; data: EventWithDetails[]; hiddenCount: number; revealed: boolean }
+/** What every Events feed card needs from the screen (#217 part 4), shared by both layouts. */
+export type FeedCardContext = {
+  currentUserId: string | null
+  onRsvp: EventCardRsvpHandler
+  isRsvpPending: (eventId: string) => boolean
+  forecasts: ReadonlyMap<string, ForecastSummary>
+  friendsGoing: ReadonlyMap<string, FriendGoing[]>
+  sponsoredIds: ReadonlySet<string>
+  /** Item id → ads to render right after it (`planFeedAds`). */
+  adPlan: ReadonlyMap<string, FeedAdPlacement[]>
+  hiddenItemIds: ReadonlySet<string>
+  onMore: (event: EventWithDetails) => void
+  onUnhide: (event: EventWithDetails) => void
+}
+/** What both Events layouts take from the screen (#217 part 4). The screen builds the shared pieces once. */
+type EventsFeedLayoutBase = {
+  sections: FeedDaySection[]
+  today: string
+  loading: boolean
+  cards: FeedCardContext
+  onToggleReveal: (key: string) => void
+  /** The pull-to-refresh control, shared by every scroller. */
+  refreshControl: ReactElement<RefreshControlProps>
+  onNearBottom: () => void
+  /** Filter chips, banners and the stale notice. */
+  filterChips: ReactNode
+  /** The "You're going" rail. */
+  rail: ReactNode
+  /** Shown in place of the cards when the filtered feed is empty. */
+  feedEmpty: ReactNode
+  /** Notification popup and the hide sheet, drawn over the layout. */
+  overlays: ReactNode
+  showCalendar: boolean
+  selectedDate: string
+  markedDates: MarkedDates
+  onSelectDate: (date: string) => void
+}
+
+export type EventsFeedDesktopProps = EventsFeedLayoutBase & {
+  header: ReactNode
+  revealedKeys: ReadonlySet<string>
+  /** "This week" label over the mini calendar (not under the Tournament filter). */
+  calendarLabel: boolean
+  month: string
+  onPrevMonth: () => void
+  onNextMonth: () => void
+  nextUp: EventWithDetails | undefined
+  onPressNextUp: () => void
+}
+
+export type EventsFeedMobileProps = EventsFeedLayoutBase & {
+  /** The header's right side (Today button already added when off this week). */
+  headerRight: ReactNode
+  curWeekPage: number
+  onPrevWeek: () => void
+  onNextWeek: () => void
+  onToday: () => void
+  docScrollActive: boolean
+  tabBarHeight: number
+  onHeaderTouchStart: () => void
+  onHeaderTouchEnd: () => void
+  onScrollTabBar: (hidden: boolean) => void
+  feedDocLayout: (e: LayoutChangeEvent) => void
+  screenRootRef: { current: ViewInstance | null }
+  feedContentRef: { current: ViewInstance | null }
+  sectionListRef: { current: SectionList<EventWithDetails, FeedDaySection> | null }
+  /** Each day's y offset in the feed, for scrolling to a picked day. */
+  sectionYRef: { current: Record<string, number> }
+}
+
 /** `useFeedHiding()`: hiding on the Events feed (#217). */
 export type FeedHiding = {
   /** The player hid something (calendar dots then skip hidden items). */

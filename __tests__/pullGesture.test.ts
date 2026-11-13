@@ -79,8 +79,8 @@ describe('doc-scroll wiring (narrow mobile web, where the body scrolls)', () => 
   })
 
   it("the Events feed's hand-rolled doc-scroll branch mounts DocPullToRefresh", () => {
-    const feed = read('app/(app)/(tabs)/(main)/index.tsx')
-    const branch = feed.slice(feed.indexOf('if (docScrollActive) {'), feed.indexOf('if (emptyOrLoading) {'))
+    const feed = read('components/events/EventsFeedMobile.tsx')
+    const branch = feed.slice(feed.indexOf('if (p.docScrollActive) {'), feed.indexOf('} else if (emptyOrLoading) {'))
     expect(branch).toMatch(/<DocPullToRefresh \{\.\.\.refreshControl\.props\} \/>/)
   })
 
