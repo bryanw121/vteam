@@ -36,7 +36,7 @@ export const ANALYTICS_EVENTS = {
   playerSetupCompleted: 'player_setup_completed',
   /** The Events feed's first rows were in hand (#184). props: { ms (since navigation start), source: snapshot | prefetch | fetch, cold } */
   feedFirstPaint: 'feed_first_paint',
-  /** The startup config was read (#216). props: { arm: cdn | direct, source: cdn | direct | fallback, ms } */
+  /** The startup config was read (#216). props: { arm: cdn | direct, source: cdn | direct | fallback, part: version | ads, ms } */
   startupTiming: 'startup_timing',
   /** A guest tapped Join / Join waitlist / Request and was sent to sign up (#229). props: { action } */
   joinIntentSaved: 'join_intent_saved',

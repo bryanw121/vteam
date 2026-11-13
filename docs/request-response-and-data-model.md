@@ -450,9 +450,9 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 
 | Table or view | Frontend/server call sites |
 |---|---|
-| `ad_banners` | [`lib/startupConfig.ts:32`](../lib/startupConfig.ts#L32) |
+| `ad_banners` | [`lib/startupConfig.ts:37`](../lib/startupConfig.ts#L37) |
 | `app_admins` | [`supabase/functions/generate-badge-art/index.ts:82`](../supabase/functions/generate-badge-art/index.ts#L82) |
-| `app_config` | [`lib/startupConfig.ts:31`](../lib/startupConfig.ts#L31) |
+| `app_config` | [`lib/startupConfig.ts:33`](../lib/startupConfig.ts#L33) |
 | `app_events` | [`lib/analytics.ts:159`](../lib/analytics.ts#L159) |
 | `badge_art` | [`hooks/useBadgeArt.ts:26`](../hooks/useBadgeArt.ts#L26)<br>[`supabase/functions/generate-badge-art/index.ts:130`](../supabase/functions/generate-badge-art/index.ts#L130) |
 | `chat_silences` | [`hooks/useSilencedUsers.ts:27`](../hooks/useSilencedUsers.ts#L27)<br>[`supabase/functions/send-chat-push/handler.ts:142`](../supabase/functions/send-chat-push/handler.ts#L142) |
@@ -487,7 +487,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `push_receipts` | [`supabase/functions/check-push-receipts/handler.ts:42`](../supabase/functions/check-push-receipts/handler.ts#L42)<br>[`supabase/functions/send-chat-push/handler.ts:206`](../supabase/functions/send-chat-push/handler.ts#L206)<br>[`supabase/functions/send-notification-push/handler.ts:150`](../supabase/functions/send-notification-push/handler.ts#L150) |
 | `push_tokens` | [`supabase/functions/check-push-receipts/handler.ts:87`](../supabase/functions/check-push-receipts/handler.ts#L87)<br>[`supabase/functions/send-chat-push/handler.ts:151`](../supabase/functions/send-chat-push/handler.ts#L151)<br>[`supabase/functions/send-notification-push/handler.ts:104`](../supabase/functions/send-notification-push/handler.ts#L104)<br>[`utils/pushNotifications.ts:115`](../utils/pushNotifications.ts#L115) |
 | `rate_limits` | [`supabase/functions/login-with-username/handler.ts:67`](../supabase/functions/login-with-username/handler.ts#L67) |
-| `sponsored_events` | [`lib/startupConfig.ts:35`](../lib/startupConfig.ts#L35) |
+| `sponsored_events` | [`lib/startupConfig.ts:40`](../lib/startupConfig.ts#L40) |
 | `tags` | [`hooks/useTags.ts:14`](../hooks/useTags.ts#L14) |
 | `tournament_comments` | [`hooks/tournament/api.ts:141`](../hooks/tournament/api.ts#L141) |
 | `tournament_matches` | [`hooks/tournament/api.ts:170`](../hooks/tournament/api.ts#L170) |
