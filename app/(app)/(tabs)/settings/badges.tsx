@@ -1,3 +1,4 @@
+import { profileAvatarSmallUri } from '../../../../utils'
 import React, { useEffect, useRef, useState } from 'react'
 import {
   Animated,
@@ -172,11 +173,11 @@ export default function BadgesScreen() {
         <View style={[shared.card, { marginTop: theme.spacing.md }]}>
           <Text style={[shared.subheading, { marginBottom: theme.spacing.xs }]}>Profile Border</Text>
           <Text style={[shared.caption, { marginBottom: theme.spacing.md }]}>
-            Unlock borders by earning attendance badges.
+            Unlock borders by earning attendance, hosting, and cheer badges.
           </Text>
 
           <View role="radiogroup" aria-label="Profile border" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.lg }}>
-            <BorderSwatch
+            <BorderSwatch avatarUri={profileAvatarSmallUri(me.profile?.avatar_url)}
               label="None"
               size="lg"
               unlocked
@@ -185,7 +186,7 @@ export default function BadgesScreen() {
               disabled={me.isSaving}
             />
             {PROFILE_BORDERS.map(border => (
-              <BorderSwatch
+              <BorderSwatch avatarUri={profileAvatarSmallUri(me.profile?.avatar_url)}
                 key={border.type}
                 label={border.label}
                 size="lg"

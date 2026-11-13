@@ -12,8 +12,8 @@ import { applyFriendAction, splitRequests } from '../hooks/useFriends'
 import { BEST_FRIEND_LIMIT, FRIEND_COPY, FRIEND_REQUESTS_PER_DAY } from '../constants/friends'
 import { NOTIFICATION_TYPES } from '../types'
 
-/** Notification types later migrations added (reports, #243). */
-const ADDED_AFTER_FRIENDS: readonly string[] = ['bring_item_uncovered', 'report_resolved', 'moderation_warning']
+/** Notification types later migrations added (bring list, reports #243, new game alerts #170). */
+const ADDED_AFTER_FRIENDS: readonly string[] = ['bring_item_uncovered', 'report_resolved', 'moderation_warning', 'new_game']
 import { USER_SCOPED_PREFIXES } from '../hooks/useCacheUserScope'
 import type { Friend, FriendGoing, FriendRequest, FriendsData, ProfileBrief } from '../types'
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react'
-import { ScrollView, Switch, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
@@ -14,7 +14,9 @@ import {
   patchNotificationPrefs,
 } from '../../../../utils/notificationPrefs'
 import { isReminderLead, reminderPreview } from '../../../../utils/reminders'
-import type { NotificationPrefs, NotificationSettingRowProps, NotificationType } from '../../../../types'
+import type { NotificationPrefs, NotificationType } from '../../../../types'
+import { NotificationSettingRow as Row } from '../../../../components/profile/NotificationSettingRow'
+import { GameAlertsCard } from '../../../../components/profile/GameAlertsCard'
 
 export default function NotificationSettingsScreen() {
   useStackBackTitle('Notification settings')
@@ -73,7 +75,8 @@ export default function NotificationSettingsScreen() {
               Choose which updates you want, in the app and as push notifications on your phone.
             </Text>
             {saveFailed ? <Text style={shared.errorText}>Could not save settings. Please try again.</Text> : null}
-            <View style={shared.card} testID="settings-reminders">
+            <GameAlertsCard />
+            <View style={[shared.card, { marginTop: theme.spacing.md }]} testID="settings-reminders">
               <Text style={[shared.labelStrong, { marginBottom: theme.spacing.sm }]}>Reminders</Text>
               <Row
                 label="Before events I'm going to"
@@ -135,34 +138,6 @@ export default function NotificationSettingsScreen() {
           </>
         </ScreenState>
       </ScrollView>
-    </View>
-  )
-}
-
-function Row({ label, subtitle, value, disabled, onValueChange, testID }: NotificationSettingRowProps) {
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: theme.spacing.sm,
-        gap: theme.spacing.md,
-      }}
-    >
-      <View style={{ flex: 1 }}>
-        <Text style={shared.body}>{label}</Text>
-        {subtitle ? <Text style={[shared.captionStrong, { marginTop: 2 }]}>{subtitle}</Text> : null}
-      </View>
-      <Switch
-        testID={testID}
-        accessibilityLabel={label}
-        value={value}
-        disabled={disabled}
-        onValueChange={onValueChange}
-        trackColor={{ false: theme.colors.border, true: theme.colors.primary + '88' }}
-        thumbColor={value ? theme.colors.primary : theme.colors.card}
-      />
     </View>
   )
 }

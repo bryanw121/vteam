@@ -1,14 +1,16 @@
 import { Pressable, View } from 'react-native'
 import { Text } from '../ui/Text'
-import { LinearGradient } from 'expo-linear-gradient'
+import { ProfileAvatar } from '../ProfileAvatar'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../../constants/theme'
 import type { ProfileBorderDef } from '../../constants/badges'
 
+
 type Props = {
   label: string
-  /** The border to preview (its `ringColors` drive the swatch). Omit for the "None" option. */
+  /** The border to preview (uses the same renderer as the profile). Omit for the "None" option. */
   borderDef?: ProfileBorderDef
+  avatarUri?: string | null
   selected: boolean
   unlocked: boolean
   onPress: () => void
@@ -25,30 +27,19 @@ const SIZES = {
 } as const
 
 /** One option in a profile-border picker. Driven entirely by `PROFILE_BORDERS` data. */
-export function BorderSwatch({ label, borderDef, selected, unlocked, onPress, size = 'sm', description, disabled = false }: Props) {
+export function BorderSwatch({ label, borderDef, selected, unlocked, onPress, size = 'sm', description, disabled = false, avatarUri = null }: Props) {
   const dim = SIZES[size]
   const outer = dim.swatch + dim.ring * 2
   const blocked = !unlocked || disabled
 
-  const ring = borderDef ? (
-    <View style={{ width: outer, height: outer, borderRadius: outer / 2, overflow: 'hidden', opacity: unlocked ? 1 : 0.3 }}>
-      <LinearGradient colors={borderDef.ringColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
-      <View style={{
-        position: 'absolute', top: dim.ring, left: dim.ring, right: dim.ring, bottom: dim.ring,
-        borderRadius: dim.swatch / 2, backgroundColor: theme.colors.card,
-        alignItems: 'center', justifyContent: 'center',
-      }}>
-        {!unlocked && <Ionicons name="lock-closed" size={dim.lockIcon} color={theme.colors.subtext} />}
-      </View>
-    </View>
-  ) : (
-    <View style={{
-      width: dim.swatch, height: dim.swatch, borderRadius: dim.swatch / 2,
-      borderWidth: 2, borderColor: theme.colors.border,
-      backgroundColor: theme.colors.background,
-      alignItems: 'center', justifyContent: 'center',
-    }}>
-      <Ionicons name="close" size={dim.noneIcon} color={theme.colors.subtext} />
+  const ring = (
+    <View style={{ width: outer + 4, height: outer + 4, alignItems: 'center', justifyContent: 'center' }}>
+      <ProfileAvatar uri={avatarUri} border={borderDef?.type ?? null} size={dim.swatch} />
+      {!unlocked && (
+        <View style={{ position: 'absolute', bottom: 0, right: 0, padding: 3, borderRadius: 12, backgroundColor: theme.colors.card }}>
+          <Ionicons name="lock-closed" size={dim.lockIcon} color={theme.colors.subtext} />
+        </View>
+      )}
     </View>
   )
 
@@ -58,7 +49,7 @@ export function BorderSwatch({ label, borderDef, selected, unlocked, onPress, si
       disabled={blocked}
       role="radio"
       aria-checked={selected}
-      aria-disabled={!unlocked}
+      aria-disabled={blocked}
       aria-label={unlocked ? label : `${label}, locked`}
       accessibilityHint={description}
       style={({ pressed }) => ({ alignItems: 'center', gap: theme.spacing.xs, opacity: pressed && unlocked ? 0.7 : 1 })}
