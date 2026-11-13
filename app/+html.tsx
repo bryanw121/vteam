@@ -39,6 +39,8 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content={APP_NAME} />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        {/* Web app manifest (#189): installable, which iPhone needs before it allows web push. */}
+        <link rel="manifest" href="/manifest.webmanifest" />
         <ScrollViewStyleReset />
         {/*
           Start the Supabase connection (DNS + TLS) while the app bundle downloads,

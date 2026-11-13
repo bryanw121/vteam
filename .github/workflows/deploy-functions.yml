@@ -1,0 +1,88 @@
+# Deploys the edge functions a push to main changed (#172), after one approval.
+#
+# The deploy job waits on the `production` environment: GitHub asks its required
+# reviewer (Bryan) to approve before it runs, and the Supabase access token lives in
+# that environment's secrets, not the repo's. Until the environment has a
+# SUPABASE_ACCESS_TOKEN secret the job prints a notice and deploys nothing, so
+# nothing changes on live by accident. Manual deploys (supabase/functions/README.md)
+# are only for recovery; the daily drift check (schema-drift.yml) compares live with main.
+name: Deploy edge functions
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/**'
+      - 'supabase/config.toml'
+  workflow_dispatch:
+    inputs:
+      functions:
+        description: 'Functions to deploy, space-separated (empty: all)'
+        required: false
+        default: ''
+
+concurrency:
+  group: deploy-functions
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Changed functions
+    runs-on: ubuntu-latest
+    outputs:
+      functions: ${{ steps.plan.outputs.functions }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - id: plan
+        env:
+          BEFORE: ${{ github.event.before }}
+          REQUESTED: ${{ github.event.inputs.functions }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            if [ -n "$REQUESTED" ]; then names="$REQUESTED"; else names=$(node scripts/changed-functions.mjs); fi
+          else
+            names=$(node scripts/changed-functions.mjs "$BEFORE" "$GITHUB_SHA")
+          fi
+          names=$(echo $names)
+          echo "functions=$names" >> "$GITHUB_OUTPUT"
+          if [ -z "$names" ]; then echo "Nothing to deploy (tests or docs only)." >> "$GITHUB_STEP_SUMMARY"; else echo "To deploy: \`$names\`" >> "$GITHUB_STEP_SUMMARY"; fi
+
+  deploy:
+    name: Deploy to live
+    needs: plan
+    if: needs.plan.outputs.functions != ''
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Deploy
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          FUNCTIONS: ${{ needs.plan.outputs.functions }}
+          PROJECT_REF: rmelsdqgrpfjzqisycdl
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::notice::No SUPABASE_ACCESS_TOKEN in the production environment: nothing deployed. Deploy by hand: $FUNCTIONS"
+            echo "Skipped: the \`production\` environment has no \`SUPABASE_ACCESS_TOKEN\` secret yet." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo "| Function | Commit |"
+            echo "| --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for name in $FUNCTIONS; do
+            # verify_jwt comes from supabase/config.toml.
+            npx --yes supabase@2.122.1 functions deploy "$name" --project-ref "$PROJECT_REF" --use-api
+            echo "| $name | \`${GITHUB_SHA::7}\` |" >> "$GITHUB_STEP_SUMMARY"
+          done

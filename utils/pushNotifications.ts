@@ -1,36 +1,22 @@
 import { Platform } from 'react-native'
 import { supabase } from '../lib/supabase'
 import { getSessionUser } from '../lib/sessionUser'
-import { isAppPath, routes } from './routes'
+import { pushDeepLink } from './pushLinks'
 import { track } from '../lib/analytics'
 import { ANALYTICS_EVENTS } from '../constants/analytics'
 import type { NotificationResponse } from 'expo-notifications'
 import type * as ExpoNotifications from 'expo-notifications'
-import type { PushData } from '../types'
+import type { PushData, WebPushState } from '../types'
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+export { pushDeepLink }
 
 /** Pushes already opened in this app session (the launch push is reported again on resubscribe). */
 const openedPushes = new Set<string>()
 
 /**
- * Where tapping a push should go, or null to just open the app. Every push
- * from send-notification-push carries `data.deep_link` (the inbox row's link);
- * older send-chat-push builds carry only `conversation_id`. A link that is not
- * an in-app path (see `isAppPath`) is ignored, never followed.
- */
-export function pushDeepLink(data: PushData | null | undefined): string | null {
-  if (!data) return null
-  if (isAppPath(data.deep_link)) return data.deep_link
-  if (typeof data.conversation_id === 'string' && UUID_RE.test(data.conversation_id)) return routes.conversation(data.conversation_id)
-  if (typeof data.event_id === 'string' && UUID_RE.test(data.event_id)) return routes.event(data.event_id)
-  return null
-}
-
-/**
  * Calls `open(path)` when someone taps a push: once for the push that launched
  * the app (cold start), then for every later tap. Returns an unsubscribe.
- * No-op on web (no push there). `load` is for tests.
+ * Web has its own version (pushNotifications.web.ts). `load` is for tests.
  */
 export function subscribeToPushTaps(
   open: (path: string) => void,
@@ -123,3 +109,16 @@ export async function registerPushToken(): Promise<void> {
     // Non-critical — push notifications are best-effort
   }
 }
+
+/** Web push lives in pushNotifications.web.ts (#189); the native apps use Expo push above. */
+export async function getWebPushState(): Promise<WebPushState> {
+  return 'unsupported'
+}
+
+export async function enableWebPush(): Promise<WebPushState> {
+  return 'unsupported'
+}
+
+export async function disableWebPush(): Promise<void> {}
+
+export async function forgetWebPushToken(): Promise<void> {}

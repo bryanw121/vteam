@@ -147,3 +147,21 @@ export const JOIN_INTENT_COPY = {
   setup: 'Set up my profile',
   later: 'Later',
 } as const
+
+/** Settings → Notifications → Push on this device (#189, components/settings/WebPushCard.tsx). */
+export const WEB_PUSH_COPY = {
+  title: 'Push on this device',
+  ask: 'Get reminders before your games, waitlist spots and messages, even when vteam is closed.',
+  turnOn: 'Turn on notifications',
+  on: 'Notifications are on for this browser.',
+  turnOff: 'Turn off on this device',
+  blocked: "Notifications are blocked for this site: turn them on in your browser's settings, then come back.",
+  unsupported: "This browser can't show notifications from vteam. The iPhone and Android apps can.",
+  installIntro: 'iPhone shows notifications only from apps on your Home Screen. It takes a moment:',
+  installSteps: [
+    'Tap the Share button (the square with an arrow) at the bottom of Safari.',
+    'Choose Add to Home Screen, then Add.',
+    'Open vteam from your Home Screen and come back here to turn notifications on.',
+  ],
+  failed: "Couldn't turn on notifications. Please try again.",
+} as const

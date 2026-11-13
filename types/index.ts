@@ -158,6 +158,24 @@ export type PushData = {
   notification_type?: unknown
 }
 
+/** Where web push stands on this browser (#189, utils/webPushState.ts). */
+export type WebPushState = 'unsupported' | 'needs-install' | 'ask' | 'on' | 'blocked'
+
+/** What `webPushState` looks at, so it stays pure. */
+export type WebPushEnv = {
+  userAgent: string
+  /** iOS: `navigator.standalone`; elsewhere `display-mode: standalone`. */
+  standalone: boolean
+  /** `'PushManager' in window && 'serviceWorker' in navigator && 'Notification' in window`. */
+  pushSupported: boolean
+  /** `Notification.permission`, or null without the API. */
+  permission: 'default' | 'granted' | 'denied' | null
+  /** This browser has a live push subscription. */
+  subscribed: boolean
+  /** The app was built with EXPO_PUBLIC_VAPID_PUBLIC_KEY. */
+  hasKey: boolean
+}
+
 /**
  * `notifications` table — per-user inbox (inserted by DB triggers only).
  */
@@ -2323,3 +2341,14 @@ export type SaveBringItemsArgs = {
 }
 export type ClaimBringItemArgs = { p_item_id: string; p_quantity: number }
 export type ReleaseBringItemArgs = { p_item_id: string }
+
+/** `/api/startup` (#216): the update check rows and ad lists, with windows so a stale copy can be filtered by time. */
+export type StartupConfig = {
+  appConfig: { platform: string; min_version: string; store_url: string | null; message: string | null }[]
+  banners: (AdBanner & { starts_at: string | null; ends_at: string | null; is_active: boolean })[]
+  sponsored: { event_id: string; starts_at: string | null; ends_at: string | null }[]
+}
+
+/** Which way this page load read the startup config (the #216 keep-or-revert experiment). */
+export type StartupArm = 'cdn' | 'direct'
+

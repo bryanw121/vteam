@@ -39,6 +39,8 @@ export const env = Object.freeze({
   supabaseRef: parseSupabaseRef(supabaseUrl),
   /** Optional: error reporting is off when unset. */
   sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN as string | undefined,
+  /** Web Push public key (#189, base64url): web push is offered only when set. */
+  vapidPublicKey: (process.env.EXPO_PUBLIC_VAPID_PUBLIC_KEY ?? '').trim(),
   /** `development` | `preview` | `production` (set per profile in eas.json). */
   appEnv: process.env.EXPO_PUBLIC_APP_ENV ?? 'production',
 })
