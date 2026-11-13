@@ -97,6 +97,7 @@ export const NOTIFICATION_PREF_TYPES = [
   'friend_accepted',
   'event_reminder',
   'late_dropout',
+  'bring_item_uncovered',
 ] as const
 
 /** Must match the `notifications_notification_type_check` constraint in Supabase exactly. */
@@ -542,7 +543,10 @@ export type Tag = Override<Tables<'tags'>, {
 export type UserEventTemplate = Override<Tables<'user_event_templates'>, {
   /** Nullable in the schema; defaults to now(). */
   created_at: string
-}>
+}> & {
+  /** What to bring (#256): the host's list, saved with the template. Null on older templates. */
+  bring_items?: BringItemDraft[] | null
+}
 
 // ─── Club Types ───────────────────────────────────────────────────────────────
 
@@ -2163,3 +2167,65 @@ export type UrlCodec<T> = {
 
 /** Field errors on the feedback form (#228: shown under each field, not as an alert). */
 export type FeedbackFieldErrors = { title?: string; description?: string; platform?: string }
+
+/** A row of the `search_members` RPC (lib/memberSearch.ts). */
+export type MemberSearchResult = Pick<Profile, 'id' | 'username' | 'first_name' | 'last_name' | 'avatar_url' | 'position' | 'created_at'>
+  & Pick<Partial<Profile>, 'selected_border' | 'skill_level'>
+
+// ─── What to bring (#256) ─────────────────────────────────────────────────────
+
+/** One person bringing (part of) an item. Names come back only for signed-in viewers. */
+export type BringClaimer = {
+  user_id: string
+  quantity: number
+  username: string | null
+  first_name: string | null
+  last_name: string | null
+  avatar_url: string | null
+}
+
+/** A row of `get_event_bring_list(p_event_id)`: the item, how much is covered, and by whom. */
+export type BringItem = {
+  id: string
+  label: string
+  quantity: number
+  required: boolean
+  position: number
+  claimed: number
+  claimers: BringClaimer[]
+}
+
+/** An item in the host form (and in a template). `id` is set for items already saved on the event. */
+export type BringItemDraft = {
+  id?: string
+  label: string
+  quantity: number
+  required: boolean
+  /** The host is bringing it. */
+  mine: boolean
+}
+
+/** What the viewer can do with one item on the event page. */
+export type BringItemAction =
+  | { kind: 'claim'; quantity: number; label: string }
+  | { kind: 'release'; label: string }
+  | { kind: 'covered' }
+  | { kind: 'join' }
+  | { kind: 'signIn' }
+  | { kind: 'closed' }
+
+/** Who is looking at the list (derived on the event page). */
+export type BringViewer = {
+  userId: string | null
+  /** Attending, or the host / a co-host. */
+  canClaim: boolean
+  /** The game has started or was cancelled. */
+  closed: boolean
+}
+
+export type SaveBringItemsArgs = {
+  p_event_id: string
+  p_items: { id?: string; label: string; quantity: number; required: boolean; mine: boolean }[]
+}
+export type ClaimBringItemArgs = { p_item_id: string; p_quantity: number }
+export type ReleaseBringItemArgs = { p_item_id: string }
