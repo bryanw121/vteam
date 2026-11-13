@@ -2427,3 +2427,34 @@ export type RecapFooterProps = {
 
 /** How a recap left the device. */
 export type RecapShareTarget = 'native' | 'web-share' | 'download'
+// ─── Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) ───
+
+/** Per-day calendar marks: a dot for days with games, the selected day highlighted. */
+export type MarkedDates = Record<string, { marked?: boolean; count?: number; dotColor?: string; selected?: boolean; selectedColor?: string; selectedDotColor?: string }>
+
+export type WeekStripContentProps = {
+  weekDays: Date[]
+  selectedDate: string
+  markedDates: MarkedDates
+  onSelectDate: (date: string) => void
+  onPrevWeek: () => void
+  onNextWeek: () => void
+}
+
+export type MonthGridContentProps = {
+  month: string  // "YYYY-MM"
+  selectedDate: string
+  markedDates: MarkedDates
+  onSelectDate: (date: string) => void
+  onPrevMonth: () => void
+  onNextMonth: () => void
+}
+
+export type WeekPagerProps = {
+  curWeekPage: number
+  selectedDate: string
+  markedDates: MarkedDates
+  onSelectDate: (date: string) => void
+  onPrevWeek: () => void
+  onNextWeek: () => void
+}

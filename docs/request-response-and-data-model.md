@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `9694519b1848`
+> Inventory fingerprint: `7c7293685dd1`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -634,6 +634,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Join intent (#229) | [`PendingAction`](../types/index.ts#L2248), [`PendingActionTake`](../types/index.ts#L2251), [`JoinOffer`](../types/index.ts#L2254), [`JoinIntentOutcome`](../types/index.ts#L2257) |
 | View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2262), [`FeedbackFieldErrors`](../types/index.ts#L2268), [`ReportReason`](../types/index.ts#L2271), [`ReportContextKind`](../types/index.ts#L2272), [`ReportStatus`](../types/index.ts#L2273), [`ReportAction`](../types/index.ts#L2274), [`ReportUserInput`](../types/index.ts#L2276), [`AdminReport`](../types/index.ts#L2285), [`ReportSheetTarget`](../types/index.ts#L2304), [`ReportSheetProps`](../types/index.ts#L2307), [`EventSeed`](../types/index.ts#L2323), [`MemberSearchResult`](../types/index.ts#L2335) |
 | What to bring (#256) | [`BringClaimer`](../types/index.ts#L2341), [`BringItem`](../types/index.ts#L2351), [`BringItemDraft`](../types/index.ts#L2362), [`BringItemAction`](../types/index.ts#L2372), [`BringViewer`](../types/index.ts#L2381), [`SaveBringItemsArgs`](../types/index.ts#L2389), [`ClaimBringItemArgs`](../types/index.ts#L2393), [`ReleaseBringItemArgs`](../types/index.ts#L2394), [`StartupConfig`](../types/index.ts#L2397), [`StartupArm`](../types/index.ts#L2404), [`MyGameRecap`](../types/index.ts#L2407), [`YourGameCardProps`](../types/index.ts#L2409), [`RecapFooterProps`](../types/index.ts#L2418), [`RecapShareTarget`](../types/index.ts#L2429) |
+| Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2433), [`WeekStripContentProps`](../types/index.ts#L2435), [`MonthGridContentProps`](../types/index.ts#L2444), [`WeekPagerProps`](../types/index.ts#L2453) |
 
 ### Constrained string values
 
