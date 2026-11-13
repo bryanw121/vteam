@@ -2352,6 +2352,30 @@ export type StartupConfig = {
 /** Which way this page load read the startup config (the #216 keep-or-revert experiment). */
 export type StartupArm = 'cdn' | 'direct'
 
+/** "Your game" on a finished game (#227): `pointsPaid` null until `award_event_points()` has run. */
+export type MyGameRecap = { pointsPaid: number | null; cheers: number; gamesThisYear: number }
+
+export type YourGameCardProps = {
+  points: number
+  pointsLine: string
+  cheers: number
+  gamesThisYear: number
+  onShare: () => void
+  sharing: boolean
+}
+
+export type RecapFooterProps = {
+  attended: boolean
+  onShare: () => void
+  onGiveCheers: () => void
+  sharing: boolean
+  docScrollActive: boolean
+  bottomInset: number
+  onHeightChange?: (h: number) => void
+}
+
+/** How a recap left the device. */
+export type RecapShareTarget = 'native' | 'web-share' | 'download'
 // ─── Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) ───
 
 /** Per-day calendar marks: a dot for days with games, the selected day highlighted. */

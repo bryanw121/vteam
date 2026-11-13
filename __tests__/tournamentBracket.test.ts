@@ -209,3 +209,15 @@ describe('plan from stored rows', () => {
     expect(states.GF).toBe('live')
   })
 })
+
+describe('grand final reset rows (#7)', () => {
+  it('maps round rounds+1, match 2 to GF2 and keeps the plan the same size', () => {
+    const { planFromRows, rowKey } = jest.requireActual('../lib/tournamentBracket') as typeof import('../lib/tournamentBracket')
+    const row = (round: number, match_number: number, is_losers_bracket = false) => ({ id: `${round}-${match_number}`, round, match_number, is_losers_bracket, team_a_id: null, team_b_id: null, winner_id: null, status: 'scheduled' })
+    const rows = [row(1, 1), row(1, 2), row(2, 1), row(1, 1, true), row(2, 1, true), row(3, 1), row(3, 2)]
+    const plan = planFromRows(rows, 'double')
+    expect(plan?.rounds).toBe(2)
+    expect(rowKey(row(3, 1), plan!)).toBe('GF')
+    expect(rowKey(row(3, 2), plan!)).toBe('GF2')
+  })
+})
