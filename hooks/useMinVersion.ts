@@ -10,7 +10,7 @@ import type { UpdateRequirement } from '../types'
  * Fails open: if the config can't be read, the app runs as usual.
  */
 export function useMinVersion(): UpdateRequirement | null {
-  const config = useStartupConfig()
+  const config = useStartupConfig('version')
   return useMemo(() => {
     const platform = Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web'
     const row = config?.appConfig.find(r => r.platform === platform)
