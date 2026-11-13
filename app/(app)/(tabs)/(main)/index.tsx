@@ -34,7 +34,8 @@ import { TourTarget } from '../../../../components/tour/TourTarget'
 import { useTourWants } from '../../../../contexts/tour'
 import { OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useUserSettings'
-import type { EventWithDetails, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, NotificationItem, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
+import type { EventWithDetails, FeedDaySection, FeedFilter, FeedFilterChip, HiddenFeedEntry, HideFeedOption, NotificationItem, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
+import { buildFeedSections } from '../../../../utils/feedSections'
 import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters } from '../../../../utils/feedFilters'
 import { useUrlParam } from '../../../../hooks/useUrlParam'
 import { feedDay } from '../../../../utils/urlState'
@@ -72,8 +73,6 @@ const FILTER_CHIPS: FeedFilterChip[] = [
   { id: 'tournament', label: 'Tournament' },
 ]
 
-/** One day of the feed. `hiddenCount` counts that day's hidden items; `revealed` = they're shown (dimmed) in `data`. */
-type DateSection = { date: string; data: EventWithDetails[]; hiddenCount: number; revealed: boolean }
 export default function EventsScreen() {
   const router = useRouter()
   const { events, loading, error, loadMonth, loadMonthSpan, refresh, loadedMonths, reachedEnd } = useMonthEvents()
@@ -209,7 +208,7 @@ export default function EventsScreen() {
   const blockPager   = useCallback(() => { pagerBlocked.current = true  }, [pagerBlocked])
   const unblockPager = useCallback(() => { pagerBlocked.current = false }, [pagerBlocked])
 
-  const sectionListRef = useRef<SectionList<EventWithDetails, DateSection>>(null)
+  const sectionListRef = useRef<SectionList<EventWithDetails, FeedDaySection>>(null)
   const sectionYRef = useRef<Record<string, number>>({})
   const lastScrollY = useRef(0)
 
@@ -264,36 +263,12 @@ export default function EventsScreen() {
     [hiddenIdx, currentUserId],
   )
 
-  const { sections, hiddenItemIds } = useMemo(() => {
-    const filtered = feedEvents.filter(event => {
-      // Outside sessions (Schelagg) only for the viewer's region: home city, else the pilot default.
-      if (event._external && event._external.region !== feedRegion) return false
-      if (surfaceFilter !== 'any' && surfaceOf(event) !== surfaceFilter) return false
-      if (activeFilter === 'all') return true
-      const tags = event.event_tags?.map(et => et.tags.name.toLowerCase()) ?? []
-      if (activeFilter === 'open_play')  return tags.some(t => t.includes('open play') || t.includes('open-play'))
-      if (activeFilter === 'tournament') return tags.some(t => t.includes('tournament'))
-      return true
-    })
-    const grouped: Record<string, DateSection> = {}
-    const hiddenIds = new Set<string>()
-    for (const event of [...filtered].sort((a, b) => a.event_date.localeCompare(b.event_date))) {
-      // Local date, so the section header matches the time shown on the event
-      // card — and matches the calendar dot, which uses the same helper.
-      const date = eventLocalDateKey(event.event_date)
-      const section = grouped[date] ??= {
-        date, data: [], hiddenCount: 0, revealed: revealedKeys.has(date) || revealedKeys.has(date.substring(0, 7)),
-      }
-      if (isHiddenForMe(event)) {
-        section.hiddenCount += 1
-        hiddenIds.add(event.id)
-        if (!section.revealed) continue
-      }
-      section.data.push(event)
-    }
-    const list = Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date))
-    return { sections: list, hiddenItemIds: hiddenIds }
-  }, [feedEvents, activeFilter, surfaceFilter, currentUserId, feedRegion, isHiddenForMe, revealedKeys])
+  const { sections, hiddenItemIds } = useMemo(
+    () => buildFeedSections(feedEvents, {
+      filter: activeFilter, surface: surfaceFilter, region: feedRegion, isHidden: isHiddenForMe, revealed: revealedKeys,
+    }),
+    [feedEvents, activeFilter, surfaceFilter, feedRegion, isHiddenForMe, revealedKeys],
+  )
 
   const toggleReveal = useCallback((key: string) => {
     setRevealedKeys(prev => {
@@ -757,7 +732,7 @@ export default function EventsScreen() {
       {(() => {
         const emptyOrLoading = sections.length === 0 ? feedEmpty : null
 
-        const renderSectionHeader = (section: DateSection) => (
+        const renderSectionHeader = (section: FeedDaySection) => (
           <View
             style={feedStyles.sectionHeader}
             onLayout={e => { sectionYRef.current[section.date] = e.nativeEvent.layout.y }}
@@ -769,7 +744,7 @@ export default function EventsScreen() {
           </View>
         )
 
-        const renderSectionFooter = (section: DateSection) => (
+        const renderSectionFooter = (section: FeedDaySection) => (
           section.hiddenCount > 0 ? (
             <View style={{ paddingHorizontal: theme.spacing.lg }}>
               <HiddenCountRow count={section.hiddenCount} revealed={section.revealed} onToggle={() => toggleReveal(section.date)} />
