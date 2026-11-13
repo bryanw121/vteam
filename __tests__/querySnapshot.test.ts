@@ -10,7 +10,9 @@ import {
   readQuerySnapshot,
   setSnapshotOwner,
   snapshotOwner,
+  snapshotValue,
   startQuerySnapshot,
+  TOURNAMENT_LIST_SNAPSHOT_ROWS,
   usableQuerySnapshot,
 } from '../lib/querySnapshot'
 
@@ -66,6 +68,30 @@ describe('isSnapshotKey', () => {
     expect(isSnapshotKey('tags')).toBe(true)
     expect(isSnapshotKey('profiles:x')).toBe(false)
     expect(isSnapshotKey('event:1')).toBe(false)
+  })
+
+  it("keeps the viewer's club tournament list, not tournament pages (#288)", () => {
+    expect(isSnapshotKey('tournaments:list:u1')).toBe(true)
+    expect(isSnapshotKey('tournament:t1')).toBe(false)
+    expect(isSnapshotKey('tournaments:other:u1')).toBe(false)
+  })
+})
+
+describe('snapshotValue', () => {
+  it('trims the tournament list to its newest rows and leaves other entries alone', () => {
+    const rows = Array.from({ length: 200 }, (_, i) => ({ id: `t${i}` }))
+    const kept = snapshotValue('tournaments:list:u1', rows) as { id: string }[]
+    expect(kept).toHaveLength(TOURNAMENT_LIST_SNAPSHOT_ROWS)
+    expect(kept[0]).toEqual({ id: 't0' })
+    expect(snapshotValue('badges:u1', rows)).toBe(rows)
+  })
+
+  it('saves the trimmed list for the viewer', () => {
+    startQuerySnapshot()
+    setSnapshotOwner('u1')
+    setQueryData('tournaments:list:u1', Array.from({ length: 60 }, (_, i) => ({ id: `t${i}` })))
+    jest.advanceTimersByTime(2000)
+    expect(readQuerySnapshot()?.entries['tournaments:list:u1']).toHaveLength(TOURNAMENT_LIST_SNAPSHOT_ROWS)
   })
 })
 
