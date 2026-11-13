@@ -164,4 +164,12 @@ export const WEB_PUSH_COPY = {
     'Open vteam from your Home Screen and come back here to turn notifications on.',
   ],
   failed: "Couldn't turn on notifications. Please try again.",
+  /** The line under "You're going" on a game page (#189), until dismissed or turned on. */
+  nudge: 'Get a reminder before this game?',
+  nudgeAction: 'Turn on notifications',
+  nudgeInstall: 'How to get reminders',
+  nudgeDismiss: 'Not now',
 } as const
+
+/** seen_banners id for the "Get a reminder?" line (#189): dismissed once, never shown again. */
+export const WEB_PUSH_NUDGE_ID = 'web-push-nudge-v1'

@@ -464,6 +464,7 @@ export default function EventDetail() {
                   onOpenProfile={openProfile}
                   onMessageHost={hostId => { void openDm(hostId) }}
                   onManageCohosts={cohostsApi.open}
+                  onOpenNotificationSettings={() => router.push(routes.settings('notifications'))}
                   payments={paymentAccess.canToggle ? payments : null}
                   noShow={isViewerNoShow(roster.rows, userId)}
                   isHostOrCohost={isHostOrCohost}

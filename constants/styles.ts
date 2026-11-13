@@ -630,6 +630,12 @@ export const shared = StyleSheet.create({
   // ── EmptyState / ScreenState ──────────────────────────────
   emptyState:       { alignItems: 'center', paddingTop: spacing.xxl, paddingHorizontal: spacing.lg, gap: spacing.sm },
   emptyStateBody:   { textAlign: 'center', maxWidth: 320 },
+  // "Get a reminder?" under You're going on a game page (#189, WebPushNudge).
+  webPushNudge: {
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginTop: theme.spacing.sm,
+    paddingLeft: theme.spacing.md, borderRadius: theme.radius.md, backgroundColor: theme.colors.primarySoft,
+  },
+  webPushNudgeAction: { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: theme.spacing.sm },
   emptyStateAction: { fontSize: font.size.sm, color: colors.primaryText, fontWeight: font.weight.medium },
   // EventDetailSkeleton: placeholders in the event page's final layout
   skeletonBlock: { backgroundColor: theme.colors.card, borderRadius: 16 },
