@@ -1,6 +1,6 @@
 import type {
   BracketAdvance, BracketLink, BracketMatchInsert, BracketNode, BracketNodeState, BracketPlan, BracketSlot,
-  BracketSource, Podium, TournamentBracketType,
+  BracketResetChange, BracketSource, Podium, TournamentBracketType,
 } from '../types'
 
 /**
@@ -17,6 +17,10 @@ import type {
  * is_losers_bracket false; `L<r>-<n>` the same with is_losers_bracket true; the
  * grand final `GF` is round rounds+1, match 1; the third-place match `TP` is the
  * final's round, match 2 (the final is always match 1).
+ *
+ * Double elimination's grand-final reset `GF2` (round rounds+1, match 2) is not in
+ * the plan: it is added only when the losers-bracket champion (slot b) wins `GF`,
+ * since both finalists then have one loss, and removed if that result is corrected.
  */
 
 export function nextPow2(n: number): number {
@@ -205,7 +209,7 @@ export type BracketRow = {
 /** A stored row's node key, given the plan's winners-round count. */
 export function rowKey(row: Pick<BracketRow, 'round' | 'match_number' | 'is_losers_bracket'>, plan: Pick<BracketPlan, 'type' | 'rounds'>): string {
   if (row.is_losers_bracket) return L(row.round, row.match_number)
-  if (plan.type === 'double' && row.round === plan.rounds + 1) return 'GF'
+  if (plan.type === 'double' && row.round === plan.rounds + 1) return row.match_number === 2 ? 'GF2' : 'GF'
   if (plan.type === 'single' && row.round === plan.rounds && row.match_number === 2) return 'TP'
   return W(row.round, row.match_number)
 }
@@ -247,9 +251,13 @@ export function advanceFrom(plan: BracketPlan, storedKeys: ReadonlySet<string>, 
   return out
 }
 
-/** The key of the match that decides the champion. */
-export function finalKey(plan: BracketPlan): string {
-  return plan.type === 'double' ? 'GF' : W(plan.rounds, 1)
+/**
+ * The key of the match that decides the champion: the final, or in double
+ * elimination the grand final, or its reset once the reset is needed.
+ */
+export function finalKey(plan: BracketPlan, byKey?: ReadonlyMap<string, BracketRow>): string {
+  if (plan.type !== 'double') return W(plan.rounds, 1)
+  return byKey && needsReset(byKey.get('GF')) ? 'GF2' : 'GF'
 }
 
 const loserOf = (row: Pick<BracketRow, 'team_a_id' | 'team_b_id' | 'winner_id'>): string | null =>
@@ -258,9 +266,14 @@ const loserOf = (row: Pick<BracketRow, 'team_a_id' | 'team_b_id' | 'winner_id'>)
 const isDone = (row: Pick<BracketRow, 'status' | 'winner_id'> | undefined): row is BracketRow =>
   !!row && !!row.winner_id && (row.status === 'completed' || row.status === 'forfeit')
 
+/** The losers-bracket champion (slot b) won the grand final: both have one loss, so it is played again. */
+export function needsReset(gf: BracketRow | undefined): boolean {
+  return isDone(gf) && !!gf.team_b_id && gf.winner_id === gf.team_b_id
+}
+
 /** True once every match that decides a podium place is recorded. */
 export function bracketComplete(plan: BracketPlan, byKey: ReadonlyMap<string, BracketRow>): boolean {
-  if (!isDone(byKey.get(finalKey(plan)))) return false
+  if (!isDone(byKey.get(finalKey(plan, byKey)))) return false
   const tp = byKey.get('TP')
   return !tp || isDone(tp)
 }
@@ -271,7 +284,7 @@ export function bracketComplete(plan: BracketPlan, byKey: ReadonlyMap<string, Br
  * double elimination, the losers-final loser.
  */
 export function bracketPodium(plan: BracketPlan, byKey: ReadonlyMap<string, BracketRow>): Podium | null {
-  const final = byKey.get(finalKey(plan))
+  const final = byKey.get(finalKey(plan, byKey))
   if (!isDone(final) || !bracketComplete(plan, byKey)) return null
   const thirds: string[] = []
   if (plan.type === 'double') {
@@ -289,6 +302,33 @@ export function bracketPodium(plan: BracketPlan, byKey: ReadonlyMap<string, Brac
   }
   return { first: final.winner_id, second: loserOf(final), thirds }
 }
+
+/**
+ * What a grand-final result means for the reset (double elimination): add it
+ * (same two teams) when the losers-bracket champion wins, remove a reset that is
+ * no longer needed after a correction. `blocked` when the reset was already
+ * played and the corrected grand final would erase it.
+ */
+export function resetChange(
+  plan: BracketPlan,
+  byKey: ReadonlyMap<string, BracketRow>,
+  gf: Pick<BracketRow, 'team_a_id' | 'team_b_id'>,
+  winnerId: string,
+): BracketResetChange {
+  const none: BracketResetChange = { add: null, removeId: null, blocked: null }
+  if (plan.type !== 'double') return none
+  const reset = byKey.get('GF2')
+  const lbChampionWon = !!gf.team_b_id && winnerId === gf.team_b_id
+  if (lbChampionWon) {
+    if (reset) return none
+    return { add: { round: plan.rounds + 1, match_number: 2, team_a_id: gf.team_a_id, team_b_id: gf.team_b_id, bracket_round_name: GF_RESET_NAME }, removeId: null, blocked: null }
+  }
+  if (!reset) return none
+  if (isDone(reset)) return { ...none, blocked: `${GF_RESET_NAME} has already been played. Change that result first.` }
+  return { ...none, removeId: (reset as BracketRow).id }
+}
+
+export const GF_RESET_NAME = 'Grand final reset'
 
 /** Slot a team occupies in a row, for advancement writes. */
 export function slotColumn(slot: BracketSlot): 'team_a_id' | 'team_b_id' {
