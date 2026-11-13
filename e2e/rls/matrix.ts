@@ -101,5 +101,6 @@ export const RLS_MATRIX: Record<TableName, RlsExpectation> = {
   tournaments: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'created_by', ownRowsOnly: false, noInsertAsOther: true } },
   user_badges: { anonSelect: 'all', anonInsert: 'none', why: 'badges on public profiles' },
   user_event_templates: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true } },
+  user_reports: { anonSelect: 'none', anonInsert: 'none', signedInSelect: 'none', why: 'reports are read and written only through report_user() / admin_* functions (#243); no client grants' },
   user_settings: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true } },
 }

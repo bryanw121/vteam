@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ReportSheet } from '../../../components/ReportSheet'
 import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Image, Pressable, Modal } from 'react-native'
 import { Text, TextInput } from '../../../components/ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -284,31 +285,21 @@ export default function ChatRoomScreen() {
     )
   }, [silenceUser])
 
-  const submitStubDmReport = useCallback(() => {
-    if (!convRow || convRow.type !== 'dm') return
-    const name = displayName({
-      first_name: convRow.other_user_first_name,
-      last_name: convRow.other_user_last_name,
-      username: convRow.other_user_username ?? 'player',
-    })
-    toast.show({ title: 'Report submitted', message: `${name} has been reported to vteam.`, variant: 'success' })
-  }, [convRow])
-
+  const [reportOpen, setReportOpen] = useState(false)
+  const reportTarget = convRow?.type === 'dm' && convRow.other_user_id
+    ? {
+        id: convRow.other_user_id,
+        name: displayName({
+          first_name: convRow.other_user_first_name,
+          last_name: convRow.other_user_last_name,
+          username: convRow.other_user_username ?? 'player',
+        }),
+      }
+    : null
   const confirmReportDmUser = useCallback(() => {
     if (!convRow || convRow.type !== 'dm') return
-    const name = displayName({
-      first_name: convRow.other_user_first_name,
-      last_name: convRow.other_user_last_name,
-      username: convRow.other_user_username ?? 'player',
-    })
-
-    confirmDestructive(
-      'Report this player?',
-      `Send a moderation report about ${name} to vteam?`,
-      'Report',
-      submitStubDmReport,
-    )
-  }, [convRow, submitStubDmReport])
+    setReportOpen(true)
+  }, [convRow])
 
   const dmHeaderMenuOptions = useMemo(() => {
     if (!convRow || convRow.type !== 'dm' || !convRow.other_user_id || !myId || convRow.other_user_id === myId) return []
@@ -748,6 +739,18 @@ export default function ChatRoomScreen() {
           </View>
         </Pressable>
       </Modal>
+      {reportTarget ? (
+        <ReportSheet
+          visible={reportOpen}
+          onDismiss={() => setReportOpen(false)}
+          target={reportTarget}
+          kind="dm"
+          contextId={id ?? null}
+          offerSilence={!silencedUserIds.has(reportTarget.id)}
+          silenceByDefault
+          onSilence={() => silenceUser(reportTarget.id)}
+        />
+      ) : null}
     </View>
   )
 }

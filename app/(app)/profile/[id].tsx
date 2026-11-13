@@ -22,6 +22,8 @@ import { FriendButton } from '../../../components/profile/FriendButton'
 import { useUserTrophies } from '../../../hooks/useUserTrophies'
 import { TrophyCase } from '../../../components/profile/TrophyCase'
 import { usePointsBalance } from '../../../hooks/usePoints'
+import { ReportSheet } from '../../../components/ReportSheet'
+import { useRequireSignIn } from '../../../hooks/useRequireSignIn'
 import {
   volleyballSkillLevelLabel,
   profileFullName,
@@ -54,6 +56,8 @@ export default function UserProfileDetail() {
   const trophies = useUserTrophies(id ?? null)
   const [refreshing, setRefreshing] = useState(false)
   const { silencedUserIds, silenceUser, unsilenceUser } = useSilencedUsers()
+  const [reportOpen, setReportOpen] = useState(false)
+  const requireSignIn = useRequireSignIn()
   const points = usePointsBalance(id)
   useFocusRefetch(userProfileKey(id))
 
@@ -99,7 +103,8 @@ export default function UserProfileDetail() {
   }
 
   function handleReportPlayer() {
-    showToast(`${displayName || 'Player'} has been reported to vteam.`, 'success')
+    if (!requireSignIn()) return
+    setReportOpen(true)
   }
 
   const displayName = profile ? profileFullName(profile) : ''
@@ -341,6 +346,16 @@ export default function UserProfileDetail() {
         </ScrollView>
       )}
       </ScreenState>
+      {profile && id ? (
+        <ReportSheet
+          visible={reportOpen}
+          onDismiss={() => setReportOpen(false)}
+          target={{ id, name: displayName || profile.username || 'Player' }}
+          kind="profile"
+          offerSilence={!isSilenced}
+          onSilence={() => silenceUser(id)}
+        />
+      ) : null}
     </View>
   )
 }

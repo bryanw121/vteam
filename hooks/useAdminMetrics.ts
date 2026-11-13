@@ -1,12 +1,12 @@
 import { useEffect } from 'react'
 import { AppState } from 'react-native'
 import { supabase } from '../lib/supabase'
-import { queryKey, useQuery } from '../lib/query'
+import { invalidate, queryKey, useMutation, useQuery } from '../lib/query'
 import type { QueryResult } from '../lib/query'
 import { STALE } from '../constants/cache'
 import { useSession } from '../contexts/session'
 import type {
-  AdminUserActivity, AdminUserSort, AdminUsersPage, MetricsEvents, MetricsOverview, OnlineNow, RetentionReport,
+  AdminReport, AdminUserActivity, AdminUserSort, ReportAction, AdminUsersPage, MetricsEvents, MetricsOverview, OnlineNow, RetentionReport,
 } from '../types'
 
 /**
@@ -110,5 +110,27 @@ export function useAdminUserActivity(personId: string | undefined): QueryResult<
     userId && personId ? queryKey('admin', userId, 'person', personId) : null,
     () => rpcJson(supabase.rpc('admin_user_activity', { p_user: personId as string })),
     { staleMs: STALE.metrics },
+  )
+}
+
+/** Reports (#243): open ones oldest first, or every report with `status = 'all'`. */
+export function useAdminReports(status: 'open' | 'all', opts?: { enabled?: boolean }): QueryResult<AdminReport[]> {
+  const { userId } = useSession()
+  return useQuery<AdminReport[]>(
+    userId ? queryKey('admin', userId, 'reports', status) : null,
+    () => rpcJson(supabase.rpc('admin_reports', { p_status: status })),
+    { staleMs: STALE.metrics, enabled: opts?.enabled ?? true, keepPreviousData: true },
+  )
+}
+
+/** Dismiss / Warn / Suspend a report; refreshes the lists after. */
+export function useResolveReport() {
+  const { userId } = useSession()
+  return useMutation(
+    async (vars: { id: string; action: ReportAction; note?: string }) => {
+      const { error } = await supabase.rpc('admin_resolve_report', { p_id: vars.id, p_action: vars.action, p_note: vars.note || undefined })
+      if (error) throw error
+    },
+    { onSuccess: () => { if (userId) invalidate(queryKey('admin', userId, 'reports')) } },
   )
 }

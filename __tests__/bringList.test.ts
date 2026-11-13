@@ -152,8 +152,11 @@ describe('event_bring_items migration', () => {
   }
 
   it('allows exactly NOTIFICATION_TYPES, and the down drops only the new one', () => {
-    expect(typesIn(up).sort()).toEqual([...NOTIFICATION_TYPES].sort())
-    expect(typesIn(down).sort()).toEqual(NOTIFICATION_TYPES.filter(t => t !== 'bring_item_uncovered').sort())
+    // Reports (#243) adds its two types in a later migration.
+    const later: readonly string[] = ['report_resolved', 'moderation_warning']
+    const ofTheTime = NOTIFICATION_TYPES.filter(t => !later.includes(t))
+    expect(typesIn(up).sort()).toEqual([...ofTheTime].sort())
+    expect(typesIn(down).sort()).toEqual(ofTheTime.filter(t => t !== 'bring_item_uncovered').sort())
   })
 
   it('matches the app limits', () => {

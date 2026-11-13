@@ -2737,6 +2737,76 @@ export type Database = {
           },
         ]
       }
+      user_reports: {
+        Row: {
+          context_id: string | null
+          context_kind: string
+          context_snapshot: string | null
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          target_id: string
+        }
+        Insert: {
+          context_id?: string | null
+          context_kind: string
+          context_snapshot?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_id: string
+        }
+        Update: {
+          context_id?: string | null
+          context_kind?: string
+          context_snapshot?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_reports_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           hidden_feed: Json
@@ -2924,6 +2994,31 @@ export type Database = {
         Returns: Json
       }
       admin_online_now: { Args: never; Returns: Json }
+      admin_reports: {
+        Args: { p_status?: string }
+        Returns: {
+          context_id: string
+          context_kind: string
+          context_snapshot: string
+          created_at: string
+          details: string
+          id: string
+          reason: string
+          reporter_id: string
+          reporter_username: string
+          resolution_note: string
+          resolved_at: string
+          status: string
+          target_id: string
+          target_name: string
+          target_open_reports: number
+          target_username: string
+        }[]
+      }
+      admin_resolve_report: {
+        Args: { p_action: string; p_id: string; p_note?: string }
+        Returns: undefined
+      }
       admin_retention: { Args: { p_weeks?: number }; Returns: Json }
       admin_user_activity: { Args: { p_user: string }; Returns: Json }
       admin_users: {
@@ -3112,6 +3207,16 @@ export type Database = {
       replace_tournament_schedule: {
         Args: { p_matches: Json; p_pools?: Json; p_tournament_id: string }
         Returns: number
+      }
+      report_user: {
+        Args: {
+          p_context_id: string
+          p_details?: string
+          p_kind: string
+          p_reason: string
+          p_target: string
+        }
+        Returns: string
       }
       respond_friend_request: {
         Args: { p_accept: boolean; p_request_id: string }
