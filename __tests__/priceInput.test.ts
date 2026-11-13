@@ -184,18 +184,21 @@ describe('form wiring', () => {
     expect(host).not.toMatch(/setField\('price',/)
   })
 
-  it('parses once at the write boundary', () => {
-    expect(host).toMatch(/const parsedPrice = parsePrice\(form\.priceText\)/)
-    expect(host.match(/price: parsedPrice/g) ?? []).toHaveLength(2)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { emptyForm, eventColumns, formFromEvent } = require('../utils/hostForm') as typeof import('../utils/hostForm')
+
+  it('parses once at the write boundary (utils/hostForm, used by create and edit)', () => {
+    expect(eventColumns({ ...emptyForm(), priceText: '5.50' }, null).price).toBe(5.5)
+    expect(host).not.toMatch(/parsePrice\(form\.priceText\)[^>]*price:/)
   })
 
-  it('gates the Venmo field on the parsed price, so a decimal price keeps its handle', () => {
-    // Previously `form.price && form.price > 0`; if that had been left reading
-    // the text field it would be truthy for "0" and wrong for "".
-    expect(host).toMatch(/parsedPrice && parsedPrice > 0/)
+  it('gates the Venmo handle on the parsed price, so a decimal price keeps its handle', () => {
+    expect(eventColumns({ ...emptyForm(), priceText: '0.50', venmoHandle: 'ana' }, null).venmo_handle).toBe('ana')
+    expect(eventColumns({ ...emptyForm(), priceText: '0', venmoHandle: 'ana' }, null).venmo_handle).toBeNull()
+    expect(eventColumns({ ...emptyForm(), priceText: '', venmoHandle: 'ana' }, null).venmo_handle).toBeNull()
   })
 
   it('hydrates the edit form with two decimal places', () => {
-    expect(host).toMatch(/priceText: data\.price != null \? Number\(data\.price\)\.toFixed\(2\)/)
+    expect(formFromEvent({ title: 't', event_date: '2026-11-20T00:00:00Z', price: 5.5 } as never).priceText).toBe('5.50')
   })
 })
