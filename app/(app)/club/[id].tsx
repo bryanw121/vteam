@@ -326,19 +326,19 @@ export default function ClubDetailScreen() {
           <View style={{ height: COVER_HEIGHT + AVATAR_OVERLAP, marginBottom: theme.spacing.sm }}>
             <View style={{ height: COVER_HEIGHT }}>
               {coverUri ? (
-                <Image source={{ uri: coverUri }} style={[StyleSheet.absoluteFillObject, { pointerEvents: 'none' } as any]} resizeMode="cover" />
+                <Image source={{ uri: coverUri }} style={[StyleSheet.absoluteFill, { pointerEvents: 'none' } as any]} resizeMode="cover" />
               ) : (
                 <LinearGradient
                   colors={theme.gradients.brand}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={[StyleSheet.absoluteFillObject, { pointerEvents: 'none' } as any]}
+                  style={[StyleSheet.absoluteFill, { pointerEvents: 'none' } as any]}
                 />
               )}
               {/* Gradient fade at bottom for avatar contrast */}
               <LinearGradient
                 colors={['transparent', 'rgba(0,0,0,0.18)']}
-                style={[StyleSheet.absoluteFillObject, { top: COVER_HEIGHT * 0.5, pointerEvents: 'none' } as any]}
+                style={[StyleSheet.absoluteFill, { top: COVER_HEIGHT * 0.5, pointerEvents: 'none' } as any]}
               />
 
               {/* Floating back button */}

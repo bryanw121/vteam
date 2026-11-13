@@ -99,7 +99,7 @@ describe('event header actions', () => {
 
 describe('Share sends an https link (#130)', () => {
   it('native share sheet: title + Central time + https link, never vteam://', async () => {
-    const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' })
+    const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction', activityType: undefined })
     try {
       renderHeader({ eventId: 'abc-123', title: 'Sand Doubles', eventDate: '2026-10-31T21:00:00' })
       await act(async () => { fireEvent.press(screen.getByTestId('event-share-button')) })

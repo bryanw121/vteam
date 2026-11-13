@@ -4,6 +4,7 @@ import type { TextInputProps, TextProps } from 'react-native'
 import { useTextScale } from '../../contexts/textScale'
 import { MAX_TEXT_SCALE } from '../../constants/textSize'
 import { scaleTextStyle, textScaleFor } from '../../utils/textScale'
+import type { TextInstance, TextInputInstance } from 'react-native'
 
 const PLATFORM = Platform.OS === 'web' ? 'web' : 'native'
 /** Web inputs below 16px make iOS Safari zoom the page on focus. */
@@ -18,7 +19,7 @@ const WEB_INPUT_MIN_FONT = 16
  * OS part as in React Native. Default `MAX_TEXT_SCALE` (2×); pass
  * `TIGHT_TEXT_SCALE` for fixed-size UI (tab bar labels, pips).
  */
-export const Text = forwardRef<RNText, TextProps>(function Text({ style, maxFontSizeMultiplier, ...rest }, ref) {
+export const Text = forwardRef<TextInstance, TextProps>(function Text({ style, maxFontSizeMultiplier, ...rest }, ref) {
   const { appScale, osScale } = useTextScale()
   const { factor, maxFontSizeMultiplier: osCap } = textScaleFor(PLATFORM, appScale, osScale, maxFontSizeMultiplier ?? MAX_TEXT_SCALE)
   return (
@@ -32,7 +33,7 @@ export const Text = forwardRef<RNText, TextProps>(function Text({ style, maxFont
 })
 
 /** The app's `TextInput`: scales like `Text`; web inputs never drop below 16px. */
-export const TextInput = forwardRef<RNTextInput, TextInputProps>(function TextInput({ style, maxFontSizeMultiplier, ...rest }, ref) {
+export const TextInput = forwardRef<TextInputInstance, TextInputProps>(function TextInput({ style, maxFontSizeMultiplier, ...rest }, ref) {
   const { appScale, osScale } = useTextScale()
   const { factor, maxFontSizeMultiplier: osCap } = textScaleFor(PLATFORM, appScale, osScale, maxFontSizeMultiplier ?? MAX_TEXT_SCALE)
   return (
@@ -53,5 +54,5 @@ export function useScaledFontSize(size: number, cap: number = MAX_TEXT_SCALE): n
 }
 
 /** Instance types, so `useRef<TextInput>(null)` keeps working with these imports. */
-export type Text = RNText
-export type TextInput = RNTextInput
+export type Text = TextInstance
+export type TextInput = TextInputInstance

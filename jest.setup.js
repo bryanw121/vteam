@@ -19,3 +19,10 @@ process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||= 'test-anon-key'
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 )
+
+// Reanimated 4.7's own mock initialises native modules and throws under Jest: use a small JS
+// stand-in for Reanimated (__tests__/helpers/reanimatedMock.js) and worklets' own JS mock.
+// A string path, so tsc doesn't type-check the package's .ts mock source.
+const WORKLETS_MOCK = 'react-native-worklets/src/mock'
+jest.mock('react-native-worklets', () => require(WORKLETS_MOCK))
+jest.mock('react-native-reanimated', () => require('./__tests__/helpers/reanimatedMock'))

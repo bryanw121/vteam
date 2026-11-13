@@ -11,6 +11,7 @@ import { DiscussionComposer } from '../DiscussionComposer'
 import type { MentionUser, TournamentCommentWithAuthor } from '../../types'
 import { CommentRow } from './CommentRow'
 import { Spinner } from '../ui/Spinner'
+import type { ScrollViewInstance } from 'react-native'
 
 type Props = {
   /** Pull-to-refresh for the whole tournament page. */
@@ -33,7 +34,7 @@ type Props = {
 
 export function DiscussionTab({ comments, hasEarlier, loadingEarlier, onLoadEarlier, loading, error, onRetry, viewerId, isCreator, mentionableUsers, onPost, onRequestDelete, refreshControl }: Props) {
   const insets = useSafeAreaInsets()
-  const scrollRef = useRef<ScrollView>(null)
+  const scrollRef = useRef<ScrollViewInstance>(null)
   const [replyTo, setReplyTo] = useState<TournamentCommentWithAuthor | null>(null)
   const [editing, setEditing] = useState<TournamentCommentWithAuthor | null>(null)
 

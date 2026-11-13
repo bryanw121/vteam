@@ -13,6 +13,7 @@ import { Button } from '../Button'
 import { IconButton } from '../ui'
 import { AnchorOptionsMenu } from '../AnchorOptionsMenu'
 import type { AnchorMenuOption, AnchorRect, IoniconName } from '../../types'
+import type { ViewInstance } from 'react-native'
 
 type Props = {
   eventId: string
@@ -65,7 +66,7 @@ export function EventHeaderActions({ eventId, tab = 0, title, eventDate, canMana
   const [menuOpen, setMenuOpen] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
   const [overflowAnchor, setOverflowAnchor] = useState<AnchorRect | null>(null)
-  const overflowRef = useRef<View>(null)
+  const overflowRef = useRef<ViewInstance>(null)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => () => { if (copiedTimer.current) clearTimeout(copiedTimer.current) }, [])
   /** Always an https link to the web app (#130), never `vteam://` or the current URL's `?from=`. */

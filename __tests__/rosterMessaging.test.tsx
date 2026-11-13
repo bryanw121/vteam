@@ -22,8 +22,8 @@ import type { EventGuest, Profile, RosterActionContext, RosterMenu } from '../ty
  * the gates, not the happy path: who is offered Message, and who must never be.
  */
 
-jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'))
-require('react-native-gesture-handler/jestSetup')
+// react-native-reanimated is mocked globally in jest.setup.js
+jest.mock('react-native-gesture-handler', () => require('./helpers/gestureHandlerMock'))
 
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),

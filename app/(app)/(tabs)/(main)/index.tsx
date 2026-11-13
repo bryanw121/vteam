@@ -61,6 +61,7 @@ import { FeedItemShell, HiddenCountRow, HideFeedSheet } from '../../../../compon
 import { useHiddenFeed } from '../../../../hooks/useHiddenFeed'
 import { hiddenIndex, hideOptions, isHidden, matchingEntries } from '../../../../utils/hiddenFeed'
 import { ShareLinkButton } from '../../../../components/ShareLinkButton'
+import type { ViewInstance } from 'react-native'
 
 // Anchors for the week/month pager indexes only. "Today" itself comes from
 // useToday() so it rolls over at midnight in an app left open (#195).
@@ -241,11 +242,11 @@ export default function EventsScreen() {
   // load-more (tab-bar hide/show is centralized in the tabs shell).
   const docScrollRef        = useRef(docScrollActive)
   docScrollRef.current      = docScrollActive
-  const feedContentRef      = useRef<View>(null)
+  const feedContentRef      = useRef<ViewInstance>(null)
   // Narrow web: come back to the same place in the feed after an event page
   // (the browser's back remounts this screen; see hooks/useDocScrollMemory).
   // The whole screen stays hidden until the offset is back, header included (#254).
-  const screenRootRef       = useRef<View>(null)
+  const screenRootRef       = useRef<ViewInstance>(null)
   const feedDocLayout       = useDocScrollMemory('tab:events', docScrollActive, feedContentRef, undefined, screenRootRef)
 
   useEffect(() => {
@@ -923,11 +924,11 @@ export default function EventsScreen() {
                 if (Math.abs(diff) > 5) setTabBarHidden(diff > 0)
               }
             }}
-            ListFooterComponent={
+            ListFooterComponent={(
               loading && sections.length > 0
                 ? <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
                 : null
-            }
+            ) ?? undefined}
             refreshControl={refreshControl}
           />
         )

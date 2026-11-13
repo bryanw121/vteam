@@ -1,5 +1,5 @@
 import React, { useLayoutEffect } from 'react'
-import { HeaderBackButton, type HeaderBackButtonProps } from '@react-navigation/elements'
+import { HeaderBackButton, type HeaderBackButtonProps } from 'expo-router/react-navigation'
 import { useNavigation, useRouter } from 'expo-router'
 import { theme } from '../constants/theme'
 import { routes } from '../utils/routes'

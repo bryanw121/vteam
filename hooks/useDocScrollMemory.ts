@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { Platform } from 'react-native'
 import type { LayoutChangeEvent, View } from 'react-native'
 import { isShown, recallScroll, rememberScroll, restoreWhenReady } from '../utils/scrollMemory'
+import type { ViewInstance } from 'react-native'
 
 /**
  * Scroll memory for a screen in document-scroll mode (narrow web, the window
@@ -20,9 +21,9 @@ import { isShown, recallScroll, rememberScroll, restoreWhenReady } from '../util
 export function useDocScrollMemory(
   key: string | undefined,
   active: boolean,
-  nodeRef: React.RefObject<View | null>,
+  nodeRef: React.RefObject<ViewInstance | null>,
   onLayout?: (e: LayoutChangeEvent) => void,
-  hideRef?: React.RefObject<View | null>,
+  hideRef?: React.RefObject<ViewInstance | null>,
 ): (e: LayoutChangeEvent) => void {
   const enabled = Platform.OS === 'web' && !!key && active
   const wasShown = useRef(false)
