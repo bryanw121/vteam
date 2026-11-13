@@ -108,6 +108,34 @@ function rpcHandlers(db, signedIn, now) {
     get_email_by_username: ({ p_username }) => `${p_username}@example.com`,
     is_club_owner: ({ p_club_id }) => db.rowsOf('club_members').some(m => m.club_id === p_club_id && m.user_id === ME && m.role === 'owner'),
     is_conversation_member: ({ conv_id }) => db.rowsOf('conversation_members').some(m => m.conversation_id === conv_id && m.user_id === ME),
+    // What to bring (#256): coverage for everyone, names for signed-in viewers; claims and releases change the fixture rows.
+    get_event_bring_list: ({ p_event_id }) => db.rowsOf('event_bring_items').filter(i => i.event_id === p_event_id)
+      .sort((a, b) => a.position - b.position)
+      .map(i => {
+        const claims = db.rowsOf('event_bring_claims').filter(c => c.item_id === i.id)
+        return {
+          ...i, claimed: claims.reduce((n, c) => n + c.quantity, 0),
+          claimers: signedIn ? claims.map(c => { const p = profile(c.user_id); return { user_id: c.user_id, quantity: c.quantity, username: p.username, first_name: p.first_name, last_name: p.last_name, avatar_url: p.avatar_url } }) : [],
+        }
+      }),
+    claim_bring_item: ({ p_item_id, p_quantity }) => {
+      const i = db.rowsOf('event_bring_items').find(x => x.id === p_item_id)
+      const claims = db.rowsOf('event_bring_claims')
+      const others = claims.filter(c => c.item_id === p_item_id && c.user_id !== ME).reduce((n, c) => n + c.quantity, 0)
+      const take = Math.min(p_quantity ?? 1, (i?.quantity ?? 0) - others)
+      if (take < 1) return null
+      const mine = claims.find(c => c.item_id === p_item_id && c.user_id === ME)
+      if (mine) mine.quantity = take
+      else claims.push({ item_id: p_item_id, event_id: i.event_id, user_id: ME, quantity: take, created_at: new Date(nowMs).toISOString() })
+      return take
+    },
+    release_bring_item: ({ p_item_id }) => {
+      const claims = db.rowsOf('event_bring_claims')
+      const k = claims.findIndex(c => c.item_id === p_item_id && c.user_id === ME)
+      if (k >= 0) claims.splice(k, 1)
+      return null
+    },
+    save_event_bring_items: () => null,
     notification_pref_enabled: () => true,
     // Saves the read like the real RPC (server clock: the fixture "now", or later), so a recount agrees (#146).
     mark_conversation_read: ({ p_conversation_id }) => {
