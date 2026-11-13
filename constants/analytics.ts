@@ -54,4 +54,10 @@ export const ANALYTICS_EVENTS = {
   scorekeeperMatch: 'scorekeeper_match',
   /** A Share button sent or copied a screen's link. props: { screen (tournament, tournaments, leagues, events, profile), how: share | copy, filtered } */
   linkShared: 'link_shared',
+  /** Said they'll bring something to a game (#256). props: { surface (indoor | sand | grass | unknown), required } */
+  bringItemClaimed: 'bring_item_claimed',
+  /** Let go of something they said they'd bring. props: { surface } */
+  bringItemReleased: 'bring_item_released',
+  /** A host saved a game's "What to bring" list. props: { items (count), surface } */
+  bringListSaved: 'bring_list_saved',
 } as const

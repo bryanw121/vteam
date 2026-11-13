@@ -740,6 +740,113 @@ export type Database = {
           },
         ]
       }
+      event_bring_alert_log: {
+        Row: {
+          event_id: string
+          sent_at: string
+        }
+        Insert: {
+          event_id: string
+          sent_at?: string
+        }
+        Update: {
+          event_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_bring_alert_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_bring_claims: {
+        Row: {
+          created_at: string
+          event_id: string
+          item_id: string
+          quantity: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          item_id: string
+          quantity?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          item_id?: string
+          quantity?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_bring_claims_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_bring_claims_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "event_bring_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_bring_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_bring_items: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          label: string
+          position: number
+          quantity: number
+          required: boolean
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          label: string
+          position?: number
+          quantity?: number
+          required?: boolean
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          label?: string
+          position?: number
+          quantity?: number
+          required?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_bring_items_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_cohosts: {
         Row: {
           added_at: string
@@ -1512,7 +1619,10 @@ export type Database = {
           body: string
           created_at: string
           data: Json
+          group_count: number
+          group_key: string | null
           id: string
+          last_activity_at: string
           notification_type: string
           read_at: string | null
           title: string
@@ -1522,7 +1632,10 @@ export type Database = {
           body: string
           created_at?: string
           data?: Json
+          group_count?: number
+          group_key?: string | null
           id?: string
+          last_activity_at?: string
           notification_type: string
           read_at?: string | null
           title: string
@@ -1532,7 +1645,10 @@ export type Database = {
           body?: string
           created_at?: string
           data?: Json
+          group_count?: number
+          group_key?: string | null
           id?: string
+          last_activity_at?: string
           notification_type?: string
           read_at?: string | null
           title?: string
@@ -2549,6 +2665,7 @@ export type Database = {
       }
       user_event_templates: {
         Row: {
+          bring_items: Json | null
           created_at: string | null
           description: string | null
           id: string
@@ -2559,6 +2676,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bring_items?: Json | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -2569,6 +2687,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bring_items?: Json | null
           created_at?: string | null
           description?: string | null
           id?: string
@@ -2804,6 +2923,15 @@ export type Database = {
         Args: { p_key: string; p_max: number; p_window_seconds: number }
         Returns: boolean
       }
+      cheers_group_body: { Args: { p_data: Json }; Returns: string }
+      cheers_group_data: {
+        Args: { p_data: Json; p_giver: string; p_name: string; p_type: string }
+        Returns: Json
+      }
+      claim_bring_item: {
+        Args: { p_item_id: string; p_quantity?: number }
+        Returns: number
+      }
       club_successor: {
         Args: { p_club: string; p_user: string }
         Returns: string
@@ -2846,6 +2974,18 @@ export type Database = {
       get_ad_free_status: { Args: never; Returns: Json }
       get_chat_unread_count: { Args: never; Returns: number }
       get_email_by_username: { Args: { p_username: string }; Returns: string }
+      get_event_bring_list: {
+        Args: { p_event_id: string }
+        Returns: {
+          claimed: number
+          claimers: Json
+          id: string
+          label: string
+          position: number
+          quantity: number
+          required: boolean
+        }[]
+      }
       get_event_card_attendee_previews: {
         Args: { p_event_ids: string[] }
         Returns: {
@@ -2937,6 +3077,7 @@ export type Database = {
         Returns: boolean
       }
       redeem_ad_free: { Args: never; Returns: Json }
+      release_bring_item: { Args: { p_item_id: string }; Returns: undefined }
       remove_friend: { Args: { p_user_id: string }; Returns: string }
       replace_tournament_schedule: {
         Args: { p_matches: Json; p_pools?: Json; p_tournament_id: string }
@@ -2949,6 +3090,10 @@ export type Database = {
       rollup_app_events: { Args: { p_days?: number }; Returns: number }
       rollup_app_online: { Args: { p_days?: number }; Returns: number }
       sample_app_online: { Args: never; Returns: undefined }
+      save_event_bring_items: {
+        Args: { p_event_id: string; p_items: Json }
+        Returns: undefined
+      }
       schelagg_safe_date: { Args: { v: string }; Returns: string }
       schema_fingerprint: { Args: never; Returns: Json }
       schema_pending_changes: { Args: never; Returns: Json }
