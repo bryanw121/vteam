@@ -205,6 +205,14 @@ jobs:
       - name: Startup budget (paint and reads)
         if: success() || failure()
         run: node scripts/shots/startup-budget.mjs --dist dist-mock --out a11y-report/startup
+      # When the server stops answering (#289): saved feed + "vteam isn't answering" within
+      # 17 s, almost no requests while down, recovery on Retry, no endless spinner on a first visit.
+      - name: Outage check
+        if: success() || failure()
+        run: node scripts/shots/outage-flow.mjs --dist dist-mock --out a11y-report/outage
+      - name: Outage summary
+        if: always() && hashFiles('a11y-report/outage/summary.md') != ''
+        run: cat a11y-report/outage/summary.md >> "$GITHUB_STEP_SUMMARY"
       - name: Job summary
         if: always() && hashFiles('a11y-report/summary.md') != ''
         run: cat a11y-report/summary.md >> "$GITHUB_STEP_SUMMARY"

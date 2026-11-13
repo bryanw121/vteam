@@ -82,4 +82,6 @@ export const ANALYTICS_EVENTS = {
   bringItemReleased: 'bring_item_released',
   /** A host saved a game's "What to bring" list. props: { items (count), surface } */
   bringListSaved: 'bring_list_saved',
+  /** The server answered again after being down (#289). props: { ms (how long), cause: server | network } */
+  serverUnreachable: 'server_unreachable',
 } as const

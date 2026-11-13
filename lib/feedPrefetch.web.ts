@@ -18,6 +18,8 @@ type FeedPrefetch = {
 }
 
 import { readStoredSession } from './supabase'
+import { reportRequest, TIMEOUT_MESSAGE } from './serverHealth'
+import { READ_TIMEOUT_MS } from '../utils/serverHealth'
 
 const MAX_AGE_MS = 15_000
 
@@ -44,7 +46,23 @@ export function takeFeedPrefetch(start: string, end: string, viewerId: string | 
   if (p.start !== start || p.end !== end || p.viewer !== viewerId) return null
   if (Date.now() - p.at > MAX_AGE_MS) return null
   lastTakenAt = p.at
-  return p.promise
+  return withDeadline(p.promise, p.at + READ_TIMEOUT_MS)
+}
+
+/**
+ * The page's own request has no time limit (it starts before the app loads), so
+ * give it the app's: past READ_TIMEOUT_MS from its start it counts as a timeout,
+ * like any read through the Supabase client (#289).
+ */
+function withDeadline(promise: Promise<unknown>, deadline: number): Promise<unknown> {
+  let timer: ReturnType<typeof setTimeout> | null = null
+  const late = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reportRequest('timeout')
+      reject(new Error(TIMEOUT_MESSAGE))
+    }, Math.max(0, deadline - Date.now()))
+  })
+  return Promise.race([promise, late]).finally(() => { if (timer) clearTimeout(timer) })
 }
 
 let lastTakenAt: number | null = null

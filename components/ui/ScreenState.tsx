@@ -6,6 +6,8 @@ import { Button } from '../Button'
 import { EmptyState } from './EmptyState'
 import type { ScreenStateProps } from '../../types'
 import { Spinner } from './Spinner'
+import { useServerHealth } from '../../lib/serverHealth'
+import { SERVER_DOWN_COPY } from '../../constants/copy'
 
 const GENERIC_ERROR = 'Something went wrong. Check your connection and try again.'
 
@@ -19,11 +21,27 @@ export function ScreenState({
   loading, ready, error, onRetry, empty, emptyIcon, emptyTitle, emptyBody,
   emptyActionLabel, onEmptyAction, children,
 }: ScreenStateProps) {
+  const health = useServerHealth()
   if (loading && !ready) {
     return (
       <View style={shared.screenStateCenter} testID="screen-state-loading">
         <Spinner color={theme.colors.primary} />
       </View>
+    )
+  }
+
+  // Nothing to show and the server (or the connection) is down: say so instead of a generic error (#289).
+  if (error && !ready && health.status === 'down') {
+    const offline = health.cause === 'network'
+    return (
+      <EmptyState
+        testID="screen-state-server-down"
+        icon={offline ? 'cloud-offline-outline' : 'pulse-outline'}
+        title={offline ? SERVER_DOWN_COPY.stateOfflineTitle : SERVER_DOWN_COPY.stateTitle}
+        body={offline ? SERVER_DOWN_COPY.stateOfflineBody : SERVER_DOWN_COPY.stateBody}
+        actionLabel={onRetry ? 'Try again' : undefined}
+        onAction={onRetry}
+      />
     )
   }
 

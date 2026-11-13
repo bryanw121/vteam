@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { AppState } from 'react-native'
+import { isServerDown, onServerRecovered } from './serverHealth'
 import { useFocusEffect } from 'expo-router'
 
 /**
@@ -463,6 +464,9 @@ export function useMutation<TVars, TResult>(
 
 /** Refetch `key` if it is stale and has an enabled reader. */
 function refetchIfStale(key: string): void {
+  // While the server is down, background refetches only pile up; the probe in lib/serverHealth
+  // brings screens back when it answers (#289). An explicit refetch({ force }) still runs.
+  if (isServerDown()) return
   const entry = cache.get(key)
   if (!entry) return
   const fetcher = activeFetcher(entry)
@@ -470,6 +474,19 @@ function refetchIfStale(key: string): void {
   if (entry.hasData && !isEntryStale(entry, entry.staleMs, Date.now())) return
   void runFetch(key, fetcher, false)
 }
+
+/**
+ * The server answered again after being down (#289): refetch, once, every query
+ * a mounted screen reads that failed or went stale meanwhile.
+ */
+export function refetchAfterRecovery(): void {
+  cache.forEach((entry, key) => {
+    const fetcher = activeFetcher(entry)
+    if (!fetcher) return
+    if (entry.error || !entry.hasData || isEntryStale(entry, entry.staleMs, Date.now())) void runFetch(key, fetcher, false)
+  })
+}
+onServerRecovered(() => refetchAfterRecovery())
 
 /**
  * Refetch `key` when the screen regains focus or the app returns to the

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient, type Session } from '@supabase/supabase-js'
 import type { AppDatabase, RecoveryLink } from '../types'
 import { parseRecoveryLink } from '../utils/recoveryLink'
+import { timedFetch } from './serverHealth'
 import { AppState, Platform } from 'react-native'
 import 'react-native-url-polyfill/auto'
 
@@ -59,6 +60,9 @@ export const supabase = createClient<AppDatabase>(supabaseUrl, supabaseAnonKey, 
     // On native, deep-link handling is done by Expo Router — no URL to detect.
     detectSessionInUrl: Platform.OS === 'web',
   },
+  // Every request has a time limit and reports whether the server answered (#289): during the
+  // 2026-11-12 outage each one waited ~90 s, and nothing told the player why.
+  global: { fetch: (input, init) => timedFetch(input, init) },
 })
 
 // Native: the token refresh timer only runs while the app is in the

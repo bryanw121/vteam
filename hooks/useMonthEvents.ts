@@ -33,6 +33,7 @@ import { addMonths, bucketByMonthKey, enumerateMonths, monthEndIso, monthKeyFrom
 import { readFeedSnapshot, SNAPSHOT_MONTHS, writeFeedSnapshot } from '../utils/feedSnapshot'
 import { fetchEventCardPreviews, previewsFromRows, withEventCardPreviews } from '../utils/eventCardPreviews'
 import { isFeedRpcUnavailable, parseFeedSpan } from '../utils/feedSpan'
+import { TIMEOUT_MESSAGE } from '../lib/serverHealth'
 import { isFeedItemOver, normalizeExternalSessions, normalizeTournaments } from '../utils/feedItems'
 import { toast } from '../lib/toast'
 import { eventKeys } from './event/keys'
@@ -201,7 +202,9 @@ async function adoptFeedPrefetch(rangeStart: string, rangeEnd: string): Promise<
   if (!pending) return null
   try {
     return await pending
-  } catch {
+  } catch (e) {
+    // The server didn't answer in time: asking again now only waits again (#289).
+    if (e instanceof Error && e.message === TIMEOUT_MESSAGE) throw e
     return null
   }
 }
@@ -222,6 +225,8 @@ async function fetchFeedSpanRpc(rangeStart: string, rangeEnd: string, externalSi
     p_external_updated_since: externalSince,
   })
   if (error) {
+    // A timeout isn't a missing function: the separate queries would only wait on the same server (#289).
+    if (error.message?.includes(TIMEOUT_MESSAGE)) throw new Error(TIMEOUT_MESSAGE)
     if (isFeedRpcUnavailable(error)) feedRpcEnabled = false
     console.warn('[useMonthEvents] get_feed_span unavailable, using separate queries:', error.message)
     return null

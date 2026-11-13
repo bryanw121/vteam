@@ -1,4 +1,5 @@
-import { GENERIC_ERROR_MESSAGE, NETWORK_ERROR_MESSAGE } from '../constants/copy'
+import { GENERIC_ERROR_MESSAGE, NETWORK_ERROR_MESSAGE, SERVER_DOWN_MESSAGE } from '../constants/copy'
+import { serverHealth, TIMEOUT_MESSAGE } from './serverHealth'
 import type { ToastMessage } from '../types'
 
 /**
@@ -25,6 +26,19 @@ export function isNetworkError(e: unknown): boolean {
   return /network request failed|failed to fetch|fetch failed|load failed|networkerror|timed out|timeout/i.test(message)
 }
 
+/**
+ * Why a write failed, in words a player can use (#289): the server (our time limit
+ * cut it off, or the server is known to be down for server reasons), their own
+ * connection, or the generic message. Never a raw database message.
+ */
+export function failedWriteMessage(e: unknown): string {
+  const message = e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : ''
+  const health = serverHealth()
+  if (message.includes(TIMEOUT_MESSAGE) || (health.status !== 'ok' && health.cause === 'server')) return SERVER_DOWN_MESSAGE
+  if (isNetworkError(e) || (health.status !== 'ok' && health.cause === 'network')) return NETWORK_ERROR_MESSAGE
+  return GENERIC_ERROR_MESSAGE
+}
+
 export const toast = {
   show(t: ToastMessage): number {
     current = { variant: 'info', ...t, id: nextId++ }
@@ -33,12 +47,11 @@ export const toast = {
   },
   /**
    * A write that failed: `title` says what ("Couldn't join"), the body says why
-   * in words a player can use: offline, or the generic message. Raw database
-   * errors are never shown.
+   * in words a player can use (`failedWriteMessage`): the server isn't answering,
+   * the connection, or the generic message. Raw database errors are never shown.
    */
   error(title: string, e?: unknown, action?: ToastMessage['action']): number {
-    const message = isNetworkError(e) ? NETWORK_ERROR_MESSAGE : GENERIC_ERROR_MESSAGE
-    return toast.show({ title, message, variant: 'error', action })
+    return toast.show({ title, message: failedWriteMessage(e), variant: 'error', action })
   },
   /** Hide the toast on screen (or only `id`, if it is still that one). */
   hide(id?: number) {

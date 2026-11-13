@@ -17,6 +17,7 @@ import { queryString } from '../../utils/urlState'
 import { tabParams } from '../../utils/tabViews'
 import { TourProvider } from '../../contexts/tour'
 import { ToastHost } from '../../components/ToastHost'
+import { ServerStatusBar } from '../../components/ServerStatusBar'
 import { TourTarget } from '../../components/tour/TourTarget'
 import { TOUR_TARGETS } from '../../constants'
 
@@ -53,6 +54,8 @@ export default function AppLayout() {
         <AppLayoutInner />
         {/* lib/toast messages, above the sidebar and every screen (#228). */}
         <ToastHost />
+        {/* "vteam isn't answering" while the server or the connection is down (#289). */}
+        <ServerStatusBar />
       </TourProvider>
     </ChatUnreadProvider>
   )

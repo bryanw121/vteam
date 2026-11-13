@@ -20,6 +20,21 @@ export const EVENT_JUST_FILLED_BODY =
 
 /** Alert body for a failed write that is almost certainly a connectivity problem. */
 export const NETWORK_ERROR_MESSAGE = 'Check your connection and try again.'
+/** A write failed because vteam's server isn't answering (timeouts, gateway errors: #289), not the player's connection. */
+export const SERVER_DOWN_MESSAGE = "vteam's server isn't answering, so nothing was saved. Try again in a minute."
+/** ServerStatusBar and the server-down screen state (#289). */
+export const SERVER_DOWN_COPY = {
+  barTitle: "vteam isn't answering",
+  barOffline: "Can't reach vteam",
+  offlineBody: 'Check your connection',
+  retrying: (seconds: number) => `Trying again in ${seconds} s`,
+  trying: 'Trying again…',
+  retry: 'Retry',
+  stateTitle: "vteam isn't answering right now",
+  stateBody: "It's our server, not your connection. We'll keep trying and show this as soon as it's back.",
+  stateOfflineTitle: "You're offline",
+  stateOfflineBody: 'Check your connection. This will load as soon as you are back online.',
+} as const
 /** Events feed: a refresh failed while older (cached or saved) events are on screen. */
 export const FEED_STALE_NOTICE = "Couldn't refresh. These may be out of date. Tap to retry."
 
