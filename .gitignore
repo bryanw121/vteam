@@ -60,3 +60,4 @@ supabase/.temp/
 .yarnrc
 yarn.lock
 coverage/
+stability-report/

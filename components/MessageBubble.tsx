@@ -8,6 +8,7 @@ import type { AnchorRect } from '../types'
 import type { MessageWithDetails } from '../types'
 import { profileAvatarSmallUri } from '../utils'
 import { useChatImageUrl } from '../hooks/useChatImageUrl'
+import type { ViewInstance } from 'react-native'
 
 const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '🔥', '👏']
 
@@ -48,7 +49,7 @@ export function MessageBubble({
   onImagePress,
   onRetryPress,
 }: Props) {
-  const peerKebabWrapRef = useRef<View>(null)
+  const peerKebabWrapRef = useRef<ViewInstance>(null)
   const [peerMenuVisible, setPeerMenuVisible] = useState(false)
   const [peerMenuAnchor, setPeerMenuAnchor] = useState<AnchorRect | null>(null)
 

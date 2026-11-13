@@ -93,7 +93,7 @@ const BACKOFF_MAX_MS = 30_000
 
 const topics = new Map<string, TopicEntry>()
 let appStateSub: NativeEventSubscription | null = null
-let lastAppState: AppStateStatus = AppState.currentState
+let lastAppState: AppStateStatus = (AppState.currentState ?? 'active') as AppStateStatus
 
 function bindingSig(b: Omit<RealtimeBinding, 'handler'>): string {
   return [b.event, b.schema ?? 'public', b.table, b.filter ?? ''].join('|')
@@ -211,7 +211,7 @@ function onAppStateChange(next: AppStateStatus): void {
 
 function ensureAppStateListener(): void {
   if (appStateSub) return
-  lastAppState = AppState.currentState
+  lastAppState = (AppState.currentState ?? 'active') as AppStateStatus
   appStateSub = AppState.addEventListener('change', onAppStateChange)
 }
 
@@ -306,5 +306,5 @@ export function __resetRealtime(): void {
     appStateSub.remove()
     appStateSub = null
   }
-  lastAppState = AppState.currentState
+  lastAppState = (AppState.currentState ?? 'active') as AppStateStatus
 }

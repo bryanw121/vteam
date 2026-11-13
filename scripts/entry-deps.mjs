@@ -72,8 +72,11 @@ function main(argv) {
     } catch {
       throw new Error(`No source map next to ${src}: export with --source-maps`)
     }
-    merged.sources.push(...map.sources)
-    merged.sourcesContent.push(...(map.sourcesContent ?? map.sources.map(() => '')))
+    // Expo 58 writes indexed maps (`sections`), older exports flat ones.
+    for (const part of map.sections ? map.sections.map(sec => sec.map) : [map]) {
+      merged.sources.push(...(part.sources ?? []))
+      merged.sourcesContent.push(...(part.sourcesContent ?? (part.sources ?? []).map(() => '')))
+    }
   }
   const { banned, packages } = analyzeEntryMap(merged)
   console.log(`First load: ${scripts.length} scripts, ${(raw / 1024).toFixed(0)} KB raw, ${merged.sources.length} modules`)

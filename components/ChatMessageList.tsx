@@ -23,11 +23,11 @@ export function ChatMessageList({ messages, renderMessage, hasMore, onLoadMore, 
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
       onEndReached={hasMore ? onLoadMore : undefined}
       onEndReachedThreshold={0.2}
-      ListFooterComponent={hasMore ? (
+      ListFooterComponent={(hasMore ? (
         <View style={shared.chatListEdge}>
           <Spinner size="small" color={theme.colors.subtext} />
         </View>
-      ) : null}
+      ) : null) ?? undefined}
     />
   )
 }

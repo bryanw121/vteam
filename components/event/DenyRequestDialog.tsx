@@ -22,7 +22,7 @@ export function DenyRequestDialog({ target, processing, onCancel, onConfirm }: P
   return (
     <Modal visible={target !== null} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={shared.modalOverlayPlain}>
-        <Pressable style={[StyleSheet.absoluteFillObject, { backgroundColor: theme.colors.overlayLight }]} onPress={onCancel} />
+        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.overlayLight }]} onPress={onCancel} />
         <View style={[shared.card, styles.card]}>
           <Text style={shared.subheading}>Deny request</Text>
           {target && (

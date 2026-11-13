@@ -138,11 +138,11 @@ function NewDMModal({ visible, onDismiss, onSelect, silencedUserIds, myId }: {
                 </TouchableOpacity>
               )
             }}
-            ListEmptyComponent={query.trim() ? (
+            ListEmptyComponent={(query.trim() ? (
               <Text style={[shared.caption, { textAlign: 'center', padding: theme.spacing.xl }]}>
                 No users found
               </Text>
-            ) : null}
+            ) : null) ?? undefined}
           />
         )}
       </View>
@@ -355,7 +355,7 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
               tintColor={theme.colors.primary}
             />
           }
-          ListHeaderComponent={visibleConversations.length === 0 ? (
+          ListHeaderComponent={(visibleConversations.length === 0 ? (
             <View style={[shared.centered, { paddingTop: 60 }]}>
               <Ionicons name="chatbubbles-outline" size={48} color={theme.colors.border} />
               <Text style={[shared.body, { marginTop: theme.spacing.md, color: theme.colors.subtext, textAlign: 'center', paddingHorizontal: theme.spacing.xl }]}>
@@ -364,7 +364,7 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
                   : 'No messages yet.\nTap the icon above to start a conversation.'}
               </Text>
             </View>
-          ) : null}
+          ) : null) ?? undefined}
         />
       </ScreenState>
 

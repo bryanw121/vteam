@@ -259,18 +259,18 @@ export default function TabsLayout() {
           <Pressable
             style={Platform.OS === 'web'
               ? ({ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 } as any)
-              : StyleSheet.absoluteFillObject}
+              : StyleSheet.absoluteFill}
             onPress={closeFab}
           >
             <BlurView
               pointerEvents="none"
               intensity={36}
               tint="dark"
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
             />
             <View
               pointerEvents="none"
-              style={[StyleSheet.absoluteFillObject, { backgroundColor: theme.colors.fabMenuBackdropDim }]}
+              style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.fabMenuBackdropDim }]}
             />
           </Pressable>
         )}
