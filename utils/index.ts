@@ -112,42 +112,6 @@ export function profileInitial(profile: NameParts): string {
   return single ? single.charAt(0).toUpperCase() : '?'
 }
 
-// ─── Member search ────────────────────────────────────────────────────────────
-
-/** Columns searched by the "find a member" boxes (chat, event invite, tournament invite). */
-const MEMBER_SEARCH_COLUMNS = ['username', 'first_name', 'last_name'] as const
-
-/**
- * Escapes one user-typed term for use as a PostgREST `ilike` value.
- *
- * Two separate hazards, both reachable by typing an ordinary name:
- *  1. PostgREST parses `or=(...)` as a comma-separated logic tree, so a raw
- *     `,` `.` `(` `)` in the term corrupts the tree — a comma 400s the request
- *     outright, a `)` silently truncates the filter and returns wrong rows.
- *     Wrapping the value in double quotes makes PostgREST treat it as a
- *     literal (verified against the live API).
- *  2. `%` and `_` are SQL LIKE wildcards and `*` is PostgREST's alias for `%`,
- *     so leaving them in lets a term match far more than the user typed.
- *     They're dropped, making search plain substring matching.
- */
-export function escapeMemberSearchTerm(term: string): string {
-  return term
-    .trim()
-    .replace(/[\\"]/g, '\\$&')  // backslash + double quote — quoting's own escapes
-    .replace(/[%_*]/g, '')      // LIKE / PostgREST wildcards
-}
-
-/**
- * Builds the `.or(...)` filter for a member search, or null when the term has
- * no searchable characters left (caller should skip the query and show nothing
- * rather than fetching every profile).
- */
-export function buildMemberSearchFilter(rawTerm: string): string | null {
-  const escaped = escapeMemberSearchTerm(rawTerm)
-  if (!escaped) return null
-  return MEMBER_SEARCH_COLUMNS.map(col => `${col}.ilike."%${escaped}%"`).join(',')
-}
-
 export { sanitizePriceInput, parsePrice, normalizePriceText, formatPrice, formatPriceAmount } from './price'
 
 export function cleanDate(d: Date) {

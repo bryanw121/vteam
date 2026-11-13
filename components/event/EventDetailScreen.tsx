@@ -401,6 +401,7 @@ export default function EventDetail() {
                   onManageCohosts={cohostsApi.open}
                   payments={paymentAccess.canToggle ? payments : null}
                   noShow={isViewerNoShow(roster.rows, userId)}
+                  isHostOrCohost={isHostOrCohost}
                 />
               ) : placeholder}
 

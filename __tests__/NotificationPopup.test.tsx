@@ -15,6 +15,9 @@ function makeNotification(overrides: Partial<Notification> = {}): Notification {
     data: {},
     read_at: null,
     created_at: new Date().toISOString(),
+    group_key: null,
+    group_count: 1,
+    last_activity_at: new Date().toISOString(),
     ...overrides,
   }
 }

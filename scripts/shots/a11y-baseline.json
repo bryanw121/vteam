@@ -97,6 +97,22 @@
       "color-contrast": 1
     }
   },
+  "event-bring-list": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
+  "event-bring-list-guest": {
+    "mobile": {
+      "color-contrast": 1
+    },
+    "desktop": {
+      "color-contrast": 2
+    }
+  },
   "event-cheers": {
     "mobile": {
       "color-contrast": 2
@@ -208,6 +224,12 @@
     }
   },
   "host-create": {
+    "mobile": {},
+    "desktop": {
+      "color-contrast": 1
+    }
+  },
+  "host-create-bring": {
     "mobile": {},
     "desktop": {
       "color-contrast": 1
