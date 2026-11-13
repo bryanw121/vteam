@@ -35,12 +35,26 @@ describe('OneTimeBanner', () => {
   })
 
   it('counts as seen once shown, even without dismissing', async () => {
+    const now = jest.spyOn(Date, 'now').mockReturnValue(1_000_000)
     const first = render(<OneTimeBanner banner={{ ...banner, id: 'other-v1' }} />)
     expect(await screen.findByText('Hello there')).toBeTruthy()
     first.unmount()
+    now.mockReturnValue(1_000_000 + 60_000)
     render(<OneTimeBanner banner={{ ...banner, id: 'other-v1' }} />)
     await act(async () => { await Promise.resolve() })
     expect(screen.queryByText('Hello there')).toBeNull()
+    now.mockRestore()
+  })
+
+  it('survives a remount right after it shows (a saved filter rewriting the address)', async () => {
+    const now = jest.spyOn(Date, 'now').mockReturnValue(2_000_000)
+    const first = render(<OneTimeBanner banner={{ ...banner, id: 'remount-v1' }} />)
+    expect(await screen.findByText('Hello there')).toBeTruthy()
+    first.unmount()
+    now.mockReturnValue(2_000_000 + 500)
+    render(<OneTimeBanner banner={{ ...banner, id: 'remount-v1' }} />)
+    expect(await screen.findByText('Hello there')).toBeTruthy()
+    now.mockRestore()
   })
 
   it('a new id shows again', async () => {

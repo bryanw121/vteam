@@ -6,7 +6,7 @@ import { DocPullToRefresh, RefreshControl } from '../../../../components/Refresh
 import { DocScrollView } from '../../../../components/DocScrollView'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFeedRsvp, useMonthEvents } from '../../../../hooks/useMonthEvents'
-import { useDocScrollMemory } from '../../../../hooks/useDocScrollMemory'
+import { useDocScrollMemory, useDocScrollRefocus } from '../../../../hooks/useDocScrollMemory'
 import { useNotifications } from '../../../../hooks/useNotifications'
 import { useIsNarrowWeb } from '../../../../hooks/useIsNarrowWeb'
 import { useFriendsGoing } from '../../../../hooks/useFriendsGoing'
@@ -248,6 +248,7 @@ export default function EventsScreen() {
   // The whole screen stays hidden until the offset is back, header included (#254).
   const screenRootRef       = useRef<ViewInstance>(null)
   const feedDocLayout       = useDocScrollMemory('tab:events', docScrollActive, feedContentRef, undefined, screenRootRef)
+  useDocScrollRefocus('tab:events', docScrollActive, feedContentRef, screenRootRef)
 
   useEffect(() => {
     if (!docScrollActive || typeof window === 'undefined') return

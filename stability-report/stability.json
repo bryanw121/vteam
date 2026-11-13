@@ -1,0 +1,109 @@
+{
+  "mode": "PR",
+  "seconds": 150,
+  "counts": {
+    "tours": 24,
+    "scroll": 24,
+    "links": 28,
+    "cases": 76
+  },
+  "findings": [
+    {
+      "check": "scroll",
+      "screen": "tournaments",
+      "viewport": "desktop",
+      "caseId": "tournaments:in:reload",
+      "kind": "reload:layout-shift",
+      "value": 0.148,
+      "detail": "1 shift(s) totalling 0.148, worst 0.148 at +525 ms: div \"ON VTEAM · 2 NOV 16 Halloween Sand Class\" moved 8 px, height -8 px; [tournaments-elsewhere] div \"ELSEWHERE IN THE STATE · 1 DEC 23–24 Wed\" moved -685 px, height -175 px; div \"Tournaments  \" moved 8 px (in)",
+      "frames": [
+        "frames/desktop-tournaments-in-reload-0.jpg",
+        "frames/desktop-tournaments-in-reload-1.jpg",
+        "frames/desktop-tournaments-in-reload-2.jpg",
+        "frames/desktop-tournaments-in-reload-3.jpg",
+        "frames/desktop-tournaments-in-reload-4.jpg"
+      ]
+    },
+    {
+      "check": "scroll",
+      "screen": "event",
+      "viewport": "phone",
+      "caseId": "event:in:reload",
+      "kind": "reload:layout-shift",
+      "value": 0.097,
+      "detail": "2 shift(s) totalling 0.116, worst 0.097 at +654 ms: [event-detail-skeleton] div \"\" moved 8 px; [event-detail-skeleton] div \"\" moved 8 px; div \" Share  Edit \" moved 0 px (in)",
+      "frames": [
+        "frames/phone-event-in-reload-0.jpg",
+        "frames/phone-event-in-reload-1.jpg",
+        "frames/phone-event-in-reload-2.jpg",
+        "frames/phone-event-in-reload-3.jpg",
+        "frames/phone-event-in-reload-4.jpg",
+        "frames/phone-event-in-reload-5.jpg",
+        "frames/phone-event-in-reload-6.jpg",
+        "frames/phone-event-in-reload-7.jpg"
+      ]
+    },
+    {
+      "check": "scroll",
+      "screen": "event",
+      "viewport": "desktop",
+      "caseId": "event:in:reload",
+      "kind": "reload:layout-shift",
+      "value": 0.045,
+      "detail": "2 shift(s) totalling 0.086, worst 0.045 at +595 ms: [event-detail-skeleton] div \"\" moved 8 px; [event-detail-skeleton] div \"\" moved 8 px; div \" Share  Edit \" moved 0 px (in)",
+      "frames": [
+        "frames/desktop-event-in-reload-0.jpg",
+        "frames/desktop-event-in-reload-1.jpg",
+        "frames/desktop-event-in-reload-2.jpg",
+        "frames/desktop-event-in-reload-3.jpg",
+        "frames/desktop-event-in-reload-4.jpg",
+        "frames/desktop-event-in-reload-5.jpg",
+        "frames/desktop-event-in-reload-6.jpg"
+      ]
+    },
+    {
+      "check": "scroll",
+      "screen": "club",
+      "viewport": "phone",
+      "caseId": "club:in:back",
+      "kind": "back:jump",
+      "value": 1322,
+      "detail": "first painted at 0 px (+115 ms), settled at 1322 px (in)",
+      "frames": [
+        "frames/phone-club-in-back-0.jpg"
+      ]
+    }
+  ],
+  "skipped": [
+    "tournaments (phone, in): Back not exercised, no child link partway down",
+    "tournaments (desktop, in): Back not exercised, no child link partway down",
+    "event (phone, in): Back not exercised, no child link partway down",
+    "event (desktop, in): Back not exercised, no child link partway down"
+  ],
+  "improved": [
+    {
+      "check": "scroll",
+      "screen": "events",
+      "viewport": "phone",
+      "kind": "back:jump",
+      "base": 794,
+      "value": 0
+    },
+    {
+      "check": "scroll",
+      "screen": "events",
+      "viewport": "desktop",
+      "kind": "reload:layout-shift",
+      "base": 0.011,
+      "value": 0
+    },
+    {
+      "check": "scroll",
+      "screen": "events",
+      "viewport": "desktop",
+      "kind": "back:not-restored",
+      "base": 259,
+      "value": 0
+    }
+  ]
+}
