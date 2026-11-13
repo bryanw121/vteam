@@ -8,6 +8,8 @@ import { openExternalUrl } from '../lib/openExternalUrl'
 import { track } from '../lib/analytics'
 import { ANALYTICS_EVENTS } from '../constants/analytics'
 import { useToday } from '../hooks/useToday'
+import { LiveScoresLink } from './programs/LiveScoresLink'
+import { sheetScoresUrl } from '../utils/sheetScores'
 import { programDateBadge, programDeadline, programKicker, programPrice, programRelative, programUrgency, programWhen } from '../utils/externalPrograms'
 import type { ExternalProgramCardProps } from '../types'
 
@@ -32,9 +34,10 @@ function ExternalProgramCardInner({ program: p, compact = false, menuInset = fal
   const start = new Date(y, m - 1, d)
   const badge = p.kind === 'tournament' ? programDateBadge(p) : null
   const relative = compact && p.kind === 'tournament' ? programRelative(p, today) : null
+  const hasScores = p.kind === 'tournament' && !!sheetScoresUrl(p.id)
   const label = p.status === 'closed' || p.status === 'full' ? `See it at ${p.org}` : `Sign up with ${p.org}`
 
-  return (
+  const card = (
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={() => {
@@ -43,7 +46,7 @@ function ExternalProgramCardInner({ program: p, compact = false, menuInset = fal
         void openExternalUrl(p.signup_url)
       }}
       disabled={!p.signup_url}
-      style={shared.externalCard}
+      style={hasScores ? [shared.externalCard, shared.externalCardJoined] : shared.externalCard}
       accessibilityRole="link"
       accessibilityLabel={[p.title, where, relative, when, price, urgency ?? deadline, label].filter(Boolean).join('. ')}
       testID="external-program-card"
@@ -89,6 +92,14 @@ function ExternalProgramCardInner({ program: p, compact = false, menuInset = fal
         ) : null}
       </View>
     </TouchableOpacity>
+  )
+  if (!hasScores) return card
+  // Two separate links: the card goes to the organizer's site as before; the strip opens scores in vteam.
+  return (
+    <View>
+      {card}
+      <LiveScoresLink programId={p.id} title={p.title} />
+    </View>
   )
 }
 

@@ -83,7 +83,7 @@ const HEX_RE = /^#[0-9a-f]{6}$/i
 /** One line of plain text: no newlines or control characters, trimmed, capped. */
 function cleanText(value: unknown, max: number): string | null {
   if (typeof value !== 'string') return null
-  // eslint-disable-next-line no-control-regex
+  // deno-lint-ignore no-control-regex
   const text = value.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim()
   return text.length > 0 && text.length <= max ? text : null
 }

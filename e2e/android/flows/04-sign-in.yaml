@@ -1,0 +1,47 @@
+# Signing in with a username, then the signed-in Me tab, and the scorekeeper
+# example (official form drawn natively: bundled PNG + SVG marks).
+appId: com.vteamvolleyball.app
+name: Sign in, profile, scorekeeper example
+tags: [signed-in]
+---
+- launchApp:
+    clearState: true
+- runFlow: _ready.yaml
+- tapOn:
+    id: header-sign-in
+- tapOn:
+    id: login-identifier
+- inputText: ${MAESTRO_E2E_USERNAME}
+- tapOn:
+    id: login-password
+- inputText: ${MAESTRO_E2E_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: login-submit
+- runFlow:
+    when:
+      visible:
+        id: welcome-skip
+    commands:
+      - tapOn:
+          id: welcome-skip
+- runFlow: _ready.yaml
+- tapOn: "Me"
+- extendedWaitUntil:
+    visible:
+      id: profile-points-count
+    timeout: 30000
+- takeScreenshot: signed-in-profile
+- scrollUntilVisible:
+    element: "Experimental features"
+    direction: DOWN
+- tapOn: "Experimental features"
+- tapOn:
+    id: experiment-scorekeeper
+- tapOn:
+    id: open-example
+- extendedWaitUntil:
+    visible:
+      id: sheet-form
+    timeout: 30000
+- takeScreenshot: scorekeeper-example
