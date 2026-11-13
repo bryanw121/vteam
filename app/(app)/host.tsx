@@ -10,16 +10,15 @@ import { getQueryData, invalidate, queryKey, useQuery } from '../../lib/query'
 import { HostFormSkeleton } from '../../components/host/HostFormSkeleton'
 import { DatePickerField } from '../../components/DatePickerField'
 import { LocationPickerField } from '../../components/LocationPickerField'
-import type { LocationValue } from '../../types'
 import { TemplatesView } from '../../components/host/TemplatesView'
 import { Chip, ScreenState } from '../../components/ui'
 import { shared, theme, STALE, EVENT_EDIT_SELECT, SURFACE_OPTIONS, DAY_LABELS_SHORT, DURATION_OPTIONS, DEFAULT_DURATION_MINUTES, GENERIC_ERROR_MESSAGE } from '../../constants'
 import type { RecurrenceCadence } from '../../constants'
 import { routes } from '../../utils/routes'
 import { useSession } from '../../contexts/session'
-import { useTags } from '../../hooks/useTags'
+import { useHostContext } from '../../hooks/host/useHostContext'
 import { cleanDate, diffTagIds, normalizePriceText, parsePrice, sanitizePriceInput } from '../../utils'
-import { emptyForm, eventColumns, eventDates, formFromEvent, formFromParams, newEventRows } from '../../utils/hostForm'
+import { emptyForm, eventColumns, formWithTemplate, eventDates, formFromEvent, formFromParams, newEventRows } from '../../utils/hostForm'
 import { bringDraftsChanged, draftsFromItems, draftsFromTemplate, saveBringArgs, templateBringItems } from '../../utils/bringList'
 import { BringItemsSection } from '../../components/host/BringItemsSection'
 import { fetchBringList } from '../../hooks/event/useEventBringList'
@@ -28,12 +27,9 @@ import { track } from '../../lib/analytics'
 import { toast } from '../../lib/toast'
 import { ANALYTICS_EVENTS } from '../../constants/analytics'
 import { defaultRecurrenceEndDate } from '../../utils/recurrence'
-import type { BringItem, BringItemDraft, CreateEventForm, EventEditSource, EventWithDetails, OwnedClubOption, Tag, UserEventTemplate } from '../../types'
+import type { BringItem, BringItemDraft, CreateEventForm, EventEditSource, EventWithDetails, Tag, UserEventTemplate } from '../../types'
 import { Spinner } from '../../components/ui/Spinner'
 
-const EMPTY_TAGS: Tag[] = []
-const EMPTY_CLUBS: OwnedClubOption[] = []
-const TEMPLATE_SELECT = 'id, user_id, name, title, description, location, max_attendees, created_at, bring_items'
 
 // Built once, like before: the reset after a create goes back to it.
 const EMPTY_FORM = emptyForm()
@@ -120,9 +116,9 @@ export default function HostEventScreen() {
   const [saveAsTemplate, setSaveAsTemplate] = useState(false)
   const [templateName, setTemplateName] = useState('')
 
-  // Tags (shared, cached) and the form's selection of them
-  const tagsQuery = useTags()
-  const availableTags = tagsQuery.data ?? EMPTY_TAGS
+  // Tags, owned clubs, recent venues and templates (hooks/host/useHostContext).
+  const { tags: availableTags, tagsLoading, ownedClubs, recentVenues, templatesQuery, refetchAll } = useHostContext(userId, view === 'templates')
+  // The form's selection of tags
   const seedTagIds = seed ? seed.event_tags.map(et => et.tag_id) : []
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(seedTagIds)
   const selectedTagIdsRef = useRef(selectedTagIds)
@@ -131,70 +127,11 @@ export default function HostEventScreen() {
   // than against mutated UI state. Set on load, refreshed after each save.
   const originalTagIdsRef = useRef<string[]>(seedTagIds)
 
-  // Clubs the host owns can be attached to the event
-  const ownedClubsQuery = useQuery<OwnedClubOption[]>(
-    userId ? queryKey('clubs', 'owned', userId) : null,
-    async () => {
-      const { data, error } = await supabase
-        .from('club_members')
-        .select('club_id, clubs (id, name)')
-        .eq('user_id', userId as string)
-        .eq('role', 'owner')
-      if (error) throw error
-      return ((data ?? []) as { clubs: OwnedClubOption | null }[])
-        .map(m => m.clubs)
-        .filter((c): c is OwnedClubOption => !!c)
-    },
-    { staleMs: STALE.feed, enabled: !!userId },
-  )
-  const ownedClubs = ownedClubsQuery.data ?? EMPTY_CLUBS
   const [selectedClubId, setSelectedClubId] = useState<string | null>(seed?.club_id ?? (typeof clubIdParam === 'string' && clubIdParam ? clubIdParam : null))
   /** The poll this new event answers; cleared once linked (or if the club changes). */
   const pollIdRef = useRef(!isEdit && typeof pollIdParam === 'string' && pollIdParam ? pollIdParam : null)
   const selectedClubIdRef = useRef(selectedClubId)
   selectedClubIdRef.current = selectedClubId
-
-  // Venues from the host's past events, offered as quick picks in the location field
-  const venuesQuery = useQuery<LocationValue[]>(
-    userId ? queryKey('host', 'venues', userId) : null,
-    async () => {
-      const { data, error } = await supabase
-        .from('events')
-        .select('location, latitude, longitude')
-        .eq('created_by', userId as string)
-        .not('location', 'is', null)
-        .order('event_date', { ascending: false })
-        .limit(20)
-      if (error) throw error
-      const seen = new Set<string>()
-      const unique: LocationValue[] = []
-      for (const e of data ?? []) {
-        if (e.location && !seen.has(e.location)) {
-          seen.add(e.location)
-          unique.push({ display: e.location, latitude: e.latitude ?? null, longitude: e.longitude ?? null })
-        }
-      }
-      return unique.slice(0, 5)
-    },
-    { staleMs: STALE.feed, enabled: !!userId },
-  )
-  const recentVenues = venuesQuery.data ?? []
-
-  // Saved templates (only fetched once the picker is opened)
-  const templatesQuery = useQuery<UserEventTemplate[]>(
-    userId ? queryKey('templates', userId) : null,
-    async () => {
-      const { data, error } = await supabase
-        .from('user_event_templates')
-        .select(TEMPLATE_SELECT)
-        .eq('user_id', userId as string)
-        .order('created_at', { ascending: false })
-      if (error) throw error
-      // TEMPORARY double cast: bring_items isn't in types/database.ts until it is regenerated from live after merge (#256).
-      return (data ?? []) as unknown as UserEventTemplate[]
-    },
-    { staleMs: STALE.feed, enabled: !!userId && view === 'templates' },
-  )
 
   // Editing: the event being edited is loaded into the form once
   const [editState, setEditState] = useState<'idle' | 'loading' | 'loaded' | 'error'>(seed ? 'loaded' : isEdit ? 'loading' : 'idle')
@@ -292,10 +229,7 @@ export default function HostEventScreen() {
     setHostPullRefreshing(true)
     try {
       await Promise.all([
-        tagsQuery.refetch({ force: true }),
-        ownedClubsQuery.refetch({ force: true }),
-        venuesQuery.refetch({ force: true }),
-        view === 'templates' ? templatesQuery.refetch({ force: true }) : undefined,
+        refetchAll(),
         // Pull to refresh is an explicit ask for the server's copy.
         editId && userId ? loadEventForEdit(editId, { force: true }) : undefined,
       ])
@@ -305,15 +239,7 @@ export default function HostEventScreen() {
   }
 
   function applyUserTemplate(t: UserEventTemplate) {
-    setForm(prev => ({
-      ...prev,
-      title: t.title,
-      description: t.description ?? '',
-      location: t.location ?? '',
-      locationLatitude: null,
-      locationLongitude: null,
-      maxAttendees: t.max_attendees,
-    }))
+    setForm(prev => formWithTemplate(prev, t))
     changeBringDrafts(draftsFromTemplate(t.bring_items))
     setView('form')
   }
@@ -619,7 +545,7 @@ export default function HostEventScreen() {
         {/* ── Event type toggle ── */}
         {(() => {
           // Tags load beside the form: hold their space so the fields below don't jump.
-          if (tagsQuery.isLoading) {
+          if (tagsLoading) {
             return (
               <View testID="host-tags-loading" style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
                 <View style={[shared.skeletonBlock, { flex: 1, height: 64, borderRadius: 18 }]} />
