@@ -2,6 +2,8 @@ import { Platform } from 'react-native'
 import { supabase } from '../lib/supabase'
 import { getSessionUser } from '../lib/sessionUser'
 import { isAppPath, routes } from './routes'
+import { track } from '../lib/analytics'
+import { ANALYTICS_EVENTS } from '../constants/analytics'
 import type { NotificationResponse } from 'expo-notifications'
 import type * as ExpoNotifications from 'expo-notifications'
 import type { PushData } from '../types'
@@ -44,7 +46,9 @@ export function subscribeToPushTaps(
     const id = response.notification.request.identifier
     if (openedPushes.has(id)) return
     openedPushes.add(id)
-    const path = pushDeepLink(response.notification.request.content.data as PushData | undefined)
+    const data = response.notification.request.content.data as PushData | undefined
+    if (data?.notification_type === 'new_game') track(ANALYTICS_EVENTS.gameAlertOpened, { source: 'unknown', via: 'push' })
+    const path = pushDeepLink(data)
     if (path) open(path)
   }
   void load()
