@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { View, ScrollView, TouchableOpacity, Image, Modal, Pressable, Platform, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, Image, Modal, Pressable, Platform, StyleSheet } from 'react-native'
 import { toast } from '../../../lib/toast'
 import { Text, TextInput } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
+import { DocScrollView } from '../../../components/DocScrollView'
 import { LinearGradient } from 'expo-linear-gradient'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
@@ -23,7 +24,9 @@ import { ClubLocationField } from '../../../components/ClubLocationField'
 import { ClubLocationCard } from '../../../components/ClubLocationCard'
 import { clubLocationFromPicker, pickerFromClubLocation } from '../../../utils/clubLocation'
 import { ClubPostCard, ClubPostComposerModal } from '../../../components/ClubPostCard'
-import { ScreenState } from '../../../components/ui'
+import { IconButton, ScreenState } from '../../../components/ui'
+import { track } from '../../../lib/analytics'
+import { ANALYTICS_EVENTS } from '../../../constants/analytics'
 import type { ClubDetailData, ClubWithDetails, LocationValue, MajorCity, Profile } from '../../../types'
 import { Spinner } from '../../../components/ui/Spinner'
 
@@ -148,6 +151,7 @@ export default function ClubDetailScreen() {
                   user_id: userId,
                   role: 'member',
                   joined_at: new Date().toISOString(),
+                  game_alerts: true,
                   profiles: (me
                     ? { id: me.id, username: me.username, first_name: me.first_name, last_name: me.last_name, avatar_url: me.avatar_url }
                     : null) as ClubWithDetails['club_members'][number]['profiles'],
@@ -160,6 +164,30 @@ export default function ClubDetailScreen() {
       onError: (error, action) => { toast.error(action === 'join' ? "Couldn't join the club" : "Couldn't leave the club", error) },
       // Membership gates the updates feed and the Clubs tab's "Joined" list.
       invalidates: [queryKey('club', id), 'clubs'],
+    },
+  )
+
+  // New game alerts for this club (#170): the viewer's own membership row, through the RPC.
+  const myAlerts = club?.club_members.find(m => m.user_id === userId)?.game_alerts ?? true
+  const clubAlerts = useMutation<boolean, void>(
+    async on => {
+      const { error } = await supabase.rpc('set_club_game_alerts', { p_club_id: id, p_on: on })
+      if (error) throw error
+    },
+    {
+      onMutate: on => {
+        const key = clubDetailKey(id, userId)
+        const before = getQueryData<ClubDetailData>(key)
+        if (!before?.club || !userId) return
+        const members = before.club.club_members.map(m => (m.user_id === userId ? { ...m, game_alerts: on } : m))
+        setQueryData<ClubDetailData>(key, { ...before, club: { ...before.club, club_members: members } })
+        return () => setQueryData<ClubDetailData>(key, before)
+      },
+      onSuccess: (_, on) => {
+        track(ANALYTICS_EVENTS.gameAlertsChanged, { field: 'club' })
+        toast.show({ message: on ? `You'll hear about new games from ${club?.name ?? 'this club'}` : `New game alerts from ${club?.name ?? 'this club'} are off`, variant: 'success' })
+      },
+      onError: error => { toast.error("Couldn't change game alerts", error) },
     },
   )
 
@@ -314,7 +342,9 @@ export default function ClubDetailScreen() {
           />
         </>
       ) : (
-        <ScrollView
+        <DocScrollView
+          docScroll={false}
+          memoryKey={`club:${id}`}
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingBottom: 40 }}
           refreshControl={
@@ -472,22 +502,35 @@ export default function ClubDetailScreen() {
             </View>
           </View>
 
-          {/* ── Join / Leave ── */}
-          {userId && !owner && (
-            <View style={{ paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.md }}>
-              {member ? (
-                <TouchableOpacity onPress={handleLeave} disabled={membership.isPending} style={[shared.buttonBase, shared.buttonSecondary, membership.isPending && shared.buttonDisabled]}>
+          {/* ── Join / Leave, and the member's game alerts bell ── */}
+          {userId && (member || !owner) && (
+            <View style={{ paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.md, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
+              {owner ? (
+                <Text style={[shared.caption, { flex: 1 }]}>{myAlerts ? 'New game alerts are on for this club' : 'New game alerts are off for this club'}</Text>
+              ) : member ? (
+                <TouchableOpacity onPress={handleLeave} disabled={membership.isPending} style={[{ flex: 1 }, shared.buttonBase, shared.buttonSecondary, membership.isPending && shared.buttonDisabled]}>
                   {membership.isPending ? <Spinner color={theme.colors.primary} /> : <Text style={shared.buttonLabelSecondary}>Leave club</Text>}
                 </TouchableOpacity>
               ) : club.membership_type === 'open' ? (
-                <TouchableOpacity onPress={handleJoin} disabled={membership.isPending} style={[shared.buttonBase, shared.buttonPrimary, membership.isPending && shared.buttonDisabled]}>
+                <TouchableOpacity onPress={handleJoin} disabled={membership.isPending} style={[{ flex: 1 }, shared.buttonBase, shared.buttonPrimary, membership.isPending && shared.buttonDisabled]}>
                   {membership.isPending ? <Spinner color={theme.colors.white} /> : <Text style={shared.buttonLabelPrimary}>Join club</Text>}
                 </TouchableOpacity>
               ) : (
-                <View style={[shared.buttonBase, { backgroundColor: theme.colors.border }]}>
+                <View style={[{ flex: 1 }, shared.buttonBase, { backgroundColor: theme.colors.border }]}>
                   <Text style={{ color: theme.colors.subtext, fontSize: theme.font.size.md, fontWeight: theme.font.weight.medium }}>Invite only</Text>
                 </View>
               )}
+              {member ? (
+                <IconButton
+                  icon={myAlerts ? 'notifications-outline' : 'notifications-off-outline'}
+                  label={myAlerts ? `Game alerts for ${club.name}: on. Turn off` : `Game alerts for ${club.name}: off. Turn on`}
+                  size={44}
+                  active={myAlerts}
+                  busy={clubAlerts.isPending}
+                  onPress={() => void clubAlerts.mutate(!myAlerts)}
+                  testID="club-game-alerts"
+                />
+              ) : null}
             </View>
           )}
 
@@ -648,7 +691,7 @@ export default function ClubDetailScreen() {
             )}
           </View>
 
-        </ScrollView>
+        </DocScrollView>
       )}
 
       {/* Delete modal */}
