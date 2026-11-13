@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { getQueryData, setQueryData, useFocusRefetch, useQuery } from '../../lib/query'
+import { getQueryData, invalidate, setQueryData, useFocusRefetch, useQuery } from '../../lib/query'
+import { takeEventSeed } from '../../lib/eventSeed'
 import { useSession } from '../../contexts/session'
 import {
   STALE,
@@ -129,6 +130,23 @@ export function useEventData(id: string) {
   const { userId } = useSession()
   const opts = { staleMs: STALE.detail }
 
+  // A shared /event/<id> link's page carries the event (#244): show it at once, as stale data
+  // every reader refetches straight away. Join and host actions wait for that fetch (seedOnly).
+  const seededRef = useRef<boolean | null>(null)
+  if (seededRef.current === null) {
+    seededRef.current = false
+    if (getQueryData(eventKeys.root(id)) === undefined) {
+      const seed = takeEventSeed(id)
+      if (seed) {
+        setQueryData(eventKeys.root(id), seed.event as EventWithDetails)
+        setQueryData(eventKeys.cohosts(id), seed.cohosts as EventCohostWithProfile[])
+        setQueryData(eventKeys.guests(id), (seed.guests as Parameters<typeof toAnonymousGuest>[0][]).map(toAnonymousGuest))
+        invalidate(eventKeys.root(id), { refetchActive: false })
+        seededRef.current = true
+      }
+    }
+  }
+
   const main = useQuery(eventKeys.root(id), () => fetchEventDetail(id), opts)
   const guests = useQuery(eventKeys.guests(id), () => fetchEventGuests(id, !!userId), opts)
   const cohosts = useQuery(eventKeys.cohosts(id), () => fetchEventCohosts(id), opts)
@@ -209,6 +227,8 @@ export function useEventData(id: string) {
     viewerProfile: viewer.data ?? null,
     roster,
     isLoading,
+    /** Showing the copy the page arrived with (#244) until the first fetch lands: don't offer Join or host actions on it. */
+    seedOnly: !!seededRef.current && main.isStale,
     loadError,
     refresh,
     refreshing,

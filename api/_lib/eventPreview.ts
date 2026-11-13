@@ -6,8 +6,8 @@
  * Reads go to PostgREST with the public anon key, so RLS decides what a
  * preview can show: exactly what a guest sees on the event page.
  */
-import { EVENT_PREVIEW_COLUMNS } from '../../constants/selects'
-import type { EventPreviewRow } from '../../types'
+import { COHOST_SELECT, EVENT_DETAIL_SELECT, EVENT_PREVIEW_COLUMNS, GUEST_PUBLIC_SELECT } from '../../constants/selects'
+import type { EventPreviewRow, EventSeed } from '../../types'
 
 export const EVENT_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -89,4 +89,29 @@ export function shortHash(text: string): string {
   let h = 5381
   for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0
   return (h >>> 0).toString(36)
+}
+
+/**
+ * #244: what a guest's event page shows, read with the anon key in one parallel round, so the
+ * page can paint the event before its own requests return (`lib/eventSeed.web.ts`). The same
+ * shapes `hooks/event/useEventData` fetches (detail row, co-hosts, name-free +1 guests). Null
+ * for an unknown event; throws on a PostgREST error so the caller simply leaves the seed out.
+ */
+export async function fetchEventSeed(id: string, cfg: SupabaseRestConfig, now: number, fetchImpl: FetchLike = fetch): Promise<EventSeed | null> {
+  const headers = { apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}`, Accept: 'application/json' }
+  const signal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal ? AbortSignal.timeout(FETCH_TIMEOUT_MS) : undefined
+  const get = async (path: string) => {
+    const res = await fetchImpl(`${cfg.url}/rest/v1/${path}`, { headers, signal })
+    if (!res.ok) throw new Error(`PostgREST ${res.status} for event seed`)
+    return res.json() as Promise<unknown[]>
+  }
+  const sel = (s: string) => encodeURIComponent(s.replace(/\s+/g, ' ').trim())
+  const [rows, cohosts, guests] = await Promise.all([
+    get(`events?select=${sel(EVENT_DETAIL_SELECT)}&id=eq.${id}&limit=1`),
+    get(`event_cohosts?select=${sel(COHOST_SELECT)}&event_id=eq.${id}&order=added_at.asc`),
+    get(`event_guests_attending?select=${sel(GUEST_PUBLIC_SELECT)}&event_id=eq.${id}&order=joined_at.asc`),
+  ])
+  const event = Array.isArray(rows) && rows[0] ? rows[0] : null
+  if (!event) return null
+  return { v: 1, id, at: now, event, cohosts: Array.isArray(cohosts) ? cohosts : [], guests: Array.isArray(guests) ? guests : [] }
 }
