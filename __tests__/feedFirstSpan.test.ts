@@ -6,6 +6,8 @@
 import { feedSpanArgs } from '../utils/feedFirstSpan'
 import { buildFeedPrefetchScript } from '../utils/feedPrefetchScript'
 import { takeFeedPrefetch } from '../lib/feedPrefetch.web'
+import { TIMEOUT_MESSAGE } from '../lib/serverHealth'
+import { HARD_TIMEOUT_MS } from '../utils/serverHealth'
 import { addMonths, monthEndIso, monthStartIso } from '../utils/monthKeys'
 import { localDateKey } from '../utils'
 import { EXTERNAL_SESSION_MAX_AGE_MS } from '../constants/events'
@@ -109,10 +111,29 @@ describe('takeFeedPrefetch', () => {
   const put = (feed: object) => { (window as unknown as { __vteamPrefetch: object }).__vteamPrefetch = { feed } }
   const promise = Promise.resolve({ events: [] })
 
-  it('hands over a matching prefetch once', () => {
+  it('hands over a matching prefetch once', async () => {
     put({ start: 's', end: 'e', viewer: 'u1', at: Date.now(), promise })
-    expect(takeFeedPrefetch('s', 'e', 'u1')).toBe(promise)
+    const taken = takeFeedPrefetch('s', 'e', 'u1')
+    await expect(taken).resolves.toEqual({ events: [] })
     expect(takeFeedPrefetch('s', 'e', 'u1')).toBeNull()
+  })
+
+  it("gives up on it at the app's hard limit after it started, like its own reads (#289)", async () => {
+    jest.useFakeTimers()
+    try {
+      put({ start: 's', end: 'e', viewer: null, at: Date.now() - 10_000, promise: new Promise(() => {}) })
+      const taken = takeFeedPrefetch('s', 'e', null)
+      let settled = false
+      taken?.then(() => { settled = true }, () => { settled = true })
+      jest.advanceTimersByTime(5_000) // 15 s: slow, not given up
+      await Promise.resolve()
+      expect(settled).toBe(false)
+      const assertion = expect(taken).rejects.toThrow(TIMEOUT_MESSAGE)
+      jest.advanceTimersByTime(HARD_TIMEOUT_MS)
+      await assertion
+    } finally {
+      jest.useRealTimers()
+    }
   })
 
   it('drops it for another span, another viewer, or when older than 15 s', () => {

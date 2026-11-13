@@ -18,6 +18,8 @@ type FeedPrefetch = {
 }
 
 import { readStoredSession } from './supabase'
+import { reportRequest, TIMEOUT_MESSAGE } from './serverHealth'
+import { HARD_TIMEOUT_MS, READ_TIMEOUT_MS } from '../utils/serverHealth'
 
 const MAX_AGE_MS = 15_000
 
@@ -44,7 +46,28 @@ export function takeFeedPrefetch(start: string, end: string, viewerId: string | 
   if (p.start !== start || p.end !== end || p.viewer !== viewerId) return null
   if (Date.now() - p.at > MAX_AGE_MS) return null
   lastTakenAt = p.at
-  return p.promise
+  return withDeadline(p.promise, p.at + READ_TIMEOUT_MS, p.at + HARD_TIMEOUT_MS)
+}
+
+/**
+ * The page's own request has no time limit (it starts before the app loads), so
+ * give it the app's (#289): past READ_TIMEOUT_MS from its start it counts as a
+ * timeout for the health state but is still waited for; past HARD_TIMEOUT_MS it
+ * is given up on, like any read through the Supabase client.
+ */
+function withDeadline(promise: Promise<unknown>, softAt: number, hardAt: number): Promise<unknown> {
+  let soft: ReturnType<typeof setTimeout> | null = null
+  let hard: ReturnType<typeof setTimeout> | null = null
+  let settled = false
+  void promise.then(() => { settled = true }, () => { settled = true })
+  soft = setTimeout(() => { if (!settled) reportRequest('timeout') }, Math.max(0, softAt - Date.now()))
+  const late = new Promise<never>((_, reject) => {
+    hard = setTimeout(() => reject(new Error(TIMEOUT_MESSAGE)), Math.max(0, hardAt - Date.now()))
+  })
+  return Promise.race([promise, late]).finally(() => {
+    if (soft) clearTimeout(soft)
+    if (hard) clearTimeout(hard)
+  })
 }
 
 let lastTakenAt: number | null = null

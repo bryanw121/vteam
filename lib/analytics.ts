@@ -1,5 +1,6 @@
 import { AppState, Platform } from 'react-native'
 import { supabase } from './supabase'
+import { isServerDown, onServerRecovered } from './serverHealth'
 import { ANALYTICS_EVENTS } from '../constants/analytics'
 import { currentAppVersion } from '../utils/appVersion'
 import type { AnalyticsEventName, AnalyticsProps } from '../types'
@@ -147,6 +148,8 @@ function isMissingTable(error: { code?: string; message?: string }): boolean {
 /** Send everything buffered now (one insert per MAX_BATCH events). Never throws. */
 export function flush(): Promise<void> {
   if (flushing) return flushing
+  // Keep the buffer while the server is down; it is sent once it answers again (#289).
+  if (isServerDown()) return Promise.resolve()
   if (timer) { clearTimeout(timer); timer = null }
   flushing = (async () => {
     try {
@@ -217,7 +220,8 @@ function openSession(cold: boolean): void {
 /** One heartbeat for the open session. Never throws; stops for good if the function is missing. */
 async function heartbeat(): Promise<void> {
   try {
-    if (isDisabled() || heartbeatMissing || !visible || !session) return
+    // While the server is down a heartbeat only waits on it (#289: one tab sent 1,868 in the outage).
+    if (isDisabled() || heartbeatMissing || !visible || !session || isServerDown()) return
     const id = await loadAnonId()
     const current = session
     if (!current) return
@@ -326,3 +330,9 @@ export function __usageSession(): { id: string; userId: string | null } | null {
 export function __bufferedEvents(): readonly PendingEvent[] {
   return buffer
 }
+
+// Back from an outage (#289): record how long it lasted (the inserts during it couldn't land) and send what waited.
+onServerRecovered((downForMs, cause) => {
+  track(ANALYTICS_EVENTS.serverUnreachable, { ms: Math.round(downForMs), cause: cause ?? 'server' })
+  void flush()
+})
