@@ -10,6 +10,7 @@
  * - /storage/v1/*          uploads succeed; object reads get a 1x1 PNG
  * - /realtime/v1/websocket joins succeed, nothing is ever pushed
  * - <app>/api/forecast      the weather proxy (#165): a fake NWS hourly series (fixtures/forecast.mjs)
+ * - <app>/api/startup       the startup config (#216): 404, so the app reads Supabase directly
  */
 import { createDb } from './postgrest.mjs'
 import { buildFixtures, VIEWS, ME } from '../fixtures/index.mjs'
@@ -213,6 +214,13 @@ export async function installSupabaseMock(page, { now, signedIn, seenIds = [], r
     if (log) log.push(`GET /api/forecast${url.search}`)
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return route.fulfill({ status: 400 })
     return json(route, 200, buildForecast(now, lat, lng))
+  })
+
+  // The startup config (api/startup.ts, #216) is a Vercel function too: answer 404 so both
+  // arms fall back to the same Supabase reads and read counts stay deterministic.
+  await page.route(url => /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/api\/startup\b/.test(url.href), route => {
+    if (log) log.push('GET /api/startup (404)')
+    return route.fulfill({ status: 404 })
   })
 
   await page.route(`${MOCK_SUPABASE_URL}/**`, async route => {
