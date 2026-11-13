@@ -806,7 +806,7 @@ export const shared = StyleSheet.create({
   oneTimeBannerActionText: { color: theme.colors.primaryText, fontSize: theme.font.size.smd, fontFamily: theme.fonts.bodySemiBold, textDecorationLine: 'underline' },
 
   // ── Guided tour overlay (components/tour/TourOverlay) ─────
-  tourRoot: { ...StyleSheet.absoluteFillObject, zIndex: 1000, elevation: 1000 },
+  tourRoot: { ...StyleSheet.absoluteFill, zIndex: 1000, elevation: 1000 },
   tourScrim: { position: 'absolute', backgroundColor: theme.colors.tourScrim },
   tourRing: {
     position: 'absolute',

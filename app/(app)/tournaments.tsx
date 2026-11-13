@@ -167,9 +167,9 @@ export default function TournamentsScreen() {
               data={items}
               keyExtractor={t => t.id}
               renderItem={({ item }) => <TournamentRow item={item} onPress={() => router.push(routes.tournament(item.id))} />}
-              ListHeaderComponent={clubHeader}
-              ListEmptyComponent={clubEmpty}
-              ListFooterComponent={outsideNode ?? outsideLoading}
+              ListHeaderComponent={(clubHeader) ?? undefined}
+              ListEmptyComponent={(clubEmpty) ?? undefined}
+              ListFooterComponent={(outsideNode ?? outsideLoading) ?? undefined}
               contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xl }}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void refresh() }} tintColor={theme.colors.primary} />}
               testID="tournaments-list"

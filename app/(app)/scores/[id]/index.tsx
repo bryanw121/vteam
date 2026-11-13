@@ -19,6 +19,7 @@ import { openExternalUrl } from '../../../../lib/openExternalUrl'
 import { Button } from '../../../../components/Button'
 import { bracketGroups, bracketRows, liveMatches, poolStandings, upNext } from '../../../../utils/sheetScores'
 import type { SheetScoresView } from '../../../../types'
+import type { ScrollViewInstance } from 'react-native'
 
 const VIEWS: { key: SheetScoresView; label: string }[] = [
   { key: 'live', label: 'Live' },
@@ -46,7 +47,7 @@ export default function ProgramScoresScreen() {
   const [view, setView] = useUrlParam('view', VIEW.scores.view)
   const [divisionParam, setDivision] = useUrlParam('division', VIEW.scores.division)
   const [team, setTeam] = useUrlParam('team', VIEW.scores.team)
-  const scrollRef = React.useRef<ScrollView>(null)
+  const scrollRef = React.useRef<ScrollViewInstance>(null)
   // Any team name (standings, brackets, courts, a team's games) opens its page on the Teams tab.
   const openTeam = (name: string) => {
     setTeam(name)

@@ -7,6 +7,7 @@ import { shared, theme } from '../../constants'
 import { TIGHT_TEXT_SCALE } from '../../constants/textSize'
 import { describeLane, formatClock, gridTicks } from '../../utils/courts'
 import type { FacilityDay, MinuteRange } from '../../types'
+import type { ScrollViewInstance } from 'react-native'
 
 type Props = {
   day: FacilityDay
@@ -32,7 +33,7 @@ export function CourtGrid({ day, span, nowMin }: Props) {
   // Axis labels sit in a fixed-height strip, so they grow only a little.
   const svgLabelSize = useScaledFontSize(theme.font.size.xs, TIGHT_TEXT_SCALE)
   const [viewport, setViewport] = useState(0)
-  const scrollRef = useRef<ScrollView>(null)
+  const scrollRef = useRef<ScrollViewInstance>(null)
   const [start, end] = span
   const hours = (end - start) / 60
   const width = Math.max(viewport, Math.ceil(hours * MIN_PX_PER_HOUR))

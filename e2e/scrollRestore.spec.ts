@@ -94,8 +94,11 @@ test.describe('Events keeps its place after going back (#254)', () => {
       await page.goto(`${BASE_URL}/`)
       await expect(page.getByTestId('events-feed')).toBeVisible({ timeout: 20_000 })
       await expect.poll(() => page.evaluate(() => document.body.classList.contains('doc-scroll'))).toBe(true)
-      await page.evaluate(() => window.scrollTo(0, Math.min(900, document.documentElement.scrollHeight - window.innerHeight)))
-      await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(220)
+      // The feed's cards can arrive a moment after its container: scroll again until the page is tall enough.
+      await expect.poll(() => page.evaluate(() => {
+        window.scrollTo(0, Math.min(900, document.documentElement.scrollHeight - window.innerHeight))
+        return window.scrollY
+      })).toBeGreaterThan(220)
       // Scrolling down hides the tab bar (and its + button); a short scroll up brings it back.
       await page.waitForTimeout(200)
       await page.evaluate(() => window.scrollBy(0, -120))
