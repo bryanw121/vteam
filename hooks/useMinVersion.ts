@@ -1,35 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { Platform } from 'react-native'
-import { supabase } from '../lib/supabase'
+import { useStartupConfig } from '../lib/startupConfig'
 import { currentAppVersion, isBelowMinimum } from '../utils/appVersion'
-import type { AppConfigRow, UpdateRequirement } from '../types'
+import type { UpdateRequirement } from '../types'
 
 /**
- * Checks the app_config table once per launch. Returns an UpdateRequirement when this
- * install is older than the platform's min_version, otherwise null.
- * Fails open: if the table is missing or the network is down, the app runs as usual.
+ * Checks the platform's min_version once per launch, from the startup config
+ * (#216). Returns an UpdateRequirement when this install is older, otherwise null.
+ * Fails open: if the config can't be read, the app runs as usual.
  */
 export function useMinVersion(): UpdateRequirement | null {
-  const [requirement, setRequirement] = useState<UpdateRequirement | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
+  const config = useStartupConfig()
+  return useMemo(() => {
     const platform = Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web'
-    supabase
-      .from('app_config')
-      .select('platform, min_version, store_url, message')
-      .eq('platform', platform)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (cancelled || error || !data) return
-        const row = data as AppConfigRow
-        const current = currentAppVersion()
-        if (isBelowMinimum(current, row.min_version)) {
-          setRequirement({ current, minimum: row.min_version, storeUrl: row.store_url, message: row.message })
-        }
-      })
-    return () => { cancelled = true }
-  }, [])
-
-  return requirement
+    const row = config?.appConfig.find(r => r.platform === platform)
+    if (!row) return null
+    const current = currentAppVersion()
+    return isBelowMinimum(current, row.min_version)
+      ? { current, minimum: row.min_version, storeUrl: row.store_url, message: row.message }
+      : null
+  }, [config])
 }
