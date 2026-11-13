@@ -5,6 +5,7 @@ import { DocPullToRefresh } from './RefreshControl'
 import { useDocScrollMemory } from '../hooks/useDocScrollMemory'
 import { isShown, recallScroll, rememberScroll, restoreWhenReady } from '../utils/scrollMemory'
 import type { WebScrollableRef } from '../types'
+import type { ScrollViewInstance, ViewInstance } from 'react-native'
 
 type Props = ScrollViewProps & {
   /**
@@ -34,8 +35,8 @@ type Props = ScrollViewProps & {
  */
 export function DocScrollView({ docScroll, memoryKey, children, style, contentContainerStyle, onScroll, onLayout, ...rest }: Props) {
   const remember = Platform.OS === 'web' && !!memoryKey
-  const scrollRef = useRef<ScrollView>(null)
-  const docRef = useRef<View>(null)
+  const scrollRef = useRef<ScrollViewInstance>(null)
+  const docRef = useRef<ViewInstance>(null)
   const wasShown = useRef(false)
   const docLayout = useDocScrollMemory(memoryKey, docScroll, docRef, onLayout)
 

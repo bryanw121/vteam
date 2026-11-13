@@ -4,6 +4,7 @@ import type { RefreshControlProps } from 'react-native'
 import { shared, theme } from '../constants'
 import { IDLE, PULL_TRIGGER, pullEnd, pullMove, pullStart, type PullState } from '../lib/pullGesture'
 import { Spinner } from './ui/Spinner'
+import type { ViewInstance } from 'react-native'
 
 type Props = RefreshControlProps & { children?: React.ReactNode }
 
@@ -86,7 +87,7 @@ function bindPull({ target, boundary, indicator, live, refreshing, onRefresh }: 
 
 /** Shared by both components: latest props in refs, indicator follows `refreshing`. */
 function usePullRefs(refreshing: boolean | undefined, onRefresh: (() => void) | undefined) {
-  const indicatorRef = useRef<View>(null)
+  const indicatorRef = useRef<ViewInstance>(null)
   const onRefreshRef = useRef(onRefresh)
   onRefreshRef.current = onRefresh
   const refreshingRef = useRef(refreshing)
@@ -99,7 +100,7 @@ function usePullRefs(refreshing: boolean | undefined, onRefresh: (() => void) | 
 }
 
 function Indicator({ indicatorRef, refreshing, tintColor, fixed }: {
-  indicatorRef: React.RefObject<View | null>
+  indicatorRef: React.RefObject<ViewInstance | null>
   refreshing: boolean | undefined
   tintColor: RefreshControlProps['tintColor']
   fixed?: boolean
@@ -127,7 +128,7 @@ function Indicator({ indicatorRef, refreshing, tintColor, fixed }: {
  * state, so a pull doesn't re-render the (possibly long) list it wraps.
  */
 export function RefreshControl({ refreshing, onRefresh, enabled = true, tintColor, style, children, ...rest }: Props) {
-  const wrapperRef = useRef<View>(null)
+  const wrapperRef = useRef<ViewInstance>(null)
   const { indicatorRef, indicatorEl, refreshingRef, onRefreshRef } = usePullRefs(refreshing, onRefresh)
 
   useEffect(() => {
@@ -156,7 +157,7 @@ export function RefreshControl({ refreshing, onRefresh, enabled = true, tintColo
  * doc-scroll branch.
  */
 export function DocPullToRefresh({ refreshing, onRefresh, enabled = true, tintColor }: RefreshControlProps) {
-  const anchorRef = useRef<View>(null)
+  const anchorRef = useRef<ViewInstance>(null)
   const { indicatorRef, indicatorEl, refreshingRef, onRefreshRef } = usePullRefs(refreshing, onRefresh)
 
   useEffect(() => {

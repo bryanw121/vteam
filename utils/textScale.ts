@@ -60,7 +60,7 @@ export function scaleTextStyle(
   if (factor === 1) return style
   const flat = StyleSheet.flatten(style) as TextStyle | undefined
   if (!flat) return style
-  const patch: TextStyle = {}
+  const patch: { fontSize?: number; lineHeight?: number } = {}
   if (typeof flat.fontSize === 'number') {
     const scaled = round(flat.fontSize * factor)
     patch.fontSize = flat.fontSize >= minFontSize ? Math.max(scaled, minFontSize) : scaled

@@ -9,6 +9,7 @@ import { ProfileAvatar } from '../ProfileAvatar'
 import { DocScrollView } from '../DocScrollView'
 import { LinkedText } from '../LinkedText'
 import { VenmoPayButton } from '../VenmoPayButton'
+import { WebPushNudge } from './WebPushNudge'
 import { FriendsGoingLine } from '../FriendsGoingLine'
 import { useFriends } from '../../hooks/useFriends'
 import { attendeeRowsWithProfiles } from '../../hooks/event/derive'
@@ -130,6 +131,8 @@ type Props = {
   onOpenProfile: (userId: string) => void
   onMessageHost: (hostId: string) => void
   onManageCohosts: () => void
+  /** The "Get a reminder?" line's install steps (#189): Settings → Notifications. */
+  onOpenNotificationSettings: () => void
   /** "I've paid" toggle; null when the viewer can't set one (free event, not on the roster, the creator). */
   payments: EventPaymentsApi | null
   /** The host flagged the viewer as a no-show (#151): show them why they get no points. */
@@ -151,6 +154,7 @@ export function DetailsTab({
   onOpenProfile,
   onMessageHost,
   onManageCohosts,
+  onOpenNotificationSettings,
   payments,
   noShow = false,
   isHostOrCohost = false,
@@ -305,6 +309,9 @@ export function DetailsTab({
           )}
         </View>
         <FriendsGoingLine going={friendsGoing} testID="event-friends-going" />
+        {eventStatus.isAttending && !event.cancelled_at && Date.parse(/[Z+]/.test(event.event_date) ? event.event_date : `${event.event_date}Z`) > Date.now()
+          ? <WebPushNudge onOpenSettings={onOpenNotificationSettings} />
+          : null}
       </View>
 
       {/* ── Info rows ── */}

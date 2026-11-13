@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+import { useFocusEffect } from 'expo-router'
 import { Platform } from 'react-native'
 import type { LayoutChangeEvent, View } from 'react-native'
 import { isShown, recallScroll, rememberScroll, restoreWhenReady } from '../utils/scrollMemory'
+import type { ViewInstance } from 'react-native'
 
 /**
  * Scroll memory for a screen in document-scroll mode (narrow web, the window
@@ -20,9 +22,9 @@ import { isShown, recallScroll, rememberScroll, restoreWhenReady } from '../util
 export function useDocScrollMemory(
   key: string | undefined,
   active: boolean,
-  nodeRef: React.RefObject<View | null>,
+  nodeRef: React.RefObject<ViewInstance | null>,
   onLayout?: (e: LayoutChangeEvent) => void,
-  hideRef?: React.RefObject<View | null>,
+  hideRef?: React.RefObject<ViewInstance | null>,
 ): (e: LayoutChangeEvent) => void {
   const enabled = Platform.OS === 'web' && !!key && active
   const wasShown = useRef(false)
@@ -66,14 +68,8 @@ export function useDocScrollMemory(
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mount
   }, [])
 
-  return useCallback((e: LayoutChangeEvent) => {
-    onLayout?.(e)
-    if (!enabled || !key) return
-    const shown = e.nativeEvent.layout.height > 0
-    const cameBack = shown && !wasShown.current
-    wasShown.current = shown
-    if (!shown) { restoring.current = true; return }
-    if (!cameBack) return
+  const restore = () => {
+    if (!key) return
     const y = recallScroll(key)
     if (y <= 0) { restoring.current = false; reveal(); return }
     restoreWhenReady({
@@ -83,6 +79,75 @@ export function useDocScrollMemory(
       current: () => window.scrollY,
       onDone: () => { restoring.current = false; reveal() },
     })
+  }
+
+  // The layout event can come before document scroll is switched on (the shell turns it
+  // on a render later on Expo Router 58): restore when it does, if the view is already shown.
+  const layoutHeight = useRef(0)
+  useEffect(() => {
+    if (!enabled || wasShown.current || layoutHeight.current <= 0) return
+    wasShown.current = true
+    restore()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- restore reads refs
+  }, [enabled])
+
+  return useCallback((e: LayoutChangeEvent) => {
+    onLayout?.(e)
+    layoutHeight.current = e.nativeEvent.layout.height
+    if (!enabled || !key) return
+    const shown = e.nativeEvent.layout.height > 0
+    const cameBack = shown && !wasShown.current
+    wasShown.current = shown
+    if (!shown) { restoring.current = true; return }
+    if (!cameBack) return
+    restore()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- nodeRef is stable
   }, [enabled, key, onLayout])
+}
+
+/**
+ * For a tab screen that stays mounted under a pushed screen (Expo Router 58 keeps
+ * the tabs mounted, so Back no longer remounts them): hide it when it loses focus,
+ * and on focus again put the remembered offset back before showing it, so Back
+ * never paints the top for a frame (#254). The first focus does nothing (the mount
+ * path above handles it). Web, document scroll and a remembered offset only.
+ */
+export function useDocScrollRefocus(
+  key: string,
+  active: boolean,
+  nodeRef: React.RefObject<ViewInstance | null>,
+  hideRef: React.RefObject<ViewInstance | null>,
+): void {
+  const focusedOnce = useRef(false)
+  const activeRef = useRef(active)
+  activeRef.current = active
+  useFocusEffect(useCallback(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return
+    const el = () => hideRef.current as unknown as HTMLElement | null
+    const show = () => { const n = el(); if (n?.style) n.style.visibility = '' }
+    let timer: ReturnType<typeof setTimeout> | null = null
+    if (focusedOnce.current) {
+      const y = recallScroll(key)
+      if (activeRef.current && y > 0 && Math.abs(window.scrollY - y) > 5) {
+        timer = setTimeout(show, 400)
+        restoreWhenReady({
+          y,
+          ready: () => document.body.classList.contains('doc-scroll') && isShown(nodeRef.current as unknown as HTMLElement | null),
+          apply: to => window.scrollTo(0, to),
+          current: () => window.scrollY,
+          onDone: () => { if (timer) clearTimeout(timer); show() },
+        })
+      } else {
+        show()
+      }
+    }
+    focusedOnce.current = true
+    return () => {
+      if (timer) clearTimeout(timer)
+      // Leaving for a pushed screen: hide now, while the offset is still remembered.
+      const n = el()
+      if (activeRef.current && recallScroll(key) > 0 && n?.style) n.style.visibility = 'hidden'
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
+  }, [key]))
 }

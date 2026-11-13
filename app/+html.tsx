@@ -1,4 +1,4 @@
-import { ScrollViewStyleReset } from 'expo-router/html'
+import { ScrollViewStyleReset, useServerDocumentContext } from 'expo-router/html'
 import { theme } from '../constants/theme'
 import { APP_NAME } from '../constants/copy'
 import { buildFeedPrefetchScript } from '../utils/feedPrefetchScript'
@@ -11,8 +11,11 @@ const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''
 const WEB_FONT_FACES = `@font-face { font-family: 'Inter_400Regular'; src: url('/fonts/inter-latin-400-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_500Medium'; src: url('/fonts/inter-latin-500-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_600SemiBold'; src: url('/fonts/inter-latin-600-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_700Bold'; src: url('/fonts/inter-latin-700-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_400Regular'; src: url('/fonts/space-grotesk-latin-400-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_500Medium'; src: url('/fonts/space-grotesk-latin-500-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_600SemiBold'; src: url('/fonts/space-grotesk-latin-600-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_700Bold'; src: url('/fonts/space-grotesk-latin-700-normal.woff2') format('woff2'); font-display: swap; }`
 
 export default function Root({ children }: { children: React.ReactNode }) {
+  // Expo Router 58 streams the document: the app's scripts, styles and favicon
+  // arrive as head/body nodes that a custom Root must render (#226).
+  const { headNodes, bodyNodes, htmlAttributes, bodyAttributes } = useServerDocumentContext()
   return (
-    <html lang="en">
+    <html lang="en" {...htmlAttributes}>
       <head>
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -103,8 +106,12 @@ export default function Root({ children }: { children: React.ReactNode }) {
           body.doc-scroll { height: auto !important; overflow: auto !important; }
           body.doc-scroll #root { height: auto !important; min-height: 100dvh; }
         ` }} />
+        {headNodes}
       </head>
-      <body>{children}</body>
+      <body {...bodyAttributes}>
+        {children}
+        {bodyNodes}
+      </body>
     </html>
   )
 }

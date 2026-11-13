@@ -72,6 +72,7 @@ import type { JoinIntentOutcome, JoinOffer, LeaveConsequence, LeaveReason, Menti
 import { profileDisplayName } from '../../utils'
 import { routes, isAppPath, toRoute } from '../../utils/routes'
 import { toast } from '../../lib/toast'
+import type { ScrollViewInstance } from 'react-native'
 
 const DETAILS_TAB = 0
 const PEOPLE_TAB = 1
@@ -158,7 +159,7 @@ export default function EventDetail() {
   }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Discussion: chat-style pinned-to-bottom scroll ─────────────────────────
-  const discussionScrollRef = useRef<ScrollView>(null)
+  const discussionScrollRef = useRef<ScrollViewInstance>(null)
   const [composerHeight, setComposerHeight] = useState(0)
   const keyboardInset = useKeyboardInset(activeTab === DISCUSSION_TAB)
   const scrollDiscussionToBottom = useCallback((animated: boolean) => {
@@ -463,6 +464,7 @@ export default function EventDetail() {
                   onOpenProfile={openProfile}
                   onMessageHost={hostId => { void openDm(hostId) }}
                   onManageCohosts={cohostsApi.open}
+                  onOpenNotificationSettings={() => router.push(routes.settings('notifications'))}
                   payments={paymentAccess.canToggle ? payments : null}
                   noShow={isViewerNoShow(roster.rows, userId)}
                   isHostOrCohost={isHostOrCohost}
