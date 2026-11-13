@@ -412,7 +412,7 @@ export function PeopleTab({
       docScroll={docScrollActive}
       style={shared.screen}
       contentContainerStyle={shared.scrollContent}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void onRefresh() }} tintColor={theme.colors.primary} />}
     >
       {canFlagNoShows && attendees.length > 0 && (
         <View testID="roster-no-show-note" style={shared.rosterNote}>
@@ -474,7 +474,7 @@ export function PeopleTab({
         : !hasTeams
           ? (
             <View
-              ref={(r) => { teamZoneRefs.current['unassigned'] = r as View | null }}
+              ref={(r) => { teamZoneRefs.current['unassigned'] = r }}
               style={[styles.dropZone, hoveredTeamKey === 'unassigned' && styles.dropZoneActive]}
             >
               <View style={shared.playerGrid}>
@@ -496,7 +496,7 @@ export function PeopleTab({
                   return (
                     <View
                       key={teamNum}
-                      ref={(r) => { teamZoneRefs.current[String(teamNum)] = r as View | null }}
+                      ref={(r) => { teamZoneRefs.current[String(teamNum)] = r }}
                       style={[styles.dropZone, isHovered && { backgroundColor: teamColor + '14', borderColor: teamColor + '60' }]}
                     >
                       <View style={shared.teamHeader}>
@@ -528,7 +528,7 @@ export function PeopleTab({
                 })}
                 {(unassigned.length > 0 || unassignedGuests.length > 0) && (
                   <View
-                    ref={(r) => { teamZoneRefs.current['unassigned'] = r as View | null }}
+                    ref={(r) => { teamZoneRefs.current['unassigned'] = r }}
                     style={[styles.dropZone, hoveredTeamKey === 'unassigned' && styles.dropZoneActive]}
                   >
                     <View style={shared.teamHeader}>

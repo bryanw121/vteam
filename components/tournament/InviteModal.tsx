@@ -77,7 +77,7 @@ export function InviteModal({ visible, onClose, viewerId, teams, invitingId, onI
               </View>
             )
           }}
-          ListEmptyComponent={query.trim() && !error ? <Text style={{ textAlign: 'center', padding: 24, color: theme.colors.subtext }}>No users found</Text> : null}
+          ListEmptyComponent={(query.trim() && !error ? <Text style={{ textAlign: 'center', padding: 24, color: theme.colors.subtext }}>No users found</Text> : null) ?? undefined}
         />
       </View>
     </Modal>

@@ -6,7 +6,7 @@ import { DocPullToRefresh, RefreshControl } from '../../../../components/Refresh
 import { DocScrollView } from '../../../../components/DocScrollView'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFeedRsvp, useMonthEvents } from '../../../../hooks/useMonthEvents'
-import { useDocScrollMemory } from '../../../../hooks/useDocScrollMemory'
+import { useDocScrollMemory, useDocScrollRefocus } from '../../../../hooks/useDocScrollMemory'
 import { useNotifications } from '../../../../hooks/useNotifications'
 import { useIsNarrowWeb } from '../../../../hooks/useIsNarrowWeb'
 import { useFriendsGoing } from '../../../../hooks/useFriendsGoing'
@@ -60,6 +60,7 @@ import { FeedItemShell, HiddenCountRow, HideFeedSheet } from '../../../../compon
 import { useHiddenFeed } from '../../../../hooks/useHiddenFeed'
 import { hiddenIndex, hideOptions, isHidden, matchingEntries } from '../../../../utils/hiddenFeed'
 import { ShareLinkButton } from '../../../../components/ShareLinkButton'
+import type { ViewInstance } from 'react-native'
 import { MonthGridContent, WeekPager, weekNavStyles } from '../../../../components/events/CalendarPagers'
 import { buildMarkedDates, getWeekStart, idxForMonth, idxForWeek, monthForIdx, weekForIdx, WEEK_CENTER } from '../../../../utils/calendarWeeks'
 
@@ -217,12 +218,13 @@ export default function EventsScreen() {
   // load-more (tab-bar hide/show is centralized in the tabs shell).
   const docScrollRef        = useRef(docScrollActive)
   docScrollRef.current      = docScrollActive
-  const feedContentRef      = useRef<View>(null)
+  const feedContentRef      = useRef<ViewInstance>(null)
   // Narrow web: come back to the same place in the feed after an event page
   // (the browser's back remounts this screen; see hooks/useDocScrollMemory).
   // The whole screen stays hidden until the offset is back, header included (#254).
-  const screenRootRef       = useRef<View>(null)
+  const screenRootRef       = useRef<ViewInstance>(null)
   const feedDocLayout       = useDocScrollMemory('tab:events', docScrollActive, feedContentRef, undefined, screenRootRef)
+  useDocScrollRefocus('tab:events', docScrollActive, feedContentRef, screenRootRef)
 
   useEffect(() => {
     if (!docScrollActive || typeof window === 'undefined') return
@@ -899,11 +901,11 @@ export default function EventsScreen() {
                 if (Math.abs(diff) > 5) setTabBarHidden(diff > 0)
               }
             }}
-            ListFooterComponent={
+            ListFooterComponent={(
               loading && sections.length > 0
                 ? <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
                 : null
-            }
+            ) ?? undefined}
             refreshControl={refreshControl}
           />
         )
