@@ -13,6 +13,7 @@ import { TourneyStatusBadge } from '../../components/tournament/TournamentBits'
 import { Chip, EmptyState, IconButton, ScreenContainer, ScreenHeader, Spinner } from '../../components/ui'
 import { routes } from '../../utils/routes'
 import { splitTournaments } from '../../utils/tournamentList'
+import { useFreeAgentCounts } from '../../hooks/useFreeAgents'
 import { ProgramSection } from '../../components/programs/ProgramSection'
 import { useExternalPrograms } from '../../hooks/useExternalPrograms'
 import { useFeedRegion } from '../../hooks/useUserSettings'
@@ -123,6 +124,7 @@ export default function TournamentsScreen() {
   const outside = tab === 'upcoming' ? programs.data : null
   const outsideAll = useMemo(() => [...(outside?.tournaments ?? []), ...(outside?.elsewhere ?? [])], [outside])
   const outsideCount = outsideAll.length
+  const freeAgentCounts = useFreeAgentCounts(outsideAll.map(p => p.id))
   const [hostParam, setHostParam] = useUrlParam('host', VIEW.tournaments.host)
   const host = hostParam || null
   const setHost = (next: string | null) => setHostParam(next ?? '')
@@ -130,8 +132,8 @@ export default function TournamentsScreen() {
   const outsideNode = outsideCount ? (
     <View style={{ marginTop: theme.spacing.sm }}>
       <ProgramHostChips programs={outsideAll} host={host} onSelect={setHost} />
-      <ProgramSection title={`Around ${city}`} programs={byHost(outside!.tournaments, host)} testID="tournaments-around" />
-      <ProgramSection title="Elsewhere in the state" programs={byHost(outside!.elsewhere, host)} testID="tournaments-elsewhere" />
+      <ProgramSection title={`Around ${city}`} programs={byHost(outside!.tournaments, host)} freeAgentCounts={freeAgentCounts} testID="tournaments-around" />
+      <ProgramSection title="Elsewhere in the state" programs={byHost(outside!.elsewhere, host)} freeAgentCounts={freeAgentCounts} testID="tournaments-elsewhere" />
       <Text style={[shared.caption, { marginTop: theme.spacing.md }]}>{PROGRAMS_SOURCE_NOTE}</Text>
     </View>
   ) : null

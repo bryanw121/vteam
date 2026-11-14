@@ -498,6 +498,8 @@ export type ExternalProgramCardProps = {
   compact?: boolean
   /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
   menuInset?: boolean
+  /** Find a team (#304): players looking for this program; undefined/null when the list has no counts. */
+  freeAgentCount?: number | null
 }
 
 /** Props of SheetTeamsView. `team` '' shows the list; onSelectTeam('') goes back to it. */
@@ -515,7 +517,7 @@ export type SheetScoringPanelProps = {
 }
 
 /** Props of LiveScoresLink. */
-export type LiveScoresLinkProps = { programId: string; title: string }
+export type LiveScoresLinkProps = { programId: string; title: string; /** Another strip follows (square bottom). */ middle?: boolean }
 
 /** Props of ProgramHostChips. */
 export type ProgramHostChipsProps = {
@@ -532,6 +534,8 @@ export type ProgramSectionProps = {
   /** Warning color: deadlines this week. */
   hot?: boolean
   testID?: string
+  /** Find a team counts for these programs (#304), from one call per screen. */
+  freeAgentCounts?: Map<string, number> | null
 }
 
 /** Outside programs grouped for one viewer's region (utils/externalPrograms). */
@@ -2595,3 +2599,4 @@ export type WeekPagerProps = {
   onNextWeek: () => void
 }
 export * from './club'
+export * from './freeAgents'

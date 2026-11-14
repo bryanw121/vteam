@@ -461,6 +461,9 @@ export const shared = StyleSheet.create({
     borderBottomRightRadius: 20,
     backgroundColor: theme.colors.primarySoft,
   },
+  programStripMiddle: { marginBottom: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+  programFreeAgentAvatars: { flexDirection: 'row' },
+  programFreeAgentLink: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.primaryText },
   programScoresLinkLabel: {
     flex: 1,
     fontFamily: theme.fonts.bodySemiBold,
@@ -1243,4 +1246,26 @@ export const shared = StyleSheet.create({
   clubMemberInitialText: { fontSize: font.size.md, fontWeight: font.weight.semibold, color: colors.primaryText },
   clubOwnerBadge: { paddingHorizontal: theme.spacing.xs, paddingVertical: 2, borderRadius: theme.radius.sm, backgroundColor: colors.primary },
   clubOwnerBadgeText: { fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.white },
+  // Scorekeeper: a whole team typed at once (RosterTextSheet)
+  rosterTextInput: { minHeight: 140, textAlignVertical: 'top', fontSize: font.size.base, lineHeight: 24 },
+  rosterTextSlot: { alignItems: 'center', gap: spacing.xxs, minWidth: 52 },
+  rosterTextChip: {
+    minWidth: 48, alignItems: 'center', paddingVertical: spacing.xs, paddingHorizontal: spacing.sm,
+    borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card,
+  },
+  rosterTextChipNumber: { fontFamily: fonts.display, fontSize: font.size.lg, color: colors.text },
+  rosterTextSlotLabel: { fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.subtext },
+  // Find a team (#304)
+  freeAgentRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, paddingVertical: spacing.md,
+    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
+  },
+  freeAgentName: { fontFamily: fonts.bodySemiBold, fontSize: font.size.lgs, color: colors.text },
+  freeAgentTags: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.xs },
+  freeAgentTag: {
+    fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.timeInk, backgroundColor: colors.primarySoft,
+    paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.full, overflow: 'hidden',
+  },
+  freeAgentMine: { borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  freeAgentFooter: { paddingTop: spacing.sm },
 })

@@ -91,6 +91,9 @@ export const SCREENS = {
   'club-poll-composer': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', actions: [{ tap: 'club-new-poll' }], sources: ['components/club/PollComposerSheet.tsx', 'hooks/useClubPollActions.ts'] },
   'club-edit': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', actions: [{ tap: 'club-edit' }, { wait: 300 }], sources: ['components/club/ClubEditForm.tsx', 'hooks/club/useClubEdit.ts', 'utils/clubForm.ts'] },
   'club-delete-dialog': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', actions: [{ tap: 'club-delete' }, { wait: 400 }], sources: ['hooks/club/useDeleteClub.ts', 'components/ui/ConfirmDialog.tsx'] },
+  'find-a-team': { route: '/find-a-team/shots-program-4', ready: 'Happy to be the 4th', sources: ['app/(app)/find-a-team/**', 'components/programs/FreeAgent*.tsx', 'hooks/useFreeAgents.ts', 'utils/freeAgents.ts'] },
+  'find-a-team-sheet': { route: '/find-a-team/shots-program-4', ready: 'Happy to be the 4th', actions: [{ tap: 'free-agent-start' }, { wait: 400 }], sources: ['components/programs/FreeAgentSheet.tsx'] },
+  'find-a-team-guest': { route: '/find-a-team/shots-program-4', signedIn: false, ready: 'looking for a team', sources: ['app/(app)/find-a-team/**'] },
   'club-detail-guest': { route: `/club/${IDS.club.indoor}`, signedIn: false, ready: 'Austin Indoor League', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts'] },
   'club-create': { route: '/club/create', sources: ['app/(app)/club/create.tsx'] },
 
