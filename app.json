@@ -31,7 +31,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/branding/vteam-favicon.png",
+      "favicon": "./assets/vteam.png",
       "name": "vteam",
       "shortName": "vteam",
       "themeColor": "#7C4DFF",
