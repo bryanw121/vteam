@@ -13,6 +13,7 @@ web-build/
 # Accessibility check (scripts/shots/a11y.mjs): mock export and report
 /dist-mock/
 /a11y-report/
+/startup-report/
 expo-env.d.ts
 
 # Native
