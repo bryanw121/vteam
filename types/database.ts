@@ -1925,53 +1925,6 @@ export type Database = {
           },
         ]
       }
-      program_free_agents: {
-        Row: {
-          created_at: string
-          expires_on: string
-          id: string
-          note: string | null
-          positions: string[]
-          program_id: string
-          program_title: string
-          updated_at: string
-          user_id: string
-          want: string
-        }
-        Insert: {
-          created_at?: string
-          expires_on?: string
-          id?: string
-          note?: string | null
-          positions?: string[]
-          program_id: string
-          program_title?: string
-          updated_at?: string
-          user_id?: string
-          want?: string
-        }
-        Update: {
-          created_at?: string
-          expires_on?: string
-          id?: string
-          note?: string | null
-          positions?: string[]
-          program_id?: string
-          program_title?: string
-          updated_at?: string
-          user_id?: string
-          want?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "program_free_agents_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2025,6 +1978,53 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      program_free_agents: {
+        Row: {
+          created_at: string
+          expires_on: string
+          id: string
+          note: string | null
+          positions: string[]
+          program_id: string
+          program_title: string
+          updated_at: string
+          user_id: string
+          want: string
+        }
+        Insert: {
+          created_at?: string
+          expires_on?: string
+          id?: string
+          note?: string | null
+          positions?: string[]
+          program_id: string
+          program_title?: string
+          updated_at?: string
+          user_id?: string
+          want?: string
+        }
+        Update: {
+          created_at?: string
+          expires_on?: string
+          id?: string
+          note?: string | null
+          positions?: string[]
+          program_id?: string
+          program_title?: string
+          updated_at?: string
+          user_id?: string
+          want?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_free_agents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_receipts: {
         Row: {
@@ -3449,9 +3449,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      redeem_ad_free: { Args: never; Returns: Json }
-      release_bring_item: { Args: { p_item_id: string }; Returns: undefined }
-      remove_friend: { Args: { p_user_id: string }; Returns: string }
       program_free_agent_counts: {
         Args: { p_ids: string[] }
         Returns: {
@@ -3459,6 +3456,9 @@ export type Database = {
           program_id: string
         }[]
       }
+      redeem_ad_free: { Args: never; Returns: Json }
+      release_bring_item: { Args: { p_item_id: string }; Returns: undefined }
+      remove_friend: { Args: { p_user_id: string }; Returns: string }
       replace_tournament_schedule: {
         Args: { p_matches: Json; p_pools?: Json; p_tournament_id: string }
         Returns: number
