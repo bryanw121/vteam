@@ -10,6 +10,7 @@
         "reload:layout-shift@slow": 0.019
       },
       "desktop": {
+        "reload:layout-shift": 0.016,
         "reload:layout-shift@slow": 0.016
       }
     }
