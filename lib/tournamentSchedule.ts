@@ -129,6 +129,56 @@ export function roundRobinRounds(teamIds: readonly string[]): [string, string][]
   return rounds
 }
 
+/** Whether every one of `n` teams can play exactly `k` pool matches (each pair at most once). */
+export function canPlayExactly(n: number, k: number): boolean {
+  return k >= 1 && k <= n - 1 && (n * k) % 2 === 0
+}
+
+/**
+ * Pool rounds where each team plays only `matchesPerTeam` of its pool (big pools: 7 teams,
+ * 4 matches each). Pairings are a circulant draw: with the pool in seed order around a ring,
+ * each team plays its nearest neighbours on both sides, so nobody's opponents are all strong or
+ * all weak. No pair meets twice and no team plays twice in a round.
+ *
+ * `matchesPerTeam` of `n - 1` or more is the full round robin. When exactly that many is
+ * impossible (an odd number of teams each playing an odd number), everyone plays one more.
+ */
+export function partialRoundRobinRounds(teamIds: readonly string[], matchesPerTeam: number): [string, string][][] {
+  const n = teamIds.length
+  if (n < 2 || matchesPerTeam < 1) return []
+  let k = Math.floor(matchesPerTeam)
+  if (!canPlayExactly(n, k) && k < n - 1) k += 1
+  if (k >= n - 1) return roundRobinRounds(teamIds)
+
+  const pairs: [number, number][] = []
+  for (let offset = 1; offset <= Math.floor(k / 2); offset++) {
+    for (let i = 0; i < n; i++) pairs.push([i, (i + offset) % n])
+  }
+  // An odd count (n is even here): everyone also plays the team straight across the ring.
+  if (k % 2 === 1) for (let i = 0; i < n / 2; i++) pairs.push([i, i + n / 2])
+
+  // Colour the pairings into rounds: each round takes matches whose teams are both free,
+  // teams with the fewest matches so far first, so nobody sits out round after round.
+  const played = new Array<number>(n).fill(0)
+  const rounds: [string, string][][] = []
+  let left = pairs
+  while (left.length > 0) {
+    const busy = new Set<number>()
+    const round: [string, string][] = []
+    const later: [number, number][] = []
+    const byNeed = [...left].sort((x, y) => (played[x[0]] + played[x[1]]) - (played[y[0]] + played[y[1]]))
+    for (const [a, b] of byNeed) {
+      if (busy.has(a) || busy.has(b)) { later.push([a, b]); continue }
+      busy.add(a); busy.add(b)
+      round.push([teamIds[a], teamIds[b]])
+    }
+    for (const i of busy) played[i]++
+    rounds.push(round)
+    left = later
+  }
+  return rounds
+}
+
 /**
  * Pack round-robin matches into time slots on `numCourts` courts.
  *
