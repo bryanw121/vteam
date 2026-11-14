@@ -1,4 +1,4 @@
-import { TouchableOpacity, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { Link } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../ui/Text'
@@ -14,7 +14,8 @@ export function LiveScoresLink({ programId, title, middle = false }: LiveScoresL
   return (
     <Link href={routes.programScores(programId)} asChild>
       <TouchableOpacity
-        style={middle ? [shared.programScoresLink, shared.programStripMiddle] : shared.programScoresLink}
+        // One object, not an array: <Link asChild> on web passes style to the DOM, where an array throws.
+        style={middle ? StyleSheet.flatten([shared.programScoresLink, shared.programStripMiddle]) : shared.programScoresLink}
         accessibilityRole="link"
         accessibilityLabel={`Scores and brackets for ${title}`}
         testID="program-scores-link"

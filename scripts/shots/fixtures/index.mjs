@@ -192,6 +192,7 @@ export function buildFixtures(now) {
     prog(3, { title: 'Coed 4s Sand · Mondays', org: 'Meanwhile Brewing', surface: 'sand', venue: 'Meanwhile Brewing Co', starts_on: day(70), ends_on: day(119), weekdays: ['Monday'], registration_deadline: day(36), team_price: '$700' }),
     prog(4, { kind: 'tournament', title: 'Turkey Spikes BYO4s Sand Tourney', surface: 'sand', venue: 'ATX Beach', starts_on: day(6), ends_on: day(6), registration_deadline: day(5), team_price: '$160', individual_price: '$45' }),
     prog(5, { kind: 'tournament', title: 'Holiday Spikes Indoor (BB/B)', starts_on: day(27), ends_on: day(27), registration_deadline: day(26), team_price: '$315–415', individual_price: '$50' }),
+    { ...prog(9, { kind: 'tournament', title: 'Texas Asian Olympics', starts_on: day(8), ends_on: day(9) }), id: 'texasao-2026-11-14' },
     prog(6, { kind: 'tournament', series: 'nagva', org: 'NAGVA', region: null, title: 'Battle of the Alamo 2026', venue: 'Mission Concepcion Sports Complex', city: 'San Antonio', starts_on: day(40), ends_on: day(41), registration_deadline: null, waitlist_on: day(38), team_price: '$650', divisions: [{ name: 'A1', cap: 12, confirmed: 7 }, { name: 'BB', cap: 24, confirmed: 20 }] }),
   ]
 
