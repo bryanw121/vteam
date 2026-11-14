@@ -84,6 +84,7 @@ export const RLS_MATRIX: Record<TableName, RlsExpectation> = {
   notifications: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: false } },
   point_balances: { anonSelect: 'all', anonInsert: 'none', why: 'points show on public profiles' },
   point_events: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true } },
+  program_free_agents: { anonSelect: 'none', anonInsert: 'none', insertRejectedBy: 'trigger', owner: { column: 'user_id', ownRowsOnly: false, noInsertAsOther: true }, why: 'Find a team (#304): signed-in players read unexpired rows (not silenced either way); guests get counts only via program_free_agent_counts(); the fill trigger refuses an unknown program (P0002)' },
   profiles: { anonSelect: 'all', anonInsert: 'none', why: 'public profile columns (PROFILE_BRIEF_SELECT)' },
   push_receipts: { anonSelect: 'none', anonInsert: 'none', signedInSelect: 'none', why: 'service-only (server jobs)' },
   push_tokens: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: true, noInsertAsOther: true } },

@@ -10,11 +10,11 @@ import type { LiveScoresLinkProps } from '../../types'
  * "Scores & brackets" strip under an outside tournament's card, for tournaments that run on the
  * Google Sheet app. Opens the scores inside vteam; the card above still links to the organizer.
  */
-export function LiveScoresLink({ programId, title }: LiveScoresLinkProps) {
+export function LiveScoresLink({ programId, title, middle = false }: LiveScoresLinkProps) {
   return (
     <Link href={routes.programScores(programId)} asChild>
       <TouchableOpacity
-        style={shared.programScoresLink}
+        style={middle ? [shared.programScoresLink, shared.programStripMiddle] : shared.programScoresLink}
         accessibilityRole="link"
         accessibilityLabel={`Scores and brackets for ${title}`}
         testID="program-scores-link"
