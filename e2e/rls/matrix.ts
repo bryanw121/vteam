@@ -91,6 +91,8 @@ export const RLS_MATRIX: Record<TableName, RlsExpectation> = {
   sponsored_events: { anonSelect: 'some', anonInsert: 'none', why: 'guests see sponsorships inside their window; admins write' },
   tags: { anonSelect: 'all', anonInsert: 'none', why: 'reference list' },
   tournament_comments: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: false, noInsertAsOther: true } },
+  tournament_days: { anonSelect: 'none', anonInsert: 'none' },
+  tournament_divisions: { anonSelect: 'none', anonInsert: 'none' },
   tournament_matches: { anonSelect: 'none', anonInsert: 'none' },
   tournament_pool_teams: { anonSelect: 'none', anonInsert: 'none' },
   tournament_pools: { anonSelect: 'none', anonInsert: 'none' },
