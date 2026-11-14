@@ -15,7 +15,13 @@ import { getQueryData, invalidate, removeQueries, setQueryData, subscribeQueryCa
  * from an older format, or is too old.
  */
 const STORAGE_KEY = 'vteam.querySnapshot'
-const VERSION = 1
+/**
+ * Bump whenever a snapshotted read changes shape: a copy saved by the previous
+ * build is then dropped instead of handed to code that expects the new shape.
+ * 2: `ads:feed` changed from `{ banners, sponsoredEventIds }` to the startup
+ * config (#280), and the old copy crashed the Events feed on open (Nov 13).
+ */
+const VERSION = 2
 /** Profile-ish data changes slowly; a week-old copy is still a better first paint than a spinner. */
 export const QUERY_SNAPSHOT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 /** Never let it fill the origin's storage quota. */

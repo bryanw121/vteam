@@ -440,7 +440,7 @@ export type FeedSnapshot = {
 
 /** Last visit's per-viewer reads kept on the device (lib/querySnapshot): cache key → data. */
 export type QuerySnapshot = {
-  v: 1
+  v: 2
   savedAt: number
   owner: string | null
   entries: Record<string, unknown>

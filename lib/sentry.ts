@@ -1,8 +1,9 @@
 import { Platform } from 'react-native'
 import * as Sentry from '@sentry/react-native'
+import { sentryEnvironment } from '../utils/sentryEnvironment'
 
 const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN
-const APP_ENV = process.env.EXPO_PUBLIC_APP_ENV ?? 'production'
+const APP_ENV = sentryEnvironment(process.env.EXPO_PUBLIC_SUPABASE_URL, process.env.EXPO_PUBLIC_APP_ENV)
 const isWeb = Platform.OS === 'web'
 
 export function initSentry() {

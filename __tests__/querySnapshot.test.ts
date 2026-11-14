@@ -41,7 +41,7 @@ afterEach(() => {
 })
 
 describe('usableQuerySnapshot', () => {
-  const ok = { v: 1, savedAt: NOW - 1000, owner: 'u1', entries: { 'profile:me:u1': { id: 'u1' }, 'tags': ['a'] } }
+  const ok = { v: 2, savedAt: NOW - 1000, owner: 'u1', entries: { 'profile:me:u1': { id: 'u1' }, 'tags': ['a'] } }
 
   it('accepts a recent snapshot', () => {
     expect(usableQuerySnapshot(ok, NOW)).toEqual(ok)
@@ -50,7 +50,7 @@ describe('usableQuerySnapshot', () => {
   it('rejects old, future, other-format or malformed snapshots', () => {
     expect(usableQuerySnapshot({ ...ok, savedAt: NOW - QUERY_SNAPSHOT_MAX_AGE_MS - 1 }, NOW)).toBeNull()
     expect(usableQuerySnapshot({ ...ok, savedAt: NOW + 3_600_000 }, NOW)).toBeNull()
-    expect(usableQuerySnapshot({ ...ok, v: 2 }, NOW)).toBeNull()
+    expect(usableQuerySnapshot({ ...ok, v: 1 }, NOW)).toBeNull()
     expect(usableQuerySnapshot({ ...ok, owner: 7 }, NOW)).toBeNull()
     expect(usableQuerySnapshot({ ...ok, entries: [] }, NOW)).toBeNull()
     expect(usableQuerySnapshot(null, NOW)).toBeNull()
@@ -97,14 +97,14 @@ describe('snapshotValue', () => {
 
 describe('startQuerySnapshot', () => {
   it('seeds the cache from the last visit and remembers whose it was', () => {
-    save({ v: 1, savedAt: NOW - 60_000, owner: 'u1', entries: { 'points:balance:u1': 42 } })
+    save({ v: 2, savedAt: NOW - 60_000, owner: 'u1', entries: { 'points:balance:u1': 42 } })
     startQuerySnapshot()
     expect(getQueryData('points:balance:u1')).toBe(42)
     expect(snapshotOwner()).toBe('u1')
   })
 
   it('drops the seeded copy when someone else is signed in', () => {
-    save({ v: 1, savedAt: NOW - 60_000, owner: 'u1', entries: { 'points:balance:u1': 42 } })
+    save({ v: 2, savedAt: NOW - 60_000, owner: 'u1', entries: { 'points:balance:u1': 42 } })
     startQuerySnapshot()
     discardSeededSnapshot()
     expect(getQueryData('points:balance:u1')).toBeUndefined()

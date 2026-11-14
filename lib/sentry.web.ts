@@ -1,4 +1,5 @@
 import type * as SentrySdk from '@sentry/react-native'
+import { sentryEnvironment } from '../utils/sentryEnvironment'
 
 /**
  * Web: Sentry loads after first paint, in its own chunk, instead of riding in
@@ -14,7 +15,7 @@ import type * as SentrySdk from '@sentry/react-native'
 type Sdk = typeof SentrySdk
 
 const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN
-const APP_ENV = process.env.EXPO_PUBLIC_APP_ENV ?? 'production'
+const APP_ENV = sentryEnvironment(process.env.EXPO_PUBLIC_SUPABASE_URL, process.env.EXPO_PUBLIC_APP_ENV)
 /** Calls kept while the SDK loads; beyond this the oldest are dropped. */
 const MAX_QUEUED = 50
 /** Load once the browser is idle after first paint, but never later than this. */
