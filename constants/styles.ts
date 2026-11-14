@@ -1191,6 +1191,27 @@ export const shared = StyleSheet.create({
   simpleScore: { fontFamily: fonts.display, fontSize: font.heading.scoreboard, lineHeight: font.heading.scoreboard + 8, fontVariant: ['tabular-nums'] },
   simpleSets: { fontFamily: fonts.bodyMedium, fontSize: font.size.md },
   simpleActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  // Scorekeeper: every number of a team on one screen (TeamNumbersCard)
+  numberBoxRow: { flexDirection: 'row', gap: spacing.xs },
+  numberBoxCourtCell: { flex: 1, minWidth: 40, maxWidth: 64, alignItems: 'center', gap: 2 },
+  numberBoxCell: { width: 52, alignItems: 'center', gap: 2 },
+  numberBox: {
+    alignSelf: 'stretch', height: 52, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.border,
+    backgroundColor: colors.background, color: colors.text, textAlign: 'center',
+    fontFamily: fonts.display, fontSize: font.size.xl, paddingHorizontal: 0,
+  },
+  numberBoxLabel: { fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.subtext, minHeight: 14 },
+  // Scorekeeper: the big point buttons on the live match screen
+  scorePointBtn: {
+    flex: 1, minHeight: 168, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center',
+    gap: spacing.xs, padding: spacing.md,
+  },
+  scorePointTeam: { fontFamily: fonts.displaySemiBold, fontSize: font.size.lg },
+  scorePointServing: {
+    fontFamily: fonts.bodySemiBold, fontSize: font.size.base, paddingHorizontal: spacing.md, paddingVertical: spacing.xxs,
+    borderRadius: radius.full, borderWidth: 1.5, overflow: 'hidden', minHeight: 26,
+  },
+  serveFirstBtn: { flex: 1, minHeight: 140, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.md },
   // Find a team (#304)
   freeAgentRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, paddingVertical: spacing.md,

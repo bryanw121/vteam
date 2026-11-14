@@ -30,6 +30,8 @@ export function LineupSetup({ doc, state, onStart }: Props) {
   const [liberos, setLiberos] = useState<Record<TeamSide, number[]>>(defaults.liberos)
   const [firstServe, setFirstServe] = useState<TeamSide | null>(defaults.firstServe)
   const [active, setActive] = useState<{ side: TeamSide; slot: number } | null>(defaults.lineups ? null : { side: 'A', slot: 0 })
+  // With last set's lineups, the usual case is one tap: same six, start. Changing them opens the full editor.
+  const [editing, setEditing] = useState(!defaults.lineups)
 
   const assign = (side: TeamSide, player: number) => {
     const slot = active?.side === side ? active.slot : lineups[side].indexOf(null)
@@ -64,6 +66,46 @@ export function LineupSetup({ doc, state, onStart }: Props) {
       firstServe,
       liberos,
     })
+  }
+
+  const startSame = (serve: TeamSide) => {
+    if (!defaults.lineups) return
+    onStart({ type: 'set_start', lineups: defaults.lineups, firstServe: serve, liberos: defaults.liberos })
+  }
+
+  if (!editing && defaults.lineups) {
+    const same = defaults.lineups
+    return (
+      <View style={{ gap: theme.spacing.md }} testID="next-set">
+        <View style={[shared.card, { gap: theme.spacing.sm }]}>
+          <Text style={shared.label}>Starting six for set {defaults.index + 1} (from last set)</Text>
+          {(['A', 'B'] as const).map(side => (
+            <View key={side} style={{ flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'center' }}>
+              <Text style={[shared.body, { fontFamily: theme.fonts.bodySemiBold, color: TEAM_COLORS[side].fill, width: 120 }]} numberOfLines={1}>{teamName(doc, side)}</Text>
+              <Text style={[shared.body, { flex: 1 }]}>{same[side].join(' · ')}{defaults.liberos[side].length ? `  ·  L ${defaults.liberos[side].join(', ')}` : ''}</Text>
+            </View>
+          ))}
+        </View>
+        {defaults.firstServe ? (
+          <Button
+            label={`Same lineups, start set ${defaults.index + 1}`}
+            icon="play"
+            onPress={() => startSame(defaults.firstServe!)}
+            testID="start-set-same"
+          />
+        ) : (
+          <View style={{ gap: theme.spacing.sm }}>
+            <Text style={shared.subheading}>Deciding set: who serves first?</Text>
+            <Text style={shared.caption}>Use the new coin toss. Same lineups as last set.</Text>
+            {(['A', 'B'] as const).map(side => (
+              <Button key={side} label={`${teamName(doc, side)} serves`} icon="play" variant="secondary" onPress={() => startSame(side)} testID={`start-set-same-${side}`} />
+            ))}
+          </View>
+        )}
+        {defaults.firstServe && <Text style={[shared.caption, { textAlign: 'center' }]}>{teamName(doc, defaults.firstServe)} serves first.</Text>}
+        <Button label="Change lineups" variant="ghost" onPress={() => setEditing(true)} testID="change-lineups" />
+      </View>
+    )
   }
 
   return (

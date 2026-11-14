@@ -495,3 +495,35 @@ export type SimpleState = {
   /** The rally just played ended a set (show "Set to …"). */
   setJustEnded: boolean
 }
+
+/**
+ * One team on the new-match screen's number grid: every box as typed (digits only).
+ * `court` is the starting six in serving order (position I first); `liberos` has two boxes.
+ * Names and captain come from saved teams or a pasted roster and ride along by number.
+ */
+export type NumberGridTeam = {
+  name: string
+  court: string[]
+  bench: string[]
+  liberos: string[]
+  details: Record<number, { name?: string; captain?: boolean }>
+}
+
+/** Where a box sits in the grid, for focus order: court, then bench, then liberos. */
+export type GridBox = { part: 'court' | 'bench' | 'liberos'; index: number }
+
+/** What's still wrong with a team's grid: empty starting spots and numbers typed twice. */
+export type NumberGridIssues = { missingCourt: number; duplicates: number[] }
+
+export type TeamNumbersCardProps = {
+  side: TeamSide
+  team: NumberGridTeam
+  /** Show empty starting spots as errors (after a Next tap). */
+  showMissing: boolean
+  onName: (name: string) => void
+  onType: (box: GridBox, text: string) => void
+  onSubmitBox: (box: GridBox) => void
+  onPaste: () => void
+  /** Registers each box's input so the screen can move focus from box to box. */
+  boxRef: (box: GridBox) => (input: unknown) => void
+}
