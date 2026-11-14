@@ -10,6 +10,19 @@ import type { ExternalProgram, ProgramsForRegion } from '../types'
 
 export const externalProgramsKey = queryKey('external-programs')
 
+/** Every fresh row of the programs mirror (one small table, all regions). */
+export async function fetchExternalPrograms(): Promise<ExternalProgram[]> {
+  const since = new Date(Date.now() - EXTERNAL_PROGRAM_MAX_AGE_MS).toISOString()
+  const { data, error } = await supabase
+    .from('external_programs')
+    .select(EXTERNAL_PROGRAM_SELECT)
+    .gte('checked_at', since)
+    .order('starts_on', { ascending: true })
+    .limit(500)
+  if (error) throw error
+  return (data ?? []) as unknown as ExternalProgram[]
+}
+
 /**
  * Leagues and tournaments run outside vteam, from Schelagg's programs feed (`external_programs`,
  * ingested every two hours; guests can read it). One small table for every region, read once and
@@ -19,18 +32,15 @@ export const externalProgramsKey = queryKey('external-programs')
 export function useExternalPrograms(): { data: ProgramsForRegion | null; isLoading: boolean; error: unknown; refetch: (o?: { force?: boolean }) => Promise<unknown> } {
   const region = useFeedRegion()
   const today = useToday()
-  const q = useQuery(externalProgramsKey, async (): Promise<ExternalProgram[]> => {
-    const since = new Date(Date.now() - EXTERNAL_PROGRAM_MAX_AGE_MS).toISOString()
-    const { data, error } = await supabase
-      .from('external_programs')
-      .select(EXTERNAL_PROGRAM_SELECT)
-      .gte('checked_at', since)
-      .order('starts_on', { ascending: true })
-      .limit(500)
-    if (error) throw error
-    return (data ?? []) as unknown as ExternalProgram[]
-  }, { staleMs: STALE.programs })
+  const q = useQuery(externalProgramsKey, fetchExternalPrograms, { staleMs: STALE.programs })
   useFocusRefetch(externalProgramsKey)
   const data = useMemo(() => (q.data ? programsForRegion(q.data, region, today) : null), [q.data, region, today])
   return { data, isLoading: q.isLoading, error: q.error, refetch: q.refetch }
+}
+
+/** One outside program by id, from the same cached read as the lists (Find a team, #304). */
+export function useExternalProgram(id: string): { program: ExternalProgram | null; isLoading: boolean; error: unknown; refetch: (o?: { force?: boolean }) => Promise<unknown> } {
+  const q = useQuery(externalProgramsKey, fetchExternalPrograms, { staleMs: STALE.programs })
+  const program = useMemo(() => q.data?.find(p => p.id === id) ?? null, [q.data, id])
+  return { program, isLoading: q.isLoading, error: q.error, refetch: q.refetch }
 }

@@ -56,6 +56,12 @@ export const ANALYTICS_EVENTS = {
   screenView: 'screen_view',
   /** Tapped through to a sign-up or booking page run outside vteam (Schelagg data). props: { kind: session | league | tournament | court, org (venue or organizer name, never a URL) } */
   outsideLinkOpened: 'outside_link_opened',
+  /** Find a team (#304): put themselves on a program's list. props: { want: partner | team | players } */
+  freeAgentListed: 'free_agent_listed',
+  /** Find a team: tapped Message on someone's row. props: {} */
+  freeAgentMessaged: 'free_agent_messaged',
+  /** Opened a Find a team page. props: { signed_in } */
+  findATeamOpened: 'find_a_team_opened',
   /** Shared an event. props: { surface: 'event', method: share_sheet | web_share | copy_link } */
   shareTapped: 'share_tapped',
   /** Changed the Events feed filters (not the restore on open). props: { filter, surface } */

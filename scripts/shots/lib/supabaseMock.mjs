@@ -123,6 +123,11 @@ function rpcHandlers(db, signedIn, now) {
       }
     },
     get_event_card_attendee_previews: ({ p_event_ids }) => previews(p_event_ids ?? []),
+    program_free_agent_counts: ({ p_ids }) => {
+      const counts = new Map()
+      for (const f of db.rowsOf('program_free_agents')) if ((p_ids ?? []).includes(f.program_id)) counts.set(f.program_id, (counts.get(f.program_id) ?? 0) + 1)
+      return [...counts].map(([program_id, n]) => ({ program_id, n }))
+    },
     get_my_conversations: () => (signedIn ? myConversations() : []),
     get_chat_unread_count: () => (signedIn ? myConversations().reduce((n, c) => n + c.unread_count, 0) : 0),
     find_or_create_dm: ({ other_user_id }) => {
