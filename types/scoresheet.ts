@@ -165,6 +165,8 @@ export type EndSetEvent = EventBase & { type: 'end_set'; winner: TeamSide; reaso
  * decides it. No further sets are played.
  */
 export type TimeUpEvent = EventBase & { type: 'time_up' }
+/** The scorekeeper added minutes to the match clock (before ending on time). */
+export type AddTimeEvent = EventBase & { type: 'add_time'; minutes: number }
 export type NoteEvent = EventBase & { type: 'note'; text: string }
 
 export type ScoreEvent =
@@ -181,6 +183,7 @@ export type ScoreEvent =
   | OverrideEvent
   | EndSetEvent
   | TimeUpEvent
+  | AddTimeEvent
   | NoteEvent
 
 /** An event before the log stamps it with an id and time. */
@@ -335,6 +338,8 @@ export type MatchState = {
   over: boolean
   /** The match clock ran out (time_up recorded). */
   timeExpired: boolean
+  /** Minutes the scorekeeper added to the match clock (add_time). */
+  addedMinutes: number
   sanctions: SanctionRecord[]
   /** Improper requests per team (the IMPROPER REQUEST box). */
   improperRequests: Record<TeamSide, boolean>
@@ -441,6 +446,18 @@ export type OfficialSheetViewProps = {
 export type MatchDetailsCardProps = { info: MatchInfo; onChange: (patch: Partial<MatchInfo>) => void }
 export type SavedTeamsPickerProps = { teams: SavedTeam[]; target: TeamSide | null; targetLabel: string; onPick: (team: SavedTeam) => void }
 
+
+/** A whole team typed or pasted at once on the new-match screen (`RosterTextSheet`). */
+export type RosterTextSheetProps = {
+  visible: boolean
+  /** "Team A" or the team's name: the sheet's title. */
+  teamLabel: string
+  /** Prefill: the team's current name and players (court in serving order, then bench). */
+  initialName: string
+  initialText: string
+  onApply: (team: { name: string; court: (RosterPlayer | null)[]; bench: RosterPlayer[] }) => void
+  onDismiss: () => void
+}
 
 /** Simple score (no lineups, no scoresheet): how a match is played. */
 export type SimpleFormat = {

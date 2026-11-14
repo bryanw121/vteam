@@ -1173,6 +1173,15 @@ export const shared = StyleSheet.create({
   hostChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   hostChipText: { fontFamily: fonts.bodyMedium, fontSize: font.size.sm, color: colors.subtext },
   hostChipTextActive: { fontFamily: fonts.bodySemiBold, color: colors.white },
+  // Scorekeeper: a whole team typed at once (RosterTextSheet)
+  rosterTextInput: { minHeight: 140, textAlignVertical: 'top', fontSize: font.size.base, lineHeight: 24 },
+  rosterTextSlot: { alignItems: 'center', gap: spacing.xxs, minWidth: 52 },
+  rosterTextChip: {
+    minWidth: 48, alignItems: 'center', paddingVertical: spacing.xs, paddingHorizontal: spacing.sm,
+    borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card,
+  },
+  rosterTextChipNumber: { fontFamily: fonts.display, fontSize: font.size.lg, color: colors.text },
+  rosterTextSlotLabel: { fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.subtext },
   // Simple score (scorekeeper/simple)
   simpleTeamSwatch: { width: 10, height: 48, borderRadius: radius.sm, marginBottom: 2 },
   simpleBanner: { marginHorizontal: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
