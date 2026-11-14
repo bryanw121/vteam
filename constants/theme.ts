@@ -107,6 +107,8 @@ export const theme = {
       xxl:    34,
       hero:   44,
       splash: 48,
+      /** Simple score's big point numbers. */
+      scoreboard: 96,
     },
     /** Emoji used as pictures (empty states, medals, pickers). */
     emoji: {

@@ -1182,6 +1182,15 @@ export const shared = StyleSheet.create({
   },
   rosterTextChipNumber: { fontFamily: fonts.display, fontSize: font.size.lg, color: colors.text },
   rosterTextSlotLabel: { fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.subtext },
+  // Simple score (scorekeeper/simple)
+  simpleTeamSwatch: { width: 10, height: 48, borderRadius: radius.sm, marginBottom: 2 },
+  simpleBanner: { marginHorizontal: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  simpleBoard: { flexDirection: 'row', gap: spacing.sm, marginVertical: spacing.md },
+  simpleSide: { flex: 1, minHeight: 260, borderRadius: radius.xl, padding: spacing.md, alignItems: 'center', justifyContent: 'space-between' },
+  simpleTeam: { fontFamily: fonts.bodySemiBold, fontSize: font.size.lg, flexShrink: 1 },
+  simpleScore: { fontFamily: fonts.display, fontSize: font.heading.scoreboard, lineHeight: font.heading.scoreboard + 8, fontVariant: ['tabular-nums'] },
+  simpleSets: { fontFamily: fonts.bodyMedium, fontSize: font.size.md },
+  simpleActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
   // Find a team (#304)
   freeAgentRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, paddingVertical: spacing.md,
