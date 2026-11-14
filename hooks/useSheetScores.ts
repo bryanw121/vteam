@@ -10,7 +10,7 @@ import type { SheetState } from '../types'
 /**
  * Live scores for an outside tournament that runs on the Google Sheet tournament app. Public,
  * read-only JSON (Apps Script answers with CORS open), refetched while the screen is open and the
- * app is in front: every 10 s, or the Sheet's `refresh_seconds` if that's longer.
+ * app is in front: every 30 s, or the Sheet's `refresh_seconds` if that's longer.
  * `url` is null when the tournament has no Sheet.
  */
 export function useSheetScores(programId: string | null): QueryResult<SheetState> & { url: string | null } {
