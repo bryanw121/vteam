@@ -2,7 +2,7 @@ name: Record tournament sheet (shadow mode)
 
 # Records the Texas Asian Olympics scores feed (Nov 14–15 2026) so vteam's own tournament engine
 # can be replayed against a real 56-team tournament afterwards ("shadow mode"). Read-only: it GETs
-# the public Google Sheet feed every 20 s and keeps a copy each time the feed changes
+# the public Google Sheet feed once a minute and keeps a copy each time the feed changes
 # (scripts/sheet-recorder.mjs). Snapshots are in the run's `sheet-recording-*` artifact (90 days).
 # Runs overlap on purpose: GitHub starts scheduled runs late, and a job may run 6 hours at most.
 # Delete this workflow once the recording is downloaded.
