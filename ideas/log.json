@@ -412,5 +412,29 @@
     "status": "approved",
     "summary": "30-min GitHub workflow reads Supabase Metrics API (dedicated secret key) for live: memory commitment, RAM, swap, disk, connections + REST probe; fails (emails) past limits or on a missing metric; replay fixture of the 11-12 outage must fail.",
     "issue": 290
+  },
+  {
+    "date": "2026-11-14",
+    "n": 1,
+    "title": "Find a team: players looking for a tournament or league team, right on the card",
+    "bucket": "competitor-gap",
+    "status": "proposed",
+    "summary": "Per-program free-agent list (partner / team / players) on outside tournament and league cards; signed-in players browse and DM, guests see counts. One table, one counts RPC, prune inside the existing programs ingest. Volo/OpenSports free agents adapted."
+  },
+  {
+    "date": "2026-11-14",
+    "n": 2,
+    "title": "Club page in pieces: one membership hook, an edit hook, and sections under 250 lines",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "Split app/(app)/club/[id].tsx (893 lines, 17 useState, 5 inline writes, local styles, inline Modal) into pure utils/clubForm, hooks/club/* (one join path shared with clubs.tsx) and components/club sections; ClubPostCard writes into a hook."
+  },
+  {
+    "date": "2026-11-14",
+    "n": 3,
+    "title": "Event links open clean: no \"event/[id]\" header, and the header row is there from the first frame",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "Layout registers event/[id] without headerShown:false, so the lazy web chunk's load shows the raw route name; fallback lacks the header row (64 px shift). Fix in layout + skeleton, reserve host buttons, add a raw-route-name check to the stability flow."
   }
 ]
