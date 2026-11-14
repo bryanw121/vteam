@@ -19,6 +19,15 @@ export type SheetMatch = {
   winner?: string
   format?: string
   next_match?: string
+  next_slot?: string
+  loser_match?: string
+  loser_slot?: string
+  /** Planned start for bracket games ("11:00 AM"), from the Sheet's Day 2 plan. */
+  time?: string
+  /** Who refs a bracket game: a team name once known, else the plan's wording ("Loser of Gold QF1"). */
+  ref?: string
+  /** Set only when `ref` is a team. */
+  ref_team?: string
   updated_at?: string
   updated_by?: string
   /** Bumped on every save; a save sends the version it started from, so two phones can't overwrite each other. */
@@ -102,6 +111,8 @@ export type SheetTeamGame = {
   label: string
   /** The team's points first: "25–21, 19–25". Court and time for upcoming games. */
   detail: string
+  /** A bracket game this team refs rather than plays. */
+  ref?: boolean
 }
 
 /** Everything the team page shows. */
