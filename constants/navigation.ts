@@ -121,6 +121,7 @@ export const HEADERLESS_STACK_ROUTES = [
   'scorekeeper/[id]/index',
   'scorekeeper/[id]/sheet',
   'scorekeeper/[id]/copy',
+  'find-a-team/[programId]',
 ] as const
 
 export type CreateMenuOption = {
