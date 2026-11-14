@@ -66,6 +66,8 @@ export function describeEvent(setup: MatchSetup, ev: ScoreEvent): string {
       return `Set ended for ${nameOf(setup, ev.winner)}: ${ev.reason}`
     case 'time_up':
       return "Time's up"
+    case 'add_time':
+      return `Added ${ev.minutes} min to the clock`
     case 'note':
       return `Note: ${ev.text}`
   }
