@@ -307,6 +307,17 @@ try {
   await shot(page, 'saved-teams')
   check((await page.getByTestId('spot-A-0').innerText()).includes('1') && (await page.getByTestId('spot-B-5').innerText()).includes('16'), 'saved teams fill both courts')
   check(await text(page, 'Match details (from your last match today)').isVisible().catch(() => false), "today's match details carry over")
+
+  // A whole team typed at once: a line of numbers, names, a libero; the first six start in order.
+  await tap(page, 'roster-text-A')
+  await page.getByTestId('roster-text-input').fill('21 22 23 24 25 26\n27 Kai\n28 Lee L')
+  await page.getByTestId('roster-text-preview').waitFor()
+  await shot(page, 'roster-text')
+  await tap(page, 'roster-text-apply')
+  await page.waitForTimeout(400)
+  const spotA = async i => (await page.getByTestId(`spot-A-${i}`).innerText()).trim()
+  check((await spotA(0)).includes('21') && (await spotA(5)).includes('26'), 'typed team fills the court in serving order')
+  check((await page.getByTestId('bench-A').innerText()).includes('27') && (await page.getByTestId('bench-A').innerText()).includes('28'), 'typed team puts the rest on the bench')
 } catch (e) {
   failures.push(e.message.split('\n')[0])
   process.stderr.write(`  FAIL ${e.message.split('\n')[0]}\n`)

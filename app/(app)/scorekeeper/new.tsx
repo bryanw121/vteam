@@ -11,6 +11,8 @@ import { CourtLayout } from '../../../components/scoresheet/CourtLayout'
 import { CourtSpot } from '../../../components/scoresheet/CourtSpot'
 import { PlayerChip } from '../../../components/scoresheet/PlayerChip'
 import { PlayerSheet } from '../../../components/scoresheet/PlayerSheet'
+import { RosterTextSheet } from '../../../components/scoresheet/RosterTextSheet'
+import { rosterToText } from '../../../lib/scoresheet/rosterText'
 import { TEAM_COLORS } from '../../../components/scoresheet/teamColors'
 import { createMatch } from '../../../hooks/useScoreMatch'
 import { POSITION_LABELS } from '../../../lib/scoresheet/engine'
@@ -82,6 +84,8 @@ export default function NewScoreMatchScreen() {
   const [showDetails, setShowDetails] = useState(false)
   const [tried, setTried] = useState(false)
   const [saving, setSaving] = useState(false)
+  // A whole team typed or pasted at once, instead of one player per sheet.
+  const [typing, setTyping] = useState<TeamSide | null>(null)
   const [savedTeams, setSavedTeams] = useState<SavedTeam[]>([])
   const [carried, setCarried] = useState(false)
 
@@ -168,6 +172,13 @@ export default function NewScoreMatchScreen() {
     setEditing(null)
   }
 
+  const applyTyped = (team: { name: string; court: (RosterPlayer | null)[]; bench: RosterPlayer[] }) => {
+    if (!typing) return
+    const side = typing
+    setTeams(prev => ({ ...prev, [side]: { name: team.name || prev[side].name, court: team.court, bench: team.bench } }))
+    setTyping(null)
+  }
+
   async function start() {
     setTried(true)
     if (!ready || saving || !firstServe) return
@@ -233,7 +244,7 @@ export default function NewScoreMatchScreen() {
           <ScreenContainer>
             <ScreenHeader safeTop kicker="Scorekeeper" title="New match" onBack={() => (router.canGoBack() ? router.back() : router.replace(routes.scorekeeper()))} />
             <Text style={[shared.body, { color: theme.colors.subtextStrong, marginBottom: theme.spacing.md }]}>
-              Tap a spot to put a player on the court. Position I serves first. Then add subs and liberos on each bench.
+              Type each team's numbers at once, or tap a spot to put one player on the court. Position I serves first.
             </Text>
 
             <SavedTeamsPicker
@@ -242,6 +253,17 @@ export default function NewScoreMatchScreen() {
               targetLabel={pickTarget === 'A' ? 'the top team (A)' : 'the bottom team (B)'}
               onPick={applySaved}
             />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginBottom: theme.spacing.sm }}>
+              {(['A', 'B'] as const).map(side => (
+                <Chip
+                  key={side}
+                  label={allPlayers(side).length ? `Edit ${teamLabel(side)} as text` : `Type ${teamLabel(side)} at once`}
+                  variant="tint"
+                  onPress={() => setTyping(side)}
+                  testID={`roster-text-${side}`}
+                />
+              ))}
+            </View>
             <CourtLayout
               renderLabel={label}
               renderSpot={(side, position) => {
@@ -361,6 +383,14 @@ export default function NewScoreMatchScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
+      <RosterTextSheet
+        visible={typing != null}
+        teamLabel={typing ? teamLabel(typing) : ''}
+        initialName={typing ? teams[typing].name : ''}
+        initialText={typing ? rosterToText(teams[typing].court, teams[typing].bench) : ''}
+        onApply={applyTyped}
+        onDismiss={() => setTyping(null)}
+      />
       <PlayerSheet
         visible={editing != null}
         editKey={editing ? `${editing.side}:${editing.spot}:${editing.spot === 'court' ? editing.position : editing.index ?? 'new'}` : ''}
