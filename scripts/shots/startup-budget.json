@@ -60,7 +60,7 @@
   },
   "tournaments": {
     "paintMs": 1000,
-    "requests": 7,
+    "requests": 8,
     "allowedDuplicates": [],
     "requestList": [
       "GET app_config select=platform,min_version,store_url,message",
@@ -69,7 +69,8 @@
       "GET profiles select=id,username,first_name,last_name,avatar_url,position,skill_l",
       "GET tournaments select=id,title,location,start_date,status,format,club_id,max_teams",
       "GET user_settings select=user_id,home_city_id,seen_banners,reminder_lead_minutes,hidd",
-      "POST rpc/get_my_conversations"
+      "POST rpc/get_my_conversations",
+      "POST rpc/program_free_agent_counts"
     ]
   },
   "events-guest": {

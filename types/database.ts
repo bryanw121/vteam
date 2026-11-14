@@ -1979,6 +1979,53 @@ export type Database = {
         }
         Relationships: []
       }
+      program_free_agents: {
+        Row: {
+          created_at: string
+          expires_on: string
+          id: string
+          note: string | null
+          positions: string[]
+          program_id: string
+          program_title: string
+          updated_at: string
+          user_id: string
+          want: string
+        }
+        Insert: {
+          created_at?: string
+          expires_on?: string
+          id?: string
+          note?: string | null
+          positions?: string[]
+          program_id: string
+          program_title?: string
+          updated_at?: string
+          user_id?: string
+          want?: string
+        }
+        Update: {
+          created_at?: string
+          expires_on?: string
+          id?: string
+          note?: string | null
+          positions?: string[]
+          program_id?: string
+          program_title?: string
+          updated_at?: string
+          user_id?: string
+          want?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_free_agents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_receipts: {
         Row: {
           created_at: string
@@ -3258,6 +3305,7 @@ export type Database = {
         }[]
       }
       find_or_create_dm: { Args: { other_user_id: string }; Returns: string }
+      free_agent_visible: { Args: { p_user: string }; Returns: boolean }
       friend_accept: {
         Args: { p_addressee: string; p_request_id: string; p_requester: string }
         Returns: undefined
@@ -3400,6 +3448,13 @@ export type Database = {
           p_user_id: string
         }
         Returns: boolean
+      }
+      program_free_agent_counts: {
+        Args: { p_ids: string[] }
+        Returns: {
+          n: number
+          program_id: string
+        }[]
       }
       redeem_ad_free: { Args: never; Returns: Json }
       release_bring_item: { Args: { p_item_id: string }; Returns: undefined }

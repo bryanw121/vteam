@@ -5,6 +5,7 @@ import { Stack, useRouter } from 'expo-router'
 import { shared, theme } from '../../constants'
 import { RefreshControl } from '../../components/RefreshControl'
 import { ScreenContainer, ScreenHeader, ScreenState } from '../../components/ui'
+import { useFreeAgentCounts } from '../../hooks/useFreeAgents'
 import { ProgramSection } from '../../components/programs/ProgramSection'
 import { useExternalPrograms } from '../../hooks/useExternalPrograms'
 import { useToday } from '../../hooks/useToday'
@@ -27,6 +28,7 @@ export default function LeaguesScreen() {
   const programs = useExternalPrograms()
   const [refreshing, setRefreshing] = useState(false)
   const all = programs.data?.leagues ?? []
+  const freeAgentCounts = useFreeAgentCounts(all.map(p => p.id))
   // The organizer chip is in the URL (`?host=ACES`); one no longer listed shows everyone.
   const [hostParam, setHostParam] = useUrlParam('host', VIEW.leagues.host)
   const host = hostParam || null
@@ -77,9 +79,9 @@ export default function LeaguesScreen() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void refresh() }} tintColor={theme.colors.primary} />}
           >
             <ProgramHostChips programs={all} host={host} onSelect={setHost} />
-            <ProgramSection title="Closing this week" programs={groups.soon} hot testID="leagues-soon" />
-            <ProgramSection title="Open" programs={groups.open} testID="leagues-open" />
-            <ProgramSection title="Not open yet, full or closed" programs={groups.later} testID="leagues-later" />
+            <ProgramSection title="Closing this week" programs={groups.soon} freeAgentCounts={freeAgentCounts} hot testID="leagues-soon" />
+            <ProgramSection title="Open" programs={groups.open} freeAgentCounts={freeAgentCounts} testID="leagues-open" />
+            <ProgramSection title="Not open yet, full or closed" programs={groups.later} freeAgentCounts={freeAgentCounts} testID="leagues-later" />
             <Text style={[shared.caption, { marginTop: theme.spacing.lg }]}>{PROGRAMS_SOURCE_NOTE}</Text>
           </ScrollView>
         </ScreenState>

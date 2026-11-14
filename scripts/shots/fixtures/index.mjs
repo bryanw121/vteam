@@ -192,7 +192,17 @@ export function buildFixtures(now) {
     prog(3, { title: 'Coed 4s Sand · Mondays', org: 'Meanwhile Brewing', surface: 'sand', venue: 'Meanwhile Brewing Co', starts_on: day(70), ends_on: day(119), weekdays: ['Monday'], registration_deadline: day(36), team_price: '$700' }),
     prog(4, { kind: 'tournament', title: 'Turkey Spikes BYO4s Sand Tourney', surface: 'sand', venue: 'ATX Beach', starts_on: day(6), ends_on: day(6), registration_deadline: day(5), team_price: '$160', individual_price: '$45' }),
     prog(5, { kind: 'tournament', title: 'Holiday Spikes Indoor (BB/B)', starts_on: day(27), ends_on: day(27), registration_deadline: day(26), team_price: '$315–415', individual_price: '$50' }),
+    { ...prog(9, { kind: 'tournament', title: 'Texas Asian Olympics', starts_on: day(8), ends_on: day(9) }), id: 'texasao-2026-11-14' },
     prog(6, { kind: 'tournament', series: 'nagva', org: 'NAGVA', region: null, title: 'Battle of the Alamo 2026', venue: 'Mission Concepcion Sports Complex', city: 'San Antonio', starts_on: day(40), ends_on: day(41), registration_deadline: null, waitlist_on: day(38), team_price: '$650', divisions: [{ name: 'A1', cap: 12, confirmed: 7 }, { name: 'BB', cap: 24, confirmed: 20 }] }),
+  ]
+
+  // Find a team (#304): players looking for a team for the Turkey Spikes sand tourney.
+  const agent = (n, user, want, positions, note, ago) => ({ id: id('f5000000', n), program_id: 'shots-program-4', user_id: user, want, positions, note, program_title: 'Turkey Spikes BYO4s Sand Tourney', expires_on: day(6), created_at: t.ago(ago), updated_at: t.ago(ago) })
+  const program_free_agents = [
+    agent(1, P.sofiag, 'partner', ['outside_hitter'], 'Sunday only, happy to play up.', 60 * 3),
+    agent(2, P.liamo, 'team', ['setter'], 'Happy to be the 4th on any team.', 60 * 20),
+    agent(3, P.aishak, 'players', ['libero', 'defensive_specialist'], 'Our team has 2, need 2 more.', 60 * 30),
+    agent(4, P.noahb, 'team', ['opposite_hitter'], null, 60 * 50),
   ]
 
   // ─── Tournaments ───────────────────────────────────────────────────────────
@@ -379,7 +389,7 @@ export function buildFixtures(now) {
   return {
     profiles: profiles(t),
     tags, major_cities, clubs, club_members, club_posts, club_post_likes, club_post_comments, club_polls, club_poll_options, club_poll_votes,
-    events, event_tags, event_attendees, event_guests, event_payments, event_cohosts, event_comments, cheers, user_event_templates, external_sessions, external_programs,
+    events, event_tags, event_attendees, event_guests, event_payments, event_cohosts, event_comments, cheers, user_event_templates, external_sessions, external_programs, program_free_agents,
     tournaments, tournament_rules, tournament_prizes, tournament_teams, tournament_team_members, tournament_pools, tournament_pool_teams,
     tournament_matches, tournament_sets, tournament_comments, tournament_team_invitations: [], tournament_team_join_requests: [],
     conversations, conversation_members, messages, message_reactions,

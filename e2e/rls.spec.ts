@@ -108,6 +108,17 @@ test.describe('anon (guest browsing)', () => {
     expect(rpc.error, 'anon must not execute send_friend_request').not.toBeNull()
   })
 
+  test('Find a team: counts only, no rows, no writes (#304)', async () => {
+    const counts = await q(() => anon.rpc('program_free_agent_counts', { p_ids: ['no-such-program'] }), 'anon program_free_agent_counts')
+    expect(counts.error, `anon counts: ${counts.error?.message}`).toBeNull()
+    for (const row of (counts.data ?? []) as Record<string, unknown>[]) expect(Object.keys(row).sort()).toEqual(['n', 'program_id'])
+    const rows = await q(() => anon.from('program_free_agents').select('user_id').limit(1), 'anon program_free_agents')
+    if (rows.error) expect(rows.error.code).toBe(RLS_DENIED)
+    else expect(rows.data).toEqual([])
+    const ins = await q(() => anon.from('program_free_agents').insert({ program_id: 'no-such-program', user_id: BUDDY_ID }), 'anon insert free agent')
+    expect(ins.error?.code).toBe(RLS_DENIED)
+  })
+
   test('cannot run the reminder job or read its ledger (#129)', async () => {
     const run = await q(() => anon.rpc('send_event_reminders'), 'anon send_event_reminders')
     expect(run.error, 'anon may not run send_event_reminders').not.toBeNull()

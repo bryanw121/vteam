@@ -9,6 +9,8 @@ import { track } from '../lib/analytics'
 import { ANALYTICS_EVENTS } from '../constants/analytics'
 import { useToday } from '../hooks/useToday'
 import { LiveScoresLink } from './programs/LiveScoresLink'
+import { FreeAgentStrip } from './programs/FreeAgentStrip'
+import { takesFreeAgents } from '../utils/freeAgents'
 import { sheetScoresUrl } from '../utils/sheetScores'
 import { programDateBadge, programDeadline, programKicker, programPrice, programRelative, programUrgency, programWhen } from '../utils/externalPrograms'
 import type { ExternalProgramCardProps } from '../types'
@@ -22,7 +24,7 @@ const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
  * they're on (Nov · 14–15 · Sat–Sun) and, in lists (`compact`), how soon it is. `compact` leagues
  * have no date block: their list is ordered by sign-up deadline.
  */
-function ExternalProgramCardInner({ program: p, compact = false, menuInset = false }: ExternalProgramCardProps) {
+function ExternalProgramCardInner({ program: p, compact = false, menuInset = false, freeAgentCount = null }: ExternalProgramCardProps) {
   const today = useToday()
   const accent = p.surface ? SURFACE_ACCENTS[p.surface] : theme.colors.subtext
   const urgency = programUrgency(p, today)
@@ -35,6 +37,8 @@ function ExternalProgramCardInner({ program: p, compact = false, menuInset = fal
   const badge = p.kind === 'tournament' ? programDateBadge(p) : null
   const relative = compact && p.kind === 'tournament' ? programRelative(p, today) : null
   const hasScores = p.kind === 'tournament' && !!sheetScoresUrl(p.id)
+  const hasFinder = takesFreeAgents(p, today)
+  const joined = hasScores || hasFinder
   const label = p.status === 'closed' || p.status === 'full' ? `See it at ${p.org}` : `Sign up with ${p.org}`
 
   const card = (
@@ -46,7 +50,7 @@ function ExternalProgramCardInner({ program: p, compact = false, menuInset = fal
         void openExternalUrl(p.signup_url)
       }}
       disabled={!p.signup_url}
-      style={hasScores ? [shared.externalCard, shared.externalCardJoined] : shared.externalCard}
+      style={joined ? [shared.externalCard, shared.externalCardJoined] : shared.externalCard}
       accessibilityRole="link"
       accessibilityLabel={[p.title, where, relative, when, price, urgency ?? deadline, label].filter(Boolean).join('. ')}
       testID="external-program-card"
@@ -93,12 +97,14 @@ function ExternalProgramCardInner({ program: p, compact = false, menuInset = fal
       </View>
     </TouchableOpacity>
   )
-  if (!hasScores) return card
-  // Two separate links: the card goes to the organizer's site as before; the strip opens scores in vteam.
+  if (!joined) return card
+  // Separate links: the card goes to the organizer's site as before; the strips open scores and
+  // Find a team (#304) in vteam.
   return (
     <View>
       {card}
-      <LiveScoresLink programId={p.id} title={p.title} />
+      {hasScores && <LiveScoresLink programId={p.id} title={p.title} middle={hasFinder} />}
+      {hasFinder && <FreeAgentStrip program={p} count={freeAgentCount} />}
     </View>
   )
 }
