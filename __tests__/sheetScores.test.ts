@@ -1,6 +1,6 @@
 import type { SheetState } from '../types'
 import {
-  bracketGroups, bracketRows, liveMatches, parseSheetState, poolStandings, record, roundLabel, setsOf, sheetScoresUrl, teamDetail,
+  bracketGroups, bracketRows, clockMinutes, isLosersBracket, liveMatches, parseSheetState, poolStandings, record, roundLabel, setsOf, sheetScoresUrl, teamDetail,
   teamList, upNext,
 } from '../utils/sheetScores'
 
@@ -91,6 +91,12 @@ describe('setsOf and roundLabel', () => {
     expect(roundLabel({ match_id: 'Gold-F', group: 'Gold' })).toBe('Final')
     expect(roundLabel({ match_id: 'Silver-R16-3', group: 'Silver' })).toBe('Round of 16 #3')
     expect(roundLabel({ match_id: 'Gold-3rd place', group: 'Gold' })).toBe('3rd place')
+    expect(roundLabel({ match_id: 'Gold-L2-3', group: 'Gold' })).toBe('Losers round 2 #3')
+    expect(roundLabel({ match_id: 'Gold-L5', group: 'Gold' })).toBe('Losers round 5')
+    expect(roundLabel({ match_id: 'Gold-WF', group: 'Gold' })).toBe('Winners final')
+    expect(roundLabel({ match_id: 'Gold-LF', group: 'Gold' })).toBe('Losers final')
+    expect(roundLabel({ match_id: 'Gold-GF', group: 'Gold' })).toBe('Grand final')
+    expect(roundLabel({ match_id: 'Gold-GF2', group: 'Gold' })).toBe('Grand final (game 2)')
   })
 })
 
@@ -172,5 +178,45 @@ describe('teams', () => {
     expect(teamDetail(state, 'Spikers')).toBeNull() // in a bracket but not in the standings fixture
     expect(teamDetail(state, 'Aces')!.games.every(g => !g.bye)).toBe(true)
     expect(teamDetail(state, 'Nobody')).toBeNull()
+  })
+})
+
+describe('double elimination (Texas AO Sunday)', () => {
+  const day2 = parseSheetState({
+    settings: { divisions: ['Gold'] },
+    standings: { A: [{ pool: 'A', team: 'Aces', played: 4, wins: 4, losses: 0, sets_won: 8, sets_lost: 0, points_for: 200, points_against: 150, rank: 1 }] },
+    matches: [
+      { match_id: 'Gold-QF1', stage: 'bracket', group: 'Gold', round: 1, court: 1, time: '11:00 AM', team_a: 'Aces', team_b: 'Blockers', status: 'final', winner: 'Blockers', s1_a: 20, s1_b: 25, s2_a: 21, s2_b: 25, next_match: 'Gold-SF1', loser_match: 'Gold-L1-1' },
+      { match_id: 'Gold-SF1', stage: 'bracket', group: 'Gold', round: 2, court: 5, time: '12:00 PM', team_a: 'Blockers', status: 'scheduled', ref: 'Aces', ref_team: 'Aces' },
+      { match_id: 'Gold-L1-1', stage: 'bracket', group: 'Gold', round: 1, court: 1, time: '12:30 PM', team_a: 'Aces', status: 'scheduled' },
+      { match_id: 'Gold-GF2', stage: 'bracket', group: 'Gold', round: 5, court: 1, time: '5:30 PM', status: 'void' },
+    ],
+  })
+
+  it('reads clock times', () => {
+    expect(clockMinutes('11:00 AM')).toBe(660)
+    expect(clockMinutes('12:30 PM')).toBe(750)
+    expect(clockMinutes(undefined)).toBeNull()
+  })
+
+  it('puts losers-bracket games under the losers bracket and shows the planned time before a game starts', () => {
+    expect(isLosersBracket({ match_id: 'Gold-L1-1', group: 'Gold' })).toBe(true)
+    expect(isLosersBracket({ match_id: 'Gold-LF', group: 'Gold' })).toBe(true)
+    expect(isLosersBracket({ match_id: 'Gold-GF', group: 'Gold' })).toBe(false)
+    const byId = Object.fromEntries(bracketRows(day2, 'Gold').map(r => [r.id, r]))
+    expect(byId['Gold-L1-1']).toMatchObject({ is_losers_bracket: true, bracket_round_name: 'Losers round 1', court: '12:30 PM · Court 1' })
+    expect(byId['Gold-SF1']).toMatchObject({ is_losers_bracket: false, court: '12:00 PM · Court 5' })
+    expect(byId['Gold-QF1'].court).toBe('Court 1')
+    expect(byId['Gold-GF2']).toBeUndefined() // a void reset game is dropped
+  })
+
+  it("lists a team's bracket games by time, with its ref duty", () => {
+    const aces = teamDetail(day2, 'Aces')!
+    expect(aces.games.map(g => [g.id, g.status, g.label, g.detail])).toEqual([
+      ['Gold-QF1', 'final', 'Gold · Quarterfinal 1', '20–25, 21–25'],
+      ['Gold-L1-1', 'upcoming', 'Gold · Losers round 1 #1', '12:30 PM · Court 1'],
+      ['ref-Gold-SF1', 'upcoming', 'Ref · Gold · Semifinal 1', '12:00 PM · Court 5'],
+    ])
+    expect(aces.games[2].ref).toBe(true)
   })
 })

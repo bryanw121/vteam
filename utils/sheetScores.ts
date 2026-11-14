@@ -67,16 +67,47 @@ export function setsOf(m: SheetMatch): { a: number; b: number }[] {
   return out
 }
 
-const ROUND_NAMES: Record<string, string> = { F: 'Final', SF: 'Semifinal', QF: 'Quarterfinal' }
+const ROUND_NAMES: Record<string, string> = {
+  F: 'Final', SF: 'Semifinal', QF: 'Quarterfinal',
+  WF: 'Winners final', LF: 'Losers final', GF: 'Grand final', GF2: 'Grand final (game 2)',
+}
 
-/** "Gold-QF2" → "Quarterfinal 2", "Gold-R16-3" → "Round of 16 #3" (the Sheet app's own labels). */
+/** A bracket game's id without its division: "Gold-L2-3" → "L2-3". */
+function shortId(m: Pick<SheetMatch, 'match_id' | 'group'>): string {
+  const id = String(m.match_id)
+  return m.group && id.startsWith(`${m.group}-`) ? id.slice(m.group.length + 1) : id
+}
+
+/**
+ * "Gold-QF2" → "Quarterfinal 2", "Gold-R16-3" → "Round of 16 #3", "Gold-L2-3" → "Losers round 2 #3",
+ * "Gold-WF" → "Winners final", "Gold-GF2" → "Grand final (game 2)" (the Sheet app's own labels).
+ */
 export function roundLabel(m: Pick<SheetMatch, 'match_id' | 'group'>): string {
-  let id = String(m.match_id)
-  if (m.group && id.startsWith(`${m.group}-`)) id = id.slice(m.group.length + 1)
+  const id = shortId(m)
+  if (ROUND_NAMES[id]) return ROUND_NAMES[id]
+  const lb = id.match(/^L(\d+)(?:-(\d+))?$/)
+  if (lb) return `Losers round ${lb[1]}${lb[2] ? ` #${lb[2]}` : ''}`
   const x = id.match(/^(F|SF|QF|R\d+)-?(\d*)$/)
   if (!x) return id
   const name = ROUND_NAMES[x[1]] ?? `Round of ${x[1].slice(1)}`
   return name + (x[2] ? (x[1].startsWith('R') ? ' #' : ' ') + x[2] : '')
+}
+
+/** A double-elimination losers-bracket game ("L1-2", "LF"). */
+export function isLosersBracket(m: Pick<SheetMatch, 'match_id' | 'group'>): boolean {
+  return /^(L\d+(-\d+)?|LF)$/.test(shortId(m))
+}
+
+/** "11:00 AM" → minutes after midnight, for ordering; null when there is no time. */
+export function clockMinutes(t: string | undefined): number | null {
+  const m = /(\d{1,2}):(\d{2})\s*(AM|PM)/i.exec(t ?? '')
+  if (!m) return null
+  return (Number(m[1]) % 12 + (/pm/i.test(m[3]) ? 12 : 0)) * 60 + Number(m[2])
+}
+
+/** "11:00 AM · Court 3" for a game not started yet; only the parts the Sheet has. */
+function whenWhere(m: SheetMatch): string {
+  return [m.time, num(m.court) ? `Court ${m.court}` : null].filter(Boolean).join(' · ')
 }
 
 /** "Pool A" for pool games, "Gold · Semifinal 1" for bracket games. */
@@ -161,12 +192,13 @@ export function bracketRows(state: SheetState, group: string): TournamentMatchRo
       match_number: Number(m.match_id.match(/(\d+)$/)?.[1] ?? i + 1),
       team_a_id: team(m.team_a),
       team_b_id: team(m.team_b),
-      court: num(m.court) ? `Court ${m.court}` : null,
+      // Before a game starts the court line also carries its planned time.
+      court: (m.status === 'scheduled' ? whenWhere(m) : num(m.court) ? `Court ${m.court}` : '') || null,
       scheduled_at: null,
       status: m.status === 'live' ? 'in_progress' : m.status === 'final' ? 'completed' : 'scheduled',
       winner_id: m.status === 'final' && m.winner && m.winner !== 'TIE' ? m.winner : null,
       bracket_round_name: round == null ? 'Other games' : roundLabel(m).replace(/ #?\d+$/, ''),
-      is_losers_bracket: false,
+      is_losers_bracket: isLosersBracket(m),
       ref_team_id: null,
       sets,
     }
@@ -198,6 +230,8 @@ export function teamDetail(state: SheetState, name: string): SheetTeamDetail | n
     .filter(m => m.team_a === name || m.team_b === name)
     .sort((a, b) =>
       (a.stage === b.stage ? 0 : a.stage === 'pool' ? -1 : 1)
+      // Bracket day runs on the clock: a losers-bracket game can come before a later winners round.
+      || ((clockMinutes(a.time) ?? 0) - (clockMinutes(b.time) ?? 0))
       || ((num(a.round) ?? 0) - (num(b.round) ?? 0))
       || a.match_id.localeCompare(b.match_id, undefined, { numeric: true }))
     .map(m => {
@@ -212,9 +246,23 @@ export function teamDetail(state: SheetState, name: string): SheetTeamDetail | n
         bye: opp === 'BYE',
         label: stageLabel(m),
         detail: setsOf(m).map(s => (isA ? `${s.a}–${s.b}` : `${s.b}–${s.a}`)).join(', ')
-          || (m.court ? `Court ${m.court}` : ''),
+          || (m.status === 'scheduled' ? whenWhere(m) : m.court ? `Court ${m.court}` : ''),
       }
     })
+  // Bracket games this team refs (the Sheet names the ref once the team that refs is known).
+  const refs: SheetTeamGame[] = state.matches
+    .filter(m => m.stage !== 'pool' && m.ref_team === name && m.status !== 'final')
+    .sort((a, b) => (clockMinutes(a.time) ?? 0) - (clockMinutes(b.time) ?? 0))
+    .map(m => ({
+      id: `ref-${m.match_id}`,
+      status: m.status === 'live' ? 'live' : 'upcoming',
+      result: null,
+      opponent: null,
+      bye: false,
+      label: `Ref · ${stageLabel(m)}`,
+      detail: whenWhere(m),
+      ref: true,
+    }))
   const upcoming: SheetTeamGame[] = upNext(state, Infinity)
     .filter(g => g.a === name || g.b === name)
     .map(g => ({
@@ -231,6 +279,6 @@ export function teamDetail(state: SheetState, name: string): SheetTeamDetail | n
     standing,
     poolSize: state.standings[standing.pool]?.length ?? 0,
     seed: seed ? { division: seed.division, seed: seed.seed } : null,
-    games: [...played, ...upcoming],
+    games: [...played, ...refs, ...upcoming],
   }
 }
