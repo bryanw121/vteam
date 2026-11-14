@@ -441,3 +441,40 @@ export type OfficialSheetViewProps = {
 export type MatchDetailsCardProps = { info: MatchInfo; onChange: (patch: Partial<MatchInfo>) => void }
 export type SavedTeamsPickerProps = { teams: SavedTeam[]; target: TeamSide | null; targetLabel: string; onPick: (team: SavedTeam) => void }
 
+
+/** Simple score (no lineups, no scoresheet): how a match is played. */
+export type SimpleFormat = {
+  /** Best of 1, 3 or 5 sets. */
+  sets: 1 | 3 | 5
+  /** Points to win a set; the deciding set of a best-of-3/5 plays to 15. */
+  target: number
+  /** A set ends at this score even if not 2 ahead (null: no cap). */
+  cap: number | null
+}
+
+/** A simple-score match as saved on the device: a log of who won each rally. */
+export type SimpleMatch = {
+  id: string
+  names: Record<TeamSide, string>
+  format: SimpleFormat
+  firstServe: TeamSide
+  /** Winner of each rally, in order. Undo drops the last one. */
+  rallies: TeamSide[]
+  startedAt: number
+  updatedAt: number
+}
+
+export type SimpleSetScore = { A: number; B: number; target: number; winner: TeamSide | null }
+
+/** Everything the simple-score screen shows, replayed from the log. */
+export type SimpleState = {
+  sets: SimpleSetScore[]
+  /** Index of the set in play (the last one when the match is over). */
+  current: number
+  setsWon: Record<TeamSide, number>
+  serving: TeamSide
+  over: boolean
+  winner: TeamSide | null
+  /** The rally just played ended a set (show "Set to …"). */
+  setJustEnded: boolean
+}
