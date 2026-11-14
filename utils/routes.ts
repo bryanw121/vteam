@@ -137,6 +137,8 @@ export const routes = {
   /** Experimental scorekeeper (Settings → Experimental features). Matches live on the device. */
   scorekeeper: () => href('/scorekeeper'),
   scorekeeperNew: () => href('/scorekeeper/new'),
+  /** Simple score: a plain point counter, no lineups or scoresheet. Device-only. */
+  scorekeeperSimple: () => href('/scorekeeper/simple'),
   scorekeeperMatch: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}`),
   scorekeeperSheet: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/sheet`),
   scorekeeperCopy: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/copy`),

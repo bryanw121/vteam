@@ -30,6 +30,28 @@ export default function ScorekeeperScreen() {
           </Text>
           <Button label="New match" icon="add" onPress={() => router.push(routes.scorekeeperNew())} style={{ marginTop: theme.spacing.lg }} testID="new-match" />
           <Pressable
+            onPress={() => router.push(routes.scorekeeperSimple())}
+            accessibilityRole="button"
+            accessibilityLabel="Simple score: just count points and sets, no lineups or scoresheet"
+            testID="open-simple"
+            style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+              shared.card,
+              { marginTop: theme.spacing.md, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
+              (pressed || hovered) && { borderColor: theme.colors.primary },
+            ]}
+          >
+            <View style={{ width: 44, height: 44, borderRadius: theme.radius.md, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="stopwatch-outline" size={22} color={theme.colors.timeInk} />
+            </View>
+            <View style={{ flex: 1, gap: theme.spacing.xs }}>
+              <Text style={shared.subheading}>Simple score</Text>
+              <Text style={[shared.body, { color: theme.colors.subtextStrong }]}>
+                Just the score: tap who won the rally. Sets and serve tracked, no lineups and no scoresheet.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={theme.colors.subtext} />
+          </Pressable>
+          <Pressable
             onPress={() => void openExampleMatch().then(id => router.push(routes.scorekeeperSheet(id)))}
             accessibilityRole="button"
             accessibilityLabel="See what you get: open a finished example match"

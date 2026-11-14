@@ -146,7 +146,7 @@ export default function ScoreMatchScreen() {
                 </View>
               )}
 
-              <MatchClock doc={m.doc} state={m.state} onTimeUp={() => m.add({ type: 'time_up' })} />
+              <MatchClock doc={m.doc} state={m.state} onTimeUp={() => m.add({ type: 'time_up' })} onAddTime={minutes => m.add({ type: 'add_time', minutes })} />
               {set?.nextPointWins && (
                 <View style={[styles.banner, { borderColor: theme.colors.warning }]} accessibilityRole="alert" testID="next-point-wins">
                   <Ionicons name="flash-outline" size={18} color={theme.colors.warning} />

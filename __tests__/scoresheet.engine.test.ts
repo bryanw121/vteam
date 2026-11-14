@@ -418,4 +418,23 @@ describe('NAGVA-style options: start at 4, caps, time limit', () => {
     const late = record(d, { type: 'timeout', team: 'A' }, startedAt + 39 * 60_000).doc
     expect(stateOf(late).warnings.map(w => w.code)).toEqual(['timeout-late'])
   })
+
+  it('added time keeps play going and moves the last-two-minutes window', () => {
+    let d = play(docOf(nagvaPool()), start('A'), ...rallies('A', 3), { type: 'add_time', minutes: 5 })
+    const startedAt = d.log[0].at
+    const s = stateOf(d)
+    expect(s.addedMinutes).toBe(5)
+    expect(s.over).toBe(false)
+    expect(s.remarks.at(-1)).toBe('Set 1 (7–4): Match clock: 5 minutes added.')
+    d = record(d, { type: 'timeout', team: 'A' }, startedAt + 39 * 60_000).doc
+    expect(stateOf(d).warnings).toEqual([])
+    d = record(d, { type: 'timeout', team: 'B' }, startedAt + 44 * 60_000).doc
+    expect(stateOf(d).warnings.map(w => w.code)).toEqual(['timeout-late'])
+  })
+
+  it('adds no time once the match has ended on time', () => {
+    const s = stateOf(play(docOf(nagvaPool()), start('A'), ...rallies('A', 3), { type: 'time_up' }, { type: 'add_time', minutes: 2 }))
+    expect(s.addedMinutes).toBe(0)
+    expect(s.warnings.map(w => w.code)).toEqual(['set-over'])
+  })
 })

@@ -165,6 +165,8 @@ export type EndSetEvent = EventBase & { type: 'end_set'; winner: TeamSide; reaso
  * decides it. No further sets are played.
  */
 export type TimeUpEvent = EventBase & { type: 'time_up' }
+/** The scorekeeper added minutes to the match clock (before ending on time). */
+export type AddTimeEvent = EventBase & { type: 'add_time'; minutes: number }
 export type NoteEvent = EventBase & { type: 'note'; text: string }
 
 export type ScoreEvent =
@@ -181,6 +183,7 @@ export type ScoreEvent =
   | OverrideEvent
   | EndSetEvent
   | TimeUpEvent
+  | AddTimeEvent
   | NoteEvent
 
 /** An event before the log stamps it with an id and time. */
@@ -335,6 +338,8 @@ export type MatchState = {
   over: boolean
   /** The match clock ran out (time_up recorded). */
   timeExpired: boolean
+  /** Minutes the scorekeeper added to the match clock (add_time). */
+  addedMinutes: number
   sanctions: SanctionRecord[]
   /** Improper requests per team (the IMPROPER REQUEST box). */
   improperRequests: Record<TeamSide, boolean>
@@ -441,3 +446,52 @@ export type OfficialSheetViewProps = {
 export type MatchDetailsCardProps = { info: MatchInfo; onChange: (patch: Partial<MatchInfo>) => void }
 export type SavedTeamsPickerProps = { teams: SavedTeam[]; target: TeamSide | null; targetLabel: string; onPick: (team: SavedTeam) => void }
 
+
+/** A whole team typed or pasted at once on the new-match screen (`RosterTextSheet`). */
+export type RosterTextSheetProps = {
+  visible: boolean
+  /** "Team A" or the team's name: the sheet's title. */
+  teamLabel: string
+  /** Prefill: the team's current name and players (court in serving order, then bench). */
+  initialName: string
+  initialText: string
+  onApply: (team: { name: string; court: (RosterPlayer | null)[]; bench: RosterPlayer[] }) => void
+  onDismiss: () => void
+}
+
+/** Simple score (no lineups, no scoresheet): how a match is played. */
+export type SimpleFormat = {
+  /** Best of 1, 3 or 5 sets. */
+  sets: 1 | 3 | 5
+  /** Points to win a set; the deciding set of a best-of-3/5 plays to 15. */
+  target: number
+  /** A set ends at this score even if not 2 ahead (null: no cap). */
+  cap: number | null
+}
+
+/** A simple-score match as saved on the device: a log of who won each rally. */
+export type SimpleMatch = {
+  id: string
+  names: Record<TeamSide, string>
+  format: SimpleFormat
+  firstServe: TeamSide
+  /** Winner of each rally, in order. Undo drops the last one. */
+  rallies: TeamSide[]
+  startedAt: number
+  updatedAt: number
+}
+
+export type SimpleSetScore = { A: number; B: number; target: number; winner: TeamSide | null }
+
+/** Everything the simple-score screen shows, replayed from the log. */
+export type SimpleState = {
+  sets: SimpleSetScore[]
+  /** Index of the set in play (the last one when the match is over). */
+  current: number
+  setsWon: Record<TeamSide, number>
+  serving: TeamSide
+  over: boolean
+  winner: TeamSide | null
+  /** The rally just played ended a set (show "Set to …"). */
+  setJustEnded: boolean
+}

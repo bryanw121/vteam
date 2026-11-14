@@ -357,6 +357,11 @@ function step(ctx: Ctx, ev: ScoreEvent) {
     default:
       break
   }
+  if (ev.type === 'add_time') {
+    if (state.timeExpired || state.over) return warn(ctx, 'set-over', 'The match clock has already ended; no time added.', ev)
+    state.addedMinutes += ev.minutes
+    return remark(ctx, state.current != null ? state.sets[state.current] : null, `Match clock: ${ev.minutes} minute${ev.minutes === 1 ? '' : 's'} added.`)
+  }
   if (ev.type === 'time_up') {
     state.timeExpired = true
     const live = state.current != null ? state.sets[state.current] : null
@@ -429,7 +434,7 @@ function step(ctx: Ctx, ev: ScoreEvent) {
         warn(ctx, 'timeout-limit', `${label(ctx, ev.team)} has used all ${ctx.setup.rules.timeoutsPerSet} time-outs this set.`, ev)
       const limit = ctx.setup.rules.format.timeLimitMinutes
       const first = ctx.state.sets[0]
-      if (limit && first && ev.at >= first.startedAt + (limit - 2) * 60_000)
+      if (limit && first && ev.at >= first.startedAt + (limit + ctx.state.addedMinutes - 2) * 60_000)
         warn(ctx, 'timeout-late', 'No time-outs in the last 2 minutes of a timed match.', ev)
       t.timeouts.push({ team: ev.team, score: [t.score, set.teams[other(ev.team)].score], eventId: ev.id })
       return
@@ -467,6 +472,7 @@ function emptyState(): MatchState {
     winner: null,
     over: false,
     timeExpired: false,
+    addedMinutes: 0,
     sanctions: [],
     improperRequests: { A: false, B: false },
     warnings: [],
