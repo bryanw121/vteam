@@ -5,6 +5,7 @@
  * (utils/urlViews.ts) has no link case here, so a new link param gets one.
  */
 import { IDS } from './fixtures/index.mjs'
+import { SCREENS } from './screens.mjs'
 
 /**
  * Screens checked for a jump or a layout shift on refresh, and for coming back
@@ -75,4 +76,28 @@ export function tourCases(full) {
     c.start === 'banner' ? c.mode === 'link' && (c.type === 'all' || c.type === 'tournament' && c.surface === 'grass')
       : c.mode === 'link' ? c.viewport === 'phone' || spread.has(`${c.type}/${c.surface}`)
         : c.viewport === 'phone' && spread.has(`${c.type}/${c.surface}`))
+}
+
+/**
+ * Raw route names (#306): every route in `SCREENS` is opened and its visible text sampled
+ * while it loads; "event/[id]" or "(tabs)" on screen means a stack header showed the route's
+ * file name. PR mode opens the stack screens that load lazily or draw their own header
+ * (`RAW_ROUTE_PR`); the nightly run opens every route, signed in and as a guest where the
+ * screen entry is a guest one.
+ */
+export const RAW_ROUTE_PR = ['/event/', '/tournament/', '/club/', '/profile/', '/chat/', '/search', '/tournaments', '/leagues']
+
+export function rawRouteCases(full) {
+  const seen = new Set()
+  const cases = []
+  for (const [name, s] of Object.entries(SCREENS)) {
+    const path = s.route
+    const signedIn = s.signedIn !== false
+    const key = `${path.split('#')[0]}|${signedIn}`
+    if (seen.has(key) || path.includes('#')) continue
+    seen.add(key)
+    if (!full && !RAW_ROUTE_PR.some(p => path.startsWith(p))) continue
+    cases.push({ name, path, signedIn })
+  }
+  return cases
 }
