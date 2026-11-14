@@ -142,6 +142,25 @@ export type StandingRow = {
   tied: boolean
 }
 
+// ─── Divisions ────────────────────────────────────────────────────────────────
+
+/** One bracket and the pool finishes that feed it (1-based, inclusive): Gold takes 2nd–3rd. */
+export type DivisionRule = { key: string; name: string; fromPlace: number; toPlace: number }
+
+export type DivisionProblem =
+  | { kind: 'none' }
+  | { kind: 'unnamed'; key: string }
+  | { kind: 'empty'; key: string }
+  | { kind: 'overlap'; key: string; place: number }
+  | { kind: 'gap'; place: number }
+  | { kind: 'out_of_range'; key: string; place: number }
+
+/** How big a division's bracket is once every pool has sent its teams. */
+export type DivisionSize = { key: string; teams: number; bracketSize: number; byes: number }
+
+/** A division's bracket seeds (best first) and each team's pool finish, for avoiding pool rematches. */
+export type DivisionSeeding = { key: string; seeds: string[]; placeOf: Map<string, number> }
+
 export type PoolStandings = { poolKey: string; name: string; rows: StandingRow[] }
 
 /** One editable set row in the result sheet (strings while typing). */
