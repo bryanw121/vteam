@@ -90,11 +90,13 @@ export async function fetchStartupConfig(part: StartupPart): Promise<StartupConf
  */
 export function useStartupConfig(part: StartupPart, enabled = true): StartupConfig | null {
   const { data } = useQuery<StartupConfig>(
-    enabled ? queryKey(part === 'ads' ? 'ads' : 'startup', part === 'ads' ? 'feed' : 'version') : null,
+    // `ads:startup`, not `ads:feed`: that key held another shape before #280 and may still be in a saved snapshot.
+    enabled ? queryKey(part === 'ads' ? 'ads' : 'startup', part === 'ads' ? 'startup' : 'version') : null,
     () => fetchStartupConfig(part),
     { staleMs: STALE.feed, enabled },
   )
-  return enabled ? data ?? null : null
+  // A cached value from another build can have another shape: treat it as not loaded rather than crash.
+  return enabled && isStartupConfig(data) ? data : null
 }
 
 /** Tests only. */
