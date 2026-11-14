@@ -39,6 +39,11 @@ export const VIEW = {
     /** A team's page on the Teams tab (`?view=teams&team=Bag%20toss`). */
     team: text(80),
   },
+  /** Find a team (#304): `/find-a-team/<program id>?pos=setter&want=partner`. */
+  findATeam: {
+    pos: oneOf(['any', 'setter', 'outside_hitter', 'opposite_hitter', 'middle_blocker', 'libero', 'defensive_specialist'] as const, 'any'),
+    want: oneOf(['any', 'partner', 'team', 'players'] as const, 'any'),
+  },
   clubs: {
     filter: oneOf(['joined', 'nearby', 'popular'] as const, 'joined'),
     q: text(60),
