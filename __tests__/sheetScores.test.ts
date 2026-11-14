@@ -36,6 +36,14 @@ const raw = {
 }
 const state: SheetState = parseSheetState(raw)
 
+describe('sheetExecUrl', () => {
+  it('is null for tournaments vteam only reads, while their scores still load', () => {
+    const { sheetExecUrl } = require('../utils/sheetScores')
+    expect(sheetExecUrl('texasao-2026-11-14')).toBeNull()
+    expect(sheetScoresUrl('texasao-2026-11-14')).toMatch(/format=json$/)
+  })
+})
+
 describe('sheetScoresUrl', () => {
   it('is null for tournaments without a Sheet', () => {
     expect(sheetScoresUrl('nagva-2026-12-05')).toBeNull()

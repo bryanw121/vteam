@@ -1,4 +1,4 @@
-import { LIVE_SCORE_SHEETS } from '../constants/liveScores'
+import { LIVE_SCORE_SHEETS, SCOREKEEPING_OFF } from '../constants/liveScores'
 import type {
   PoolStandings,
   SetScore,
@@ -18,8 +18,9 @@ import type {
  * using team names as team ids: the Sheet has no ids, and names are unique within a tournament.
  */
 
-/** The Sheet web app's `/exec` URL for an outside tournament (scoring posts here), or null. */
+/** The Sheet web app's `/exec` URL to score an outside tournament (writes post here), or null when vteam may only read it. */
 export function sheetExecUrl(programId: string | null | undefined): string | null {
+  if (programId && SCOREKEEPING_OFF.has(programId)) return null
   const base = programId ? LIVE_SCORE_SHEETS[programId] : undefined
   return base && /^https?:\/\//.test(base) ? base : null
 }

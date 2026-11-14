@@ -17,7 +17,7 @@ import { VIEW } from '../../../../utils/urlViews'
 import { routes } from '../../../../utils/routes'
 import { openExternalUrl } from '../../../../lib/openExternalUrl'
 import { Button } from '../../../../components/Button'
-import { bracketGroups, bracketRows, liveMatches, poolStandings, upNext } from '../../../../utils/sheetScores'
+import { bracketGroups, bracketRows, liveMatches, poolStandings, sheetExecUrl, upNext } from '../../../../utils/sheetScores'
 import type { SheetScoresView } from '../../../../types'
 import type { ScrollViewInstance } from 'react-native'
 
@@ -199,7 +199,7 @@ export default function ProgramScoresScreen() {
                 {program.org} website <Ionicons name="open-outline" size={12} color={theme.colors.primary} />
               </Text>
             ) : null}
-            <View style={{ marginTop: theme.spacing.lg }}>
+            {sheetExecUrl(id as string) ? <View style={{ marginTop: theme.spacing.lg }}>
               <Button
                 label="I'm a scorekeeper"
                 icon="clipboard-outline"
@@ -207,7 +207,7 @@ export default function ProgramScoresScreen() {
                 onPress={() => router.push(routes.programScorekeeper(id as string))}
                 testID="scores-scorekeeper"
               />
-            </View>
+            </View> : null}
           </ScrollView>
         </ScreenState>
       </ScreenContainer>
