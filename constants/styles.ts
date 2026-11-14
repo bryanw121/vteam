@@ -64,7 +64,7 @@ export const shared = StyleSheet.create({
   buttonBase:         { padding: spacing.md, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   buttonPrimary:      { backgroundColor: colors.primary },
   buttonSecondary:    { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.primary },
-  buttonDanger:       { backgroundColor: colors.error },
+  buttonDanger:       { backgroundColor: colors.dangerFill },
   buttonDisabled:     { opacity: 0.5 },
   buttonLabelPrimary: { fontFamily: theme.fonts.bodySemiBold, color: colors.white,   fontSize: font.size.md },
   buttonLabelSecondary: { fontFamily: theme.fonts.bodySemiBold, color: colors.primaryText, fontSize: font.size.md },

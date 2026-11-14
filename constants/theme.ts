@@ -30,6 +30,8 @@ export const theme = {
     cool:         '#00D6B4',
     // Status
     error:        '#FF5555',
+    /** Filled destructive buttons (Button variant danger): white label at 5:1 (`error` itself is 3.1:1). */
+    dangerFill:   '#D12F2F',
     warning:      '#FFA040',
     success:      '#00D26A',
     // Toast surfaces (#228): dark tints of each status colour, so light text reads on them (>= 4.5:1).

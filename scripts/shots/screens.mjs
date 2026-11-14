@@ -87,8 +87,10 @@ export const SCREENS = {
 
   // ── Clubs ───────────────────────────────────────────────────────────────
   'clubs-list': { route: '/clubs', ready: 'Eastside Sand Social', sources: ['app/(app)/(tabs)/(main)/clubs.tsx', 'components/MajorCityAutocomplete.tsx'] },
-  'club-detail': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts', 'components/ClubPostCard.tsx', 'components/EventCard.tsx', 'components/club/PollBlock.tsx', 'utils/clubPoll.ts'] },
+  'club-detail': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts', 'components/club/Club*.tsx', 'hooks/club/**', 'utils/clubForm.ts', 'components/ClubPostCard.tsx', 'components/EventCard.tsx', 'components/club/PollBlock.tsx', 'utils/clubPoll.ts'] },
   'club-poll-composer': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', actions: [{ tap: 'club-new-poll' }], sources: ['components/club/PollComposerSheet.tsx', 'hooks/useClubPollActions.ts'] },
+  'club-edit': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', actions: [{ tap: 'club-edit' }, { wait: 300 }], sources: ['components/club/ClubEditForm.tsx', 'hooks/club/useClubEdit.ts', 'utils/clubForm.ts'] },
+  'club-delete-dialog': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', actions: [{ tap: 'club-delete' }, { wait: 400 }], sources: ['hooks/club/useDeleteClub.ts', 'components/ui/ConfirmDialog.tsx'] },
   'club-detail-guest': { route: `/club/${IDS.club.indoor}`, signedIn: false, ready: 'Austin Indoor League', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts'] },
   'club-create': { route: '/club/create', sources: ['app/(app)/club/create.tsx'] },
 
