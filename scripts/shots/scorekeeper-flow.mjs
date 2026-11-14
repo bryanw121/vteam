@@ -43,7 +43,7 @@ async function shot(page, name, fullPage = false) {
   await page.screenshot({ path: file, fullPage, animations: 'disabled', caret: 'hide' })
   process.stderr.write(`  shot ${file}\n`)
 }
-const tap = (page, id) => page.getByTestId(id).first().click({ timeout: 10000 })
+const tap = (page, id) => page.getByTestId(id).first().click({ timeout: 10000 }).catch(e => { throw new Error(`tap ${id}: ${e.message}`) })
 const text = (page, t) => page.getByText(t, { exact: false }).first()
 
 try {
@@ -102,11 +102,12 @@ try {
 
   // 3. Every number on one screen: type into position I and each box moves on by itself
   //    (two digits, or a space); team B's lineup is pasted into its position I in one go.
-  await page.getByTestId('num-A-court-0').locator('input').first().click().catch(() => page.getByTestId('num-A-court-0').click())
+  await tap(page, 'num-A-court-0')
+  await page.waitForTimeout(300) // the box selects its text on focus; type after that, as a person would
   await page.keyboard.type('1 2 3 4 5 6 7 8 ', { delay: 30 })
   await page.waitForTimeout(200)
   const box = id => page.getByTestId(id)
-  const boxValue = async id => (await box(id).inputValue().catch(async () => box(id).locator('input').inputValue()))
+  const boxValue = id => box(id).inputValue()
   check((await boxValue('num-A-court-5')) === '6' && (await boxValue('num-A-bench-1')) === '8', 'typing moves from box to box')
   await box('num-A-liberos-0').fill('20')
   await box('num-B-court-0').fill('11 12 13 14 15 16')
@@ -149,8 +150,10 @@ try {
   await tap(page, backRow)
   await shot(page, 'libero-sheet')
   await tap(page, 'libero-in')
+  await page.waitForTimeout(500)
   await tap(page, 'score-more')
   await tap(page, 'more-court')
+  await page.waitForTimeout(500)
   await tap(page, 'court-A-2')
   await page.getByTestId('sub-confirm').waitFor()
   await tap(page, 'sub-in-7')
