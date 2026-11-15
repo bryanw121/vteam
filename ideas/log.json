@@ -439,5 +439,29 @@
     "status": "approved",
     "summary": "Layout registers event/[id] without headerShown:false, so the lazy web chunk's load shows the raw route name; fallback lacks the header row (64 px shift). Fix in layout + skeleton, reserve host buttons, add a raw-route-name check to the stability flow.",
     "issue": 306
+  },
+  {
+    "date": "2026-11-15",
+    "n": 1,
+    "title": "A crash never sticks: the error screen clears saved data, gets you back, and tells us",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "Try again clears device snapshots and the in-memory cache before resetting; a repeat crash offers Reload; next open within 10 min skips snapshots (safe start); app_crash metric flushed at once; job_health() gets an 'app: crashes' row that fails at 3+ people in 3 h. Measured: a wrong-shape badges/trophies snapshot crashes Profile and survives Try Again and reload."
+  },
+  {
+    "date": "2026-11-15",
+    "n": 2,
+    "title": "Upgrade check: every PR opens on a device that last ran main",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "scripts/shots/upgrade-flow.mjs loads the base build's mocked export as a returning viewer, keeps its storage, then opens the PR build with it and fails on the error boundary, pageerror, #418 or Sentry capture. Base dist from main's web-dist-mock artifact. Would have caught the Nov 13 ads:feed crash."
+  },
+  {
+    "date": "2026-11-15",
+    "n": 3,
+    "title": "Chat room in pieces: composer, mentions and the bad-word prompt out of a 757-line screen",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "app/(app)/chat/[id].tsx (757 lines, 19 useState, 7 useEffect, club_members read in an effect) split into pure chatComposer utils, useChatComposer, cached useClubMentionables, useBadWordPrompt, header/composer components on ScreenHeader and BottomSheet; send rules tested by behavior instead of a source-text search. Three PRs."
   }
 ]
