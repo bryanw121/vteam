@@ -33,11 +33,13 @@ import { useCacheUserScope } from '../hooks/useCacheUserScope'
 import { useMyProfile } from '../hooks/useMyProfile'
 import { UpdateRequiredScreen } from '../components/UpdateRequiredScreen'
 import { startQuerySnapshot } from '../lib/querySnapshot'
+import { isSafeStart } from '../lib/crashRecovery'
 import { noteScreen, screenPattern, setUsageUser, startUsageTracking } from '../lib/analytics'
 
 initSentry()
-// Last visit's profile / settings / chat list into the cache before the first render (web).
-startQuerySnapshot()
+// Last visit's profile / settings / chat list into the cache before the first render (web),
+// unless the app crashed a few minutes ago: then nothing saved is trusted (#316).
+startQuerySnapshot({ seed: !isSafeStart() })
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!
 const AVATARS_BUCKET = 'avatars'

@@ -299,8 +299,17 @@ export function getQueryData<T>(key: string): T | undefined {
  * do not refetch on their own; call `invalidate` afterwards if they should.
  */
 export function removeQueries(prefix: string): void {
+  removeWhere(key => matchesPrefix(key, prefix))
+}
+
+/** Drop every cached read (after a crash, #316): mounted readers are reset like `removeQueries`. */
+export function removeAllQueries(): void {
+  removeWhere(() => true)
+}
+
+function removeWhere(match: (key: string) => boolean): void {
   Array.from(cache.entries()).forEach(([key, entry]) => {
-    if (!matchesPrefix(key, prefix)) return
+    if (!match(key)) return
     entry.fetchId++
     entry.promise = null
     if (entry.subscribers.size === 0 && entry.activeFetchers.size === 0) {

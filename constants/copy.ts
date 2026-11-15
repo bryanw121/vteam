@@ -35,6 +35,19 @@ export const SERVER_DOWN_COPY = {
   stateOfflineTitle: "You're offline",
   stateOfflineBody: 'Check your connection. This will load as soon as you are back online.',
 } as const
+/** The error screen after a render error (#316). */
+export const CRASH_COPY = {
+  title: 'This screen hit a snag',
+  body: "We've been told about it. Trying again clears the copy of your screens saved on this device and loads them fresh.",
+  tryAgain: 'Try again',
+  goToEvents: 'Go to Events',
+  againTitle: 'Still not working',
+  againBody: "Reloading starts vteam from scratch. Nothing saved on your account is lost.",
+  reload: 'Reload vteam',
+  report: 'Report the problem',
+  reportTitle: (screen: string) => `App crashed on ${screen}`,
+  reportDetails: (screen: string, when: string, version: string) => `Crashed on ${screen} at ${when} (app ${version}).\n\nWhat I was doing: `,
+} as const
 /** Events feed: a refresh failed while older (cached or saved) events are on screen. */
 export const FEED_STALE_NOTICE = "Couldn't refresh. These may be out of date. Tap to retry."
 
