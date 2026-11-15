@@ -552,3 +552,13 @@ export type SimpleScoreboardProps = {
   onSwitchSides: () => void
   onClose: () => void
 }
+
+/** `PinchZoom`: pinch to zoom and drag around a view (the scoresheet). */
+export type PinchZoomProps = {
+  /** Zoom set from outside (the Enlarge button); 1 is the fitted size. */
+  zoom?: number
+  /** Called when a pinch ends, with the new zoom. */
+  onZoomChange?: (zoom: number) => void
+  children: import('react').ReactNode
+  testID?: string
+}
