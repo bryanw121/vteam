@@ -8,6 +8,9 @@ import { POSITION_LABELS } from '../../lib/scoresheet/engine'
 import { boxNumber, gridIssues } from '../../lib/scoresheet/numberGrid'
 import type { GridBox, TeamNumbersCardProps } from '../../types'
 
+/** Under each starting box: who serves 1st, 2nd... (the scoresheet calls these positions I–VI). */
+const SERVE_ORDER = ['1st', '2nd', '3rd', '4th', '5th', '6th']
+
 // iOS's number pad has no Next key; this keyboard has digits and a Next key on every platform.
 const KEYBOARD = Platform.select({ ios: 'numbers-and-punctuation', default: 'number-pad' } as const)
 
@@ -68,19 +71,19 @@ export function TeamNumbersCard({ side, team, showMissing, onName, onType, onSub
         <Chip label="Paste" variant="tint" onPress={onPaste} testID={`roster-text-${side}`} />
       </View>
 
-      <Text style={[shared.label, { marginBottom: 0 }]}>Serve order · I serves first</Text>
+      <Text style={[shared.label, { marginBottom: 0 }]}>Starting six, in the order they serve</Text>
       <View style={shared.numberBoxRow}>
-        {team.court.map((v, i) => box({ part: 'court', index: i }, v, `position ${POSITION_LABELS[i]}`, POSITION_LABELS[i]))}
+        {team.court.map((v, i) => box({ part: 'court', index: i }, v, `serves ${SERVE_ORDER[i]}, position ${POSITION_LABELS[i]}`, SERVE_ORDER[i]))}
       </View>
 
-      <Text style={[shared.label, { marginBottom: 0 }]}>Bench</Text>
+      <Text style={[shared.label, { marginBottom: 0 }]}>Subs on the bench</Text>
       <View style={[shared.numberBoxRow, { flexWrap: 'wrap' }]}>
         {team.bench.map((v, i) => box({ part: 'bench', index: i }, v, `bench ${i + 1}`))}
       </View>
 
-      <Text style={[shared.label, { marginBottom: 0 }]}>Libero</Text>
+      <Text style={[shared.label, { marginBottom: 0 }]}>Libero (if they have one)</Text>
       <View style={shared.numberBoxRow}>
-        {team.liberos.map((v, i) => box({ part: 'liberos', index: i }, v, `libero ${i + 1}`, 'L'))}
+        {team.liberos.map((v, i) => box({ part: 'liberos', index: i }, v, `libero ${i + 1}`))}
       </View>
 
       {duplicates.length > 0 && (

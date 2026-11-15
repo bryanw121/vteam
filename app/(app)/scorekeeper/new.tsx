@@ -183,6 +183,9 @@ export default function NewScoreMatchScreen() {
 
             {step === 'numbers' && (
               <>
+                <Text style={[shared.body, { color: theme.colors.subtextStrong, marginBottom: theme.spacing.md }]}>
+                  Type each player's jersey number. Tap the first box and keep typing: it moves to the next box by itself.
+                </Text>
                 <SavedTeamsPicker
                   teams={savedTeams.filter(t => !usedNames.has(t.name.trim().toLowerCase()))}
                   target={pickTarget}
