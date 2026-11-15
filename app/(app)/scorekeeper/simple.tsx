@@ -106,6 +106,7 @@ export default function SimpleScoreScreen() {
                   ? `${name(state.winner!)} wins ${state.setsWon[state.winner!]}–${state.setsWon[state.winner === 'A' ? 'B' : 'A']}`
                   : `Set to ${name(lastDone.winner)}, ${Math.max(lastDone.A, lastDone.B)}–${Math.min(lastDone.A, lastDone.B)}. ${name(state.serving)} serves first.`}
               </Text>
+              <Button label="Undo last point" variant="ghost" size="sm" fullWidth={false} onPress={s.undo} testID="simple-undo" />
             </View>
           )}
 
@@ -114,8 +115,8 @@ export default function SimpleScoreScreen() {
               const color = TEAM_COLORS[side]
               const serving = !state.over && state.serving === side
               return (
+                <View key={side} style={{ flex: 1, gap: theme.spacing.sm }}>
                 <Pressable
-                  key={side}
                   onPress={() => s.point(side)}
                   disabled={state.over}
                   accessibilityRole="button"
@@ -130,12 +131,21 @@ export default function SimpleScoreScreen() {
                   <Text style={[shared.simpleScore, { color: color.ink }]} maxFontSizeMultiplier={1.3}>{set[side]}</Text>
                   <Text style={[shared.simpleSets, { color: color.ink }]}>Sets {state.setsWon[side]}{match.format.sets > 1 ? ` / ${setsToWin(match.format)}` : ''}</Text>
                 </Pressable>
+                <Button
+                  label={`−1 ${name(side)}`}
+                  variant="secondary"
+                  size="touch"
+                  onPress={() => s.minus(side)}
+                  disabled={set[side] === 0}
+                  accessibilityLabel={`Take a point away from ${name(side)}`}
+                  testID={`simple-minus-${side}`}
+                />
+                </View>
               )
             })}
           </View>
 
           <View style={shared.simpleActions}>
-            <Button label="Undo" icon="arrow-undo" variant="secondary" size="touch" fullWidth={false} onPress={s.undo} disabled={!match.rallies.length} testID="simple-undo" />
             <Button label="Switch sides" icon="swap-horizontal" variant="secondary" size="touch" fullWidth={false} onPress={() => setFlipped(f => !f)} testID="simple-flip" />
             <Button label="New match" icon="refresh" variant={state.over ? 'primary' : 'ghost'} size="touch" fullWidth={false} onPress={() => (state.over ? s.reset() : setConfirmNew(true))} testID="simple-new" />
           </View>

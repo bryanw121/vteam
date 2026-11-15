@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { addPoint, newSimpleMatch, parseSimpleMatch, replaySimple, undoPoint } from '../lib/simpleScore'
+import { addPoint, minusPoint, newSimpleMatch, parseSimpleMatch, replaySimple, undoPoint } from '../lib/simpleScore'
 import { track } from '../lib/analytics'
 import { ANALYTICS_EVENTS } from '../constants/analytics'
 import type { SimpleFormat, SimpleMatch, TeamSide } from '../types/scoresheet'
@@ -46,7 +46,8 @@ export function useSimpleScore() {
   }, [match, commit])
 
   const undo = useCallback(() => { if (match) commit(undoPoint(match, Date.now())) }, [match, commit])
+  const minus = useCallback((team: TeamSide) => { if (match) commit(minusPoint(match, team, Date.now())) }, [match, commit])
   const reset = useCallback(() => commit(null), [commit])
 
-  return { loaded, match, state, start, point, undo, reset }
+  return { loaded, match, state, start, point, minus, undo, reset }
 }

@@ -132,6 +132,10 @@ try {
 
   // The tour (opens by itself the first time; the harness marks tours done, so start it from "?")
   await shot(page, 'scoring')
+  await tap(page, 'minus-A')
+  await page.waitForTimeout(400)
+  check((await page.getByTestId('score-A').innerText()).trim() === '3', '−1 takes a point from that team')
+  await point('A')
   await tap(page, 'score-help')
   for (let i = 0; i < 4; i++) {
     await page.getByTestId('tour-card').waitFor()
@@ -180,7 +184,10 @@ try {
   await page.getByTestId('point-A').waitFor({ timeout: 20000 })
   check((await page.getByTestId('score-A').innerText()) === before, 'score restored after closing the tab')
   check((await page.getByTestId('serving-now').innerText()) === serverBefore, 'server restored after closing the tab')
+  await tap(page, 'score-more')
   check(await page.getByTestId('action-undo').isEnabled(), 'undo history restored')
+  await page.keyboard.press('Escape')
+  await page.getByTestId('bottom-sheet-backdrop').first().click({ timeout: 3000 }).catch(() => {})
   await shot(page, 'resumed-after-close')
 
   // Resume card on Experimental features
@@ -204,6 +211,7 @@ try {
   await liveForm.scrollIntoViewIfNeeded()
   await shot(page, 'live-sheet-whole-form')
   await tap(page, 'live-zoom-follow')
+  await tap(page, 'score-more')
   await tap(page, 'action-undo')
   await liveForm.scrollIntoViewIfNeeded()
   await page.waitForTimeout(500)
@@ -216,6 +224,7 @@ try {
   check(await tinted() > 0 && await dashed() === 0, 'redo writes the marks back')
 
   // 6. Mistakes: undo / redo, flip a past rally in the timeline, wrong server, fix sheet
+  await tap(page, 'score-more')
   await tap(page, 'action-undo')
   await tap(page, 'score-more')
   await tap(page, 'action-redo')

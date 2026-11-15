@@ -39,7 +39,9 @@ export function replaySimple(m: SimpleMatch): SimpleState {
   let serving = m.firstServe
   let over = false
   let setJustEnded = false
-  for (const team of m.rallies) {
+  // Index in the rally log where the set on the board began.
+  let setStart = 0
+  for (const [i, team] of m.rallies.entries()) {
     if (over) break
     setJustEnded = false
     const set = sets[sets.length - 1]
@@ -54,15 +56,28 @@ export function replaySimple(m: SimpleMatch): SimpleState {
     setFirstServe = other(setFirstServe)
     serving = setFirstServe
     sets.push({ A: 0, B: 0, target: setTarget(f, sets.length), winner: null })
+    setStart = i + 1
   }
   const winner = over ? (setsWon.A > setsWon.B ? 'A' : 'B') : null
-  return { sets, current: sets.length - 1, setsWon, serving, over, winner, setJustEnded }
+  return { sets, current: sets.length - 1, setsWon, serving, over, winner, setJustEnded, setStart }
 }
 
 /** A point to `team`; ignored once the match is over. */
 export function addPoint(m: SimpleMatch, team: TeamSide, now: number): SimpleMatch {
   if (replaySimple(m).over) return m
   return { ...m, rallies: [...m.rallies, team], updatedAt: now }
+}
+
+/**
+ * −1 for `team`: takes away that team's latest point in the set on the board (it can be any
+ * rally of the set, not only the last one). Earlier sets are never touched. Unchanged when the
+ * team has no points in this set.
+ */
+export function minusPoint(m: SimpleMatch, team: TeamSide, now: number): SimpleMatch {
+  const { setStart } = replaySimple(m)
+  const i = m.rallies.lastIndexOf(team)
+  if (i < setStart) return m
+  return { ...m, rallies: [...m.rallies.slice(0, i), ...m.rallies.slice(i + 1)], updatedAt: now }
 }
 
 export function undoPoint(m: SimpleMatch, now: number): SimpleMatch {

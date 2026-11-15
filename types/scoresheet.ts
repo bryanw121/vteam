@@ -494,6 +494,8 @@ export type SimpleState = {
   winner: TeamSide | null
   /** The rally just played ended a set (show "Set to …"). */
   setJustEnded: boolean
+  /** Index in the rally log where the set on the board began (−1 only reaches back to here). */
+  setStart: number
 }
 
 /**

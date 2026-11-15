@@ -66,3 +66,22 @@ describe('simple score', () => {
     expect(parseSimpleMatch(null)).toBeNull()
   })
 })
+
+describe('−1', () => {
+  const { minusPoint, newSimpleMatch, replaySimple } = require('../lib/simpleScore')
+  const fmt = { sets: 3, target: 25, cap: null }
+  const base = (rallies: ('A' | 'B')[]) => ({ ...newSimpleMatch({ names: { A: 'A', B: 'B' }, format: fmt, firstServe: 'A', now: 0 }), rallies })
+
+  test("takes away the team's latest point in this set", () => {
+    const m = minusPoint(base(['A', 'B', 'A', 'B']), 'A', 1)
+    expect(m.rallies).toEqual(['A', 'B', 'B'])
+    expect(replaySimple(m).sets[0]).toMatchObject({ A: 1, B: 2 })
+  })
+
+  test('never reaches into a finished set', () => {
+    const set1 = Array.from({ length: 25 }, () => 'A' as const)
+    const m = base([...set1, 'B'])
+    expect(minusPoint(m, 'A', 1)).toBe(m)
+    expect(minusPoint(m, 'B', 1).rallies).toEqual(set1)
+  })
+})

@@ -29,6 +29,7 @@ import { deleteMatch } from '../../../../lib/scoresheet/storage'
 import { describeEvent, playerLabel } from '../../../../lib/scoresheet/describe'
 import { POSITION_LABELS, courtOf, serverOf } from '../../../../lib/scoresheet/engine'
 import { teamName } from '../../../../lib/scoresheet/summary'
+import { lastPointEventId } from '../../../../lib/scoresheet/minusOne'
 import { shared, theme } from '../../../../constants'
 import { routes } from '../../../../utils/routes'
 import { TourTarget } from '../../../../components/tour/TourTarget'
@@ -212,7 +213,24 @@ export default function ScoreMatchScreen() {
                   )}
 
                   <View ref={actionsRef} collapsable={false} style={{ marginTop: theme.spacing.sm }}>
-                    <Button label="Undo" icon="arrow-undo" variant="secondary" size="touch" onPress={m.undo} disabled={!m.doc.undo.length} testID="action-undo" />
+                    <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+                      {(['A', 'B'] as const).map(side => {
+                        const target = lastPointEventId(m.doc!.log, side)
+                        return (
+                          <View key={side} style={{ flex: 1 }}>
+                            <Button
+                              label={`−1 ${teamName(m.doc!, side)}`}
+                              variant="secondary"
+                              size="touch"
+                              disabled={!target}
+                              onPress={() => { if (target) m.remove(target) }}
+                              accessibilityLabel={`Take a point away from ${teamName(m.doc!, side)}`}
+                              testID={`minus-${side}`}
+                            />
+                          </View>
+                        )
+                      })}
+                    </View>
                     {lastEvent && (
                       <Text style={[shared.caption, { textAlign: 'center', marginTop: theme.spacing.xs }]} numberOfLines={1}>
                         Last: {describeEvent(m.doc.setup, lastEvent)}
@@ -304,6 +322,7 @@ export default function ScoreMatchScreen() {
           <TimelineSheet visible={sheet === 'timeline'} onDismiss={close} doc={m.doc} onEdit={m.edit} onRemove={m.remove} onInsert={m.insert} />
           <BottomSheet visible={sheet === 'more'} onDismiss={close} title="More">
             <SheetBody>
+              <Button label="Undo last action" icon="arrow-undo" variant="secondary" disabled={!m.doc.undo.length} onPress={() => { m.undo(); close() }} testID="action-undo" />
               {set && (
                 <View style={styles.moreGrid}>
                   {(['A', 'B'] as const).map(side => (

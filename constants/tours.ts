@@ -78,7 +78,7 @@ export const TOURS = {
       {
         target: TOUR_TARGETS.scoreActions,
         title: 'Tapped the wrong side?',
-        body: 'Undo takes back the last thing you recorded.',
+        body: "−1 takes that team's last point away. Undo for anything else is in More.",
         placement: 'top',
       },
       {
