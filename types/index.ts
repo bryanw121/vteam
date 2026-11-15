@@ -2601,6 +2601,11 @@ export type WeekPagerProps = {
 export * from './club'
 export * from './freeAgents'
 
+/** Kept on the device after a crash (#316): when, which screen type, how many in a row, and whether a way out was tried since. */
+export type CrashMarker = { at: number; count: number; screen: string; recovered?: boolean }
+
+/** What the bug form is prefilled with after "Report the problem" (memory only, never in a URL). */
+export type CrashReport = { screen: string; at: number; version: string; platform: 'iOS' | 'Android' | 'Mobile web' | 'Desktop web' }
 /** The @word being typed in a club chat (#318): what follows the @, and where the @ is. */
 export type ActiveMention = { query: string; atIndex: number }
 

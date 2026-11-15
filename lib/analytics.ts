@@ -292,6 +292,11 @@ export function setUsageUser(userId: string | null): void {
   void heartbeat()
 }
 
+/** The screen type last noted (`screenPattern`, never an id), or null before the first one. */
+export function currentScreen(): string | null {
+  return screen
+}
+
 /** The screen type now on (`screenPattern`, or a tab's path); records a screen_view when it changes. */
 export function noteScreen(pattern: string): void {
   try {

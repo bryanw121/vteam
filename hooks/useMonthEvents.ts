@@ -30,6 +30,7 @@ import { useSession } from '../contexts/session'
 import { localDateKey, startOfToday } from '../utils'
 import { sessionConfirmation } from '../utils/externalFreshness'
 import { addMonths, bucketByMonthKey, enumerateMonths, monthEndIso, monthKeyFromIso, monthStartIso } from '../utils/monthKeys'
+import { isSafeStart } from '../lib/crashRecovery'
 import { readFeedSnapshot, SNAPSHOT_MONTHS, writeFeedSnapshot } from '../utils/feedSnapshot'
 import { fetchEventCardPreviews, previewsFromRows, withEventCardPreviews } from '../utils/eventCardPreviews'
 import { isFeedRpcUnavailable, parseFeedSpan } from '../utils/feedSpan'
@@ -114,6 +115,8 @@ function trackFirstPaint(source: 'snapshot' | 'prefetch' | 'fetch', startedAt?: 
 }
 
 function seedFromSnapshot(): void {
+  // Shortly after a crash nothing saved on the device is trusted (#316).
+  if (isSafeStart()) return
   const snap = readFeedSnapshot()
   if (!snap) return
   trackFirstPaint('snapshot')

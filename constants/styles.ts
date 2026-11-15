@@ -1316,6 +1316,13 @@ export const shared = StyleSheet.create({
   },
   freeAgentMine: { borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.primarySoft },
   freeAgentFooter: { paddingTop: spacing.sm },
+  // Error screen after a render error (ErrorFallback, #316)
+  crashScreen: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, backgroundColor: colors.background },
+  crashInner: { width: '100%', maxWidth: 420, alignItems: 'center', gap: spacing.md },
+  crashIcon: { width: 64, height: 64, borderRadius: radius.full, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  crashTitle: { fontFamily: fonts.display, fontSize: font.heading.md, color: colors.text, textAlign: 'center' },
+  crashBody: { fontFamily: fonts.body, fontSize: font.size.md, lineHeight: font.lineHeight.normal, color: colors.subtext, textAlign: 'center' },
+  crashButton: { alignSelf: 'stretch' },
   // Chat room (app/(app)/chat/[id].tsx, components/chat/*, #318)
   chatRoomHeader: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
