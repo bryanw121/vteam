@@ -66,3 +66,39 @@ describe('simple score', () => {
     expect(parseSimpleMatch(null)).toBeNull()
   })
 })
+
+describe('−1', () => {
+  const { minusPoint, newSimpleMatch, replaySimple } = require('../lib/simpleScore')
+  const fmt = { sets: 3, target: 25, cap: null }
+  const base = (rallies: ('A' | 'B')[]) => ({ ...newSimpleMatch({ names: { A: 'A', B: 'B' }, format: fmt, firstServe: 'A', now: 0 }), rallies })
+
+  test("takes away the team's latest point in this set", () => {
+    const m = minusPoint(base(['A', 'B', 'A', 'B']), 'A', 1)
+    expect(m.rallies).toEqual(['A', 'B', 'B'])
+    expect(replaySimple(m).sets[0]).toMatchObject({ A: 1, B: 2 })
+  })
+
+  test('never reaches into a set once the next one has points', () => {
+    const set1 = Array.from({ length: 25 }, () => 'A' as const)
+    const m = base([...set1, 'B'])
+    expect(minusPoint(m, 'A', 1)).toBe(m)
+    expect(minusPoint(m, 'B', 1).rallies).toEqual(set1)
+  })
+
+  test('right after a set ends, −1 reopens it (a wrong 25th point is fixable)', () => {
+    const set1 = Array.from({ length: 25 }, () => 'A' as const)
+    const m = minusPoint(base(set1), 'A', 1)
+    const s = replaySimple(m)
+    expect(s.sets).toHaveLength(1)
+    expect(s.sets[0]).toMatchObject({ A: 24, B: 0, winner: null })
+  })
+
+  test('after the match ends, −1 reopens the last set', () => {
+    const won = Array.from({ length: 25 }, () => 'A' as const)
+    const m = base([...won, ...won])
+    expect(replaySimple(m).over).toBe(true)
+    const back = replaySimple(minusPoint(m, 'A', 1))
+    expect(back.over).toBe(false)
+    expect(back.sets[1]).toMatchObject({ A: 24 })
+  })
+})

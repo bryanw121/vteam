@@ -8,6 +8,7 @@ import { Button } from '../../../../components/Button'
 import { MatchDetailsCard } from '../../../../components/scoresheet/MatchDetailsCard'
 import { OfficialSheetButton } from '../../../../components/scoresheet/OfficialSheetButton'
 import { OfficialSheetView } from '../../../../components/scoresheet/OfficialSheetView'
+import { PinchZoom } from '../../../../components/scoresheet/PinchZoom'
 import { TourTarget } from '../../../../components/tour/TourTarget'
 import { useScoreMatch } from '../../../../hooks/useScoreMatch'
 import { useOfficialLayout } from '../../../../hooks/useOfficialLayout'
@@ -18,7 +19,7 @@ import { TOUR_TARGETS } from '../../../../constants/tours'
 import { shared, theme } from '../../../../constants'
 import { routes } from '../../../../utils/routes'
 
-/** How much bigger "Enlarge" draws the form (scroll sideways to read it). */
+/** How far the zoom button zooms in (pinching goes anywhere from 1× to 4×). */
 const ENLARGED = 2.4
 
 /**
@@ -33,8 +34,8 @@ export default function ScoresheetScreen() {
   const { doc, state, loading, updateInfo } = useScoreMatch(id)
   const layout = useOfficialLayout(doc, state)
   const [page, setPage] = useState(0)
-  const [enlarged, setEnlarged] = useState(false)
-  const [formWidth, setFormWidth] = useState(0)
+  const [zoom, setZoom] = useState(1)
+  const zoomed = zoom > 1.05
 
   // The example explains itself: walk through it every time it's opened.
   const isExample = !!doc?.example
@@ -73,17 +74,15 @@ export default function ScoresheetScreen() {
                 </View>
               )}
 
-              <View style={{ marginTop: theme.spacing.md }} onLayout={e => setFormWidth(e.nativeEvent.layout.width)}>
+              <View style={{ marginTop: theme.spacing.md }}>
                 <TourTarget id={TOUR_TARGETS.sheetForm}>
-                  <ScrollView horizontal scrollEnabled={enlarged} showsHorizontalScrollIndicator={enlarged}>
-                    <View style={{ width: formWidth ? formWidth * (enlarged ? ENLARGED : 1) : '100%' }}>
-                      <OfficialSheetView layout={layout} page={page} accessibilityLabel={`Official USA Volleyball scoresheet, ${layout.pages[page] === 'plain' ? 'remarks page' : `sheet ${page + 1}`}`} testID="sheet-form" />
-                    </View>
-                  </ScrollView>
+                  <PinchZoom zoom={zoom} onZoomChange={setZoom} testID="sheet-zoom">
+                    <OfficialSheetView layout={layout} page={page} accessibilityLabel={`Official USA Volleyball scoresheet, ${layout.pages[page] === 'plain' ? 'remarks page' : `sheet ${page + 1}`}`} testID="sheet-form" />
+                  </PinchZoom>
                 </TourTarget>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: theme.spacing.xs }}>
-                  <Text style={[shared.caption, { flex: 1 }]}>{enlarged ? 'Scroll sideways to read across.' : 'The form as it will print.'}</Text>
-                  <IconButton icon={enlarged ? 'contract-outline' : 'expand-outline'} size={44} label={enlarged ? 'Fit the form to the screen' : 'Enlarge the form'} onPress={() => setEnlarged(v => !v)} testID="sheet-enlarge" />
+                  <Text style={[shared.caption, { flex: 1 }]}>{zoomed ? 'Drag to move around. Pinch in to see it all.' : 'Pinch to zoom in. The form as it will print.'}</Text>
+                  <IconButton icon={zoomed ? 'contract-outline' : 'expand-outline'} size={44} label={zoomed ? 'Fit the form to the screen' : 'Zoom in on the form'} onPress={() => setZoom(zoomed ? 1 : ENLARGED)} testID="sheet-enlarge" />
                 </View>
               </View>
 
