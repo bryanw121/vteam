@@ -250,8 +250,9 @@ export default function EventsScreen() {
 
   // Flatten all events from sections for desktop grid layout
   const allEvents = useMemo(() => sections.flatMap(s => s.data), [sections])
-  // "Next up" links to an event page, so it skips sessions at other venues.
-  const nextClubEvent = useMemo(() => allEvents.find(e => !e._external), [allEvents])
+  // "Next up" links to an event or tournament page, so it skips what runs elsewhere: sessions at
+  // other venues and outside tournaments (their `program:` ids have no page here).
+  const nextClubEvent = useMemo(() => allEvents.find(e => !e._external && !e._program), [allEvents])
   const openNextUp = useCallback(() => {
     if (nextClubEvent) router.push(nextClubEvent._isTournament ? routes.tournament(nextClubEvent.id) : routes.event(nextClubEvent.id))
   }, [nextClubEvent, router])
