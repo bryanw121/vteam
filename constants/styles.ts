@@ -1185,6 +1185,7 @@ export const shared = StyleSheet.create({
   // Simple score (scorekeeper/simple)
   simpleTeamSwatch: { width: 10, height: 48, borderRadius: radius.sm, marginBottom: 2 },
   simpleBanner: { marginHorizontal: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  simpleSettingsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 44, paddingVertical: spacing.xs },
   simpleBoard: { flexDirection: 'row', gap: spacing.sm, marginVertical: spacing.md },
   simpleSide: { flex: 1, minHeight: 260, borderRadius: radius.xl, padding: spacing.md, alignItems: 'center', justifyContent: 'space-between' },
   simpleTeam: { fontFamily: fonts.bodySemiBold, fontSize: font.size.lg, flexShrink: 1 },

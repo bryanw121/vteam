@@ -4,16 +4,18 @@ import { Stack, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from '../../../components/ui/Text'
-import { Chip, ConfirmDialog, ScreenContainer, ScreenHeader, Spinner } from '../../../components/ui'
+import { BottomSheet, Chip, ConfirmDialog, ScreenContainer, ScreenHeader, Spinner } from '../../../components/ui'
+import { SheetBody } from '../../../components/scoresheet/SheetParts'
 import { Button } from '../../../components/Button'
-import { Input } from '../../../components/Input'
 import { TEAM_COLORS } from '../../../components/scoresheet/teamColors'
 import { SimpleScoreboard } from '../../../components/scoresheet/SimpleScoreboard'
 import { useSimpleScore } from '../../../hooks/useSimpleScore'
 import { SIMPLE_FORMATS, setsToWin } from '../../../lib/simpleScore'
 import { shared, theme } from '../../../constants'
 import { routes } from '../../../utils/routes'
-import type { TeamSide } from '../../../types'
+import type { SimpleFormat, TeamSide } from '../../../types'
+
+const sameFormat = (a: SimpleFormat, b: SimpleFormat) => a.sets === b.sets && a.target === b.target && a.cap === b.cap
 
 /** Shorter than this and wider than tall: a phone turned sideways, so the scoreboard opens by itself. */
 const PHONE_LANDSCAPE_MAX_HEIGHT = 500
@@ -26,9 +28,7 @@ export default function SimpleScoreScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const s = useSimpleScore()
-  const [names, setNames] = useState<Record<TeamSide, string>>({ A: '', B: '' })
-  const [formatKey, setFormatKey] = useState(SIMPLE_FORMATS[1].key)
-  const [firstServe, setFirstServe] = useState<TeamSide>('A')
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [flipped, setFlipped] = useState(false)
   const [confirmNew, setConfirmNew] = useState(false)
   // The sideways scoreboard: opened with "Show the score", or by turning a phone to landscape.
@@ -41,9 +41,8 @@ export default function SimpleScoreScreen() {
   const phoneLandscape = width > height && height < PHONE_LANDSCAPE_MAX_HEIGHT
 
   const back = () => (router.canGoBack() ? router.back() : router.replace(routes.scorekeeper()))
-  const format = SIMPLE_FORMATS.find(f => f.key === formatKey)!.format
 
-  if (!s.loaded) {
+  if (!s.loaded || !s.match) {
     return (
       <View style={[shared.screen, { alignItems: 'center', justifyContent: 'center' }]}>
         <Stack.Screen options={{ headerShown: false }} />
@@ -52,51 +51,10 @@ export default function SimpleScoreScreen() {
     )
   }
 
-  // ── Setup ──────────────────────────────────────────────────────────────────
-  if (!s.match || !s.state) {
-    return (
-      <View style={shared.screen}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: insets.bottom + theme.spacing.xxl }} keyboardShouldPersistTaps="handled">
-          <ScreenContainer>
-            <ScreenHeader safeTop kicker="Scorekeeper" title="Simple score" onBack={back} />
-            <Text style={[shared.body, { color: theme.colors.subtextStrong, marginBottom: theme.spacing.md }]}>
-              Just the score: tap the team that won the rally. Sets and serve are tracked for you. No lineups and no scoresheet.
-            </Text>
-            <View style={[shared.card, { marginHorizontal: 0, gap: theme.spacing.md }]}>
-              {(['A', 'B'] as const).map(side => (
-                <View key={side} style={{ flexDirection: 'row', alignItems: 'flex-end', gap: theme.spacing.sm }}>
-                  <View style={[shared.simpleTeamSwatch, { backgroundColor: TEAM_COLORS[side].fill }]} />
-                  <View style={{ flex: 1 }}>
-                    <Input label={`Team ${side}`} value={names[side]} onChangeText={v => setNames(n => ({ ...n, [side]: v }))} placeholder={`Team ${side}`} maxLength={40} autoCapitalize="words" testID={`simple-name-${side}`} />
-                  </View>
-                </View>
-              ))}
-              <View style={{ gap: theme.spacing.xs }}>
-                <Text style={shared.label}>Format</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
-                  {SIMPLE_FORMATS.map(f => <Chip key={f.key} label={f.label} role="radio" active={formatKey === f.key} onPress={() => setFormatKey(f.key)} testID={`simple-format-${f.key}`} />)}
-                </View>
-                <Text style={shared.caption}>Win by 2. Best-of matches play the deciding set to 15.</Text>
-              </View>
-              <View style={{ gap: theme.spacing.xs }}>
-                <Text style={shared.label}>Serves first</Text>
-                <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-                  {(['A', 'B'] as const).map(side => (
-                    <Chip key={side} label={names[side].trim() || `Team ${side}`} role="radio" variant="tint" active={firstServe === side} onPress={() => setFirstServe(side)} testID={`simple-serve-${side}`} />
-                  ))}
-                </View>
-              </View>
-              <Button label="Start" icon="play" onPress={() => s.start({ names, format, firstServe })} testID="simple-start" />
-            </View>
-          </ScreenContainer>
-        </ScrollView>
-      </View>
-    )
-  }
-
   // ── Scoring ────────────────────────────────────────────────────────────────
   const { match, state } = s
+  if (!match || !state) return null
+  const formatLabel = SIMPLE_FORMATS.find(f => sameFormat(f.format, match.format))?.label ?? `Best of ${match.format.sets}`
   const order: TeamSide[] = flipped ? ['B', 'A'] : ['A', 'B']
   const lastDone = state.setJustEnded ? state.sets[state.over ? state.current : state.current - 1] : null
   // Between sets: the set that just ended stays on the board until Start set N.
@@ -112,6 +70,20 @@ export default function SimpleScoreScreen() {
       <ScrollView contentContainerStyle={{ padding: theme.spacing.md, paddingBottom: insets.bottom + theme.spacing.xl }}>
         <ScreenContainer>
           <ScreenHeader safeTop kicker="Simple score" title={state.over ? 'Match over' : betweenSets ? `Set ${state.current} over` : `Set ${state.current + 1}${match.format.sets > 1 ? ` of up to ${match.format.sets}` : ''}`} onBack={back} />
+
+          <Pressable
+            onPress={() => setSettingsOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`Game settings: ${formatLabel}, ${name(match.firstServe)} serves first. Change`}
+            style={shared.simpleSettingsRow}
+            testID="simple-settings"
+          >
+            <Ionicons name="options-outline" size={18} color={theme.colors.subtextStrong} />
+            <Text style={[shared.body, { flex: 1, color: theme.colors.subtextStrong }]} numberOfLines={2}>
+              {formatLabel} · {name(match.firstServe)} serves first
+            </Text>
+            <Text style={[shared.body, { color: theme.colors.primaryText, fontFamily: theme.fonts.bodySemiBold }]}>Change</Text>
+          </Pressable>
 
           {lastDone?.winner && locked && (
             <View style={[shared.card, shared.simpleBanner]} accessibilityRole="alert" accessibilityLiveRegion="polite" testID="simple-set-result">
@@ -199,6 +171,25 @@ export default function SimpleScoreScreen() {
           onClose={() => { setShowBoard(false); setBoardDismissed(true) }}
         />
       )}
+
+      <BottomSheet visible={settingsOpen} onDismiss={() => setSettingsOpen(false)} title="Game settings">
+        <SheetBody>
+          <Text style={[shared.label, { marginBottom: 0 }]}>Format</Text>
+          <View role="radiogroup" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+            {SIMPLE_FORMATS.map(f => (
+              <Chip key={f.key} label={f.label} role="radio" active={sameFormat(f.format, match.format)} onPress={() => s.update({ format: f.format })} testID={`simple-format-${f.key}`} />
+            ))}
+          </View>
+          <Text style={shared.caption}>Win by 2. Best-of matches play the deciding set to 15. Changing it keeps the points scored so far.</Text>
+          <Text style={[shared.label, { marginBottom: 0 }]}>Serves first</Text>
+          <View role="radiogroup" style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+            {(['A', 'B'] as const).map(side => (
+              <Chip key={side} label={name(side)} role="radio" variant="tint" active={match.firstServe === side} onPress={() => s.update({ firstServe: side })} testID={`simple-serve-${side}`} />
+            ))}
+          </View>
+          <Button label="Done" onPress={() => setSettingsOpen(false)} testID="simple-settings-done" />
+        </SheetBody>
+      </BottomSheet>
 
       <ConfirmDialog
         visible={confirmNew}
