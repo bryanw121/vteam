@@ -45,6 +45,18 @@ export function LineupSetup({ doc, state, onStart }: Props) {
     setLiberos(prev => ({ ...prev, [side]: prev[side].filter(n => n !== player) }))
   }
 
+  // Tap a spot to pick it; tap another spot of the same team to swap the two players.
+  const tapSpot = (side: TeamSide, slot: number) => {
+    if (active?.side === side && active.slot === slot) return setActive(null)
+    if (active?.side === side) {
+      const next = [...lineups[side]]
+      ;[next[active.slot], next[slot]] = [next[slot], next[active.slot]]
+      setLineups({ ...lineups, [side]: next })
+      return setActive(null)
+    }
+    setActive({ side, slot })
+  }
+
   const toggleLibero = (side: TeamSide, n: number) => {
     setLiberos(prev => ({ ...prev, [side]: prev[side].includes(n) ? prev[side].filter(x => x !== n) : [...prev[side], n].slice(-2) }))
     setLineups(prev => ({ ...prev, [side]: prev[side].map(x => (x === n ? null : x)) }))
@@ -113,8 +125,8 @@ export function LineupSetup({ doc, state, onStart }: Props) {
       <View>
         <Text style={shared.subheading}>Set {defaults.index + 1} lineups</Text>
         <Text style={shared.caption}>
-          Tap a spot on the court, then a player. Position I serves first, then II, III and on around.
-          {defaults.lineups ? " Filled in from last set; change anything that's different." : ''}
+          Tap two players on the court to swap them. To bring someone else in, tap a spot, then their number below.
+          {defaults.lineups ? " Filled in from last set." : ''}
         </Text>
       </View>
 
@@ -130,7 +142,7 @@ export function LineupSetup({ doc, state, onStart }: Props) {
               name={n != null ? names[side].get(n) : undefined}
               highlight={isActive ? TEAM_COLORS[side] : null}
               placeholder="–"
-              onPress={() => setActive({ side, slot })}
+              onPress={() => tapSpot(side, slot)}
               accessibilityLabel={`${teamName(doc, side)} position ${POSITION_LABELS[slot]}${n != null ? `: #${n}` : ', empty'}`}
               testID={`slot-${side}-${slot}`}
             />
@@ -145,7 +157,7 @@ export function LineupSetup({ doc, state, onStart }: Props) {
         return (
           <View key={side} style={[shared.card, { gap: theme.spacing.sm, borderLeftWidth: 4, borderLeftColor: color.fill }]} testID={`lineup-${side}`}>
             <Text style={shared.label}>
-              {teamName(doc, side)}{picking && active ? `: pick position ${POSITION_LABELS[active.slot]}` : ''}
+              {teamName(doc, side)}{picking && active ? ': tap a number to put them in, or another spot to swap' : ''}
             </Text>
             <View role="radiogroup" style={styles.chips}>
               {roster.filter(p => !liberos[side].includes(p.number)).map(p => (
