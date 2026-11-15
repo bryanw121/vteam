@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `e66b79e728dd`
+> Inventory fingerprint: `08daa0afa210`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -457,7 +457,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `badge_art` | [`hooks/useBadgeArt.ts:26`](../hooks/useBadgeArt.ts#L26)<br>[`supabase/functions/generate-badge-art/index.ts:130`](../supabase/functions/generate-badge-art/index.ts#L130) |
 | `chat_silences` | [`hooks/useSilencedUsers.ts:27`](../hooks/useSilencedUsers.ts#L27)<br>[`supabase/functions/send-chat-push/handler.ts:143`](../supabase/functions/send-chat-push/handler.ts#L143) |
 | `cheers` | [`hooks/event/useEventCheers.ts:16`](../hooks/event/useEventCheers.ts#L16)<br>[`hooks/useCheersSummary.ts:12`](../hooks/useCheersSummary.ts#L12)<br>[`hooks/useMyGameRecap.ts:18`](../hooks/useMyGameRecap.ts#L18)<br>[`hooks/useMyProfile.ts:72`](../hooks/useMyProfile.ts#L72)<br>[`hooks/useUserProfile.ts:21`](../hooks/useUserProfile.ts#L21)<br>[`utils/badges.ts:41`](../utils/badges.ts#L41) |
-| `club_members` | [`app/(app)/chat/[id].tsx:95`](../app/%28app%29/chat/%5Bid%5D.tsx#L95)<br>[`app/(app)/tournament/create.tsx:774`](../app/%28app%29/tournament/create.tsx#L774)<br>[`hooks/club/useClubMembership.ts:16`](../hooks/club/useClubMembership.ts#L16)<br>[`hooks/host/useHostContext.ts:27`](../hooks/host/useHostContext.ts#L27) |
+| `club_members` | [`app/(app)/tournament/create.tsx:774`](../app/%28app%29/tournament/create.tsx#L774)<br>[`hooks/chat/useClubMentionables.ts:24`](../hooks/chat/useClubMentionables.ts#L24)<br>[`hooks/club/useClubMembership.ts:16`](../hooks/club/useClubMembership.ts#L16)<br>[`hooks/host/useHostContext.ts:27`](../hooks/host/useHostContext.ts#L27) |
 | `club_post_comments` | [`hooks/club/clubPostWrites.ts:16`](../hooks/club/clubPostWrites.ts#L16) |
 | `club_post_likes` | [`hooks/club/clubPostWrites.ts:10`](../hooks/club/clubPostWrites.ts#L10) |
 | `club_posts` | [`hooks/club/clubPostWrites.ts:21`](../hooks/club/clubPostWrites.ts#L21)<br>[`hooks/useClub.ts:72`](../hooks/useClub.ts#L72) |
@@ -637,7 +637,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Join intent (#229) | [`PendingAction`](../types/index.ts#L2388), [`PendingActionTake`](../types/index.ts#L2391), [`JoinOffer`](../types/index.ts#L2394), [`JoinIntentOutcome`](../types/index.ts#L2397) |
 | View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2402), [`FeedbackFieldErrors`](../types/index.ts#L2408), [`ReportReason`](../types/index.ts#L2411), [`ReportContextKind`](../types/index.ts#L2412), [`ReportStatus`](../types/index.ts#L2413), [`ReportAction`](../types/index.ts#L2414), [`ReportUserInput`](../types/index.ts#L2416), [`AdminReport`](../types/index.ts#L2425), [`ReportSheetTarget`](../types/index.ts#L2444), [`ReportSheetProps`](../types/index.ts#L2447), [`EventSeed`](../types/index.ts#L2463), [`MemberSearchResult`](../types/index.ts#L2475) |
 | What to bring (#256) | [`BringClaimer`](../types/index.ts#L2481), [`BringItem`](../types/index.ts#L2491), [`BringItemDraft`](../types/index.ts#L2502), [`BringItemAction`](../types/index.ts#L2512), [`BringViewer`](../types/index.ts#L2521), [`SaveBringItemsArgs`](../types/index.ts#L2529), [`ClaimBringItemArgs`](../types/index.ts#L2533), [`ReleaseBringItemArgs`](../types/index.ts#L2534), [`StartupConfig`](../types/index.ts#L2537), [`StartupArm`](../types/index.ts#L2544), [`MyGameRecap`](../types/index.ts#L2547), [`YourGameCardProps`](../types/index.ts#L2549), [`RecapFooterProps`](../types/index.ts#L2558), [`RecapShareTarget`](../types/index.ts#L2569) |
-| Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2573), [`WeekStripContentProps`](../types/index.ts#L2575), [`MonthGridContentProps`](../types/index.ts#L2584), [`WeekPagerProps`](../types/index.ts#L2593), [`CrashMarker`](../types/index.ts#L2605), [`CrashReport`](../types/index.ts#L2608) |
+| Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2573), [`WeekStripContentProps`](../types/index.ts#L2575), [`MonthGridContentProps`](../types/index.ts#L2584), [`WeekPagerProps`](../types/index.ts#L2593), [`CrashMarker`](../types/index.ts#L2605), [`CrashReport`](../types/index.ts#L2608), [`ActiveMention`](../types/index.ts#L2610), [`ChatRoomHeaderProps`](../types/index.ts#L2613), [`ChatComposerBandProps`](../types/index.ts#L2622), [`ChatComposerProps`](../types/index.ts#L2631), [`ImageViewerProps`](../types/index.ts#L2639) |
 
 ### Constrained string values
 
@@ -650,6 +650,7 @@ TypeScript `enum` keyword.
 | `BadgeStat` | `events_attended_past`, `events_hosted_past`, `cheers_received_total`, `cheers_given_events`, `spike_cheers`, `serve_cheers`, `block_cheers`, `set_cheers`, `dig_pass_cheers`, `communication_cheers`, `beta_active`, `tournament_hosted`, `profile_complete`, `vex_member` | [`constants/badges.ts:43`](../constants/badges.ts#L43) |
 | `BadgeType` | `event_attendee`, `event_host`, `cheers_received`, `cheers_given`, `spike_cheer`, `serve_cheer`, `block_cheer`, `set_cheer`, `dig_pass_cheer`, `communication_cheer`, `beta_tester`, `tournament_director`, `profile_complete`, `vex_spirit` | [`types/index.ts:1292`](../types/index.ts#L1292) |
 | `CardBgType` | `ember`, `frost`, `aurora` | [`types/index.ts:1290`](../types/index.ts#L1290) |
+| `ChatComposerBandProps.icon` | `return-down-back`, `pencil-outline` | [`types/index.ts:2623`](../types/index.ts#L2623) |
 | `CheerType` | `spike`, `block`, `serve`, `dig`, `set`, `pass`, `communication` | [`types/index.ts:234`](../types/index.ts#L234) |
 | `ChipProps.role` | `button`, `radio` | [`types/index.ts:1515`](../types/index.ts#L1515) |
 | `ChipProps.size` | `default`, `touch` | [`types/index.ts:1517`](../types/index.ts#L1517) |

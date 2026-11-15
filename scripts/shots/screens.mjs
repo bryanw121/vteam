@@ -106,9 +106,9 @@ export const SCREENS = {
   'chat-list': { route: '/chat', ready: 'Jordan', sources: ['app/(app)/(tabs)/(main)/chat.tsx', 'hooks/useConversations.ts', 'hooks/useChatUnread.tsx', 'hooks/useOpenDm.ts'] },
   'chat-conversation': {
     route: `/chat/${IDS.conversation.jordan}`, ready: 'Bringing the good ball',
-    sources: ['app/(app)/chat/**', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx', 'components/ReactionPicker.tsx', 'hooks/useMessages.ts', 'hooks/useSilencedUsers.ts'],
+    sources: ['app/(app)/chat/**', 'components/chat/**', 'hooks/chat/**', 'utils/chatComposer.ts', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx', 'components/ReactionPicker.tsx', 'hooks/useMessages.ts', 'hooks/useSilencedUsers.ts'],
   },
-  'chat-club': { route: `/chat/${IDS.conversation.clubChat}`, ready: 'shared album', sources: ['app/(app)/chat/**', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx'] },
+  'chat-club': { route: `/chat/${IDS.conversation.clubChat}`, ready: 'shared album', sources: ['app/(app)/chat/**', 'components/chat/**', 'hooks/chat/**', 'utils/chatComposer.ts', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx'] },
 
   // ── Profile ─────────────────────────────────────────────────────────────
   'profile-own': {
