@@ -3,6 +3,10 @@ import { theme } from './theme'
 
 const { colors, spacing, font, radius, shadow, fonts } = theme
 
+/** Club page (#305): cover photo height and the avatar that overlaps its bottom edge. */
+export const CLUB_COVER_HEIGHT = 200
+export const CLUB_AVATAR_SIZE = 80
+
 export const shared = StyleSheet.create({
 
   // ─── Layout ───────────────────────────────────────────────
@@ -60,7 +64,7 @@ export const shared = StyleSheet.create({
   buttonBase:         { padding: spacing.md, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   buttonPrimary:      { backgroundColor: colors.primary },
   buttonSecondary:    { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.primary },
-  buttonDanger:       { backgroundColor: colors.error },
+  buttonDanger:       { backgroundColor: colors.dangerFill },
   buttonDisabled:     { opacity: 0.5 },
   buttonLabelPrimary: { fontFamily: theme.fonts.bodySemiBold, color: colors.white,   fontSize: font.size.md },
   buttonLabelSecondary: { fontFamily: theme.fonts.bodySemiBold, color: colors.primaryText, fontSize: font.size.md },
@@ -1170,6 +1174,75 @@ export const shared = StyleSheet.create({
   hostChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   hostChipText: { fontFamily: fonts.bodyMedium, fontSize: font.size.sm, color: colors.subtext },
   hostChipTextActive: { fontFamily: fonts.bodySemiBold, color: colors.white },
+
+  // ── Club page (#305): sections in components/club/ ──
+  clubFloatingBtn: {
+    backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: theme.radius.full,
+    width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
+  },
+  clubFloatingBtnDanger: { backgroundColor: 'rgba(220,50,50,0.65)' },
+  clubFloatingBar: {
+    position: 'absolute', left: theme.spacing.md, right: theme.spacing.md,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+  },
+  clubCoverEditBtn: {
+    position: 'absolute', bottom: theme.spacing.sm, right: theme.spacing.md,
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs,
+    backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: theme.radius.full,
+    paddingHorizontal: theme.spacing.sm, paddingVertical: theme.spacing.xs,
+  },
+  clubCoverEditLabel: { color: colors.white, fontSize: font.size.xs, fontWeight: font.weight.semibold },
+  clubAvatarRing: {
+    width: CLUB_AVATAR_SIZE + 6, height: CLUB_AVATAR_SIZE + 6, borderRadius: (CLUB_AVATAR_SIZE + 6) / 2,
+    backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', ...theme.shadow.sm,
+  },
+  clubAvatar: {
+    width: CLUB_AVATAR_SIZE, height: CLUB_AVATAR_SIZE, borderRadius: CLUB_AVATAR_SIZE / 2,
+    backgroundColor: colors.primary + '22', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  clubAvatarImage: { width: CLUB_AVATAR_SIZE, height: CLUB_AVATAR_SIZE },
+  clubAvatarInitial: { fontSize: font.size.xxl, fontWeight: font.weight.bold, color: colors.primaryText },
+  clubAvatarCameraBtn: {
+    position: 'absolute', bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12,
+    backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: colors.card,
+  },
+  clubTitleBlock: { alignItems: 'center', gap: theme.spacing.xs, paddingHorizontal: theme.spacing.lg, marginBottom: theme.spacing.md },
+  clubTitle: { fontSize: font.size.xl, fontWeight: font.weight.bold, color: colors.text, textAlign: 'center' },
+  clubMetaRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flexWrap: 'wrap', justifyContent: 'center' },
+  clubMetaText: { fontSize: font.size.xs, color: colors.subtext },
+  clubBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 3, borderRadius: theme.radius.full, borderWidth: 1,
+  },
+  clubBadgeOpen: { backgroundColor: colors.success + '18', borderColor: colors.success + '44' },
+  clubBadgeClosed: { backgroundColor: colors.subtext + '12', borderColor: colors.border },
+  clubBadgeText: { fontSize: font.size.xs, fontWeight: font.weight.medium },
+  clubStatsRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: theme.spacing.md },
+  clubStatItem: { alignItems: 'center', gap: 3, flex: 1 },
+  clubStatNumber: { fontSize: font.size.xl, fontWeight: font.weight.bold, color: colors.text },
+  clubStatDivider: { width: 1, backgroundColor: colors.border, alignSelf: 'stretch', marginVertical: theme.spacing.xs },
+  clubActionRow: { paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.md, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+  clubInviteOnly: { backgroundColor: colors.border },
+  clubInviteOnlyLabel: { color: colors.subtext, fontSize: font.size.md, fontWeight: font.weight.medium },
+  clubSectionHeader: { paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.sm },
+  clubUpdatesHeader: {
+    paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.sm, flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.md,
+  },
+  clubLinkLabel: { fontSize: font.size.sm, fontWeight: font.weight.semibold, color: colors.primaryText },
+  clubEmptyCard: { alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md },
+  clubMemberRow: {
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
+  },
+  clubMemberInitial: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary + '18',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  clubMemberInitialText: { fontSize: font.size.md, fontWeight: font.weight.semibold, color: colors.primaryText },
+  clubOwnerBadge: { paddingHorizontal: theme.spacing.xs, paddingVertical: 2, borderRadius: theme.radius.sm, backgroundColor: colors.primary },
+  clubOwnerBadgeText: { fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.white },
   // Scorekeeper: a whole team typed at once (RosterTextSheet)
   rosterTextInput: { minHeight: 140, textAlignVertical: 'top', fontSize: font.size.base, lineHeight: 24 },
   rosterTextSlot: { alignItems: 'center', gap: spacing.xxs, minWidth: 52 },
