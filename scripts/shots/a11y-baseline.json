@@ -49,16 +49,14 @@
   },
   "chat-club": {
     "mobile": {},
-    "desktop": {
-      "color-contrast": 1
-    }
+    "desktop": {}
   },
   "chat-conversation": {
     "mobile": {
       "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 2
+      "color-contrast": 1
     }
   },
   "chat-list": {
