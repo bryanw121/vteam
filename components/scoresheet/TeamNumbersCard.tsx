@@ -4,12 +4,11 @@ import { Chip } from '../ui'
 import { Input } from '../Input'
 import { TEAM_COLORS } from './teamColors'
 import { shared, theme } from '../../constants'
-import { POSITION_LABELS } from '../../lib/scoresheet/engine'
 import { boxNumber, gridIssues } from '../../lib/scoresheet/numberGrid'
 import type { GridBox, TeamNumbersCardProps } from '../../types'
 
-/** Under each starting box: who serves 1st, 2nd... (the scoresheet calls these positions I–VI). */
-const SERVE_ORDER = ['1st', '2nd', '3rd', '4th', '5th', '6th']
+/** Under each starting box: its court position (the scoresheet writes these as I–VI; position 1 serves first). */
+const POSITION_NAMES = ['Pos 1', 'Pos 2', 'Pos 3', 'Pos 4', 'Pos 5', 'Pos 6']
 
 // iOS's number pad has no Next key; this keyboard has digits and a Next key on every platform.
 const KEYBOARD = Platform.select({ ios: 'numbers-and-punctuation', default: 'number-pad' } as const)
@@ -71,9 +70,9 @@ export function TeamNumbersCard({ side, team, showMissing, onName, onType, onSub
         <Chip label="Paste" variant="tint" onPress={onPaste} testID={`roster-text-${side}`} />
       </View>
 
-      <Text style={[shared.label, { marginBottom: 0 }]}>Starting six, in the order they serve</Text>
+      <Text style={[shared.label, { marginBottom: 0 }]}>Starting six by position · Pos 1 serves first</Text>
       <View style={shared.numberBoxRow}>
-        {team.court.map((v, i) => box({ part: 'court', index: i }, v, `serves ${SERVE_ORDER[i]}, position ${POSITION_LABELS[i]}`, SERVE_ORDER[i]))}
+        {team.court.map((v, i) => box({ part: 'court', index: i }, v, `position ${i + 1}${i === 0 ? ', serves first' : ''}`, POSITION_NAMES[i]))}
       </View>
 
       <Text style={[shared.label, { marginBottom: 0 }]}>Subs on the bench</Text>
