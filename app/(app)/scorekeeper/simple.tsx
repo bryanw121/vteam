@@ -31,7 +31,7 @@ export default function SimpleScoreScreen() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [flipped, setFlipped] = useState(false)
   const [confirmNew, setConfirmNew] = useState(false)
-  // The sideways scoreboard: opened with "Show the score", or by turning a phone to landscape.
+  // The sideways view (full scoring, big enough to show people): opened with "Sideways view", or by turning a phone to landscape.
   const [showBoard, setShowBoard] = useState(false)
   const [boardDismissed, setBoardDismissed] = useState(false)
   // After a set ends, the board keeps its final score until "Start set N" (rally count when tapped),
@@ -141,7 +141,7 @@ export default function SimpleScoreScreen() {
           </View>
 
           <View style={shared.simpleActions}>
-            <Button label="Show the score" icon="phone-landscape-outline" variant="secondary" size="touch" fullWidth={false} onPress={() => { setBoardDismissed(false); setShowBoard(true) }} testID="simple-show-board" />
+            <Button label="Sideways view" icon="phone-landscape-outline" variant="secondary" size="touch" fullWidth={false} onPress={() => { setBoardDismissed(false); setShowBoard(true) }} testID="simple-show-board" />
             <Button label="Switch sides" icon="swap-horizontal" variant="secondary" size="touch" fullWidth={false} onPress={() => setFlipped(f => !f)} testID="simple-flip" />
             <Button label="New match" icon="refresh" variant={state.over ? 'primary' : 'ghost'} size="touch" fullWidth={false} onPress={() => (state.over ? s.reset() : setConfirmNew(true))} testID="simple-new" />
           </View>
@@ -168,6 +168,15 @@ export default function SimpleScoreScreen() {
           serving={locked ? null : state.serving}
           order={order}
           setLabel={state.over ? 'Final' : betweenSets ? `Set ${state.current} over` : `Set ${state.current + 1}${match.format.sets > 1 ? ` of up to ${match.format.sets}` : ''}`}
+          locked={locked}
+          notice={!locked || !lastDone?.winner ? null : state.over
+            ? `${name(state.winner!)} wins ${state.setsWon[state.winner!]}–${state.setsWon[state.winner === 'A' ? 'B' : 'A']}. Wrong point? Tap −1.`
+            : `Set to ${name(lastDone.winner)}, ${Math.max(lastDone.A, lastDone.B)}–${Math.min(lastDone.A, lastDone.B)}. Wrong point? Tap −1.`}
+          nextSetLabel={betweenSets ? `Start set ${state.current + 1} · ${name(state.serving)} serves` : null}
+          onPoint={side => s.point(side)}
+          onMinus={side => s.minus(side)}
+          onNextSet={() => setStartedAt(match.rallies.length)}
+          onSwitchSides={() => setFlipped(f => !f)}
           onClose={() => { setShowBoard(false); setBoardDismissed(true) }}
         />
       )}

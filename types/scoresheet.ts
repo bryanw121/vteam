@@ -530,7 +530,7 @@ export type TeamNumbersCardProps = {
   boxRef: (box: GridBox) => (input: unknown) => void
 }
 
-/** Simple score's sideways scoreboard (`SimpleScoreboard`): what people around the court see. */
+/** Simple score's sideways scoreboard (`SimpleScoreboard`): scoring in landscape, big enough to show people. */
 export type SimpleScoreboardProps = {
   names: Record<TeamSide, string>
   scores: Record<TeamSide, number>
@@ -540,5 +540,15 @@ export type SimpleScoreboardProps = {
   order: TeamSide[]
   /** "Set 2 of up to 3", "Final"... */
   setLabel: string
+  /** Scoring is paused: between sets (until Start set N) or after the match. */
+  locked: boolean
+  /** Shown over the board while locked: "Set to Team A, 25–21". */
+  notice: string | null
+  /** "Start set 2 · Team B serves" between sets; null otherwise. */
+  nextSetLabel: string | null
+  onPoint: (side: TeamSide) => void
+  onMinus: (side: TeamSide) => void
+  onNextSet: () => void
+  onSwitchSides: () => void
   onClose: () => void
 }
