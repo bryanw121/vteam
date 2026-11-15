@@ -2600,3 +2600,35 @@ export type WeekPagerProps = {
 }
 export * from './club'
 export * from './freeAgents'
+
+/** The @word being typed in a club chat (#318): what follows the @, and where the @ is. */
+export type ActiveMention = { query: string; atIndex: number }
+
+/** Chat room header (#318). `onOpenMenu` (DMs with another player) gets the menu button's place on screen. */
+export type ChatRoomHeaderProps = {
+  title: string
+  avatarUri: string | null | undefined
+  isClub: boolean
+  onBack: () => void
+  onOpenMenu?: (anchor: AnchorRect) => void
+}
+
+/** The reply / edit strip above the chat input. */
+export type ChatComposerBandProps = {
+  icon: 'return-down-back' | 'pencil-outline'
+  title: string
+  body: string
+  cancelLabel: string
+  onCancel: () => void
+}
+
+/** The chat room's composer: what `useChatComposer` returns, plus what the screen decides. */
+export type ChatComposerProps = {
+  composer: ReturnType<typeof import('../hooks/chat/useChatComposer').useChatComposer>
+  isClub: boolean
+  replyLabel: string
+  replyBody: string
+}
+
+/** A chat picture full screen; null = closed. */
+export type ImageViewerProps = { uri: string | null; onClose: () => void }
