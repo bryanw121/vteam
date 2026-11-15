@@ -4,11 +4,10 @@ import { Text } from '../ui/Text'
 import { Chip } from '../ui'
 import { Button } from '../Button'
 import { PlayerChip } from './PlayerChip'
-import { CourtLayout } from './CourtLayout'
 import { CourtSpot } from './CourtSpot'
 import { TEAM_COLORS } from './teamColors'
 import { shared, theme } from '../../constants'
-import { POSITION_LABELS, nextSetDefaults } from '../../lib/scoresheet/engine'
+import { nextSetDefaults } from '../../lib/scoresheet/engine'
 import { teamName } from '../../lib/scoresheet/summary'
 import type { Lineup, MatchDoc, MatchState, ScoreEventInput, TeamSide } from '../../types'
 
@@ -19,6 +18,10 @@ type Props = {
 }
 
 const empty = (): (number | null)[] => [null, null, null, null, null, null]
+/** Lineup slots where they stand, from behind the team's own baseline: front row at the net, server back right (slot 0). */
+const FRONT_ROW = [3, 2, 1]
+const BACK_ROW = [4, 5, 0]
+const SPOT_NAMES = ['back right', 'front right', 'front middle', 'front left', 'back left', 'back middle']
 
 /** Before each set: six players per team in serving order, liberos, and who serves first. */
 export function LineupSetup({ doc, state, onStart }: Props) {
@@ -32,6 +35,8 @@ export function LineupSetup({ doc, state, onStart }: Props) {
   const [active, setActive] = useState<{ side: TeamSide; slot: number } | null>(defaults.lineups ? null : { side: 'A', slot: 0 })
   // With last set's lineups, the usual case is one tap: same six, start. Changing them opens the full editor.
   const [editing, setEditing] = useState(!defaults.lineups)
+  // One team's court at a time, the same way round as on the new-match screen.
+  const [team, setTeam] = useState<TeamSide>('A')
 
   const assign = (side: TeamSide, player: number) => {
     const slot = active?.side === side ? active.slot : lineups[side].indexOf(null)
@@ -41,7 +46,12 @@ export function LineupSetup({ doc, state, onStart }: Props) {
     setLineups({ ...lineups, [side]: next })
     // Move on to the next empty slot of this team.
     const after = [...Array(6).keys()].map(i => (slot + 1 + i) % 6).find(i => next[i] == null)
-    setActive(after != null ? { side, slot: after } : null)
+    const other: TeamSide = side === 'A' ? 'B' : 'A'
+    const otherEmpty = lineups[other].indexOf(null)
+    if (after != null) setActive({ side, slot: after })
+    // This team is done: go on to the other team's first empty spot.
+    else if (otherEmpty >= 0) { setTeam(other); setActive({ side: other, slot: otherEmpty }) }
+    else setActive(null)
     setLiberos(prev => ({ ...prev, [side]: prev[side].filter(n => n !== player) }))
   }
 
@@ -130,34 +140,58 @@ export function LineupSetup({ doc, state, onStart }: Props) {
         </Text>
       </View>
 
-      <CourtLayout
-        renderLabel={side => <Text style={[shared.label, { color: TEAM_COLORS[side].fill, marginBottom: 0 }]}>{teamName(doc, side)}</Text>}
-        renderSpot={(side, slot) => {
-          const n = lineups[side][slot]
-          const isActive = active?.side === side && active.slot === slot
-          return (
-            <CourtSpot
-              position={slot}
-              number={n}
-              name={n != null ? names[side].get(n) : undefined}
-              highlight={isActive ? TEAM_COLORS[side] : null}
-              placeholder="–"
-              onPress={() => tapSpot(side, slot)}
-              accessibilityLabel={`${teamName(doc, side)} position ${POSITION_LABELS[slot]}${n != null ? `: #${n}` : ', empty'}`}
-              testID={`slot-${side}-${slot}`}
+      <View role="tablist" style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+        {(['A', 'B'] as const).map(side => (
+          <View key={side} style={{ flex: 1 }}>
+            <Button
+              label={`${teamName(doc, side)}${complete(side) ? ' ✓' : ''}`}
+              variant={team === side ? 'primary' : 'secondary'}
+              size="touch"
+              onPress={() => { setTeam(side); setActive(null) }}
+              accessibilityLabel={`Show ${teamName(doc, side)}'s lineup${complete(side) ? ', complete' : ''}`}
+              testID={`lineup-team-${side}`}
             />
-          )
-        }}
-      />
+          </View>
+        ))}
+      </View>
 
-      {(['A', 'B'] as const).map(side => {
+      <View style={shared.numberCourt} testID={`lineup-court-${team}`}>
+        <View style={shared.numberCourtNet}>
+          <Text style={shared.numberCourtNetLabel} maxFontSizeMultiplier={1.3}>NET</Text>
+        </View>
+        {[FRONT_ROW, BACK_ROW].map((row, r) => (
+          <View key={r} style={styles.courtRow}>
+            {row.map(slot => {
+              const n = lineups[team][slot]
+              const isActive = active?.side === team && active.slot === slot
+              return (
+                <View key={slot} style={{ flex: 1 }}>
+                  <CourtSpot
+                    position={slot}
+                    number={n}
+                    name={n != null ? names[team].get(n) : undefined}
+                    highlight={isActive ? TEAM_COLORS[team] : null}
+                    placeholder="–"
+                    onPress={() => tapSpot(team, slot)}
+                    accessibilityLabel={`${teamName(doc, team)} ${SPOT_NAMES[slot]}${slot === 0 ? ', serves first' : ''}${n != null ? `: #${n}` : ', empty'}`}
+                    testID={`slot-${team}-${slot}`}
+                  />
+                </View>
+              )
+            })}
+          </View>
+        ))}
+      </View>
+
+      {(() => {
+        const side = team
         const roster = doc.setup.teams[side].players
         const color = TEAM_COLORS[side]
         const picking = active?.side === side
         return (
-          <View key={side} style={[shared.card, { gap: theme.spacing.sm, borderLeftWidth: 4, borderLeftColor: color.fill }]} testID={`lineup-${side}`}>
+          <View style={[shared.card, { gap: theme.spacing.sm, borderLeftWidth: 4, borderLeftColor: color.fill }]} testID={`lineup-${side}`}>
             <Text style={shared.label}>
-              {teamName(doc, side)}{picking && active ? ': tap a number to put them in, or another spot to swap' : ''}
+              {picking ? 'Tap a number to put them in, or another spot to swap' : `${teamName(doc, side)}'s players`}
             </Text>
             <View role="radiogroup" style={styles.chips}>
               {roster.filter(p => !liberos[side].includes(p.number)).map(p => (
@@ -181,7 +215,7 @@ export function LineupSetup({ doc, state, onStart }: Props) {
             </View>
           </View>
         )
-      })}
+      })()}
 
       <View style={[shared.card, { gap: theme.spacing.sm }]}>
         <Text style={shared.subheading}>Serves first</Text>
@@ -200,4 +234,5 @@ export function LineupSetup({ doc, state, onStart }: Props) {
 
 const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
+  courtRow: { flexDirection: 'row', gap: theme.spacing.xs },
 })
