@@ -92,4 +92,6 @@ export const ANALYTICS_EVENTS = {
   bringListSaved: 'bring_list_saved',
   /** The server answered again after being down (#289). props: { ms (how long), cause: server | network } */
   serverUnreachable: 'server_unreachable',
+  /** A render error reached the error screen (#316). props: { screen (pattern, never an id), attempt (1 = first, 2+ = again within 30 s), had_snapshot } */
+  appCrash: 'app_crash',
 } as const

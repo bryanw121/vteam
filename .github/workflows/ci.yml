@@ -192,6 +192,8 @@ jobs:
         run: node scripts/shots/badge-artwork-flow.mjs --dist dist-mock --out a11y-report/badge-artwork
       - name: Chat badge browser check
         run: node scripts/shots/chat-unread-flow.mjs --dist dist-mock --out a11y-report/chat-unread
+      - name: Crash recovery browser check
+        run: node scripts/shots/crash-recovery-flow.mjs --dist dist-mock --out a11y-report/crash-recovery
       - name: axe scan vs baseline
         run: npm run a11y -- --dist dist-mock --out a11y-report
       # Tours never skip a step, no jump or layout shift on refresh/Back, every

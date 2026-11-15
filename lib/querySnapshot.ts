@@ -175,11 +175,15 @@ export function setSnapshotOwner(owner: string | null): void {
   if (liveKeys.size > 0) scheduleWrite()
 }
 
-/** Seed the cache from the last visit and start saving fresh reads. Idempotent; call once at startup. */
-export function startQuerySnapshot(): void {
+/**
+ * Seed the cache from the last visit and start saving fresh reads. Idempotent; call once at startup.
+ * `seed: false` (shortly after a crash, #316) starts saving without seeding, and drops the old copy.
+ */
+export function startQuerySnapshot(opts: { seed?: boolean } = {}): void {
   if (started || !storage()) return
   started = true
-  const snap = readQuerySnapshot()
+  if (opts.seed === false) clearQuerySnapshot()
+  const snap = opts.seed === false ? null : readQuerySnapshot()
   if (snap) {
     Object.entries(snap.entries).forEach(([key, data]) => {
       setQueryData(key, data)
