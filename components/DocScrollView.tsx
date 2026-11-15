@@ -2,7 +2,7 @@ import React, { useCallback, useLayoutEffect, useRef } from 'react'
 import { Platform, ScrollView, ScrollViewProps, StyleProp, View, ViewStyle } from 'react-native'
 import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControlProps } from 'react-native'
 import { DocPullToRefresh } from './RefreshControl'
-import { useDocScrollMemory } from '../hooks/useDocScrollMemory'
+import { useDocScrollMemory, useDocScrollRefocus } from '../hooks/useDocScrollMemory'
 import { isShown, recallScroll, rememberScroll, restoreWhenReady } from '../utils/scrollMemory'
 import type { WebScrollableRef } from '../types'
 import type { ScrollViewInstance, ViewInstance } from 'react-native'
@@ -39,6 +39,10 @@ export function DocScrollView({ docScroll, memoryKey, children, style, contentCo
   const docRef = useRef<ViewInstance>(null)
   const wasShown = useRef(false)
   const docLayout = useDocScrollMemory(memoryKey, docScroll, docRef, onLayout)
+  // A tab screen stays mounted under a pushed screen (Profile under Cheers): hide it as it
+  // leaves and put the offset back before showing it on Back, so it never paints at the top
+  // and then jumps (the flicker).
+  useDocScrollRefocus(memoryKey ?? '', remember && docScroll, docRef, docRef)
 
   const scrollNode = () => (scrollRef.current as unknown as WebScrollableRef)?.getScrollableNode?.() ?? null
 

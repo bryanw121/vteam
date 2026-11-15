@@ -2598,4 +2598,5 @@ export type WeekPagerProps = {
   onPrevWeek: () => void
   onNextWeek: () => void
 }
+export * from './club'
 export * from './freeAgents'

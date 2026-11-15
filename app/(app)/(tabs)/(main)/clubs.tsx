@@ -13,9 +13,10 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Stack, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../../../lib/supabase'
-import { queryKey, setQueryData, useFocusRefetch, useMutation, useQuery } from '../../../../lib/query'
+import { queryKey, useFocusRefetch, useQuery } from '../../../../lib/query'
 import { useSession } from '../../../../contexts/session'
 import { useRequireSignIn } from '../../../../hooks/useRequireSignIn'
+import { useClubMembership } from '../../../../hooks/club/useClubMembership'
 import { SignInButton } from '../../../../components/SignInButton'
 import { ScreenState } from '../../../../components/ui'
 import { CLUBS_TAB_INDEX, STALE, shared, theme } from '../../../../constants'
@@ -27,7 +28,6 @@ import type { ClubListItem, MajorCity } from '../../../../types'
 import { Spinner } from '../../../../components/ui/Spinner'
 import { useUrlParam } from '../../../../hooks/useUrlParam'
 import { VIEW } from '../../../../utils/urlViews'
-import { toast } from '../../../../lib/toast'
 
 /** List payload: member count; membership embed is added when signed in. */
 const CLUB_LIST_SELECT_BASE =
@@ -58,11 +58,6 @@ function clubColor(name: string): string {
   return PALETTE[Math.abs(h) % PALETTE.length]
 }
 
-/** Replace one club in the cached list (optimistic join/rollback). */
-function replaceClubInList(listKey: string, club: ClubListItem): void {
-  setQueryData<ClubListItem[]>(listKey, prev => (prev ?? []).map(c => (c.id === club.id ? club : c)))
-}
-
 type ClubCardProps = {
   club: ClubListItem
   /** The signed-in viewer, or null for a guest. */
@@ -82,26 +77,8 @@ function ClubCard({ club, userId, listKey, isOwner, isMember, onPress }: ClubCar
   const color = clubColor(club.name)
 
   // One mutation per card, so joining two clubs in a row never drops the second tap.
-  const join = useMutation<string, void>(
-    async uid => {
-      const { error } = await supabase.from('club_members').insert({ club_id: club.id, user_id: uid, role: 'member' })
-      if (error) throw error
-    },
-    {
-      onMutate: uid => {
-        const before = club
-        replaceClubInList(listKey, {
-          ...club,
-          club_members: [{ count: memberCount(club) + 1 }],
-          my_membership: [{ club_id: club.id, user_id: uid, role: 'member', joined_at: new Date().toISOString() }],
-        })
-        return () => replaceClubInList(listKey, before)
-      },
-      onError: error => { toast.error("Couldn't join the club", error) },
-      // The club's own page lists its members and posts.
-      invalidates: [queryKey('club', club.id)],
-    },
-  )
+  // The same join as the club page (#305), updating this list's row at once.
+  const join = useClubMembership(club.id, { listKey, listClub: club })
 
   useEffect(() => {
     let cancelled = false
@@ -114,7 +91,7 @@ function ClubCard({ club, userId, listKey, isOwner, isMember, onPress }: ClubCar
   function handleJoinPress(e: { stopPropagation?: () => void }) {
     e.stopPropagation?.()
     if (!userId) { requireSignIn(); return }
-    void join.mutate(userId)
+    void join.mutate('join')
   }
 
   return (

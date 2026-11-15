@@ -7,7 +7,7 @@ import { getSessionUser } from '../lib/sessionUser'
 import { Text, TextInput } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter } from 'expo-router'
-import { supabase } from '../lib/supabase'
+import { addClubPostComment, createClubPost, setClubPostLike } from '../hooks/club/clubPostWrites'
 import { shared, theme, CLUB_POST_COMMENT_MAX, CLUB_POST_BODY_MAX, GENERIC_ERROR_MESSAGE, NETWORK_ERROR_MESSAGE } from '../constants'
 import { routes } from '../utils/routes'
 import type { ClubPostCommentWithAuthor, ClubPostWithFeed } from '../types'
@@ -66,19 +66,7 @@ export function ClubPostCard({
     if (!currentUserId || !isClubMember || likeBusy) return
     setLikeBusy(true)
     try {
-      if (likedByMe) {
-        const { error } = await supabase
-          .from('club_post_likes')
-          .delete()
-          .eq('club_post_id', post.id)
-          .eq('user_id', currentUserId)
-        if (error) throw error
-      } else {
-        const { error } = await supabase
-          .from('club_post_likes')
-          .insert({ club_post_id: post.id, user_id: currentUserId })
-        if (error) throw error
-      }
+      await setClubPostLike(post.id, currentUserId, !likedByMe)
       onDataChanged()
     } catch (e: unknown) {
       toast.error("Couldn't update your like", e)
@@ -96,12 +84,7 @@ export function ClubPostCard({
     }
     setCommentBusy(true)
     try {
-      const { error } = await supabase.from('club_post_comments').insert({
-        club_post_id: post.id,
-        user_id: currentUserId,
-        body,
-      })
-      if (error) throw error
+      await addClubPostComment(post.id, currentUserId, body)
       setCommentDraft('')
       onDataChanged()
     } catch (e: unknown) {
@@ -273,12 +256,7 @@ export function ClubPostComposerModal({ visible, clubId, onClose, onCreated }: C
     setError(null)
     setBusy(true)
     try {
-      const { error } = await supabase.from('club_posts').insert({
-        club_id: clubId,
-        created_by: uid,
-        body: trimmed,
-      })
-      if (error) throw error
+      await createClubPost(clubId, uid, trimmed)
       setBody('')
       onCreated()
       onClose()

@@ -3,7 +3,7 @@ import { Animated, Image, Platform, Pressable, View, TouchableOpacity } from 're
 import { Text } from '../../components/ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Stack, useRouter, usePathname } from 'expo-router'
-import { theme, BADGE_DEFINITIONS, BREAKPOINTS, TABS, TIGHT_TEXT_SCALE, tabIndexFromPath, SWIPE_NAVIGATION } from '../../constants'
+import { theme, BADGE_DEFINITIONS, BREAKPOINTS, TABS, TIGHT_TEXT_SCALE, tabIndexFromPath, SWIPE_NAVIGATION, HEADERLESS_STACK_ROUTES } from '../../constants'
 import type { CreateMenuOption } from '../../constants'
 import { CreateMenuList } from '../../components/CreateMenuList'
 import { WebNavContext } from '../../contexts/webNav'
@@ -217,15 +217,12 @@ function AppLayoutInner() {
               }}
             >
               <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: 'Back' }} />
-      <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
               <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back, presentation: 'modal', ...(Platform.OS === 'web' ? { animationEnabled: false } : {}) }} />
-              <Stack.Screen name="event/[id]" options={{ headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back }} />
-              <Stack.Screen name="profile/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
-              <Stack.Screen name="club/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
               <Stack.Screen name="club/create" options={{ title: 'Create club', headerBackTitle: 'Clubs', gestureEnabled: SWIPE_NAVIGATION.back }} />
               <Stack.Screen name="notifications" options={{ title: 'Notifications', headerBackTitle: 'Back' }} />
-              <Stack.Screen name="chat/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
-              <Stack.Screen name="book" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+              {HEADERLESS_STACK_ROUTES.map(name => (
+                <Stack.Screen key={name} name={name} options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+              ))}
             </Stack>
 
             {/* FAB backdrop */}
@@ -302,15 +299,12 @@ function AppLayoutInner() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: 'Back' }} />
-      <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
       <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back, presentation: 'modal' }} />
-      <Stack.Screen name="event/[id]" options={{ headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back }} />
-      <Stack.Screen name="profile/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
-      <Stack.Screen name="club/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
       <Stack.Screen name="club/create" options={{ title: 'Create club', headerBackTitle: 'Clubs', gestureEnabled: SWIPE_NAVIGATION.back }} />
       <Stack.Screen name="notifications" options={{ title: 'Notifications', headerBackTitle: 'Back' }} />
-      <Stack.Screen name="chat/[id]" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
-      <Stack.Screen name="book" options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+      {HEADERLESS_STACK_ROUTES.map(name => (
+        <Stack.Screen key={name} name={name} options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
+      ))}
     </Stack>
     </SentryErrorBoundary>
   )
