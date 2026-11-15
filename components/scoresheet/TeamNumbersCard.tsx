@@ -7,8 +7,15 @@ import { shared, theme } from '../../constants'
 import { boxNumber, gridIssues } from '../../lib/scoresheet/numberGrid'
 import type { GridBox, TeamNumbersCardProps } from '../../types'
 
-/** Under each starting box: its court position (the scoresheet writes these as I–VI; position 1 serves first). */
-const POSITION_NAMES = ['Pos 1', 'Pos 2', 'Pos 3', 'Pos 4', 'Pos 5', 'Pos 6']
+/**
+ * The starting six drawn where they stand, seen from behind the team's own baseline: front row
+ * (left, middle, right) at the net, back row below, the server at back right. Values are indexes
+ * into `court` (serving order: 0 serves first, the scoresheet's I–VI), so typing still moves
+ * box to box in serving order.
+ */
+const FRONT_ROW = [3, 2, 1]
+const BACK_ROW = [4, 5, 0]
+const SPOT_NAMES = ['back right', 'front right', 'front middle', 'front left', 'back left', 'back middle']
 
 // iOS's number pad has no Next key; this keyboard has digits and a Next key on every platform.
 const KEYBOARD = Platform.select({ ios: 'numbers-and-punctuation', default: 'number-pad' } as const)
@@ -70,9 +77,21 @@ export function TeamNumbersCard({ side, team, showMissing, onName, onType, onSub
         <Chip label="Paste" variant="tint" onPress={onPaste} testID={`roster-text-${side}`} />
       </View>
 
-      <Text style={[shared.label, { marginBottom: 0 }]}>Starting six by position · Pos 1 serves first</Text>
-      <View style={shared.numberBoxRow}>
-        {team.court.map((v, i) => box({ part: 'court', index: i }, v, `position ${i + 1}${i === 0 ? ', serves first' : ''}`, POSITION_NAMES[i]))}
+      <Text style={[shared.label, { marginBottom: 0 }]}>Starting six, where they stand</Text>
+      <View style={shared.numberCourt} testID={`court-${side}`}>
+        <View style={shared.numberCourtNet}>
+          <Text style={shared.numberCourtNetLabel} maxFontSizeMultiplier={1.3}>NET</Text>
+        </View>
+        {[FRONT_ROW, BACK_ROW].map((row, r) => (
+          <View key={r} style={shared.numberBoxRow}>
+            {row.map(i => box(
+              { part: 'court', index: i },
+              team.court[i],
+              `${SPOT_NAMES[i]}${i === 0 ? ', serves first' : ''}`,
+              i === 0 ? 'Serves first' : undefined,
+            ))}
+          </View>
+        ))}
       </View>
 
       <Text style={[shared.label, { marginBottom: 0 }]}>Subs on the bench</Text>

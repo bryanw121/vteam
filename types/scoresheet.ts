@@ -529,3 +529,16 @@ export type TeamNumbersCardProps = {
   /** Registers each box's input so the screen can move focus from box to box. */
   boxRef: (box: GridBox) => (input: unknown) => void
 }
+
+/** Simple score's sideways scoreboard (`SimpleScoreboard`): what people around the court see. */
+export type SimpleScoreboardProps = {
+  names: Record<TeamSide, string>
+  scores: Record<TeamSide, number>
+  setsWon: Record<TeamSide, number>
+  serving: TeamSide | null
+  /** Left to right, as on the scoring screen (Switch sides flips it). */
+  order: TeamSide[]
+  /** "Set 2 of up to 3", "Final"... */
+  setLabel: string
+  onClose: () => void
+}

@@ -70,14 +70,22 @@ export function addPoint(m: SimpleMatch, team: TeamSide, now: number): SimpleMat
 
 /**
  * −1 for `team`: takes away that team's latest point in the set on the board (it can be any
- * rally of the set, not only the last one). Earlier sets are never touched. Unchanged when the
- * team has no points in this set.
+ * rally of the set, not only the last one). Right after a set ends the board still shows that
+ * set, so −1 reaches into it and reopens it; older sets are never touched. Unchanged when the
+ * team has no points there.
  */
 export function minusPoint(m: SimpleMatch, team: TeamSide, now: number): SimpleMatch {
-  const { setStart } = replaySimple(m)
+  const start = boardSetStart(m)
   const i = m.rallies.lastIndexOf(team)
-  if (i < setStart) return m
+  if (i < start) return m
   return { ...m, rallies: [...m.rallies.slice(0, i), ...m.rallies.slice(i + 1)], updatedAt: now }
+}
+
+/** Where the set on the board starts: the set in play, or the one that just ended while the next has no points yet. */
+export function boardSetStart(m: SimpleMatch): number {
+  const { setStart, over } = replaySimple(m)
+  if (over || setStart < m.rallies.length || setStart === 0) return setStart
+  return replaySimple({ ...m, rallies: m.rallies.slice(0, -1) }).setStart
 }
 
 export function undoPoint(m: SimpleMatch, now: number): SimpleMatch {
