@@ -66,7 +66,7 @@ export const ANALYTICS_EVENTS = {
   shareTapped: 'share_tapped',
   /** Changed the Events feed filters (not the restore on open). props: { filter, surface } */
   feedFilterChanged: 'feed_filter_changed',
-  /** A Scorekeeper match started or finished (device-only, so this is the only record). props: { stage: started | finished, sets (sets played) } */
+  /** A Scorekeeper match started or finished (device-only, so this is the only record). props: { stage: started | finished, sets (sets played), mode?: simple } */
   scorekeeperMatch: 'scorekeeper_match',
   /** A Share button sent or copied a screen's link. props: { screen (tournament, tournaments, leagues, events, profile), how: share | copy, filtered } */
   linkShared: 'link_shared',
