@@ -1255,12 +1255,54 @@ export const shared = StyleSheet.create({
   // Simple score (scorekeeper/simple)
   simpleTeamSwatch: { width: 10, height: 48, borderRadius: radius.sm, marginBottom: 2 },
   simpleBanner: { marginHorizontal: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  simpleSettingsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 44, paddingVertical: spacing.xs },
   simpleBoard: { flexDirection: 'row', gap: spacing.sm, marginVertical: spacing.md },
   simpleSide: { flex: 1, minHeight: 260, borderRadius: radius.xl, padding: spacing.md, alignItems: 'center', justifyContent: 'space-between' },
   simpleTeam: { fontFamily: fonts.bodySemiBold, fontSize: font.size.lg, flexShrink: 1 },
   simpleScore: { fontFamily: fonts.display, fontSize: font.heading.scoreboard, lineHeight: font.heading.scoreboard + 8, fontVariant: ['tabular-nums'] },
   simpleSets: { fontFamily: fonts.bodyMedium, fontSize: font.size.md },
   simpleActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  // Scorekeeper: every number of a team on one screen (TeamNumbersCard)
+  numberBoxRow: { flexDirection: 'row', gap: spacing.xs },
+  numberBoxCourtCell: { flex: 1, minWidth: 40, maxWidth: 96, alignItems: 'center', gap: 2 },
+  numberBoxCell: { width: 52, alignItems: 'center', gap: 2 },
+  numberBox: {
+    alignSelf: 'stretch', height: 52, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.border,
+    backgroundColor: colors.background, color: colors.text, textAlign: 'center',
+    fontFamily: fonts.display, fontSize: font.size.xl, paddingHorizontal: 0,
+  },
+  // Simple score's sideways scoreboard (SimpleScoreboard)
+  scoreboardRoot: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, backgroundColor: colors.background },
+  scoreboardHalf: { flex: 1, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center', padding: spacing.md, gap: spacing.xs },
+  scoreboardTeam: { fontFamily: fonts.displaySemiBold, fontSize: font.size.xl, flexShrink: 1 },
+  scoreboardScore: { fontFamily: fonts.display, fontVariant: ['tabular-nums'] },
+  scoreboardSets: { fontFamily: fonts.bodySemiBold, fontSize: font.size.lg },
+  scoreboardSetLabel: { flex: 1, textAlign: 'center', fontFamily: fonts.bodySemiBold, fontSize: font.size.md, color: colors.subtextStrong },
+  scoreboardTopBar: { position: 'absolute', height: 44, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  scoreboardIcon: {
+    width: 44, height: 44, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+  },
+  scoreboardMinus: { minWidth: 88, minHeight: 44, borderRadius: radius.full, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.md },
+  scoreboardNotice: {
+    position: 'absolute', width: 340, gap: spacing.sm, padding: spacing.md, borderRadius: radius.lg,
+    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+  },
+  numberCourt: { gap: spacing.xs, padding: spacing.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  numberCourtNet: { borderTopWidth: 3, borderTopColor: colors.subtext, alignItems: 'center', paddingTop: 2 },
+  numberCourtNetLabel: { fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.subtext, letterSpacing: 2 },
+  numberBoxLabel: { fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.subtext, minHeight: 14 },
+  // Scorekeeper: the big point buttons on the live match screen
+  scorePointBtn: {
+    flex: 1, minHeight: 168, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center',
+    gap: spacing.xs, padding: spacing.md,
+  },
+  scorePointTeam: { fontFamily: fonts.displaySemiBold, fontSize: font.size.lg },
+  scorePointServing: {
+    fontFamily: fonts.bodySemiBold, fontSize: font.size.base, paddingHorizontal: spacing.md, paddingVertical: spacing.xxs,
+    borderRadius: radius.full, borderWidth: 1.5, overflow: 'hidden', minHeight: 26,
+  },
+  serveFirstBtn: { flex: 1, minHeight: 140, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.md },
   // Find a team (#304)
   freeAgentRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, paddingVertical: spacing.md,

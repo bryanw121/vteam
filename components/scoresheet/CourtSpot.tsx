@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet } from 'react-native'
 import { Text } from '../ui/Text'
 import { theme } from '../../constants'
-import { POSITION_LABELS } from '../../lib/scoresheet/engine'
 
 type Props = {
   position: number
@@ -17,7 +16,7 @@ type Props = {
   testID?: string
 }
 
-/** One player spot on the court: position label, number, first name. */
+/** One player spot on the court: number and first name; the serving spot (back right) says so. */
 export function CourtSpot({ position, number, name, highlight, libero, placeholder = '+', onPress, accessibilityLabel, testID }: Props) {
   const first = name?.split(' ')[0]
   const ink = highlight ? highlight.ink : undefined
@@ -37,7 +36,7 @@ export function CourtSpot({ position, number, name, highlight, libero, placehold
         (pressed || hovered) && !!onPress && !highlight && { borderColor: theme.colors.primary },
       ]}
     >
-      <Text style={[styles.pos, ink ? { color: ink } : null]} maxFontSizeMultiplier={1.15}>{POSITION_LABELS[position]}</Text>
+      {position === 0 && <Text style={[styles.pos, ink ? { color: ink } : null]} maxFontSizeMultiplier={1.15}>Serves</Text>}
       <Text style={[empty ? styles.plus : styles.num, ink ? { color: ink } : null]} maxFontSizeMultiplier={1.15}>{empty ? placeholder : number}</Text>
       {!!first && <Text style={[styles.name, ink ? { color: ink } : null]} numberOfLines={1} maxFontSizeMultiplier={1.15}>{first}</Text>}
     </Pressable>

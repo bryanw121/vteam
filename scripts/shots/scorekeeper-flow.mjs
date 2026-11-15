@@ -43,7 +43,7 @@ async function shot(page, name, fullPage = false) {
   await page.screenshot({ path: file, fullPage, animations: 'disabled', caret: 'hide' })
   process.stderr.write(`  shot ${file}\n`)
 }
-const tap = (page, id) => page.getByTestId(id).first().click({ timeout: 10000 })
+const tap = (page, id) => page.getByTestId(id).first().click({ timeout: 10000 }).catch(e => { throw new Error(`tap ${id}: ${e.message}`) })
 const text = (page, t) => page.getByText(t, { exact: false }).first()
 
 try {
@@ -100,34 +100,28 @@ try {
   await fill('team-name-B', 'Blockers')
   await shot(page, 'new-match-empty')
 
-  // 3. Put the starting six on the court: tap position I, then each save moves to the next spot.
-  const starters = [[1, 'Maya'], [2, 'Jess'], [3, 'Priya'], [4, 'Lena'], [5, 'Sofia'], [6, 'Tori'], [11, 'Ana'], [12, 'Bea'], [13, 'Cara'], [14, 'Dee'], [15, 'Eve'], [16, 'Fay']]
-  await tap(page, 'spot-A-0')
-  for (const [i, [n, name]] of starters.entries()) {
-    await page.getByTestId('player-number').waitFor()
-    await fill('player-number', String(n))
-    await fill('player-name', name)
-    if (i === 2) await shot(page, 'player-sheet')
-    await tap(page, 'player-save')
-    await page.waitForTimeout(250)
-  }
-  const bench = { A: [[7, 'Nina'], [8, 'Rae'], [20, 'Kim', true]], B: [[17, 'Gia'], [30, 'Hana', true]] }
-  for (const side of ['A', 'B']) {
-    for (const [n, name, libero] of bench[side]) {
-      await tap(page, `bench-add-${side}`)
-      await page.getByTestId('player-number').waitFor()
-      await fill('player-number', String(n))
-      await fill('player-name', name)
-      if (libero) await tap(page, 'player-libero')
-      await tap(page, 'player-save')
-      await page.waitForTimeout(250)
-    }
-  }
-  await tap(page, 'first-serve-A')
+  // 3. Every number on one screen: type into position I and each box moves on by itself
+  //    (two digits, or a space); team B's lineup is pasted into its position I in one go.
+  await tap(page, 'num-A-court-0')
+  await page.waitForTimeout(300) // the box selects its text on focus; type after that, as a person would
+  await page.keyboard.type('1 2 3 4 5 6 7 8 ', { delay: 30 })
+  await page.waitForTimeout(200)
+  const box = id => page.getByTestId(id)
+  const boxValue = id => box(id).inputValue()
+  check((await boxValue('num-A-court-5')) === '6' && (await boxValue('num-A-bench-1')) === '8', 'typing moves from box to box')
+  await box('num-A-liberos-0').fill('20')
+  await box('num-B-court-0').fill('11 12 13 14 15 16')
+  await page.waitForTimeout(200)
+  check((await boxValue('num-B-court-5')) === '16', 'a pasted lineup fills the serve order')
+  await box('num-B-bench-0').fill('17')
+  await box('num-B-liberos-0').fill('30')
   await page.evaluate(() => window.scrollTo(0, 0))
-  await shot(page, 'new-match-court')
-  await shot(page, 'new-match-full', true)
-  await tap(page, 'start-match')
+  await shot(page, 'new-match-numbers')
+  await shot(page, 'new-match-numbers-full', true)
+  await tap(page, 'numbers-next')
+  await page.getByTestId('first-serve-A').waitFor()
+  await shot(page, 'new-match-serve')
+  await tap(page, 'first-serve-A')
 
   // 4. Scoring
   await page.getByTestId('point-A').waitFor()
@@ -137,8 +131,13 @@ try {
   check(await page.getByTestId('score-A').innerText().then(t => t.includes('4')), 'score A is 4 after 7 rallies')
 
   // The tour (opens by itself the first time; the harness marks tours done, so start it from "?")
+  await shot(page, 'scoring')
+  await tap(page, 'minus-A')
+  await page.waitForTimeout(400)
+  check((await page.getByTestId('score-A').innerText()).trim() === '3', '−1 takes a point from that team')
+  await point('A')
   await tap(page, 'score-help')
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 4; i++) {
     await page.getByTestId('tour-card').waitFor()
     await shot(page, `tour-step-${i + 1}`)
     await tap(page, 'tour-next')
@@ -146,13 +145,19 @@ try {
   }
   check(!(await page.getByTestId('tour-overlay').isVisible().catch(() => false)), 'the tour closes after its last step')
 
-  // Libero in for the back-row player, then a substitution from the court
+  // Libero in for the back-row player (from More), then a substitution from the court view
+  await tap(page, 'score-more')
+  await shot(page, 'more-sheet')
   await tap(page, 'action-libero')
   await page.getByTestId('libero-in').waitFor()
   const backRow = await page.locator('[data-testid^="libero-for-"]').first().getAttribute('data-testid')
   await tap(page, backRow)
   await shot(page, 'libero-sheet')
   await tap(page, 'libero-in')
+  await page.waitForTimeout(500)
+  await tap(page, 'score-more')
+  await tap(page, 'more-court')
+  await page.waitForTimeout(500)
   await tap(page, 'court-A-2')
   await page.getByTestId('sub-confirm').waitFor()
   await tap(page, 'sub-in-7')
@@ -160,7 +165,7 @@ try {
   await tap(page, 'sub-confirm')
 
   // A third time-out raises a warning but is recorded
-  for (let i = 0; i < 3; i++) { await tap(page, 'action-timeout'); await tap(page, 'timeout-B') }
+  for (let i = 0; i < 3; i++) { await tap(page, 'score-more'); await tap(page, 'more-timeout-B') }
   await page.getByTestId('score-warning').waitFor()
   check(await page.getByTestId('timeout-timer').isVisible(), 'time-out countdown is running')
   const clockAt = await page.getByTestId('timeout-clock').innerText()
@@ -171,15 +176,18 @@ try {
   // 5. Close the tab mid-set and come back
   const url = page.url()
   const before = await page.getByTestId('score-A').innerText()
-  const serverBefore = await page.getByTestId('server-row').innerText()
+  const serverBefore = await page.getByTestId('serving-now').innerText()
   await page.close()
   page = await context.newPage()
   await open(page)
   await page.goto(url, { waitUntil: 'load' })
   await page.getByTestId('point-A').waitFor({ timeout: 20000 })
   check((await page.getByTestId('score-A').innerText()) === before, 'score restored after closing the tab')
-  check((await page.getByTestId('server-row').innerText()) === serverBefore, 'server restored after closing the tab')
+  check((await page.getByTestId('serving-now').innerText()) === serverBefore, 'server restored after closing the tab')
+  await tap(page, 'score-more')
   check(await page.getByTestId('action-undo').isEnabled(), 'undo history restored')
+  await page.keyboard.press('Escape')
+  await page.getByTestId('bottom-sheet-backdrop').first().click({ timeout: 3000 }).catch(() => {})
   await shot(page, 'resumed-after-close')
 
   // Resume card on Experimental features
@@ -203,19 +211,24 @@ try {
   await liveForm.scrollIntoViewIfNeeded()
   await shot(page, 'live-sheet-whole-form')
   await tap(page, 'live-zoom-follow')
+  await tap(page, 'score-more')
   await tap(page, 'action-undo')
   await liveForm.scrollIntoViewIfNeeded()
   await page.waitForTimeout(500)
   check(await dashed() > 0 && await tinted() === 0, 'undo outlines what it erased on the live sheet, and tints nothing')
   check((await page.getByTestId('live-sheet-note').innerText()).startsWith('Undone'), 'the note says what the outline means')
   await shot(page, 'live-sheet-undo')
+  await tap(page, 'score-more')
   await tap(page, 'action-redo')
   await page.waitForTimeout(500)
   check(await tinted() > 0 && await dashed() === 0, 'redo writes the marks back')
 
   // 6. Mistakes: undo / redo, flip a past rally in the timeline, wrong server, fix sheet
+  await tap(page, 'score-more')
   await tap(page, 'action-undo')
+  await tap(page, 'score-more')
   await tap(page, 'action-redo')
+  await tap(page, 'score-more')
   await tap(page, 'action-timeline')
   await page.locator('[data-testid^="timeline-"]').first().waitFor()
   const rally = page.getByText('Point Blockers', { exact: true }).first()
@@ -224,12 +237,13 @@ try {
   await tap(page, 'timeline-flip')
   await page.keyboard.press('Escape')
   await page.getByTestId('bottom-sheet-backdrop').first().click({ timeout: 3000 }).catch(() => {})
-  await tap(page, 'server-row')
+  await tap(page, 'score-more')
+  await tap(page, 'more-wrong')
   await page.getByTestId('wrong-confirm').waitFor()
   await tap(page, 'wrong-discovered-later')
   await shot(page, 'wrong-server')
   // The receiving team was out of position at the serve: point to the serving team.
-  const servingTeam = (await page.getByTestId('server-row').innerText()).includes('Blockers') ? 'B' : 'A'
+  const servingTeam = (await page.getByTestId('point-B').getByTestId('serving-now').count()) ? 'B' : 'A'
   const receiver = servingTeam === 'A' ? 'B' : 'A'
   const scoreBefore = await page.getByTestId(`score-${servingTeam}`).innerText()
   await tap(page, `fault-team-${receiver}`)
@@ -237,7 +251,7 @@ try {
   await shot(page, 'rotation-fault')
   await tap(page, 'wrong-confirm')
   await page.waitForTimeout(400)
-  const n = s => Number((s.match(/\n(\d+)\n/) ?? [])[1])
+  const n = s => Number(s.trim())
   check(n(await page.getByTestId(`score-${servingTeam}`).innerText()) === n(scoreBefore) + 1, 'receiving team out of rotation gives the server a point')
   await tap(page, 'score-more')
   await tap(page, 'more-fix')
@@ -251,7 +265,7 @@ try {
     if (set === 0) {
       await page.getByTestId('set-result').waitFor()
       await shot(page, 'set-over', true)
-      await tap(page, 'start-set')
+      await tap(page, 'start-set-same')
       await page.getByTestId('point-A').waitFor()
     }
   }
@@ -305,8 +319,12 @@ try {
   await tap(page, 'saved-team-Blockers')
   await page.waitForTimeout(400)
   await shot(page, 'saved-teams')
-  check((await page.getByTestId('spot-A-0').innerText()).includes('1') && (await page.getByTestId('spot-B-5').innerText()).includes('16'), 'saved teams fill both courts')
+  check((await boxValue('num-A-court-0')) === '1' && (await boxValue('num-B-court-5')) === '16', 'saved teams fill both teams')
+  await tap(page, 'numbers-next')
+  await page.getByTestId('first-serve-A').waitFor()
   check(await text(page, 'Match details (from your last match today)').isVisible().catch(() => false), "today's match details carry over")
+  await tap(page, 'screen-header-back').catch(() => page.goBack())
+  await page.getByTestId('roster-text-A').waitFor()
 
   // A whole team typed at once: a line of numbers, names, a libero; the first six start in order.
   await tap(page, 'roster-text-A')
@@ -315,9 +333,8 @@ try {
   await shot(page, 'roster-text')
   await tap(page, 'roster-text-apply')
   await page.waitForTimeout(400)
-  const spotA = async i => (await page.getByTestId(`spot-A-${i}`).innerText()).trim()
-  check((await spotA(0)).includes('21') && (await spotA(5)).includes('26'), 'typed team fills the court in serving order')
-  check((await page.getByTestId('bench-A').innerText()).includes('27') && (await page.getByTestId('bench-A').innerText()).includes('28'), 'typed team puts the rest on the bench')
+  check((await boxValue('num-A-court-0')) === '21' && (await boxValue('num-A-court-5')) === '26', 'typed team fills the serve order')
+  check((await boxValue('num-A-bench-0')) === '27' && (await boxValue('num-A-liberos-0')) === '28', 'typed team puts the rest on the bench and the libero in its box')
 } catch (e) {
   failures.push(e.message.split('\n')[0])
   process.stderr.write(`  FAIL ${e.message.split('\n')[0]}\n`)
