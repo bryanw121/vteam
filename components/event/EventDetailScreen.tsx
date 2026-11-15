@@ -31,6 +31,7 @@ import {
   useTeamDrag,
   eventDateMs,
 } from '../../hooks/event'
+import { useEventBack } from '../../hooks/event/useEventBack'
 import { Pager } from '../../components/Pager'
 import { ScreenState } from '../../components/ui'
 import { CheersTab } from '../../components/event/CheersTab'
@@ -70,7 +71,7 @@ import { track } from '../../lib/analytics'
 import { hostWillBeTold, leaveConsequences, leaveDmText, leaveSubtitle } from '../../utils/leaveConsequences'
 import type { JoinIntentOutcome, JoinOffer, LeaveConsequence, LeaveReason, MentionUser, Profile } from '../../types'
 import { profileDisplayName } from '../../utils'
-import { routes, isAppPath, toRoute } from '../../utils/routes'
+import { routes } from '../../utils/routes'
 import { toast } from '../../lib/toast'
 import type { ScrollViewInstance } from 'react-native'
 
@@ -96,7 +97,7 @@ function withWebGestureRoot(screen: React.ReactElement) {
 }
 
 export default function EventDetail() {
-  const { id, from } = useLocalSearchParams<{ id: string; from?: string }>()
+  const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const isMobileWeb = useIsNarrowWeb()
@@ -266,15 +267,7 @@ export default function EventDetail() {
     : ''
 
   // ── Navigation + host actions ──────────────────────────────────────────────
-  function goBack() {
-    // back() first — it cleanly pops the event screen, so a stale screen can't make a
-    // later push load the wrong event. replace() only for direct URL loads (no history).
-    if (router.canGoBack()) router.back()
-    else {
-      const back = from ? decodeURIComponent(from) : null
-      router.replace(isAppPath(back) ? toRoute(back) : routes.events())
-    }
-  }
+  const goBack = useEventBack()
 
   const deleteEvent = useMutation(
     async () => {

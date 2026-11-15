@@ -95,6 +95,36 @@ export const SWIPE_NAVIGATION = {
   calendar: false,
 } as const
 
+/**
+ * Stack screens in `app/(app)` that draw their own header. The layout registers each with
+ * `headerShown: false`, so the stack's default header (titled with the route name, e.g.
+ * "event/[id]") never shows, even for a frame before the screen mounts or while a lazy web
+ * chunk loads (#306). `__tests__/headerlessRoutes.test.ts` keeps this list in step with the
+ * screens that set `headerShown: false` themselves.
+ */
+export const HEADERLESS_STACK_ROUTES = [
+  'event/[id]',
+  'profile/[id]',
+  'club/[id]',
+  'chat/[id]',
+  'book',
+  'welcome',
+  'search',
+  'leagues',
+  'tournaments',
+  'tournament/[id]',
+  'tournament/create',
+  'scores/[id]/index',
+  'scores/[id]/keep',
+  'scorekeeper/index',
+  'scorekeeper/new',
+  'scorekeeper/[id]/index',
+  'scorekeeper/[id]/sheet',
+  'scorekeeper/[id]/copy',
+  'scorekeeper/simple',
+  'find-a-team/[programId]',
+] as const
+
 export type CreateMenuOption = {
   label: string
   path: RouteString

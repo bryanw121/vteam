@@ -11,13 +11,15 @@
  *   doesn't vanish and spinners don't return (#250, #254).
  * - links: every `VIEW` link keeps its values, a change follows into the address,
  *   and phone tab switches keep each tab's view.
+ * - routes: no screen ever shows a route's file name ("event/[id]", "(tabs)") while it
+ *   loads, e.g. a stack header for a screen not registered as headerless (#306).
  *
  * Findings are compared with scripts/shots/stability-baseline.json; a new or
  * worse one fails (after one confirming re-run, for runner noise). PR mode is a
  * subset sized for CI; --full runs every combination, also with every Supabase
  * response delayed 800 ms.
  *
- *   node scripts/shots/stability-flow.mjs --dist dist-mock [--out stability-report] [--full] [--only tours,scroll,links] [--update-baseline] [--concurrency 4]
+ *   node scripts/shots/stability-flow.mjs --dist dist-mock [--out stability-report] [--full] [--only tours,scroll,links,routes] [--update-baseline] [--concurrency 4]
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
@@ -27,12 +29,12 @@ import { serveDist } from './lib/server.mjs'
 import { installSupabaseMock } from './lib/supabaseMock.mjs'
 import { loadRelationships, loadSeenIds } from './lib/schema.mjs'
 import { defaultNow, TIME_ZONE } from './fixtures/time.mjs'
-import { LINK_CASES, SCROLL_SCREENS, tourCases } from './stabilityCases.mjs'
-import { analyzeSamples, baselineFrom, confirmFailures, diffBaseline, paramMismatches, renderHtml, renderMarkdown, tourFindings } from './lib/stability.mjs'
+import { LINK_CASES, SCROLL_SCREENS, rawRouteCases, tourCases } from './stabilityCases.mjs'
+import { analyzeSamples, rawRouteText, baselineFrom, confirmFailures, diffBaseline, paramMismatches, renderHtml, renderMarkdown, tourFindings } from './lib/stability.mjs'
 
 const args = parseArgs(process.argv.slice(2))
 const full = !!args.full
-const only = args.only ? String(args.only).split(',') : ['tours', 'scroll', 'links']
+const only = args.only ? String(args.only).split(',') : ['tours', 'scroll', 'links', 'routes']
 const out = resolve(args.out || 'stability-report')
 const concurrency = Number(args.concurrency ?? 4)
 const BASELINE = resolve('scripts/shots/stability-baseline.json')
@@ -360,10 +362,46 @@ async function linkCase(c, viewport) {
   return findings
 }
 
+// ── Raw route names ──────────────────────────────────────────────────────────
+
+/** Open a route and read its visible text every 50 ms for 3 s after navigation starts. */
+async function rawRouteCase(c, viewport, delay) {
+  const { context, page } = await newPage(viewport, { signedIn: c.signedIn, delay })
+  const seen = new Map()
+  let frame = null
+  try {
+    const nav = page.goto(server.url + c.path, { waitUntil: 'commit' }).catch(() => {})
+    const t0 = Date.now()
+    while (Date.now() - t0 < 3000) {
+      const text = await page.evaluate(() => document.body?.innerText ?? '').catch(() => '')
+      const hit = rawRouteText(text)
+      if (hit) {
+        const t = Date.now() - t0
+        const at = seen.get(hit) ?? { first: t, last: t }
+        at.last = t
+        seen.set(hit, at)
+        if (!frame) {
+          frame = `frames/route-${c.name}-${viewport}${delay ? `-d${delay}` : ''}.png`
+          await page.screenshot({ path: join(out, frame) }).catch(() => { frame = null })
+        }
+      }
+      await new Promise(r => setTimeout(r, 50))
+    }
+    await nav
+  } finally { await context.close() }
+  const screen = c.path.split('?')[0].replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, ':id')
+  return [...seen].map(([hit, { first, last }]) => ({
+    check: 'routes', screen, viewport, caseId: `${c.path}:${c.signedIn ? 'in' : 'guest'}${delay ? `:d${delay}` : ''}`,
+    kind: delay ? 'raw-route@slow' : 'raw-route', value: last - first + 50,
+    detail: `"${hit}" on screen from +${first} ms to +${last} ms (${c.signedIn ? 'signed in' : 'guest'}${delay ? `, ${delay} ms` : ''})`,
+    frames: frame ? [{ file: frame, t: first }] : [],
+  }))
+}
+
 // ── Run ─────────────────────────────────────────────────────────────────────
 
 const skipped = []
-const counts = { tours: 0, scroll: 0, links: 0, cases: 0 }
+const counts = { tours: 0, scroll: 0, links: 0, routes: 0, cases: 0 }
 const ran = new Set()
 const jobs = []
 const delays = full ? [0, 800] : [0]
@@ -379,6 +417,10 @@ if (only.includes('scroll')) for (const d of delays) for (const c of scrollCases
 if (only.includes('links')) for (const c of LINK_CASES) for (const viewport of ['phone', 'desktop']) {
   jobs.push({ key: `links:${c.path}:${viewport}`, run: () => linkCase(c, viewport) })
   ran.add(`links|${c.view}:${c.path.split('?')[1] ?? ''}|${viewport}`); counts.links++
+}
+if (only.includes('routes')) for (const d of delays) for (const c of rawRouteCases(full)) for (const viewport of ['phone', 'desktop']) {
+  jobs.push({ key: `routes:${c.path}:${c.signedIn}:${viewport}:${d}`, run: () => rawRouteCase(c, viewport, d) })
+  ran.add(`routes|${c.path.split('?')[0].replace(/[0-9a-f]{8}-[0-9a-f-]{27}/g, ':id')}|${viewport}`); counts.routes++
 }
 counts.cases = jobs.length
 
