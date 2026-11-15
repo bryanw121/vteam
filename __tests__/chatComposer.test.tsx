@@ -3,8 +3,8 @@ import { act, renderHook } from '@testing-library/react-native'
 jest.mock('expo-image-picker', () => ({ launchImageLibraryAsync: async () => ({ canceled: false, assets: [{ uri: 'file://pic.jpg' }] }) }))
 const mockAlert = jest.fn()
 jest.mock('../utils/chatUtils', () => ({ chatAlert: (...a: unknown[]) => mockAlert(...a) }))
-const mockLoadAt = jest.fn(async () => 0)
-const mockSaveAt = jest.fn(async () => {})
+const mockLoadAt = jest.fn(async (_id: string) => 0)
+const mockSaveAt = jest.fn(async (_id: string, _ts: number) => {})
 jest.mock('../constants/dmBadWords', () => ({
   DM_BAD_WORD_PROMPT_COOLDOWN_MS: 60 * 60 * 1000,
   dmMessageContainsBadWord: (c: string | null) => !!c && c.includes('badword'),
