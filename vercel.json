@@ -1,6 +1,6 @@
 {
   "buildCommand": "node scripts/vercel-schema-gate.mjs && npm run build:web",
-  "ignoreCommand": "[ \"$VERCEL_ENV\" != \"production\" ]",
+  "ignoreCommand": "[ \"$VERCEL_ENV\" = \"preview\" ]",
   "routes": [
     {
       "src": "/(_expo/static|assets)/(.*)",
