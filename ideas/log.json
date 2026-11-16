@@ -466,5 +466,29 @@
     "status": "approved",
     "summary": "app/(app)/chat/[id].tsx (757 lines, 19 useState, 7 useEffect, club_members read in an effect) split into pure chatComposer utils, useChatComposer, cached useClubMentionables, useBadWordPrompt, header/composer components on ScreenHeader and BottomSheet; send rules tested by behavior instead of a source-text search. Three PRs.",
     "issue": 318
+  },
+  {
+    "date": "2026-11-16",
+    "n": 1,
+    "title": "Follow your team: \"Next game: Court 3 at 10:40\" pinned on the scores page",
+    "bucket": "competitor-gap",
+    "status": "proposed",
+    "summary": "Device-only follow of one team per Sheet tournament (guests too): Live tab pins live score or next game (time, court, opponent), next ref duty and pool place; team highlighted via existing myTeamId in Pools/Brackets. Tournify, LeagueApps Play. Push left for v2."
+  },
+  {
+    "date": "2026-11-16",
+    "n": 2,
+    "title": "First look for first visits: draw today's games from the page while the app loads",
+    "bucket": "latency",
+    "status": "proposed",
+    "summary": "Guest first visits p50 2.9 s / p90 11.3 s live; locally the prefetched feed lands at 1.36 s but cards paint at 4.2 s (1.1 MB bundle boot). Inline script draws a read-only first look (3 cards) outside the React root, fades out when the real feed paints. Target <=1.7 s locally. Also notes /api/startup CDN arm falls back 20/38 (per-deployment regional cache)."
+  },
+  {
+    "date": "2026-11-16",
+    "n": 3,
+    "title": "No silent skips: every stability case runs, and a case that can't run fails",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "32 of 92 refresh/Back cases skipped two days running (Clubs/Chat fixtures don't scroll, no child link on event/Tournaments). More fixture rows, child links, a Sheet scores fixture, and EXPECTED_SKIPS so a skip fails unless listed with a reason."
   }
 ]
