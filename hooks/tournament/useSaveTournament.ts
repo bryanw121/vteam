@@ -11,9 +11,10 @@ import { saveTournamentArgs } from '../../utils/tournamentDraft'
 import type { SaveTournamentInput } from '../../types'
 
 export async function saveTournament({ draft, status }: SaveTournamentInput): Promise<string> {
-  const { data, error } = await supabase.rpc('save_tournament', saveTournamentArgs(draft, status))
+  // Cast until types/database.ts is regenerated from live with save_tournament (applied when #325 merges).
+  const { data, error } = await supabase.rpc('save_tournament' as never, saveTournamentArgs(draft, status) as never)
   if (error) throw error
-  if (!data) throw new Error('save_tournament returned no id')
+  if (typeof data !== 'string') throw new Error('save_tournament returned no id')
   return data
 }
 
