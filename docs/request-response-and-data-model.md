@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `08daa0afa210`
+> Inventory fingerprint: `910d7f9bbccb`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -450,9 +450,9 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 
 | Table or view | Frontend/server call sites |
 |---|---|
-| `ad_banners` | [`lib/startupConfig.ts:37`](../lib/startupConfig.ts#L37) |
+| `ad_banners` | [`lib/startupConfig.ts:28`](../lib/startupConfig.ts#L28) |
 | `app_admins` | [`supabase/functions/generate-badge-art/index.ts:82`](../supabase/functions/generate-badge-art/index.ts#L82) |
-| `app_config` | [`lib/startupConfig.ts:33`](../lib/startupConfig.ts#L33) |
+| `app_config` | [`lib/startupConfig.ts:24`](../lib/startupConfig.ts#L24) |
 | `app_events` | [`lib/analytics.ts:224`](../lib/analytics.ts#L224) |
 | `badge_art` | [`hooks/useBadgeArt.ts:26`](../hooks/useBadgeArt.ts#L26)<br>[`supabase/functions/generate-badge-art/index.ts:130`](../supabase/functions/generate-badge-art/index.ts#L130) |
 | `chat_silences` | [`hooks/useSilencedUsers.ts:27`](../hooks/useSilencedUsers.ts#L27)<br>[`supabase/functions/send-chat-push/handler.ts:143`](../supabase/functions/send-chat-push/handler.ts#L143) |
@@ -488,7 +488,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `push_receipts` | [`supabase/functions/check-push-receipts/handler.ts:42`](../supabase/functions/check-push-receipts/handler.ts#L42)<br>[`supabase/functions/send-chat-push/handler.ts:225`](../supabase/functions/send-chat-push/handler.ts#L225)<br>[`supabase/functions/send-notification-push/handler.ts:174`](../supabase/functions/send-notification-push/handler.ts#L174) |
 | `push_tokens` | [`supabase/functions/check-push-receipts/handler.ts:87`](../supabase/functions/check-push-receipts/handler.ts#L87)<br>[`supabase/functions/send-chat-push/handler.ts:152`](../supabase/functions/send-chat-push/handler.ts#L152)<br>[`supabase/functions/send-notification-push/handler.ts:109`](../supabase/functions/send-notification-push/handler.ts#L109)<br>[`utils/pushNotifications.ts:101`](../utils/pushNotifications.ts#L101)<br>[`utils/pushNotifications.web.ts:66`](../utils/pushNotifications.web.ts#L66) |
 | `rate_limits` | [`supabase/functions/login-with-username/handler.ts:67`](../supabase/functions/login-with-username/handler.ts#L67) |
-| `sponsored_events` | [`lib/startupConfig.ts:40`](../lib/startupConfig.ts#L40) |
+| `sponsored_events` | [`lib/startupConfig.ts:31`](../lib/startupConfig.ts#L31) |
 | `tags` | [`hooks/useTags.ts:14`](../hooks/useTags.ts#L14) |
 | `tournament_comments` | [`hooks/tournament/api.ts:141`](../hooks/tournament/api.ts#L141) |
 | `tournament_matches` | [`hooks/tournament/api.ts:170`](../hooks/tournament/api.ts#L170) |
@@ -636,8 +636,8 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Public profile, history, cheers summary (#185) | [`UserProfileData`](../types/index.ts#L2352), [`EventHistoryKind`](../types/index.ts#L2361), [`CheersReceived`](../types/index.ts#L2364), [`CheersSummary`](../types/index.ts#L2370), [`RecoveryLink`](../types/index.ts#L2378) |
 | Join intent (#229) | [`PendingAction`](../types/index.ts#L2388), [`PendingActionTake`](../types/index.ts#L2391), [`JoinOffer`](../types/index.ts#L2394), [`JoinIntentOutcome`](../types/index.ts#L2397) |
 | View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2402), [`FeedbackFieldErrors`](../types/index.ts#L2408), [`ReportReason`](../types/index.ts#L2411), [`ReportContextKind`](../types/index.ts#L2412), [`ReportStatus`](../types/index.ts#L2413), [`ReportAction`](../types/index.ts#L2414), [`ReportUserInput`](../types/index.ts#L2416), [`AdminReport`](../types/index.ts#L2425), [`ReportSheetTarget`](../types/index.ts#L2444), [`ReportSheetProps`](../types/index.ts#L2447), [`EventSeed`](../types/index.ts#L2463), [`MemberSearchResult`](../types/index.ts#L2475) |
-| What to bring (#256) | [`BringClaimer`](../types/index.ts#L2481), [`BringItem`](../types/index.ts#L2491), [`BringItemDraft`](../types/index.ts#L2502), [`BringItemAction`](../types/index.ts#L2512), [`BringViewer`](../types/index.ts#L2521), [`SaveBringItemsArgs`](../types/index.ts#L2529), [`ClaimBringItemArgs`](../types/index.ts#L2533), [`ReleaseBringItemArgs`](../types/index.ts#L2534), [`StartupConfig`](../types/index.ts#L2537), [`StartupArm`](../types/index.ts#L2544), [`MyGameRecap`](../types/index.ts#L2547), [`YourGameCardProps`](../types/index.ts#L2549), [`RecapFooterProps`](../types/index.ts#L2558), [`RecapShareTarget`](../types/index.ts#L2569) |
-| Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2573), [`WeekStripContentProps`](../types/index.ts#L2575), [`MonthGridContentProps`](../types/index.ts#L2584), [`WeekPagerProps`](../types/index.ts#L2593), [`CrashMarker`](../types/index.ts#L2605), [`CrashReport`](../types/index.ts#L2608), [`ActiveMention`](../types/index.ts#L2610), [`ChatRoomHeaderProps`](../types/index.ts#L2613), [`ChatComposerBandProps`](../types/index.ts#L2622), [`ChatComposerProps`](../types/index.ts#L2631), [`ImageViewerProps`](../types/index.ts#L2639) |
+| What to bring (#256) | [`BringClaimer`](../types/index.ts#L2481), [`BringItem`](../types/index.ts#L2491), [`BringItemDraft`](../types/index.ts#L2502), [`BringItemAction`](../types/index.ts#L2512), [`BringViewer`](../types/index.ts#L2521), [`SaveBringItemsArgs`](../types/index.ts#L2529), [`ClaimBringItemArgs`](../types/index.ts#L2533), [`ReleaseBringItemArgs`](../types/index.ts#L2534), [`StartupConfig`](../types/index.ts#L2537), [`MyGameRecap`](../types/index.ts#L2544), [`YourGameCardProps`](../types/index.ts#L2546), [`RecapFooterProps`](../types/index.ts#L2555), [`RecapShareTarget`](../types/index.ts#L2566) |
+| Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2570), [`WeekStripContentProps`](../types/index.ts#L2572), [`MonthGridContentProps`](../types/index.ts#L2581), [`WeekPagerProps`](../types/index.ts#L2590), [`CrashMarker`](../types/index.ts#L2602), [`CrashReport`](../types/index.ts#L2605), [`ActiveMention`](../types/index.ts#L2607), [`ChatRoomHeaderProps`](../types/index.ts#L2610), [`ChatComposerBandProps`](../types/index.ts#L2619), [`ChatComposerProps`](../types/index.ts#L2628), [`ImageViewerProps`](../types/index.ts#L2636) |
 
 ### Constrained string values
 
@@ -650,7 +650,7 @@ TypeScript `enum` keyword.
 | `BadgeStat` | `events_attended_past`, `events_hosted_past`, `cheers_received_total`, `cheers_given_events`, `spike_cheers`, `serve_cheers`, `block_cheers`, `set_cheers`, `dig_pass_cheers`, `communication_cheers`, `beta_active`, `tournament_hosted`, `profile_complete`, `vex_member` | [`constants/badges.ts:43`](../constants/badges.ts#L43) |
 | `BadgeType` | `event_attendee`, `event_host`, `cheers_received`, `cheers_given`, `spike_cheer`, `serve_cheer`, `block_cheer`, `set_cheer`, `dig_pass_cheer`, `communication_cheer`, `beta_tester`, `tournament_director`, `profile_complete`, `vex_spirit` | [`types/index.ts:1292`](../types/index.ts#L1292) |
 | `CardBgType` | `ember`, `frost`, `aurora` | [`types/index.ts:1290`](../types/index.ts#L1290) |
-| `ChatComposerBandProps.icon` | `return-down-back`, `pencil-outline` | [`types/index.ts:2623`](../types/index.ts#L2623) |
+| `ChatComposerBandProps.icon` | `return-down-back`, `pencil-outline` | [`types/index.ts:2620`](../types/index.ts#L2620) |
 | `CheerType` | `spike`, `block`, `serve`, `dig`, `set`, `pass`, `communication` | [`types/index.ts:234`](../types/index.ts#L234) |
 | `ChipProps.role` | `button`, `radio` | [`types/index.ts:1515`](../types/index.ts#L1515) |
 | `ChipProps.size` | `default`, `touch` | [`types/index.ts:1517`](../types/index.ts#L1517) |
@@ -683,7 +683,7 @@ TypeScript `enum` keyword.
 | `MyEventStatus` | `hosting`, `attending`, `waitlisted`, `requested` | [`types/index.ts:973`](../types/index.ts#L973) |
 | `NOTIFICATION_TYPES / NotificationType` | `tournament_team_invite`, `tournament_join_request`, `tournament_join_accepted`, `tournament_join_declined`, `tournament_free_agent_assigned`, `tournament_mention`, `chat_mention`, `report_resolved`, `moderation_warning` | [`types/index.ts:107`](../types/index.ts#L107) |
 | `ProfileBorder` | `bronze`, `gold`, `gradient`, `storm`, `aether` | [`types/index.ts:67`](../types/index.ts#L67) |
-| `RecapShareTarget` | `native`, `web-share`, `download` | [`types/index.ts:2569`](../types/index.ts#L2569) |
+| `RecapShareTarget` | `native`, `web-share`, `download` | [`types/index.ts:2566`](../types/index.ts#L2566) |
 | `RecoveryLink` | `recovery`, `expired` | [`types/index.ts:2378`](../types/index.ts#L2378) |
 | `RecurrenceCadence` | `weekly`, `biweekly`, `monthly` | [`constants/events.ts:90`](../constants/events.ts#L90) |
 | `ReportAction` | `dismiss`, `warn`, `suspend` | [`types/index.ts:2414`](../types/index.ts#L2414) |
@@ -695,7 +695,6 @@ TypeScript `enum` keyword.
 | `SearchScope` | `upcoming`, `mine_past` | [`types/index.ts:460`](../types/index.ts#L460) |
 | `SelfAttendanceAction` | `join`, `leave`, `joinWaitlist`, `leaveWaitlist`, `requestToJoin`, `cancelRequest`, `rerequest` | [`types/index.ts:1815`](../types/index.ts#L1815) |
 | `SessionCheckStatus` | `scheduled`, `canceled`, `changed`, `gone`, `unknown` | [`types/index.ts:2172`](../types/index.ts#L2172) |
-| `StartupArm` | `cdn`, `direct` | [`types/index.ts:2544`](../types/index.ts#L2544) |
 | `Surface` | `indoor`, `sand`, `grass` | [`types/index.ts:231`](../types/index.ts#L231) |
 | `TeamMode` | `random`, `balanced` | [`types/index.ts:1758`](../types/index.ts#L1758) |
 | `TextSizeId` | `small`, `default`, `large`, `xlarge` | [`types/index.ts:2248`](../types/index.ts#L2248) |
