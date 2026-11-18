@@ -52,3 +52,6 @@ export const TIEBREAKER_LABELS = {
 } as const
 
 export const PODIUM_LABELS = ['Champion', 'Runner-up', 'Third place'] as const
+
+/** Tournament wizard (#325): the club list couldn't load. */
+export const TOURNAMENT_CLUBS_ERROR = "Couldn't load your clubs."
