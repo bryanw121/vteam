@@ -1390,6 +1390,55 @@ export type TournamentDraft = {
   thirdPlaceMatch: boolean
 }
 
+/** How a new tournament is saved from the wizard's last step. */
+export type TournamentSaveStatus = 'draft' | 'published'
+
+/** What the wizard saves: the draft, as a draft or published. */
+export type SaveTournamentInput = { draft: TournamentDraft; status: TournamentSaveStatus }
+
+/** One choice on the wizard's Format step. */
+export type TournamentFormatOption = { id: TournamentFormat; icon: string; label: string; description: string }
+
+/** A club the creator can attach a tournament to. */
+export type TournamentClubOption = Pick<Club, 'id' | 'name'>
+
+/** The wizard's small form pieces (`components/tournament/create/CreateBits.tsx`). */
+export type WizardStepIndicatorProps = { current: number }
+export type WizardSectionLabelProps = { icon: IoniconName; label: string }
+export type WizardFieldProps = { label: string; children: React.ReactNode }
+export type WizardTextBoxProps = {
+  value: string
+  onChangeText: (v: string) => void
+  placeholder?: string
+  multiline?: boolean
+  keyboardType?: 'default' | 'numeric' | 'decimal-pad'
+  style?: object
+}
+export type WizardStepperProps = { value: number; onChange: (v: number) => void; min?: number; max?: number }
+export type WizardToggleProps = { value: boolean; onChange: (v: boolean) => void; label: string; sub?: string }
+export type WizardPreviewRowProps = { icon: IoniconName; label: string; value: string }
+
+/** Props shared by the wizard's step sections (`components/tournament/create`). */
+export type TournamentStepProps = {
+  draft: TournamentDraft
+  update: (patch: Partial<TournamentDraft>) => void
+}
+
+export type TournamentBasicsStepProps = TournamentStepProps & {
+  clubs: readonly TournamentClubOption[]
+  clubsLoading: boolean
+  clubsError: boolean
+  onRetryClubs: () => void
+}
+
+export type TournamentPreviewStepProps = {
+  draft: TournamentDraft
+  clubs: readonly TournamentClubOption[]
+  onSaveDraft: () => void
+  onPublish: () => void
+  saving: boolean
+}
+
 // ─── Tournament Discussion ────────────────────────────────────────────────────
 
 export type TournamentComment = Tables<'tournament_comments'>

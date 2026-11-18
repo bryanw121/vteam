@@ -44,6 +44,12 @@ export const theme = {
     black:        '#000000',
     /** Label/icon colour on `primary`, `error` and other saturated fills. */
     onPrimary:    '#FFFFFF',
+    /** White text and lines on a `primary` fill at lower emphasis (tournament preview hero). */
+    onPrimaryStrong: 'rgba(255,255,255,0.85)',
+    onPrimarySoft:   'rgba(255,255,255,0.75)',
+    onPrimaryMuted:  'rgba(255,255,255,0.6)',
+    onPrimaryLine:   'rgba(255,255,255,0.3)',
+    onPrimaryFill:   'rgba(255,255,255,0.12)',
     /** Scrim behind dialogs and bottom sheets. */
     overlay:      'rgba(0,0,0,0.5)',    // shared.modalOverlay (host, feedback)
     overlayLight: 'rgba(0,0,0,0.45)',   // event detail's confirm dialogs / ConfirmDialog
