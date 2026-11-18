@@ -57,6 +57,68 @@ let started = false
 let heartbeatTimer: ReturnType<typeof setInterval> | null = null
 let heartbeatMissing = false
 let screen: string | null = null
+/** The session the current screen's screen_view went out under (a new session sends it again). */
+let screenSessionId: string | null = null
+/** The first screen noted this launch: where the visit landed. */
+let firstScreen: string | null = null
+/**
+ * The id the first session will take. Events tracked before startUsageTracking() opens it
+ * (the first screen, the first feed paint, a banner: the app hydrates first) carry it, so they
+ * land in that session instead of none (#326: 17% of screen views had no session).
+ */
+let pendingSessionId: string | null = null
+
+/** The open session's id, or the one the first session will take. */
+function currentSessionId(): string {
+  if (session) return session.id
+  pendingSessionId ??= randomId()
+  return pendingSessionId
+}
+
+/**
+ * When this launch started counting, for first-paint timings. Web: the page's time origin,
+ * moved to the moment it was first shown if it opened in a background tab. Native: when this
+ * module loaded (the root layout imports it first thing). `performance.now()` on iOS counts
+ * from much earlier (#326: feed_first_paint read 22–26 hours there).
+ */
+const moduleLoadedAt = Date.now()
+let webShownAt: number | null = null
+try {
+  if (Platform.OS === 'web' && typeof document !== 'undefined' && typeof performance !== 'undefined') {
+    if (document.visibilityState !== 'hidden') webShownAt = 0
+    else {
+      const onVisible = () => {
+        if (document.visibilityState === 'hidden') return
+        webShownAt = performance.now()
+        document.removeEventListener('visibilitychange', onVisible)
+      }
+      document.addEventListener('visibilitychange', onVisible)
+    }
+  }
+} catch { /* no document: native or tests */ }
+
+/** Milliseconds since this launch was first on screen (see above); null if a web page was never shown. */
+export function msSinceOpen(now: number = Date.now()): number | null {
+  if (Platform.OS === 'web' && typeof performance !== 'undefined') {
+    return webShownAt === null ? null : Math.round(performance.now() - webShownAt)
+  }
+  return Math.max(0, now - moduleLoadedAt)
+}
+
+/** The web path this page loaded on (the Events feed is `/`). */
+let loadPath: string | null = null
+try {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') loadPath = window.location.pathname
+} catch { /* no window */ }
+
+/**
+ * Did this launch open on the Events feed? Web: the path the page loaded on. Native: the first
+ * screen noted (the app opens on Events unless a link or push sent it elsewhere).
+ */
+export function landedOnFeed(): boolean {
+  if (Platform.OS === 'web') return loadPath === '/' || loadPath === null
+  return firstScreen === null || firstScreen === '/'
+}
 
 function webStorage(): Storage | null {
   if (Platform.OS !== 'web') return null
@@ -132,7 +194,7 @@ export function track(name: AnalyticsEventName, props: AnalyticsProps = {}): voi
   try {
     if (isDisabled()) return
     if (JSON.stringify(props).length > MAX_PROPS_CHARS) props = {}
-    buffer.push({ name, props, session: session?.id ?? null })
+    buffer.push({ name, props, session: currentSessionId() })
     if (buffer.length > MAX_BUFFER) buffer.splice(0, buffer.length - MAX_BUFFER)
     listen()
     schedule()
@@ -208,13 +270,19 @@ function webReferrer(): string | null {
 
 function openSession(cold: boolean): void {
   if (isDisabled()) return
-  session = { id: randomId(), userId: sessionUser }
+  session = { id: pendingSessionId ?? randomId(), userId: sessionUser }
+  pendingSessionId = null
   const props: AnalyticsProps = { cold }
   if (cold) {
     const ref = webReferrer()
     if (ref) props.referrer = ref
   }
   track(ANALYTICS_EVENTS.sessionStart, props)
+  // A session reopened on the same screen (back after 30 min, another account) says where it is (#326).
+  if (screen && screenSessionId !== session.id) {
+    screenSessionId = session.id
+    track(ANALYTICS_EVENTS.screenView, { screen })
+  }
 }
 
 /** One heartbeat for the open session. Never throws; stops for good if the function is missing. */
@@ -303,6 +371,8 @@ export function noteScreen(pattern: string): void {
     if (pattern === screen) return
     const from = screen
     screen = pattern
+    firstScreen ??= pattern
+    screenSessionId = currentSessionId()
     track(ANALYTICS_EVENTS.screenView, from ? { screen: pattern, from } : { screen: pattern })
   } catch { /* never break the app for metrics */ }
 }
@@ -324,6 +394,9 @@ export function __resetAnalytics(opts: { enabled?: boolean } = {}): void {
   started = false
   heartbeatMissing = false
   screen = null
+  screenSessionId = null
+  firstScreen = null
+  pendingSessionId = null
 }
 
 /** Test-only: the open session. */
