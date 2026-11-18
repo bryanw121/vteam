@@ -490,5 +490,29 @@
     "bucket": "testing",
     "status": "proposed",
     "summary": "32 of 92 refresh/Back cases skipped two days running (Clubs/Chat fixtures don't scroll, no child link on event/Tournaments). More fixture rows, child links, a Sheet scores fixture, and EXPECTED_SKIPS so a skip fails unless listed with a reason."
+  },
+  {
+    "date": "2026-11-18",
+    "n": 1,
+    "title": "End the startup CDN experiment: direct reads win, by 1.3 seconds",
+    "bucket": "latency",
+    "status": "proposed",
+    "summary": "startup_timing on live: direct p50 365 ms vs CDN arm p50 ~1.6 s (62% timed out at 1.5 s; 0 of 11 CDN answers since Nov 15). Read directly always, delete api/startup and the coin flip, record the result in CLAUDE.md."
+  },
+  {
+    "date": "2026-11-18",
+    "n": 2,
+    "title": "Tournament create in pieces: a pure draft core, a clubs hook, and one transactional save",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "Split the 879-line tournament/create.tsx (0 tests) like #188; save_tournament RPC writes tournament + rules in one transaction (today's rollback delete is silently refused by RLS) and the insert policy requires club membership."
+  },
+  {
+    "date": "2026-11-18",
+    "n": 3,
+    "title": "Metrics that land in the right session: first screens, first paints and resumed visits counted",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "17% of screen_views and 38% of feed_first_paints have no session_id, 52 of ~130 sessions have no screen_view, feed_first_paint reports hours. Stamp pre-session events, re-send the screen on a new session, measure first paint from the right start; unit + e2e checks."
   }
 ]
