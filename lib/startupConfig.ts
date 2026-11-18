@@ -1,29 +1,20 @@
 import { supabase } from './supabase'
 import { track } from './analytics'
 import { queryKey, useQuery } from './query'
-import { shareUrl } from '../constants/share'
 import { STALE } from '../constants/cache'
 import { ANALYTICS_EVENTS } from '../constants/analytics'
-import { isStartupConfig, pickStartupArm } from '../utils/startupConfig'
-import type { StartupArm, StartupConfig } from '../types'
+import { isStartupConfig } from '../utils/startupConfig'
+import type { StartupConfig } from '../types'
 
 /**
- * The startup config (#216): update-check rows and the feed's ads, read once per
- * open (each by the screen that needs it). Half of page loads read them from the CDN-cached `/api/startup` (a cold
- * database then only has to answer the feed), half straight from Supabase, and
- * `startup_timing` records how long each took so we can keep or revert it.
- * Any CDN failure falls back to the direct reads, so it never costs an open.
+ * The startup config: the update-check rows and the feed's ads, read once per
+ * open, each by the screen that needs it, straight from Supabase.
+ *
+ * #216 tried a CDN-cached `/api/startup` against these direct reads for a week
+ * (Nov 13–18 2026). At vteam's traffic the CDN copy was never warm: the CDN arm
+ * took p50 ~1.6 s (62% hit its 1.5 s timeout) against 365 ms direct, so it was
+ * removed (#324). `startup_timing` still records how long the read took.
  */
-const CDN_TIMEOUT_MS = 1500
-
-let arm: StartupArm | null = null
-function startupArm(): StartupArm {
-  if (arm) return arm
-  let override: string | null = null
-  try { override = typeof localStorage !== 'undefined' ? localStorage.getItem('vteam.startupArm') : null } catch { /* storage blocked */ }
-  arm = pickStartupArm(Math.random(), override)
-  return arm
-}
 
 /** What each reader needs. The update check reads on every screen; the ads only on the feed. */
 export type StartupPart = 'version' | 'ads'
@@ -47,39 +38,10 @@ async function readDirect(part: StartupPart): Promise<StartupConfig> {
   }
 }
 
-/** One CDN request per page load serves both parts (it is one cached response anyway). */
-let cdnRequest: Promise<StartupConfig | null> | null = null
-function readCdnOnce(): Promise<StartupConfig | null> {
-  if (!cdnRequest) cdnRequest = readCdn().then(r => { if (!r) cdnRequest = null; return r })
-  return cdnRequest
-}
-
-async function readCdn(): Promise<StartupConfig | null> {
-  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
-  const timer = controller ? setTimeout(() => controller.abort(), CDN_TIMEOUT_MS) : null
-  try {
-    const res = await fetch(shareUrl('/api/startup'), { signal: controller?.signal, headers: { Accept: 'application/json' } })
-    if (!res.ok) return null
-    const body: unknown = await res.json()
-    return isStartupConfig(body) ? body : null
-  } catch {
-    return null
-  } finally {
-    if (timer) clearTimeout(timer)
-  }
-}
-
 export async function fetchStartupConfig(part: StartupPart): Promise<StartupConfig> {
-  const which = startupArm()
   const started = Date.now()
-  let source: 'cdn' | 'direct' | 'fallback' = 'direct'
-  let config: StartupConfig | null = null
-  if (which === 'cdn') {
-    config = await readCdnOnce()
-    source = config ? 'cdn' : 'fallback'
-  }
-  if (!config) config = await readDirect(part)
-  track(ANALYTICS_EVENTS.startupTiming, { arm: which, source, part, ms: Date.now() - started })
+  const config = await readDirect(part)
+  track(ANALYTICS_EVENTS.startupTiming, { arm: 'direct', source: 'direct', part, ms: Date.now() - started })
   return config
 }
 
@@ -98,6 +60,3 @@ export function useStartupConfig(part: StartupPart, enabled = true): StartupConf
   // A cached value from another build can have another shape: treat it as not loaded rather than crash.
   return enabled && isStartupConfig(data) ? data : null
 }
-
-/** Tests only. */
-export function __resetStartupArm(): void { arm = null; cdnRequest = null }
