@@ -6,7 +6,7 @@ import { AppState } from 'react-native'
 import { supabase } from '../lib/supabase'
 import {
   ANALYTICS_FLUSH_MS, HEARTBEAT_MS, SESSION_IDLE_MS, __bufferedEvents, __resetAnalytics, __usageSession, flush,
-  needsNewSession, noteScreen, screenPattern, setUsageUser, startUsageTracking, track,
+  landedOnFeed, msSinceOpen, needsNewSession, noteScreen, screenPattern, setUsageUser, startUsageTracking, track,
 } from '../lib/analytics'
 
 describe('lib/analytics', () => {
@@ -168,6 +168,56 @@ describe('usage sessions', () => {
     expect(views).toEqual([{ screen: '/' }, { screen: '/event/[id]', from: '/' }])
     await jest.advanceTimersByTimeAsync(HEARTBEAT_MS)
     expect(heartbeats().at(-1)).toMatchObject({ p_screen: '/event/[id]' })
+  })
+
+  it('events tracked before the first session opens land in it (#326)', async () => {
+    noteScreen('/')
+    track('banner_shown', { banner: 'austin-pilot-v2' })
+    startUsageTracking(null)
+    await jest.advanceTimersByTimeAsync(0)
+    const id = __usageSession()!.id
+    await flush()
+    expect(rows().map(r => [r.name, r.session_id])).toEqual([
+      ['screen_view', id], ['banner_shown', id], ['session_start', id],
+    ])
+  })
+
+  it('a session reopened on the same screen records that screen again (#326)', async () => {
+    startUsageTracking('user-1')
+    await jest.advanceTimersByTimeAsync(0)
+    noteScreen('/')
+    appStateListener!('background')
+    await jest.advanceTimersByTimeAsync(SESSION_IDLE_MS + 1000)
+    appStateListener!('active')
+    await jest.advanceTimersByTimeAsync(0)
+    const second = __usageSession()!.id
+    noteScreen('/') // same screen, same session: still deduped
+    await flush()
+    const views = rows().filter(r => r.name === 'screen_view')
+    expect(views).toHaveLength(2)
+    expect(views[1]).toMatchObject({ props: { screen: '/' }, session_id: second })
+    expect(rows().filter(r => r.session_id === null)).toEqual([])
+  })
+
+  it('a different account signing in starts a new session and records the screen in it', async () => {
+    startUsageTracking(null)
+    await jest.advanceTimersByTimeAsync(0)
+    noteScreen('/profile')
+    setUsageUser('user-1')
+    const id = __usageSession()!.id
+    await flush()
+    expect(rows().filter(r => r.name === 'screen_view').map(r => r.session_id)).toContain(id)
+  })
+
+  it('counts launch time from when the app opened, not from device boot (#326)', () => {
+    const now = Date.now()
+    const ms = msSinceOpen(now + 1234)
+    expect(ms).not.toBeNull()
+    expect(ms!).toBeGreaterThanOrEqual(1234)
+    expect(ms!).toBeLessThan(60_000)
+    expect(landedOnFeed()).toBe(true)
+    noteScreen('/scores/[id]')
+    expect(landedOnFeed()).toBe(false)
   })
 
   it('stops heartbeating if the function is missing (migration not applied yet)', async () => {
