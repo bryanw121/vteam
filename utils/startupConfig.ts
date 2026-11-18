@@ -1,4 +1,4 @@
-import type { AdBanner, FeedAds, StartupArm, StartupConfig } from '../types'
+import type { AdBanner, FeedAds, StartupConfig } from '../types'
 
 /** Is a row with this window on at `now`? Missing ends mean open-ended. */
 export function inWindow(row: { starts_at: string | null; ends_at: string | null }, now: number): boolean {
@@ -8,8 +8,8 @@ export function inWindow(row: { starts_at: string | null; ends_at: string | null
 }
 
 /**
- * The feed's ads from a startup config (#216). The CDN copy can be up to a day
- * old, so windows and `is_active` are checked here as RLS would have.
+ * The feed's ads from a startup config. A copy restored from the device can be
+ * days old, so windows and `is_active` are checked here as RLS would have.
  */
 export function feedAdsFrom(config: StartupConfig, now: number): FeedAds {
   const banners: AdBanner[] = config.banners
@@ -19,13 +19,7 @@ export function feedAdsFrom(config: StartupConfig, now: number): FeedAds {
   return { banners, sponsoredEventIds }
 }
 
-/** This page load's arm: a stable coin flip, overridable for tests (`'cdn'` / `'direct'`). */
-export function pickStartupArm(random: number, override?: string | null): StartupArm {
-  if (override === 'cdn' || override === 'direct') return override
-  return random < 0.5 ? 'cdn' : 'direct'
-}
-
-/** A response from /api/startup shaped like a config (anything else falls back to direct reads). */
+/** A value shaped like a config (a cached copy from another build may not be). */
 export function isStartupConfig(v: unknown): v is StartupConfig {
   if (!v || typeof v !== 'object') return false
   const o = v as Record<string, unknown>
