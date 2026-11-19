@@ -3,6 +3,10 @@ import { theme } from './theme'
 
 const { colors, spacing, font, radius, shadow, fonts } = theme
 
+/** Club page (#305): cover photo height and the avatar that overlaps its bottom edge. */
+export const CLUB_COVER_HEIGHT = 200
+export const CLUB_AVATAR_SIZE = 80
+
 export const shared = StyleSheet.create({
 
   // ─── Layout ───────────────────────────────────────────────
@@ -60,7 +64,7 @@ export const shared = StyleSheet.create({
   buttonBase:         { padding: spacing.md, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   buttonPrimary:      { backgroundColor: colors.primary },
   buttonSecondary:    { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.primary },
-  buttonDanger:       { backgroundColor: colors.error },
+  buttonDanger:       { backgroundColor: colors.dangerFill },
   buttonDisabled:     { opacity: 0.5 },
   buttonLabelPrimary: { fontFamily: theme.fonts.bodySemiBold, color: colors.white,   fontSize: font.size.md },
   buttonLabelSecondary: { fontFamily: theme.fonts.bodySemiBold, color: colors.primaryText, fontSize: font.size.md },
@@ -457,6 +461,9 @@ export const shared = StyleSheet.create({
     borderBottomRightRadius: 20,
     backgroundColor: theme.colors.primarySoft,
   },
+  programStripMiddle: { marginBottom: 0, borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+  programFreeAgentAvatars: { flexDirection: 'row' },
+  programFreeAgentLink: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.primaryText },
   programScoresLinkLabel: {
     flex: 1,
     fontFamily: theme.fonts.bodySemiBold,
@@ -659,15 +666,12 @@ export const shared = StyleSheet.create({
   },
   chatNewMessagesLabel: { fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.onPrimary },
   chatListEdge: { alignItems: 'center', justifyContent: 'center', minHeight: theme.spacing.md, paddingVertical: theme.spacing.xs },
+  // EventHero's height with a one-line title (18 padding, pills, title, location), so the
+  // page doesn't move 8 px when the event lands on a cold link (#306).
   skeletonHero: {
     marginHorizontal: theme.spacing.md, marginTop: theme.spacing.xs, marginBottom: theme.spacing.sm,
-    height: 128, borderRadius: 22, backgroundColor: theme.colors.card,
+    height: 136, borderRadius: 22, backgroundColor: theme.colors.card,
   },
-  skeletonTabs: {
-    flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center',
-    height: 44, borderBottomWidth: 1, borderBottomColor: theme.colors.border,
-  },
-  skeletonTab: { width: 56, height: 10, borderRadius: 5, backgroundColor: theme.colors.card },
   // RefreshControl.web: pull-to-refresh wrapper and its spinner
   pullWrapper: { position: 'relative' },
   // DocPullToRefresh: zero-size in-flow anchor; its indicator is pinned to the viewport
@@ -1170,4 +1174,200 @@ export const shared = StyleSheet.create({
   hostChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   hostChipText: { fontFamily: fonts.bodyMedium, fontSize: font.size.sm, color: colors.subtext },
   hostChipTextActive: { fontFamily: fonts.bodySemiBold, color: colors.white },
+
+  // ── Club page (#305): sections in components/club/ ──
+  clubFloatingBtn: {
+    backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: theme.radius.full,
+    width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
+  },
+  clubFloatingBtnDanger: { backgroundColor: 'rgba(220,50,50,0.65)' },
+  clubFloatingBar: {
+    position: 'absolute', left: theme.spacing.md, right: theme.spacing.md,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+  },
+  clubCoverEditBtn: {
+    position: 'absolute', bottom: theme.spacing.sm, right: theme.spacing.md,
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs,
+    backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: theme.radius.full,
+    paddingHorizontal: theme.spacing.sm, paddingVertical: theme.spacing.xs,
+  },
+  clubCoverEditLabel: { color: colors.white, fontSize: font.size.xs, fontWeight: font.weight.semibold },
+  clubAvatarRing: {
+    width: CLUB_AVATAR_SIZE + 6, height: CLUB_AVATAR_SIZE + 6, borderRadius: (CLUB_AVATAR_SIZE + 6) / 2,
+    backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', ...theme.shadow.sm,
+  },
+  clubAvatar: {
+    width: CLUB_AVATAR_SIZE, height: CLUB_AVATAR_SIZE, borderRadius: CLUB_AVATAR_SIZE / 2,
+    backgroundColor: colors.primary + '22', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  clubAvatarImage: { width: CLUB_AVATAR_SIZE, height: CLUB_AVATAR_SIZE },
+  clubAvatarInitial: { fontSize: font.size.xxl, fontWeight: font.weight.bold, color: colors.primaryText },
+  clubAvatarCameraBtn: {
+    position: 'absolute', bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12,
+    backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: colors.card,
+  },
+  clubTitleBlock: { alignItems: 'center', gap: theme.spacing.xs, paddingHorizontal: theme.spacing.lg, marginBottom: theme.spacing.md },
+  clubTitle: { fontSize: font.size.xl, fontWeight: font.weight.bold, color: colors.text, textAlign: 'center' },
+  clubMetaRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flexWrap: 'wrap', justifyContent: 'center' },
+  clubMetaText: { fontSize: font.size.xs, color: colors.subtext },
+  clubBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 3, borderRadius: theme.radius.full, borderWidth: 1,
+  },
+  clubBadgeOpen: { backgroundColor: colors.success + '18', borderColor: colors.success + '44' },
+  clubBadgeClosed: { backgroundColor: colors.subtext + '12', borderColor: colors.border },
+  clubBadgeText: { fontSize: font.size.xs, fontWeight: font.weight.medium },
+  clubStatsRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: theme.spacing.md },
+  clubStatItem: { alignItems: 'center', gap: 3, flex: 1 },
+  clubStatNumber: { fontSize: font.size.xl, fontWeight: font.weight.bold, color: colors.text },
+  clubStatDivider: { width: 1, backgroundColor: colors.border, alignSelf: 'stretch', marginVertical: theme.spacing.xs },
+  clubActionRow: { paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.md, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+  clubInviteOnly: { backgroundColor: colors.border },
+  clubInviteOnlyLabel: { color: colors.subtext, fontSize: font.size.md, fontWeight: font.weight.medium },
+  clubSectionHeader: { paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.sm },
+  clubUpdatesHeader: {
+    paddingHorizontal: theme.spacing.md, marginBottom: theme.spacing.sm, flexDirection: 'row',
+    alignItems: 'center', justifyContent: 'space-between', gap: theme.spacing.md,
+  },
+  clubLinkLabel: { fontSize: font.size.sm, fontWeight: font.weight.semibold, color: colors.primaryText },
+  clubEmptyCard: { alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md },
+  clubMemberRow: {
+    flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
+  },
+  clubMemberInitial: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: colors.primary + '18',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  clubMemberInitialText: { fontSize: font.size.md, fontWeight: font.weight.semibold, color: colors.primaryText },
+  clubOwnerBadge: { paddingHorizontal: theme.spacing.xs, paddingVertical: 2, borderRadius: theme.radius.sm, backgroundColor: colors.primary },
+  clubOwnerBadgeText: { fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.white },
+  // Scorekeeper: a whole team typed at once (RosterTextSheet)
+  rosterTextInput: { minHeight: 140, textAlignVertical: 'top', fontSize: font.size.base, lineHeight: 24 },
+  rosterTextSlot: { alignItems: 'center', gap: spacing.xxs, minWidth: 52 },
+  rosterTextChip: {
+    minWidth: 48, alignItems: 'center', paddingVertical: spacing.xs, paddingHorizontal: spacing.sm,
+    borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card,
+  },
+  rosterTextChipNumber: { fontFamily: fonts.display, fontSize: font.size.lg, color: colors.text },
+  rosterTextSlotLabel: { fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.subtext },
+  // Simple score (scorekeeper/simple)
+  simpleTeamSwatch: { width: 10, height: 48, borderRadius: radius.sm, marginBottom: 2 },
+  simpleBanner: { marginHorizontal: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  simpleSettingsRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 44, paddingVertical: spacing.xs },
+  simpleBoard: { flexDirection: 'row', gap: spacing.sm, marginVertical: spacing.md },
+  simpleSide: { flex: 1, minHeight: 260, borderRadius: radius.xl, padding: spacing.md, alignItems: 'center', justifyContent: 'space-between' },
+  simpleTeam: { fontFamily: fonts.bodySemiBold, fontSize: font.size.lg, flexShrink: 1 },
+  simpleScore: { fontFamily: fonts.display, fontSize: font.heading.scoreboard, lineHeight: font.heading.scoreboard + 8, fontVariant: ['tabular-nums'] },
+  simpleSets: { fontFamily: fonts.bodyMedium, fontSize: font.size.md },
+  simpleActions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  // Scorekeeper: every number of a team on one screen (TeamNumbersCard)
+  numberBoxRow: { flexDirection: 'row', gap: spacing.xs },
+  numberBoxCourtCell: { flex: 1, minWidth: 40, maxWidth: 96, alignItems: 'center', gap: 2 },
+  numberBoxCell: { width: 52, alignItems: 'center', gap: 2 },
+  numberBox: {
+    alignSelf: 'stretch', height: 52, borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.border,
+    backgroundColor: colors.background, color: colors.text, textAlign: 'center',
+    fontFamily: fonts.display, fontSize: font.size.xl, paddingHorizontal: 0,
+  },
+  // Simple score's sideways scoreboard (SimpleScoreboard)
+  scoreboardRoot: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, backgroundColor: colors.background },
+  scoreboardHalf: { flex: 1, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center', padding: spacing.md, gap: spacing.xs },
+  scoreboardTeam: { fontFamily: fonts.displaySemiBold, fontSize: font.size.xl, flexShrink: 1 },
+  scoreboardScore: { fontFamily: fonts.display, fontVariant: ['tabular-nums'] },
+  scoreboardSets: { fontFamily: fonts.bodySemiBold, fontSize: font.size.lg },
+  scoreboardSetLabel: { flex: 1, textAlign: 'center', fontFamily: fonts.bodySemiBold, fontSize: font.size.md, color: colors.subtextStrong },
+  scoreboardTopBar: { position: 'absolute', height: 44, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  scoreboardIcon: {
+    width: 44, height: 44, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+  },
+  scoreboardMinus: { minWidth: 88, minHeight: 44, borderRadius: radius.full, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.md },
+  scoreboardNotice: {
+    position: 'absolute', width: 340, gap: spacing.sm, padding: spacing.md, borderRadius: radius.lg,
+    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+  },
+  numberCourt: { gap: spacing.xs, padding: spacing.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  numberCourtNet: { borderTopWidth: 3, borderTopColor: colors.subtext, alignItems: 'center', paddingTop: 2 },
+  numberCourtNetLabel: { fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.subtext, letterSpacing: 2 },
+  numberBoxLabel: { fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.subtext, minHeight: 14 },
+  // Scorekeeper: the big point buttons on the live match screen
+  scorePointBtn: {
+    flex: 1, minHeight: 168, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center',
+    gap: spacing.xs, padding: spacing.md,
+  },
+  scorePointTeam: { fontFamily: fonts.displaySemiBold, fontSize: font.size.lg },
+  scorePointServing: {
+    fontFamily: fonts.bodySemiBold, fontSize: font.size.base, paddingHorizontal: spacing.md, paddingVertical: spacing.xxs,
+    borderRadius: radius.full, borderWidth: 1.5, overflow: 'hidden', minHeight: 26,
+  },
+  serveFirstBtn: { flex: 1, minHeight: 140, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.md },
+  // Find a team (#304)
+  freeAgentRow: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, paddingVertical: spacing.md,
+    borderBottomWidth: 1, borderBottomColor: colors.borderSoft,
+  },
+  freeAgentName: { fontFamily: fonts.bodySemiBold, fontSize: font.size.lgs, color: colors.text },
+  freeAgentTags: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.xs },
+  freeAgentTag: {
+    fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.timeInk, backgroundColor: colors.primarySoft,
+    paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.full, overflow: 'hidden',
+  },
+  freeAgentMine: { borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  freeAgentFooter: { paddingTop: spacing.sm },
+  // Error screen after a render error (ErrorFallback, #316)
+  crashScreen: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, backgroundColor: colors.background },
+  crashInner: { width: '100%', maxWidth: 420, alignItems: 'center', gap: spacing.md },
+  crashIcon: { width: 64, height: 64, borderRadius: radius.full, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  crashTitle: { fontFamily: fonts.display, fontSize: font.heading.md, color: colors.text, textAlign: 'center' },
+  crashBody: { fontFamily: fonts.body, fontSize: font.size.md, lineHeight: font.lineHeight.normal, color: colors.subtext, textAlign: 'center' },
+  crashButton: { alignSelf: 'stretch' },
+  // Chat room (app/(app)/chat/[id].tsx, components/chat/*, #318)
+  chatRoomHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    paddingBottom: spacing.md, paddingHorizontal: spacing.md,
+    borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.background,
+  },
+  chatRoomBack: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginLeft: -spacing.sm },
+  chatRoomAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  chatRoomAvatarClub: { borderRadius: radius.md },
+  chatRoomAvatarImage: { width: 36, height: 36 },
+  chatRoomTitle: { flex: 1, fontFamily: fonts.display, fontSize: font.size.lg, letterSpacing: -0.3, color: colors.text },
+  chatRoomMenu: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  chatComposerBand: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    backgroundColor: colors.card, borderTopWidth: 1, borderTopColor: colors.border,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+  },
+  chatComposerQuote: { flex: 1, borderLeftWidth: 2, borderLeftColor: colors.primary, paddingLeft: spacing.sm },
+  chatComposerQuoteTitle: { fontSize: font.size.xs, color: colors.primaryText, fontWeight: font.weight.semibold },
+  chatComposerQuoteBody: { fontSize: font.size.xs, color: colors.subtext },
+  chatComposerPreview: { width: 60, height: 60, borderRadius: radius.sm },
+  chatComposerPreviewRemove: { position: 'absolute', top: 0, left: 48, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  chatComposerPreviewRemoveDot: { backgroundColor: colors.subtext, borderRadius: radius.full, width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  chatMentionList: { borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.card, maxHeight: 200, overflow: 'hidden' },
+  chatMentionRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 2, minHeight: 44,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2, borderBottomColor: colors.border,
+  },
+  chatMentionAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  chatMentionName: { fontSize: font.size.md, fontWeight: font.weight.semibold, color: colors.text },
+  chatMentionHandle: { fontSize: font.size.sm, color: colors.subtext },
+  chatInputBar: {
+    flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm,
+    paddingHorizontal: spacing.md, paddingTop: spacing.sm,
+    borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.background,
+  },
+  chatAttach: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', marginLeft: -spacing.sm },
+  chatInputPill: {
+    flex: 1, flexDirection: 'row', alignItems: 'flex-end',
+    backgroundColor: colors.card, borderRadius: 22, borderWidth: 1, borderColor: colors.border,
+    paddingLeft: 14, paddingRight: spacing.xs, paddingVertical: spacing.xs, minHeight: 40, maxHeight: 120,
+  },
+  chatInput: { flex: 1, paddingTop: 7, paddingBottom: 7, fontFamily: fonts.body, fontSize: font.size.md, color: colors.text, minHeight: 32 },
+  chatSend: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' },
+  chatSendOn: { backgroundColor: colors.primary },
+  chatImageViewer: { flex: 1, backgroundColor: colors.black, alignItems: 'center', justifyContent: 'center' },
+  chatImageViewerImage: { width: '100%', height: '80%' },
 })

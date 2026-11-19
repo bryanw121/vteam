@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Modal, ScrollView, TouchableOpacity, View } from 'react-native'
 import { Text, TextInput } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
@@ -10,7 +10,9 @@ import { Button } from '../../../../components/Button'
 import { Input } from '../../../../components/Input'
 import { shared, theme } from '../../../../constants'
 import { feedbackErrors } from '../../../../utils/feedbackForm'
-import { GENERIC_ERROR_MESSAGE } from '../../../../constants/copy'
+import { CRASH_COPY, GENERIC_ERROR_MESSAGE } from '../../../../constants/copy'
+import { takeCrashReport } from '../../../../lib/crashRecovery'
+import { crashReportTime } from '../../../../utils/crashRecovery'
 import type { FeedbackFieldErrors, FeedbackKind, FeedbackPriority } from '../../../../types'
 import { useUrlParam } from '../../../../hooks/useUrlParam'
 import { VIEW } from '../../../../utils/urlViews'
@@ -32,6 +34,15 @@ export default function FeedbackScreen() {
   const [errors, setErrors] = useState<FeedbackFieldErrors>({})
   const titleRef = useRef<TextInput>(null)
   const descriptionRef = useRef<TextInput>(null)
+
+  // "Report the problem" on the error screen (#316): the crash's details, typed in for them.
+  useEffect(() => {
+    const crash = takeCrashReport()
+    if (!crash) return
+    setPlatform(crash.platform)
+    setTitle(CRASH_COPY.reportTitle(crash.screen))
+    setDescription(CRASH_COPY.reportDetails(crash.screen, crashReportTime(crash.at), crash.version))
+  }, [])
 
   const handleScrollRefresh = useCallback(() => {
     setRefreshing(true)

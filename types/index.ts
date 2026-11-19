@@ -498,6 +498,8 @@ export type ExternalProgramCardProps = {
   compact?: boolean
   /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
   menuInset?: boolean
+  /** Find a team (#304): players looking for this program; undefined/null when the list has no counts. */
+  freeAgentCount?: number | null
 }
 
 /** Props of SheetTeamsView. `team` '' shows the list; onSelectTeam('') goes back to it. */
@@ -515,7 +517,7 @@ export type SheetScoringPanelProps = {
 }
 
 /** Props of LiveScoresLink. */
-export type LiveScoresLinkProps = { programId: string; title: string }
+export type LiveScoresLinkProps = { programId: string; title: string; /** Another strip follows (square bottom). */ middle?: boolean }
 
 /** Props of ProgramHostChips. */
 export type ProgramHostChipsProps = {
@@ -532,6 +534,8 @@ export type ProgramSectionProps = {
   /** Warning color: deadlines this week. */
   hot?: boolean
   testID?: string
+  /** Find a team counts for these programs (#304), from one call per screen. */
+  freeAgentCounts?: Map<string, number> | null
 }
 
 /** Outside programs grouped for one viewer's region (utils/externalPrograms). */
@@ -1384,6 +1388,55 @@ export type TournamentDraft = {
   tiebreakers: TiebreakerKey[]
   /** Single elimination: play off third place (otherwise both semifinal losers share it). */
   thirdPlaceMatch: boolean
+}
+
+/** How a new tournament is saved from the wizard's last step. */
+export type TournamentSaveStatus = 'draft' | 'published'
+
+/** What the wizard saves: the draft, as a draft or published. */
+export type SaveTournamentInput = { draft: TournamentDraft; status: TournamentSaveStatus }
+
+/** One choice on the wizard's Format step. */
+export type TournamentFormatOption = { id: TournamentFormat; icon: string; label: string; description: string }
+
+/** A club the creator can attach a tournament to. */
+export type TournamentClubOption = Pick<Club, 'id' | 'name'>
+
+/** The wizard's small form pieces (`components/tournament/create/CreateBits.tsx`). */
+export type WizardStepIndicatorProps = { current: number }
+export type WizardSectionLabelProps = { icon: IoniconName; label: string }
+export type WizardFieldProps = { label: string; children: React.ReactNode }
+export type WizardTextBoxProps = {
+  value: string
+  onChangeText: (v: string) => void
+  placeholder?: string
+  multiline?: boolean
+  keyboardType?: 'default' | 'numeric' | 'decimal-pad'
+  style?: object
+}
+export type WizardStepperProps = { value: number; onChange: (v: number) => void; min?: number; max?: number }
+export type WizardToggleProps = { value: boolean; onChange: (v: boolean) => void; label: string; sub?: string }
+export type WizardPreviewRowProps = { icon: IoniconName; label: string; value: string }
+
+/** Props shared by the wizard's step sections (`components/tournament/create`). */
+export type TournamentStepProps = {
+  draft: TournamentDraft
+  update: (patch: Partial<TournamentDraft>) => void
+}
+
+export type TournamentBasicsStepProps = TournamentStepProps & {
+  clubs: readonly TournamentClubOption[]
+  clubsLoading: boolean
+  clubsError: boolean
+  onRetryClubs: () => void
+}
+
+export type TournamentPreviewStepProps = {
+  draft: TournamentDraft
+  clubs: readonly TournamentClubOption[]
+  onSaveDraft: () => void
+  onPublish: () => void
+  saving: boolean
 }
 
 // ─── Tournament Discussion ────────────────────────────────────────────────────
@@ -2529,15 +2582,12 @@ export type SaveBringItemsArgs = {
 export type ClaimBringItemArgs = { p_item_id: string; p_quantity: number }
 export type ReleaseBringItemArgs = { p_item_id: string }
 
-/** `/api/startup` (#216): the update check rows and ad lists, with windows so a stale copy can be filtered by time. */
+/** The startup config: the update check rows and ad lists, with windows so a stale copy can be filtered by time. */
 export type StartupConfig = {
   appConfig: { platform: string; min_version: string; store_url: string | null; message: string | null }[]
   banners: (AdBanner & { starts_at: string | null; ends_at: string | null; is_active: boolean })[]
   sponsored: { event_id: string; starts_at: string | null; ends_at: string | null }[]
 }
-
-/** Which way this page load read the startup config (the #216 keep-or-revert experiment). */
-export type StartupArm = 'cdn' | 'direct'
 
 /** "Your game" on a finished game (#227): `pointsPaid` null until `award_event_points()` has run. */
 export type MyGameRecap = { pointsPaid: number | null; cheers: number; gamesThisYear: number }
@@ -2594,3 +2644,42 @@ export type WeekPagerProps = {
   onPrevWeek: () => void
   onNextWeek: () => void
 }
+export * from './club'
+export * from './freeAgents'
+
+/** Kept on the device after a crash (#316): when, which screen type, how many in a row, and whether a way out was tried since. */
+export type CrashMarker = { at: number; count: number; screen: string; recovered?: boolean }
+
+/** What the bug form is prefilled with after "Report the problem" (memory only, never in a URL). */
+export type CrashReport = { screen: string; at: number; version: string; platform: 'iOS' | 'Android' | 'Mobile web' | 'Desktop web' }
+/** The @word being typed in a club chat (#318): what follows the @, and where the @ is. */
+export type ActiveMention = { query: string; atIndex: number }
+
+/** Chat room header (#318). `onOpenMenu` (DMs with another player) gets the menu button's place on screen. */
+export type ChatRoomHeaderProps = {
+  title: string
+  avatarUri: string | null | undefined
+  isClub: boolean
+  onBack: () => void
+  onOpenMenu?: (anchor: AnchorRect) => void
+}
+
+/** The reply / edit strip above the chat input. */
+export type ChatComposerBandProps = {
+  icon: 'return-down-back' | 'pencil-outline'
+  title: string
+  body: string
+  cancelLabel: string
+  onCancel: () => void
+}
+
+/** The chat room's composer: what `useChatComposer` returns, plus what the screen decides. */
+export type ChatComposerProps = {
+  composer: ReturnType<typeof import('../hooks/chat/useChatComposer').useChatComposer>
+  isClub: boolean
+  replyLabel: string
+  replyBody: string
+}
+
+/** A chat picture full screen; null = closed. */
+export type ImageViewerProps = { uri: string | null; onClose: () => void }

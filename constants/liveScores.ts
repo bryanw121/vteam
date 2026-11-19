@@ -20,5 +20,16 @@ export const LIVE_SCORE_SHEETS: Record<string, string> = {
     'https://script.google.com/macros/s/AKfycbxBRkHsAjcWqPHEihn_5vAQV4ToiySOU_HnxsbgUtYu-ILEkCp6XHblq3h1DnIxW1TD/exec',
 }
 
-/** Floor for how often the open scores screen refetches; the Sheet's `refresh_seconds` can raise it. */
-export const LIVE_SCORES_MIN_REFRESH_MS = 10_000
+/**
+ * Programs where vteam only shows scores: no "I'm a scorekeeper" button and no writes to the Sheet.
+ * Texas AO's Sheet has no scorekeeper PIN, and its desk keeps the official scores, so a stray tap in
+ * vteam must never change them.
+ */
+export const SCOREKEEPING_OFF: ReadonlySet<string> = new Set(['texasao-2026-11-14'])
+
+/**
+ * Floor for how often the open scores screen refetches; the Sheet's `refresh_seconds` can raise it.
+ * 30 s, not the Sheet's own 10: every open screen is a separate call to the organizer's Apps Script,
+ * which runs a limited number of requests at once, and vteam must never be what slows their day.
+ */
+export const LIVE_SCORES_MIN_REFRESH_MS = 30_000

@@ -87,8 +87,13 @@ export const SCREENS = {
 
   // ── Clubs ───────────────────────────────────────────────────────────────
   'clubs-list': { route: '/clubs', ready: 'Eastside Sand Social', sources: ['app/(app)/(tabs)/(main)/clubs.tsx', 'components/MajorCityAutocomplete.tsx'] },
-  'club-detail': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts', 'components/ClubPostCard.tsx', 'components/EventCard.tsx', 'components/club/PollBlock.tsx', 'utils/clubPoll.ts'] },
+  'club-detail': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts', 'components/club/Club*.tsx', 'hooks/club/**', 'utils/clubForm.ts', 'components/ClubPostCard.tsx', 'components/EventCard.tsx', 'components/club/PollBlock.tsx', 'utils/clubPoll.ts'] },
   'club-poll-composer': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', actions: [{ tap: 'club-new-poll' }], sources: ['components/club/PollComposerSheet.tsx', 'hooks/useClubPollActions.ts'] },
+  'club-edit': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', actions: [{ tap: 'club-edit' }, { wait: 300 }], sources: ['components/club/ClubEditForm.tsx', 'hooks/club/useClubEdit.ts', 'utils/clubForm.ts'] },
+  'club-delete-dialog': { route: `/club/${IDS.club.eastside}`, ready: 'Eastside Sand Social', actions: [{ tap: 'club-delete' }, { wait: 400 }], sources: ['hooks/club/useDeleteClub.ts', 'components/ui/ConfirmDialog.tsx'] },
+  'find-a-team': { route: '/find-a-team/shots-program-4', ready: 'Happy to be the 4th', sources: ['app/(app)/find-a-team/**', 'components/programs/FreeAgent*.tsx', 'hooks/useFreeAgents.ts', 'utils/freeAgents.ts'] },
+  'find-a-team-sheet': { route: '/find-a-team/shots-program-4', ready: 'Happy to be the 4th', actions: [{ tap: 'free-agent-start' }, { wait: 400 }], sources: ['components/programs/FreeAgentSheet.tsx'] },
+  'find-a-team-guest': { route: '/find-a-team/shots-program-4', signedIn: false, ready: 'looking for a team', sources: ['app/(app)/find-a-team/**'] },
   'club-detail-guest': { route: `/club/${IDS.club.indoor}`, signedIn: false, ready: 'Austin Indoor League', sources: ['app/(app)/club/[id].tsx', 'hooks/useClub.ts'] },
   'club-create': { route: '/club/create', sources: ['app/(app)/club/create.tsx'] },
 
@@ -101,9 +106,9 @@ export const SCREENS = {
   'chat-list': { route: '/chat', ready: 'Jordan', sources: ['app/(app)/(tabs)/(main)/chat.tsx', 'hooks/useConversations.ts', 'hooks/useChatUnread.tsx', 'hooks/useOpenDm.ts'] },
   'chat-conversation': {
     route: `/chat/${IDS.conversation.jordan}`, ready: 'Bringing the good ball',
-    sources: ['app/(app)/chat/**', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx', 'components/ReactionPicker.tsx', 'hooks/useMessages.ts', 'hooks/useSilencedUsers.ts'],
+    sources: ['app/(app)/chat/**', 'components/chat/**', 'hooks/chat/**', 'utils/chatComposer.ts', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx', 'components/ReactionPicker.tsx', 'hooks/useMessages.ts', 'hooks/useSilencedUsers.ts'],
   },
-  'chat-club': { route: `/chat/${IDS.conversation.clubChat}`, ready: 'shared album', sources: ['app/(app)/chat/**', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx'] },
+  'chat-club': { route: `/chat/${IDS.conversation.clubChat}`, ready: 'shared album', sources: ['app/(app)/chat/**', 'components/chat/**', 'hooks/chat/**', 'utils/chatComposer.ts', 'components/ChatMessageList*.tsx', 'components/MessageBubble.tsx'] },
 
   // ── Profile ─────────────────────────────────────────────────────────────
   'profile-own': {
@@ -121,6 +126,8 @@ export const SCREENS = {
   'settings-account': { route: '/settings/account', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/account.tsx'] },
   'settings-experimental': { route: '/settings/experimental', ready: 'Scorekeeper', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/experimental.tsx', 'constants/experiments.ts', 'components/scoresheet/MatchRow.tsx'] },
   scorekeeper: { route: '/scorekeeper', ready: 'New match', sources: ['app/(app)/scorekeeper/index.tsx', 'components/scoresheet/MatchRow.tsx', 'hooks/useSavedMatches.ts'] },
+  'scorekeeper-simple': { route: '/scorekeeper/simple', ready: 'serves first', sources: ['app/(app)/scorekeeper/simple.tsx', 'hooks/useSimpleScore.ts', 'lib/simpleScore.ts'] },
+  'scorekeeper-simple-play': { route: '/scorekeeper/simple', ready: 'serves first', actions: [{ tap: 'simple-point-A' }, { tap: 'simple-point-A' }, { tap: 'simple-point-B' }, { wait: 300 }], sources: ['app/(app)/scorekeeper/simple.tsx', 'hooks/useSimpleScore.ts', 'lib/simpleScore.ts'] },
   'scorekeeper-new': { route: '/scorekeeper/new', ready: 'NET', sources: ['app/(app)/scorekeeper/new.tsx', 'components/scoresheet/CourtLayout.tsx', 'components/scoresheet/CourtSpot.tsx', 'components/scoresheet/PlayerSheet.tsx', 'lib/scoresheet/rules.ts'] },
   'settings-display': { route: '/settings/display', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/display.tsx', 'contexts/textScale.tsx'] },
   'settings-notifications': {

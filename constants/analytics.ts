@@ -56,11 +56,17 @@ export const ANALYTICS_EVENTS = {
   screenView: 'screen_view',
   /** Tapped through to a sign-up or booking page run outside vteam (Schelagg data). props: { kind: session | league | tournament | court, org (venue or organizer name, never a URL) } */
   outsideLinkOpened: 'outside_link_opened',
+  /** Find a team (#304): put themselves on a program's list. props: { want: partner | team | players } */
+  freeAgentListed: 'free_agent_listed',
+  /** Find a team: tapped Message on someone's row. props: {} */
+  freeAgentMessaged: 'free_agent_messaged',
+  /** Opened a Find a team page. props: { signed_in } */
+  findATeamOpened: 'find_a_team_opened',
   /** Shared an event. props: { surface: 'event', method: share_sheet | web_share | copy_link } */
   shareTapped: 'share_tapped',
   /** Changed the Events feed filters (not the restore on open). props: { filter, surface } */
   feedFilterChanged: 'feed_filter_changed',
-  /** A Scorekeeper match started or finished (device-only, so this is the only record). props: { stage: started | finished, sets (sets played) } */
+  /** A Scorekeeper match started or finished (device-only, so this is the only record). props: { stage: started | finished, sets (sets played), mode?: simple } */
   scorekeeperMatch: 'scorekeeper_match',
   /** A Share button sent or copied a screen's link. props: { screen (tournament, tournaments, leagues, events, profile), how: share | copy, filtered } */
   linkShared: 'link_shared',
@@ -86,4 +92,6 @@ export const ANALYTICS_EVENTS = {
   bringListSaved: 'bring_list_saved',
   /** The server answered again after being down (#289). props: { ms (how long), cause: server | network } */
   serverUnreachable: 'server_unreachable',
+  /** A render error reached the error screen (#316). props: { screen (pattern, never an id), attempt (1 = first, 2+ = again within 30 s), had_snapshot } */
+  appCrash: 'app_crash',
 } as const

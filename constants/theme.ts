@@ -30,6 +30,8 @@ export const theme = {
     cool:         '#00D6B4',
     // Status
     error:        '#FF5555',
+    /** Filled destructive buttons (Button variant danger): white label at 5:1 (`error` itself is 3.1:1). */
+    dangerFill:   '#D12F2F',
     warning:      '#FFA040',
     success:      '#00D26A',
     // Toast surfaces (#228): dark tints of each status colour, so light text reads on them (>= 4.5:1).
@@ -42,6 +44,12 @@ export const theme = {
     black:        '#000000',
     /** Label/icon colour on `primary`, `error` and other saturated fills. */
     onPrimary:    '#FFFFFF',
+    /** White text and lines on a `primary` fill at lower emphasis (tournament preview hero). */
+    onPrimaryStrong: 'rgba(255,255,255,0.85)',
+    onPrimarySoft:   'rgba(255,255,255,0.75)',
+    onPrimaryMuted:  'rgba(255,255,255,0.6)',
+    onPrimaryLine:   'rgba(255,255,255,0.3)',
+    onPrimaryFill:   'rgba(255,255,255,0.12)',
     /** Scrim behind dialogs and bottom sheets. */
     overlay:      'rgba(0,0,0,0.5)',    // shared.modalOverlay (host, feedback)
     overlayLight: 'rgba(0,0,0,0.45)',   // event detail's confirm dialogs / ConfirmDialog
@@ -107,6 +115,8 @@ export const theme = {
       xxl:    34,
       hero:   44,
       splash: 48,
+      /** Simple score's big point numbers. */
+      scoreboard: 96,
     },
     /** Emoji used as pictures (empty states, medals, pickers). */
     emoji: {

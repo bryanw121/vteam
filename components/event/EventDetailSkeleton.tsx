@@ -3,6 +3,9 @@ import { Platform, View } from 'react-native'
 import { shared, theme } from '../../constants'
 import type { EventWithDetails } from '../../types'
 import { EventHero } from './EventHero'
+import { EventTabBar } from './EventTabBar'
+
+const noop = () => {}
 
 type Props = {
   /** The tapped feed card's row: paints the real banner immediately. Absent on a cold deep link. */
@@ -20,8 +23,9 @@ export function EventDetailSkeleton({ seed, topInset }: Props) {
     <View testID="event-detail-skeleton" accessibilityLabel="Loading event">
       <View style={{ paddingTop: Platform.OS !== 'web' ? topInset + 52 : 0 }}>
         {seed ? <EventHero event={seed} /> : <View style={shared.skeletonHero} />}
-        <View style={shared.skeletonTabs}>
-          {[0, 1, 2, 3].map(i => <View key={i} style={shared.skeletonTab} />)}
+        {/* The real tab bar, inert: same height as the loaded page at every text size (#306). */}
+        <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <EventTabBar activeTab={0} peopleCount={0} onSelect={noop} />
         </View>
       </View>
       <View style={{ padding: theme.spacing.md, gap: theme.spacing.sm }}>

@@ -120,4 +120,24 @@ test.describe('usage metrics', () => {
     // Every row carries a session id and the app version.
     expect(captured.rows.every(r => typeof r.session_id === 'string' && typeof r.app_version === 'string')).toBe(true)
   })
+
+  test('a first visit to Events lands in one session, with its screen and a real first-paint time (#326)', async ({ page }) => {
+    const captured = await captureInserts(page)
+    await page.goto(`${BASE_URL}/`)
+    await expect.poll(() => captured.heartbeats.length, { timeout: 20_000 }).toBeGreaterThan(0)
+    await expect.poll(async () => {
+      await hidePage(page)
+      return named(captured.rows, E.feedFirstPaint).length
+    }, { timeout: 20_000 }).toBe(1)
+
+    const session = named(captured.rows, E.sessionStart)[0]?.session_id
+    expect(session).toEqual(expect.stringMatching(/^[A-Za-z0-9-]{8,64}$/))
+    // Everything from this visit, including what was tracked before the session opened, is in it.
+    expect(captured.rows.map(r => r.session_id).filter(id => id !== session)).toEqual([])
+    expect(named(captured.rows, E.screenView)[0].props).toMatchObject({ screen: '/' })
+    const paint = named(captured.rows, E.feedFirstPaint)[0].props
+    expect(paint).toMatchObject({ landing: true, source: expect.stringMatching(/^(prefetch|fetch|snapshot)$/) })
+    expect(paint.ms).toEqual(expect.any(Number))
+    expect(paint.ms as number).toBeLessThan(30_000)
+  })
 })

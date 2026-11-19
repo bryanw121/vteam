@@ -13,7 +13,7 @@ import {
 } from '../constants'
 import { supabase } from '../lib/supabase'
 import { feedPrefetchAge, takeFeedPrefetch } from '../lib/feedPrefetch'
-import { track } from '../lib/analytics'
+import { landedOnFeed, msSinceOpen, track } from '../lib/analytics'
 import { ANALYTICS_EVENTS } from '../constants/analytics'
 import { getSessionUser } from '../lib/sessionUser'
 import {
@@ -30,6 +30,7 @@ import { useSession } from '../contexts/session'
 import { localDateKey, startOfToday } from '../utils'
 import { sessionConfirmation } from '../utils/externalFreshness'
 import { addMonths, bucketByMonthKey, enumerateMonths, monthEndIso, monthKeyFromIso, monthStartIso } from '../utils/monthKeys'
+import { isSafeStart } from '../lib/crashRecovery'
 import { readFeedSnapshot, SNAPSHOT_MONTHS, writeFeedSnapshot } from '../utils/feedSnapshot'
 import { fetchEventCardPreviews, previewsFromRows, withEventCardPreviews } from '../utils/eventCardPreviews'
 import { isFeedRpcUnavailable, parseFeedSpan } from '../utils/feedSpan'
@@ -37,7 +38,7 @@ import { TIMEOUT_MESSAGE } from '../lib/serverHealth'
 import { isFeedItemOver, normalizeExternalSessions, normalizeTournaments } from '../utils/feedItems'
 import { toast } from '../lib/toast'
 import { eventKeys } from './event/keys'
-import type { EventCardPreviews, EventWithDetails, ExternalSession, FeedRsvpResult, FeedRsvpVars, FeedSpanRows } from '../types'
+import type { AnalyticsProps, EventCardPreviews, EventWithDetails, ExternalSession, FeedRsvpResult, FeedRsvpVars, FeedSpanRows } from '../types'
 
 /**
  * The Events feed, on `lib/query`.
@@ -99,21 +100,30 @@ export function __resetFeedState(): void {
  */
 /**
  * feed_first_paint (#184): when the first feed rows were in hand, and from
- * where. `ms` is since navigation start; `cold` marks a server that took over
- * 1 s (prefetch: since the <head> request started). Once per page load.
+ * where. `ms` is since the launch was first on screen (`msSinceOpen`), sent only
+ * when the launch opened on the feed (`landing`); someone who opens Events hours
+ * into a visit would otherwise report hours (#326). `wait_ms` is how long the
+ * server took (prefetch: since the <head> request started); `cold` marks over
+ * 1 s. Once per launch.
  */
 let firstPaintTracked = false
 function trackFirstPaint(source: 'snapshot' | 'prefetch' | 'fetch', startedAt?: number): void {
-  if (firstPaintTracked || typeof performance === 'undefined') return
+  if (firstPaintTracked) return
   firstPaintTracked = true
-  const ms = Math.round(performance.now())
   const prefetchAt = feedPrefetchAge()
-  const serverMs = source === 'prefetch' && prefetchAt !== null ? Date.now() - prefetchAt
+  const waitMs = source === 'prefetch' && prefetchAt !== null ? Date.now() - prefetchAt
     : startedAt !== undefined ? Date.now() - startedAt : null
-  track(ANALYTICS_EVENTS.feedFirstPaint, { ms, source, cold: serverMs !== null && serverMs > 1000 })
+  const landing = landedOnFeed()
+  const sinceOpen = msSinceOpen()
+  const props: AnalyticsProps = { source, landing, cold: waitMs !== null && waitMs > 1000 }
+  if (landing && sinceOpen !== null) props.ms = sinceOpen
+  if (waitMs !== null) props.wait_ms = waitMs
+  track(ANALYTICS_EVENTS.feedFirstPaint, props)
 }
 
 function seedFromSnapshot(): void {
+  // Shortly after a crash nothing saved on the device is trusted (#316).
+  if (isSafeStart()) return
   const snap = readFeedSnapshot()
   if (!snap) return
   trackFirstPaint('snapshot')

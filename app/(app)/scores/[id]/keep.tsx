@@ -131,8 +131,8 @@ export default function SheetScorekeeperScreen() {
           onRetry={() => { void scores.refetch({ force: true }) }}
           empty={!execUrl}
           emptyIcon="clipboard-outline"
-          emptyTitle="No scorekeeping for this tournament"
-          emptyBody="Scorekeeping works for tournaments run on the vteam tournament sheet."
+          emptyTitle="Scored at the tournament desk"
+          emptyBody="The organizers keep this tournament's scores. vteam only shows them."
         >
           <ScrollView contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xl }} keyboardShouldPersistTaps="handled">
             {!keeper && state ? (

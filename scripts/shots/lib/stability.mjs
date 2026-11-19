@@ -87,6 +87,15 @@ function round(v) { return Math.round(v * 1000) / 1000 }
  * the card, and whether a spotlight box was on screen). A gap, a repeat, a
  * missing spotlight or a walk that ends early is a finding.
  */
+/**
+ * A route's file name in visible text: a dynamic segment ("event/[id]", "[programId]") or a
+ * route group ("(tabs)"). Players should never see either (#306). Returns the match or null.
+ */
+export function rawRouteText(text) {
+  const m = String(text ?? '').match(/[\w-]*\/?\[[a-zA-Z]+\](?:\/[\w-]+)*|\((?:tabs|main|app|auth)\)/)
+  return m ? m[0] : null
+}
+
 export function tourFindings(steps, expected) {
   const out = []
   const of = expected ?? steps[0]?.of
@@ -175,7 +184,7 @@ const md = s => String(s).replace(/\|/g, '\\|').replace(/\n/g, ' ')
 
 export function renderMarkdown({ diff, counts, seconds, mode }) {
   const lines = ['## Stability check', '']
-  lines.push(`${mode} run, ${counts.cases} cases in ${seconds} s: tours ${counts.tours}, refresh/Back ${counts.scroll}, links ${counts.links}.`, '')
+  lines.push(`${mode} run, ${counts.cases} cases in ${seconds} s: tours ${counts.tours}, refresh/Back ${counts.scroll}, links ${counts.links}, raw route names ${counts.routes ?? 0}.`, '')
   if (!diff.failures.length) lines.push('**Passed.** No finding beyond `scripts/shots/stability-baseline.json`.', '')
   else {
     lines.push(`**${diff.failures.length} new finding(s)** (frames in the \`a11y-report\` artifact, \`stability/\`):`, '')

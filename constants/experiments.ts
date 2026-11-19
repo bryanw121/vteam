@@ -6,7 +6,7 @@ export const EXPERIMENTS: readonly Experiment[] = [
   {
     id: 'scorekeeper',
     title: 'Scorekeeper',
-    body: 'Keep the official score by tapping. Rotations, subs and time-outs are tracked for you, and you get a finished USA Volleyball scoresheet.',
+    body: 'Keep the official score by tapping: rotations, subs and time-outs are tracked, and you get a finished USA Volleyball scoresheet. Or use Simple score to just count points and sets.',
     icon: 'clipboard-outline',
     href: routes.scorekeeper(),
   },

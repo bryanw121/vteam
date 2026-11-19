@@ -4,7 +4,7 @@
 // standings, seeds and bracket compared with the Sheet's (docs: "vteam tournament creation" design).
 // Read-only: GETs a public feed, writes one file per change of the feed's `stamp`. No Supabase.
 //
-//   node scripts/sheet-recorder.mjs --out recording --minutes 340 [--every 20] [--url <exec URL>]
+//   node scripts/sheet-recorder.mjs --out recording --minutes 340 [--every 60] [--url <exec URL>]
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -14,7 +14,7 @@ const arg = (name, fallback) => {
 }
 const out = arg('out', 'recording')
 const minutes = Number(arg('minutes', '340'))
-const every = Math.max(10, Number(arg('every', '20')))
+const every = Math.max(30, Number(arg('every', '60')))
 // Default: the first Sheet URL in constants/liveScores.ts, so the recorder follows the app.
 const url =
   arg('url') ||

@@ -165,6 +165,8 @@ export type EndSetEvent = EventBase & { type: 'end_set'; winner: TeamSide; reaso
  * decides it. No further sets are played.
  */
 export type TimeUpEvent = EventBase & { type: 'time_up' }
+/** The scorekeeper added minutes to the match clock (before ending on time). */
+export type AddTimeEvent = EventBase & { type: 'add_time'; minutes: number }
 export type NoteEvent = EventBase & { type: 'note'; text: string }
 
 export type ScoreEvent =
@@ -181,6 +183,7 @@ export type ScoreEvent =
   | OverrideEvent
   | EndSetEvent
   | TimeUpEvent
+  | AddTimeEvent
   | NoteEvent
 
 /** An event before the log stamps it with an id and time. */
@@ -335,6 +338,8 @@ export type MatchState = {
   over: boolean
   /** The match clock ran out (time_up recorded). */
   timeExpired: boolean
+  /** Minutes the scorekeeper added to the match clock (add_time). */
+  addedMinutes: number
   sanctions: SanctionRecord[]
   /** Improper requests per team (the IMPROPER REQUEST box). */
   improperRequests: Record<TeamSide, boolean>
@@ -441,3 +446,119 @@ export type OfficialSheetViewProps = {
 export type MatchDetailsCardProps = { info: MatchInfo; onChange: (patch: Partial<MatchInfo>) => void }
 export type SavedTeamsPickerProps = { teams: SavedTeam[]; target: TeamSide | null; targetLabel: string; onPick: (team: SavedTeam) => void }
 
+
+/** A whole team typed or pasted at once on the new-match screen (`RosterTextSheet`). */
+export type RosterTextSheetProps = {
+  visible: boolean
+  /** "Team A" or the team's name: the sheet's title. */
+  teamLabel: string
+  /** Prefill: the team's current name and players (court in serving order, then bench). */
+  initialName: string
+  initialText: string
+  onApply: (team: { name: string; court: (RosterPlayer | null)[]; bench: RosterPlayer[] }) => void
+  onDismiss: () => void
+}
+
+/** Simple score (no lineups, no scoresheet): how a match is played. */
+export type SimpleFormat = {
+  /** Best of 1, 3 or 5 sets. */
+  sets: 1 | 3 | 5
+  /** Points to win a set; the deciding set of a best-of-3/5 plays to 15. */
+  target: number
+  /** A set ends at this score even if not 2 ahead (null: no cap). */
+  cap: number | null
+}
+
+/** A simple-score match as saved on the device: a log of who won each rally. */
+export type SimpleMatch = {
+  id: string
+  names: Record<TeamSide, string>
+  format: SimpleFormat
+  firstServe: TeamSide
+  /** Winner of each rally, in order. Undo drops the last one. */
+  rallies: TeamSide[]
+  startedAt: number
+  updatedAt: number
+}
+
+export type SimpleSetScore = { A: number; B: number; target: number; winner: TeamSide | null }
+
+/** Everything the simple-score screen shows, replayed from the log. */
+export type SimpleState = {
+  sets: SimpleSetScore[]
+  /** Index of the set in play (the last one when the match is over). */
+  current: number
+  setsWon: Record<TeamSide, number>
+  serving: TeamSide
+  over: boolean
+  winner: TeamSide | null
+  /** The rally just played ended a set (show "Set to …"). */
+  setJustEnded: boolean
+  /** Index in the rally log where the set on the board began (−1 only reaches back to here). */
+  setStart: number
+}
+
+/**
+ * One team on the new-match screen's number grid: every box as typed (digits only).
+ * `court` is the starting six in serving order (position I first); `liberos` has two boxes.
+ * Names and captain come from saved teams or a pasted roster and ride along by number.
+ */
+export type NumberGridTeam = {
+  name: string
+  court: string[]
+  bench: string[]
+  liberos: string[]
+  details: Record<number, { name?: string; captain?: boolean }>
+}
+
+/** Where a box sits in the grid, for focus order: court, then bench, then liberos. */
+export type GridBox = { part: 'court' | 'bench' | 'liberos'; index: number }
+
+/** What's still wrong with a team's grid: empty starting spots and numbers typed twice. */
+export type NumberGridIssues = { missingCourt: number; duplicates: number[] }
+
+export type TeamNumbersCardProps = {
+  side: TeamSide
+  team: NumberGridTeam
+  /** Show empty starting spots as errors (after a Next tap). */
+  showMissing: boolean
+  onName: (name: string) => void
+  onType: (box: GridBox, text: string) => void
+  onSubmitBox: (box: GridBox) => void
+  onPaste: () => void
+  /** Registers each box's input so the screen can move focus from box to box. */
+  boxRef: (box: GridBox) => (input: unknown) => void
+}
+
+/** Simple score's sideways scoreboard (`SimpleScoreboard`): scoring in landscape, big enough to show people. */
+export type SimpleScoreboardProps = {
+  names: Record<TeamSide, string>
+  scores: Record<TeamSide, number>
+  setsWon: Record<TeamSide, number>
+  serving: TeamSide | null
+  /** Left to right, as on the scoring screen (Switch sides flips it). */
+  order: TeamSide[]
+  /** "Set 2 of up to 3", "Final"... */
+  setLabel: string
+  /** Scoring is paused: between sets (until Start set N) or after the match. */
+  locked: boolean
+  /** Shown over the board while locked: "Set to Team A, 25–21". */
+  notice: string | null
+  /** "Start set 2 · Team B serves" between sets; null otherwise. */
+  nextSetLabel: string | null
+  onPoint: (side: TeamSide) => void
+  onMinus: (side: TeamSide) => void
+  onNextSet: () => void
+  onSwitchSides: () => void
+  onClose: () => void
+}
+
+/** `PinchZoom`: pinch to zoom and drag around a view (the scoresheet). */
+export type PinchZoomProps = {
+  /** Zoom set from outside (the Enlarge button); 1 is the fitted size. */
+  zoom?: number
+  /** Called when a pinch ends, with the new zoom. */
+  onZoomChange?: (zoom: number) => void
+  children: import('react').ReactNode
+  testID?: string
+}

@@ -55,6 +55,8 @@ export function useDocScrollMemory(
   const reveal = () => {
     if (hiddenUntil.current) { clearTimeout(hiddenUntil.current); hiddenUntil.current = null }
     const el = hideNode()
+    // useDocScrollRefocus is holding it hidden until its own restore settles: leave it to that.
+    if (el?.dataset?.[HOLD]) return
     if (el?.style) el.style.visibility = ''
   }
   useLayoutEffect(() => {
@@ -105,6 +107,9 @@ export function useDocScrollMemory(
   }, [enabled, key, onLayout])
 }
 
+/** Set on the hidden node while useDocScrollRefocus restores, so the mount/layout path doesn't show it early. */
+const HOLD = 'vteamScrollHold'
+
 /**
  * For a tab screen that stays mounted under a pushed screen (Expo Router 58 keeps
  * the tabs mounted, so Back no longer remounts them): hide it when it loses focus,
@@ -124,18 +129,35 @@ export function useDocScrollRefocus(
   useFocusEffect(useCallback(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return
     const el = () => hideRef.current as unknown as HTMLElement | null
-    const show = () => { const n = el(); if (n?.style) n.style.visibility = '' }
+    const show = () => {
+      const n = el()
+      if (!n?.style) return
+      delete n.dataset[HOLD]
+      n.style.visibility = ''
+    }
     let timer: ReturnType<typeof setTimeout> | null = null
     if (focusedOnce.current) {
       const y = recallScroll(key)
-      if (activeRef.current && y > 0 && Math.abs(window.scrollY - y) > 5) {
+      if (activeRef.current && y > 0) {
+        const n = el()
+        if (n?.style) { n.dataset[HOLD] = '1'; n.style.visibility = 'hidden' }
         timer = setTimeout(show, 400)
+        const ready = () => document.body.classList.contains('doc-scroll') && isShown(nodeRef.current as unknown as HTMLElement | null)
         restoreWhenReady({
           y,
-          ready: () => document.body.classList.contains('doc-scroll') && isShown(nodeRef.current as unknown as HTMLElement | null),
+          ready,
           apply: to => window.scrollTo(0, to),
           current: () => window.scrollY,
-          onDone: () => { if (timer) clearTimeout(timer); show() },
+          // Show only once the offset has held for a frame: the shell can still reset the
+          // window to 0 as document scroll switches back on (a one-frame flash of the top).
+          onDone: () => requestAnimationFrame(() => {
+            if (Math.abs(window.scrollY - y) > 5) {
+              restoreWhenReady({ y, ready, apply: to => window.scrollTo(0, to), current: () => window.scrollY, onDone: () => { if (timer) clearTimeout(timer); show() } })
+              return
+            }
+            if (timer) clearTimeout(timer)
+            show()
+          }),
         })
       } else {
         show()
@@ -146,7 +168,7 @@ export function useDocScrollRefocus(
       if (timer) clearTimeout(timer)
       // Leaving for a pushed screen: hide now, while the offset is still remembered.
       const n = el()
-      if (activeRef.current && recallScroll(key) > 0 && n?.style) n.style.visibility = 'hidden'
+      if (activeRef.current && recallScroll(key) > 0 && n?.style) { n.dataset[HOLD] = '1'; n.style.visibility = 'hidden' }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
   }, [key]))

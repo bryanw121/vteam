@@ -189,7 +189,7 @@ describe('ConfirmDialog', () => {
 
   it('destructive uses the danger fill, otherwise primary', () => {
     const { rerender } = render(<ConfirmDialog {...base} destructive onConfirm={() => {}} onCancel={() => {}} />)
-    expect(flat(screen.getByTestId('confirm-dialog-confirm')).backgroundColor).toBe(theme.colors.error)
+    expect(flat(screen.getByTestId('confirm-dialog-confirm')).backgroundColor).toBe(theme.colors.dangerFill)
     rerender(<ConfirmDialog {...base} onConfirm={() => {}} onCancel={() => {}} />)
     expect(flat(screen.getByTestId('confirm-dialog-confirm')).backgroundColor).toBe(theme.colors.primary)
   })
@@ -250,7 +250,7 @@ describe('Button', () => {
 
   it.each([
     ['primary', theme.colors.primary],
-    ['danger', theme.colors.error],
+    ['danger', theme.colors.dangerFill],
     ['secondary', 'transparent'],
     ['ghost', 'transparent'],
   ] as const)('%s variant background', (variant, bg) => {

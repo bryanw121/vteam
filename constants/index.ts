@@ -1,6 +1,6 @@
 export { theme } from './theme'
 export { AVATARS_BUCKET, CLUB_AVATARS_BUCKET, CHAT_IMAGES_BUCKET, CHAT_IMAGE_SIGNED_URL_TTL_SEC, AVATAR_MAX_FILE_BYTES, AVATAR_SIGNED_URL_TTL_SEC } from './storage'
-export { shared } from './styles'
+export { shared, CLUB_COVER_HEIGHT, CLUB_AVATAR_SIZE } from './styles'
 export { BREAKPOINTS } from './layout'
 export { STALE } from './cache'
 export {
@@ -28,6 +28,7 @@ export {
   CHAT_TAB_INDEX,
   PROFILE_TAB_INDEX,
   SWIPE_NAVIGATION,
+  HEADERLESS_STACK_ROUTES,
 } from './navigation'
 export type { Tab, TabKey, CreateMenuOption, CreateMenuSection } from './navigation'
 export { formatEventDate, eventAttendeeDisplayCount } from '../utils'

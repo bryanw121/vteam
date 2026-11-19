@@ -112,7 +112,7 @@ export function SheetTeamsView({ state, team, onSelectTeam }: SheetTeamsViewProp
 
 /** One game on a team's page: W / L / T (or LIVE, or Next), the opponent (tappable), where, and the score. */
 function GameRow({ game: g, last, onSelectTeam }: { game: SheetTeamGame; last: boolean; onSelectTeam: (team: string) => void }) {
-  const badge = g.status === 'live' ? 'LIVE' : g.status === 'upcoming' ? 'Next' : g.result ?? ''
+  const badge = g.ref ? 'Ref' : g.status === 'live' ? 'LIVE' : g.status === 'upcoming' ? 'Next' : g.result ?? ''
   const color = g.status === 'live' ? theme.colors.hot : g.result ? RESULT_COLOR[g.result] : theme.colors.subtext
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderBottomWidth: last ? 0 : 1, borderBottomColor: theme.colors.borderSoft }}>
@@ -129,7 +129,7 @@ function GameRow({ game: g, last, onSelectTeam }: { game: SheetTeamGame; last: b
             style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.text }}
           >vs {g.opponent}</Text>
         ) : (
-          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.md, color: theme.colors.subtext }}>{g.bye ? 'Bye' : 'vs TBD'}</Text>
+          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.md, color: theme.colors.subtext }}>{g.ref ? 'Reffing' : g.bye ? 'Bye' : 'vs TBD'}</Text>
         )}
         <Text numberOfLines={1} style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext }}>{g.label}</Text>
       </View>

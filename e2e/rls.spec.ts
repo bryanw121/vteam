@@ -108,6 +108,17 @@ test.describe('anon (guest browsing)', () => {
     expect(rpc.error, 'anon must not execute send_friend_request').not.toBeNull()
   })
 
+  test('Find a team: counts only, no rows, no writes (#304)', async () => {
+    const counts = await q(() => anon.rpc('program_free_agent_counts', { p_ids: ['no-such-program'] }), 'anon program_free_agent_counts')
+    expect(counts.error, `anon counts: ${counts.error?.message}`).toBeNull()
+    for (const row of (counts.data ?? []) as Record<string, unknown>[]) expect(Object.keys(row).sort()).toEqual(['n', 'program_id'])
+    const rows = await q(() => anon.from('program_free_agents').select('user_id').limit(1), 'anon program_free_agents')
+    if (rows.error) expect(rows.error.code).toBe(RLS_DENIED)
+    else expect(rows.data).toEqual([])
+    const ins = await q(() => anon.from('program_free_agents').insert({ program_id: 'no-such-program', user_id: BUDDY_ID }), 'anon insert free agent')
+    expect(ins.error?.code).toBe(RLS_DENIED)
+  })
+
   test('cannot run the reminder job or read its ledger (#129)', async () => {
     const run = await q(() => anon.rpc('send_event_reminders'), 'anon send_event_reminders')
     expect(run.error, 'anon may not run send_event_reminders').not.toBeNull()
@@ -126,6 +137,13 @@ test.describe('anon (guest browsing)', () => {
 
   test('cannot call save_event (#188)', async () => {
     const res = await q(() => anon.rpc('save_event', { p_edit_id: null, p_event: { title: '[e2e rls] must fail' }, p_dates: [new Date().toISOString()], p_tag_ids: [] } as never), 'anon save_event')
+    expect(res.error).not.toBeNull()
+  })
+
+  test('cannot call save_tournament (#325)', async () => {
+    const res = await q(() => anon.rpc('save_tournament' as never, {
+      p_tournament: { title: '[e2e rls] must fail', club_id: crypto.randomUUID(), start_date: new Date().toISOString(), format: 'bracket' }, p_rules: {},
+    } as never), 'anon save_tournament')
     expect(res.error).not.toBeNull()
   })
 
@@ -221,6 +239,18 @@ test.describe('signed in as the e2e account', () => {
       p_edit_id: null, p_event: { title: '[e2e rls] must fail' }, p_dates: Array.from({ length: 53 }, (_, i) => new Date(Date.now() + i * 86_400_000).toISOString()), p_tag_ids: [],
     } as never), 'save_event 53 dates')
     expect(tooMany.error?.code).toBe('22023')
+  })
+
+  test("tournaments (#325): can't create one in a club it isn't in, by RPC or directly", async () => {
+    const notMine = crypto.randomUUID()
+    const rpc = await q(() => me.rpc('save_tournament' as never, {
+      p_tournament: { title: '[e2e rls] must fail', club_id: notMine, start_date: new Date().toISOString(), format: 'bracket', status: 'draft' }, p_rules: {},
+    } as never), 'save_tournament in another club')
+    expect(rpc.error?.code).toBe(RLS_DENIED)
+    const direct = await q(() => me.from('tournaments').insert({
+      title: '[e2e rls] must fail', club_id: notMine, created_by: myId, start_date: new Date().toISOString(), format: 'bracket',
+    }).select('id'), 'insert tournament in another club')
+    expect(direct.error?.code).toBe(RLS_DENIED)
   })
 
   test('cannot rename itself; other columns of its own row still update (#223)', async () => {

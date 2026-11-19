@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -17,6 +18,7 @@ import { WrongServerSheet } from '../../../../components/scoresheet/WrongServerS
 import { FixSheet } from '../../../../components/scoresheet/FixSheet'
 import { TextSheet } from '../../../../components/scoresheet/TextSheet'
 import { TimelineSheet } from '../../../../components/scoresheet/TimelineSheet'
+import { SheetBody } from '../../../../components/scoresheet/SheetParts'
 import { LiveSheetPanel } from '../../../../components/scoresheet/LiveSheetPanel'
 import { TimeoutTimer } from '../../../../components/scoresheet/TimeoutTimer'
 import { MatchClock } from '../../../../components/scoresheet/MatchClock'
@@ -27,6 +29,7 @@ import { deleteMatch } from '../../../../lib/scoresheet/storage'
 import { describeEvent, playerLabel } from '../../../../lib/scoresheet/describe'
 import { POSITION_LABELS, courtOf, serverOf } from '../../../../lib/scoresheet/engine'
 import { teamName } from '../../../../lib/scoresheet/summary'
+import { lastPointEventId } from '../../../../lib/scoresheet/minusOne'
 import { shared, theme } from '../../../../constants'
 import { routes } from '../../../../utils/routes'
 import { TourTarget } from '../../../../components/tour/TourTarget'
@@ -36,7 +39,11 @@ import { loadSeenBanners, markBannerSeenOnDevice } from '../../../../utils/seenB
 
 /** Recorded on the device when the tour opens by itself, so it only does that once (finishing records tour-scorekeeper-done). */
 const SCOREKEEPER_TOUR_OFFERED = 'tour-scorekeeper-offered'
-import type { IoniconName, TeamSide } from '../../../../types'
+/** Court, counts and live scoresheet under the score buttons: off unless turned on in More (remembered on the device). */
+const SHOW_COURT_KEY = 'vteam.scorekeeper.showCourt'
+/** Side by side at this width; stacked on phones. */
+const SIDE_BY_SIDE_MIN = 700
+import type { TeamSide } from '../../../../types'
 
 type SheetKind = 'sub' | 'libero' | 'timeout' | 'sanction' | 'wrong' | 'fix' | 'note' | 'end_set' | 'timeline' | 'more'
 
@@ -54,14 +61,23 @@ export default function ScoreMatchScreen() {
   const [subOut, setSubOut] = useState<number | undefined>(undefined)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const lastPointAt = useRef(0)
+  const { width, height } = useWindowDimensions()
+  const wide = width >= SIDE_BY_SIDE_MIN
+  const [showCourt, setShowCourt] = useState(false)
+  useEffect(() => {
+    AsyncStorage.getItem(SHOW_COURT_KEY).then(v => setShowCourt(v === 'on')).catch(() => {})
+  }, [])
+  const toggleCourt = () => {
+    const next = !showCourt
+    setShowCourt(next)
+    void AsyncStorage.setItem(SHOW_COURT_KEY, next ? 'on' : 'off').catch(() => {})
+  }
 
   const set = m.state && m.state.current != null ? m.state.sets[m.state.current] : null
   const tour = useTour()
-  const cardsRef = useTourTarget(TOUR_TARGETS.scoreCards)
   const serverRef = useTourTarget(TOUR_TARGETS.scoreServer)
   const pointsRef = useTourTarget(TOUR_TARGETS.scorePoints)
   const actionsRef = useTourTarget(TOUR_TARGETS.scoreActions)
-  const courtRef = useTourTarget(TOUR_TARGETS.scoreCourt)
   // The first time someone has a set to score, walk them through the screen (once per device; "?" replays it).
   const setInPlay = !!set
   useEffect(() => {
@@ -104,16 +120,18 @@ export default function ScoreMatchScreen() {
     <View style={styles.topBar}>
       <IconButton icon="chevron-back" size={44} label="Back to Scorekeeper" onPress={() => (router.canGoBack() ? router.back() : router.replace(routes.scorekeeper()))} />
       <View style={{ flex: 1, alignItems: 'center' }}>
-        <Text style={styles.topTitle} numberOfLines={1}>{m.doc ? `${teamName(m.doc, 'A')} vs ${teamName(m.doc, 'B')}` : 'Match'}</Text>
-        {m.state && (
-          <Text style={shared.caption}>
-            {set ? `Set ${set.index + 1} · to ${set.target}${set.cap != null ? ` (cap ${set.cap})` : ''}` : m.state.over ? 'Final' : `Set ${m.state.sets.length + 1} next`} · Sets {m.state.setsWon.A}–{m.state.setsWon.B}
+        <Text style={styles.topTitle} numberOfLines={1}>
+          {!m.state ? 'Match' : set ? `Set ${set.index + 1} · Sets ${m.state.setsWon.A}–${m.state.setsWon.B}` : m.state.over ? 'Final' : `Set ${m.state.sets.length + 1} next`}
+        </Text>
+        {m.state && m.doc && (
+          <Text style={shared.caption} numberOfLines={1}>
+            {set ? `To ${set.target}${set.cap != null ? `, cap ${set.cap}` : ''}` : `${teamName(m.doc, 'A')} vs ${teamName(m.doc, 'B')} · Sets ${m.state.setsWon.A}–${m.state.setsWon.B}`}
           </Text>
         )}
       </View>
       {set && <IconButton icon="help-circle-outline" size={44} label="How scoring works" onPress={() => tour.start('scorekeeper', 'help_button')} testID="score-help" />}
       <TourTarget id={TOUR_TARGETS.scoreMore}>
-        <IconButton icon="ellipsis-horizontal" size={44} label="More actions" onPress={() => openSheet('more')} testID="score-more" />
+        <Button label="More" variant="secondary" size="touch" fullWidth={false} onPress={() => openSheet('more')} testID="score-more" />
       </TourTarget>
     </View>
   )
@@ -146,7 +164,7 @@ export default function ScoreMatchScreen() {
                 </View>
               )}
 
-              <MatchClock doc={m.doc} state={m.state} onTimeUp={() => m.add({ type: 'time_up' })} />
+              <MatchClock doc={m.doc} state={m.state} onTimeUp={() => m.add({ type: 'time_up' })} onAddTime={minutes => m.add({ type: 'add_time', minutes })} />
               {set?.nextPointWins && (
                 <View style={[styles.banner, { borderColor: theme.colors.warning }]} accessibilityRole="alert" testID="next-point-wins">
                   <Ionicons name="flash-outline" size={18} color={theme.colors.warning} />
@@ -157,106 +175,108 @@ export default function ScoreMatchScreen() {
 
               {set && (
                 <>
-                  <View ref={cardsRef} collapsable={false} style={styles.scores}>
+                  <View ref={pointsRef} collapsable={false} style={[styles.pointArea, { minHeight: Math.max(320, height - 280) }, wide && { flexDirection: 'row' }]}>
                     {(['A', 'B'] as const).map(side => {
-                      const t = set.teams[side]
-                      const serving = set.serving === side
                       const color = TEAM_COLORS[side]
-                      const rules = m.doc!.setup.rules
+                      const serving = set.serving === side
+                      const server = serverOf(set.teams[side])
                       return (
-                        <View key={side} style={[styles.scoreCard, { borderColor: serving ? color.fill : theme.colors.border }]} testID={`score-${side}`}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs }}>
-                            {serving && <Ionicons name="ellipse" size={10} color={color.fill} accessibilityLabel="Serving" />}
-                            <Text style={styles.teamName} numberOfLines={1}>{teamName(m.doc!, side)}</Text>
+                        <Pressable
+                          key={side}
+                          onPress={() => point(side)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Point to ${teamName(m.doc!, side)}, ${set.teams[side].score}${serving ? `, serving #${server}` : ''}`}
+                          testID={`point-${side}`}
+                          style={({ pressed }) => [shared.scorePointBtn, { backgroundColor: color.fill }, pressed && { opacity: 0.85, transform: [{ scale: 0.99 }] }]}
+                        >
+                          <Text style={[shared.scorePointTeam, { color: color.ink }]} numberOfLines={1}>{teamName(m.doc!, side)}</Text>
+                          <Text style={[styles.bigScore, { color: color.ink }]} testID={`score-${side}`} maxFontSizeMultiplier={1.3}>{set.teams[side].score}</Text>
+                          <View ref={serving ? serverRef : undefined} collapsable={false}>
+                            <Text
+                              style={[shared.scorePointServing, { color: color.ink, borderColor: serving ? color.ink : 'transparent' }]}
+                              testID={serving ? 'serving-now' : undefined}
+                              maxFontSizeMultiplier={1.3}
+                            >
+                              {serving ? `Serving · #${server}` : ' '}
+                            </Text>
                           </View>
-                          <Text style={styles.bigScore} accessibilityLabel={`${teamName(m.doc!, side)} ${t.score}`}>{t.score}</Text>
-                          <Text style={shared.caption}>
-                            T/O {t.timeouts.length}/{rules.timeoutsPerSet} · Subs {t.subs.filter(s => !s.exceptional).length}{rules.subsPerSet != null ? `/${rules.subsPerSet}` : ''}
-                          </Text>
-                        </View>
+                        </Pressable>
                       )
                     })}
                   </View>
 
-                  <Pressable ref={serverRef} onPress={() => openSheet('wrong')} accessibilityRole="button" accessibilityLabel="Who should be serving; tap to record an out-of-rotation fault" style={styles.serverRow} testID="server-row">
-                    <Ionicons name="tennisball-outline" size={18} color={TEAM_COLORS[set.serving].fill} />
-                    <Text style={[shared.body, { flex: 1 }]}>
-                      Serving: <Text style={{ fontFamily: theme.fonts.bodySemiBold }}>{playerLabel(m.doc.setup, set.serving, serverOf(set.teams[set.serving]))}</Text> · {teamName(m.doc, set.serving)}
-                    </Text>
-                    <Text style={[shared.caption, { color: theme.colors.warning }]}>Out of rotation?</Text>
-                  </Pressable>
-
                   {set.courtSwitchAt != null && Math.max(set.teams.A.score, set.teams.B.score) === set.courtSwitchAt && (
-                    <View style={[styles.banner, { borderColor: theme.colors.accent }]} accessibilityRole="alert">
+                    <View style={[styles.banner, { borderColor: theme.colors.accent, marginTop: theme.spacing.sm }]} accessibilityRole="alert">
                       <Ionicons name="swap-horizontal" size={18} color={theme.colors.accent} />
                       <Text style={[shared.body, { flex: 1 }]}>Switch courts: a team reached {set.courtSwitchAt}.</Text>
                     </View>
                   )}
 
-                  <View ref={pointsRef} collapsable={false} style={styles.pointRow}>
-                    {(['A', 'B'] as const).map(side => (
-                      <Pressable
-                        key={side}
-                        onPress={() => point(side)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Point to ${teamName(m.doc!, side)}`}
-                        testID={`point-${side}`}
-                        style={({ pressed }) => [styles.pointBtn, { backgroundColor: TEAM_COLORS[side].fill }, pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }]}
-                      >
-                        <Ionicons name="add-circle" size={28} color={TEAM_COLORS[side].ink} />
-                        <Text style={[styles.pointLabel, { color: TEAM_COLORS[side].ink }]} numberOfLines={1}>{teamName(m.doc!, side)}</Text>
-                      </Pressable>
-                    ))}
-                  </View>
-
-                  <View ref={actionsRef} collapsable={false} style={styles.actions}>
-                    <Action icon="arrow-undo" label="Undo" onPress={m.undo} disabled={!m.doc.undo.length} testID="action-undo" />
-                    <Action icon="arrow-redo" label="Redo" onPress={m.redo} disabled={!m.doc.redo.length} testID="action-redo" />
-                    <Action icon="swap-vertical" label="Sub" onPress={() => { setSubOut(undefined); openSheet('sub') }} testID="action-sub" />
-                    <Action icon="shirt-outline" label="Libero" onPress={() => openSheet('libero')} testID="action-libero" />
-                    <Action icon="pause" label="Time" onPress={() => openSheet('timeout')} testID="action-timeout" />
-                    <Action icon="card-outline" label="Card" onPress={() => openSheet('sanction')} testID="action-card" />
-                    <Action icon="list" label="Timeline" onPress={() => openSheet('timeline')} testID="action-timeline" />
-                  </View>
-
-                  {lastEvent && (
-                    <Text style={[shared.caption, { textAlign: 'center', marginTop: theme.spacing.sm }]} numberOfLines={1}>
-                      Last: {describeEvent(m.doc.setup, lastEvent)}
-                    </Text>
-                  )}
-
-                  <View ref={courtRef} collapsable={false} style={styles.courts}>
-                    <Text style={[shared.caption, { textAlign: 'center' }]}>Tap a player to sub them, or the libero to swap back.</Text>
-                    <CourtLayout
-                      renderLabel={side => (
-                        <Text style={[shared.label, { color: TEAM_COLORS[side].fill, marginBottom: 0, textAlign: 'center' }]}>
-                          {teamName(m.doc!, side)}{set.serving === side ? ' · serving' : ''}
-                        </Text>
-                      )}
-                      renderSpot={(side, position) => {
-                        const spot = courtOf(set.teams[side])[position]
-                        const isServer = set.serving === side && position === 0
+                  <View ref={actionsRef} collapsable={false} style={{ marginTop: theme.spacing.sm }}>
+                    <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
+                      {(['A', 'B'] as const).map(side => {
+                        const target = lastPointEventId(m.doc!.log, side)
                         return (
-                          <CourtSpot
-                            position={position}
-                            number={spot.player}
-                            name={names[side].get(spot.player)}
-                            libero={spot.libero}
-                            highlight={isServer ? TEAM_COLORS[side] : null}
-                            onPress={() => {
-                              if (spot.libero) return openSheet('libero', side)
-                              setSubOut(spot.player)
-                              openSheet('sub', side)
-                            }}
-                            accessibilityLabel={`${teamName(m.doc!, side)} position ${POSITION_LABELS[position]}: ${spot.libero ? 'libero ' : ''}#${spot.player}${isServer ? ', serving' : ''}`}
-                            testID={`court-${side}-${position}`}
-                          />
+                          <View key={side} style={{ flex: 1 }}>
+                            <Button
+                              label={`−1 ${teamName(m.doc!, side)}`}
+                              variant="secondary"
+                              size="touch"
+                              disabled={!target}
+                              onPress={() => { if (target) m.remove(target) }}
+                              accessibilityLabel={`Take a point away from ${teamName(m.doc!, side)}`}
+                              testID={`minus-${side}`}
+                            />
+                          </View>
                         )
-                      }}
-                    />
+                      })}
+                    </View>
+                    {lastEvent && (
+                      <Text style={[shared.caption, { textAlign: 'center', marginTop: theme.spacing.xs }]} numberOfLines={1}>
+                        Last: {describeEvent(m.doc.setup, lastEvent)}
+                      </Text>
+                    )}
                   </View>
 
-                  <LiveSheetPanel doc={m.doc} state={m.state} setIndex={set.index} onOpenSheet={() => router.push(routes.scorekeeperSheet(m.doc!.id))} />
+                  {showCourt && (
+                    <View style={styles.courts} testID="court-details">
+                      <Text style={[shared.caption, { textAlign: 'center' }]}>
+                        {(['A', 'B'] as const).map(side => {
+                          const t = set.teams[side]
+                          const rules = m.doc!.setup.rules
+                          return `${teamName(m.doc!, side)}: T/O ${t.timeouts.length}/${rules.timeoutsPerSet} · Subs ${t.subs.filter(x => !x.exceptional).length}${rules.subsPerSet != null ? `/${rules.subsPerSet}` : ''}`
+                        }).join('   ')}
+                      </Text>
+                      <CourtLayout
+                        renderLabel={side => (
+                          <Text style={[shared.label, { color: TEAM_COLORS[side].fill, marginBottom: 0, textAlign: 'center' }]}>
+                            {teamName(m.doc!, side)}{set.serving === side ? ' · serving' : ''}
+                          </Text>
+                        )}
+                        renderSpot={(side, position) => {
+                          const spot = courtOf(set.teams[side])[position]
+                          const isServer = set.serving === side && position === 0
+                          return (
+                            <CourtSpot
+                              position={position}
+                              number={spot.player}
+                              name={names[side].get(spot.player)}
+                              libero={spot.libero}
+                              highlight={isServer ? TEAM_COLORS[side] : null}
+                              onPress={() => {
+                                if (spot.libero) return openSheet('libero', side)
+                                setSubOut(spot.player)
+                                openSheet('sub', side)
+                              }}
+                              accessibilityLabel={`${teamName(m.doc!, side)} position ${POSITION_LABELS[position]}: ${spot.libero ? 'libero ' : ''}#${spot.player}${isServer ? ', serving' : ''}`}
+                              testID={`court-${side}-${position}`}
+                            />
+                          )
+                        }}
+                      />
+                      <LiveSheetPanel doc={m.doc} state={m.state} setIndex={set.index} onOpenSheet={() => router.push(routes.scorekeeperSheet(m.doc!.id))} />
+                    </View>
+                  )}
                 </>
               )}
 
@@ -301,16 +321,61 @@ export default function ScoreMatchScreen() {
           <TextSheet visible={sheet === 'note' || sheet === 'end_set'} onDismiss={close} doc={m.doc} mode={sheet === 'end_set' ? 'end_set' : 'note'} onSubmit={m.add} />
           <TimelineSheet visible={sheet === 'timeline'} onDismiss={close} doc={m.doc} onEdit={m.edit} onRemove={m.remove} onInsert={m.insert} />
           <BottomSheet visible={sheet === 'more'} onDismiss={close} title="More">
-            <View style={{ gap: theme.spacing.sm }}>
-              <Button label="Scoresheet" icon="document-text-outline" variant="secondary" onPress={() => { close(); router.push(routes.scorekeeperSheet(m.doc!.id)) }} testID="more-sheet" />
-              <Button label="Timeline: fix a past rally" icon="list" variant="secondary" onPress={() => setSheet('timeline')} />
-              {set && <Button label="Out of rotation (point or wrong server)" icon="alert-circle-outline" variant="secondary" onPress={() => setSheet('wrong')} />}
+            <SheetBody>
+              <Button label="Undo last action" icon="arrow-undo" variant="secondary" disabled={!m.doc.undo.length} onPress={() => { m.undo(); close() }} testID="action-undo" />
+              {set && (
+                <View style={styles.moreGrid}>
+                  {(['A', 'B'] as const).map(side => (
+                    <Pressable
+                      key={`to-${side}`}
+                      onPress={() => { m.add({ type: 'timeout', team: side }); close() }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${teamName(m.doc!, side)} time-out`}
+                      testID={`more-timeout-${side}`}
+                      style={({ pressed }) => [styles.moreTile, { borderColor: TEAM_COLORS[side].fill, backgroundColor: TEAM_COLORS[side].soft }, pressed && { opacity: 0.8 }]}
+                    >
+                      <Text style={[shared.body, { fontFamily: theme.fonts.bodySemiBold }]} numberOfLines={1}>{teamName(m.doc!, side)} time-out</Text>
+                      <Text style={shared.caption}>{set.teams[side].timeouts.length} of {m.doc!.setup.rules.timeoutsPerSet} used</Text>
+                    </Pressable>
+                  ))}
+                  {(['A', 'B'] as const).map(side => (
+                    <Pressable
+                      key={`sub-${side}`}
+                      onPress={() => { setSubOut(undefined); openSheet('sub', side) }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${teamName(m.doc!, side)} substitution`}
+                      testID={`more-sub-${side}`}
+                      style={({ pressed }) => [styles.moreTile, { borderColor: TEAM_COLORS[side].fill, backgroundColor: TEAM_COLORS[side].soft }, pressed && { opacity: 0.8 }]}
+                    >
+                      <Text style={[shared.body, { fontFamily: theme.fonts.bodySemiBold }]} numberOfLines={1}>{teamName(m.doc!, side)} sub</Text>
+                      <Text style={shared.caption}>
+                        {set.teams[side].subs.filter(x => !x.exceptional).length}{m.doc!.setup.rules.subsPerSet != null ? ` of ${m.doc!.setup.rules.subsPerSet}` : ''} used
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+              {set && <Button label="Libero in / out" icon="shirt-outline" variant="secondary" onPress={() => setSheet('libero')} testID="action-libero" />}
+              <Button label="Card or sanction" icon="card-outline" variant="secondary" onPress={() => setSheet('sanction')} testID="action-card" />
+              {set && <Button label="Out of rotation or wrong server" icon="alert-circle-outline" variant="secondary" onPress={() => setSheet('wrong')} testID="more-wrong" />}
+              <Button label="Timeline: fix a past rally" icon="list" variant="secondary" onPress={() => setSheet('timeline')} testID="action-timeline" />
               {set && <Button label="Match the scoreboard" icon="construct-outline" variant="secondary" onPress={() => setSheet('fix')} testID="more-fix" />}
+              <Button label="Redo" icon="arrow-redo" variant="secondary" disabled={!m.doc.redo.length} onPress={() => { m.redo(); close() }} testID="action-redo" />
               {set && <Button label="Rally replayed (no point)" icon="refresh" variant="secondary" onPress={() => { m.add({ type: 'replay' }); close() }} />}
               <Button label="Add a remark" icon="create-outline" variant="secondary" onPress={() => setSheet('note')} />
               {set && <Button label="End set early" icon="flag-outline" variant="secondary" onPress={() => setSheet('end_set')} />}
+              {set && (
+                <Button
+                  label={showCourt ? 'Hide court and live scoresheet' : 'Show court and live scoresheet'}
+                  icon={showCourt ? 'eye-off-outline' : 'grid-outline'}
+                  variant="secondary"
+                  onPress={() => { toggleCourt(); close() }}
+                  testID="more-court"
+                />
+              )}
+              <Button label="Scoresheet" icon="document-text-outline" variant="secondary" onPress={() => { close(); router.push(routes.scorekeeperSheet(m.doc!.id)) }} testID="more-sheet" />
               <Button label="Delete match" icon="trash-outline" variant="danger" onPress={() => { close(); setConfirmDelete(true) }} />
-            </View>
+            </SheetBody>
           </BottomSheet>
         </>
       )}
@@ -330,23 +395,6 @@ export default function ScoreMatchScreen() {
   )
 }
 
-function Action({ icon, label, onPress, disabled, testID }: { icon: IoniconName; label: string; onPress: () => void; disabled?: boolean; testID?: string }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: !!disabled }}
-      testID={testID}
-      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [styles.action, disabled && { opacity: 0.35 }, (pressed || hovered) && !disabled && { backgroundColor: theme.colors.background }]}
-    >
-      <Ionicons name={icon} size={20} color={theme.colors.text} />
-      <Text style={styles.actionLabel} numberOfLines={1} maxFontSizeMultiplier={1.15}>{label}</Text>
-    </Pressable>
-  )
-}
-
 const styles = StyleSheet.create({
   topBar: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.sm },
   topTitle: { fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lg, color: theme.colors.text },
@@ -360,48 +408,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.card,
     marginBottom: theme.spacing.sm,
   },
-  scores: { flexDirection: 'row', gap: theme.spacing.sm },
-  scoreCard: {
-    flex: 1,
-    alignItems: 'center',
-    padding: theme.spacing.sm,
-    borderRadius: theme.radius.lg,
-    borderWidth: 2,
-    backgroundColor: theme.colors.card,
-  },
-  teamName: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.text, flexShrink: 1 },
-  bigScore: { fontFamily: theme.fonts.display, fontSize: theme.font.heading.splash, color: theme.colors.text, lineHeight: theme.font.heading.splash * 1.15 },
-  serverRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    minHeight: 44,
-    paddingHorizontal: theme.spacing.sm,
-    marginVertical: theme.spacing.sm,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.card,
-  },
-  pointRow: { flexDirection: 'row', gap: theme.spacing.sm },
-  pointBtn: {
-    flex: 1,
-    minHeight: 96,
-    borderRadius: theme.radius.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.sm,
-  },
-  pointLabel: { fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lg },
-  actions: {
-    flexDirection: 'row',
-    marginTop: theme.spacing.sm,
-    borderRadius: theme.radius.lg,
-    backgroundColor: theme.colors.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    overflow: 'hidden',
-  },
-  action: { flex: 1, minHeight: 56, alignItems: 'center', justifyContent: 'center', gap: 2, paddingHorizontal: 2 },
-  actionLabel: { fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
+  pointArea: { gap: theme.spacing.sm },
+  bigScore: { fontFamily: theme.fonts.display, fontSize: theme.font.heading.scoreboard, lineHeight: theme.font.heading.scoreboard * 1.1, fontVariant: ['tabular-nums'] },
+  moreGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
+  moreTile: { flexBasis: '47%', flexGrow: 1, minHeight: 60, borderRadius: theme.radius.md, borderWidth: 1, alignItems: 'center', justifyContent: 'center', padding: theme.spacing.sm },
   courts: { gap: theme.spacing.sm, marginTop: theme.spacing.md },
 })

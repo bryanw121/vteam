@@ -96,3 +96,14 @@ test('the summary names each failing check and how to read the error', () => {
   assert.match(md, /cron\.job_run_details/)
   assert.match(renderSummary({ live: [] }), /✅ all healthy/)
 })
+
+test('app crashes (#316) pass or fail as job_health() judged them, with its counts', () => {
+  const quiet = { check_name: 'app: crashes', ok: true, last_ok_at: null, failures_24h: 2, detail: '2 crashes from 1 people in 24h; 0 in 3h' }
+  const spike = { ...quiet, ok: false, failures_24h: 9, detail: '9 crashes from 4 people in 24h; 3 in 3h' }
+  const [a] = evaluate('live', [quiet], { now: NOW }).filter(r => r.check === 'app: crashes')
+  const [b] = evaluate('live', [spike], { now: NOW }).filter(r => r.check === 'app: crashes')
+  assert.equal(a.ok, true)
+  assert.equal(b.ok, false)
+  assert.match(b.detail, /4 people in 24h; 3 in 3h/)
+  assert.equal(evaluate('beta', [spike], { now: NOW, expectationsOnly: true }).some(r => r.check === 'app: crashes'), false)
+})

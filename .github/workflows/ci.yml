@@ -192,6 +192,43 @@ jobs:
         run: node scripts/shots/badge-artwork-flow.mjs --dist dist-mock --out a11y-report/badge-artwork
       - name: Chat badge browser check
         run: node scripts/shots/chat-unread-flow.mjs --dist dist-mock --out a11y-report/chat-unread
+      - name: Crash recovery browser check
+        run: node scripts/shots/crash-recovery-flow.mjs --dist dist-mock --out a11y-report/crash-recovery
+      # Upgrade check (#317): this build opened on a device that last ran main. The
+      # base's mock export is cached by every push to main (below); on a miss it is
+      # exported from the PR's base commit.
+      - name: Base build for the upgrade check (cache)
+        id: base-dist
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: dist-base/
+          key: dist-mock-${{ github.event.pull_request.base.sha }}
+          restore-keys: dist-mock-
+      - name: Base build for the upgrade check (export)
+        if: github.event_name == 'pull_request' && steps.base-dist.outputs.cache-matched-key == ''
+        timeout-minutes: 12
+        run: |
+          git fetch --depth 1 origin ${{ github.event.pull_request.base.sha }}
+          git worktree add ../base FETCH_HEAD
+          cd ../base
+          npm ci --no-audit --no-fund
+          npx expo export -p web --clear --output-dir "$GITHUB_WORKSPACE/dist-base"
+        env:
+          CI: '1'
+          EXPO_NO_TELEMETRY: '1'
+          EXPO_PUBLIC_SUPABASE_URL: https://shotsmock.supabase.co
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: shots-mock-anon-key
+          EXPO_PUBLIC_SENTRY_DSN: ''
+          EXPO_PUBLIC_APP_ENV: development
+      - name: Upgrade check (this build on a device that ran main)
+        if: github.event_name == 'pull_request' && (success() || failure()) && hashFiles('dist-base/index.html') != ''
+        run: |
+          echo "Base build: ${{ steps.base-dist.outputs.cache-matched-key || 'exported from the base commit' }}"
+          node scripts/shots/upgrade-flow.mjs --before dist-base --after dist-mock --out a11y-report/upgrade
+      - name: Upgrade summary
+        if: always() && hashFiles('a11y-report/upgrade/summary.md') != ''
+        run: cat a11y-report/upgrade/summary.md >> "$GITHUB_STEP_SUMMARY"
       - name: axe scan vs baseline
         run: npm run a11y -- --dist dist-mock --out a11y-report
       # Tours never skip a step, no jump or layout shift on refresh/Back, every
@@ -219,6 +256,13 @@ jobs:
       - name: Stability summary
         if: always() && hashFiles('a11y-report/stability/summary.md') != ''
         run: cat a11y-report/stability/summary.md >> "$GITHUB_STEP_SUMMARY"
+      # The next PRs' upgrade check opens their build on a device that ran this one.
+      - name: Keep this build for upgrade checks
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: dist-mock/
+          key: dist-mock-${{ github.sha }}
       - name: Upload a11y report
         if: always() && hashFiles('a11y-report/**') != ''
         uses: actions/upload-artifact@v4
