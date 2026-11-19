@@ -113,7 +113,7 @@ export type Podium = { first: string | null; second: string | null; thirds: stri
 
 // ─── Standings ────────────────────────────────────────────────────────────────
 
-export type TiebreakerKey = 'head_to_head' | 'set_ratio' | 'point_diff' | 'points_for'
+export type TiebreakerKey = 'head_to_head' | 'set_ratio' | 'sets_won' | 'point_diff' | 'points_for'
 
 export type SetScore = { set_number: number; team_a_score: number; team_b_score: number }
 

@@ -2218,11 +2218,94 @@ export type Database = {
           },
         ]
       }
+      tournament_days: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          stage: string
+          starts_at: string
+          tournament_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order: number
+          id?: string
+          stage?: string
+          starts_at: string
+          tournament_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          stage?: string
+          starts_at?: string
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_days_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournament_divisions: {
+        Row: {
+          bracket_type: string
+          created_at: string
+          display_order: number
+          fill_by: string
+          from_place: number
+          id: string
+          name: string
+          third_place_match: boolean
+          to_place: number
+          tournament_id: string
+        }
+        Insert: {
+          bracket_type?: string
+          created_at?: string
+          display_order: number
+          fill_by?: string
+          from_place: number
+          id?: string
+          name: string
+          third_place_match?: boolean
+          to_place: number
+          tournament_id: string
+        }
+        Update: {
+          bracket_type?: string
+          created_at?: string
+          display_order?: number
+          fill_by?: string
+          from_place?: number
+          id?: string
+          name?: string
+          third_place_match?: boolean
+          to_place?: number
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_divisions_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_matches: {
         Row: {
           bracket_round_name: string | null
           court: string | null
           created_at: string
+          division_id: string | null
           id: string
           is_losers_bracket: boolean
           match_number: number
@@ -2241,6 +2324,7 @@ export type Database = {
           bracket_round_name?: string | null
           court?: string | null
           created_at?: string
+          division_id?: string | null
           id?: string
           is_losers_bracket?: boolean
           match_number: number
@@ -2259,6 +2343,7 @@ export type Database = {
           bracket_round_name?: string | null
           court?: string | null
           created_at?: string
+          division_id?: string | null
           id?: string
           is_losers_bracket?: boolean
           match_number?: number
@@ -2419,6 +2504,7 @@ export type Database = {
         Row: {
           deciding_set_score: number
           point_cap: number | null
+          pool_sets_played: number | null
           sets_to_win: number
           starting_score: number
           third_place_match: boolean
@@ -2430,6 +2516,7 @@ export type Database = {
         Insert: {
           deciding_set_score?: number
           point_cap?: number | null
+          pool_sets_played?: number | null
           sets_to_win?: number
           starting_score?: number
           third_place_match?: boolean
@@ -2441,6 +2528,7 @@ export type Database = {
         Update: {
           deciding_set_score?: number
           point_cap?: number | null
+          pool_sets_played?: number | null
           sets_to_win?: number
           starting_score?: number
           third_place_match?: boolean
@@ -2764,6 +2852,7 @@ export type Database = {
           description: string | null
           format: string
           has_refs: boolean
+          house_rule: string | null
           id: string
           location: string | null
           match_duration_minutes: number
@@ -2771,6 +2860,7 @@ export type Database = {
           max_teams: number | null
           min_roster_size: number
           num_courts: number
+          pool_matches_per_team: number | null
           price: number
           published_at: string | null
           registration_deadline: string | null
@@ -2782,6 +2872,7 @@ export type Database = {
           teams_advance_per_pool: number
           title: string
           venmo_handle: string | null
+          warmup_minutes: number
         }
         Insert: {
           bracket_type?: string | null
@@ -2793,6 +2884,7 @@ export type Database = {
           description?: string | null
           format: string
           has_refs?: boolean
+          house_rule?: string | null
           id?: string
           location?: string | null
           match_duration_minutes?: number
@@ -2800,6 +2892,7 @@ export type Database = {
           max_teams?: number | null
           min_roster_size?: number
           num_courts?: number
+          pool_matches_per_team?: number | null
           price?: number
           published_at?: string | null
           registration_deadline?: string | null
@@ -2811,6 +2904,7 @@ export type Database = {
           teams_advance_per_pool?: number
           title: string
           venmo_handle?: string | null
+          warmup_minutes?: number
         }
         Update: {
           bracket_type?: string | null
@@ -2822,6 +2916,7 @@ export type Database = {
           description?: string | null
           format?: string
           has_refs?: boolean
+          house_rule?: string | null
           id?: string
           location?: string | null
           match_duration_minutes?: number
@@ -2829,6 +2924,7 @@ export type Database = {
           max_teams?: number | null
           min_roster_size?: number
           num_courts?: number
+          pool_matches_per_team?: number | null
           price?: number
           published_at?: string | null
           registration_deadline?: string | null
@@ -2840,6 +2936,7 @@ export type Database = {
           teams_advance_per_pool?: number
           title?: string
           venmo_handle?: string | null
+          warmup_minutes?: number
         }
         Relationships: [
           {

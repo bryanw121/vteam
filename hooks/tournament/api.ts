@@ -104,7 +104,7 @@ async function fetchRules(id: string): Promise<TournamentRules | null> {
   if (!res.error) return res.data as TournamentRules | null
   if (!isMissingSchema(res.error)) throw res.error
   const old = await ok(supabase.from('tournament_rules').select(RULES_BASE_COLUMNS).eq('tournament_id', id).maybeSingle())
-  return old ? { ...old, tiebreakers: [...DEFAULT_TIEBREAKERS], third_place_match: false } : null
+  return old ? { ...old, tiebreakers: [...DEFAULT_TIEBREAKERS], third_place_match: false, pool_sets_played: null } : null
 }
 
 export async function fetchTournamentCore(id: string): Promise<TournamentCore> {

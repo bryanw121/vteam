@@ -71,6 +71,7 @@ function tiebreakValue(key: TiebreakerKey, row: Totals, group: ReadonlySet<strin
           && (m.team_a_id === row.teamId || m.team_b_id === row.teamId))
         .reduce((sum, m) => sum + (m.winner_id === row.teamId ? 1 : m.winner_id ? 0 : 0.5), 0)
     case 'set_ratio': return setRatio(row)
+    case 'sets_won': return row.setsWon
     case 'point_diff': return row.pointsFor - row.pointsAgainst
     case 'points_for': return row.pointsFor
   }

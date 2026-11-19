@@ -47,6 +47,7 @@ export const SCHEDULE_OPTIONS = {
 export const TIEBREAKER_LABELS = {
   head_to_head: 'Head-to-head',
   set_ratio: 'Set ratio',
+  sets_won: 'Sets won',
   point_diff: 'Point difference',
   points_for: 'Points scored',
 } as const
