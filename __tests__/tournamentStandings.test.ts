@@ -51,6 +51,22 @@ describe('computeStandings', () => {
     expect(noH2h[0].teamId).toBe('a')
   })
 
+  it('sets won ranks the team that took more sets, where set ratio alone would not', () => {
+    // a and b are both 1-1 and never met. a took 3 sets of 6, b took 2 of 4: the same ratio.
+    const games = [
+      m('a', 'c', [[25, 20], [20, 25], [15, 10]]), // a 2-1
+      m('d', 'a', [[25, 20], [20, 25], [15, 10]]), // a 1-2
+      m('b', 'c', [[25, 20], [25, 20]]),           // b 2-0
+      m('d', 'b', [[25, 20], [25, 20]]),           // b 0-2
+    ]
+    const bySets = computeStandings(['a', 'b', 'c', 'd'], games, ['sets_won'])
+    const order = bySets.map(r => r.teamId)
+    expect(order.indexOf('a')).toBeLessThan(order.indexOf('b'))
+    expect(bySets.find(r => r.teamId === 'a')?.tied).toBe(false)
+    const byRatio = computeStandings(['a', 'b', 'c', 'd'], games, ['set_ratio'])
+    expect(byRatio.find(r => r.teamId === 'a')?.tied).toBe(true)
+  })
+
   it('a three-way circle (each 1-1 among them) falls through to set ratio', () => {
     const rows = computeStandings(['a', 'b', 'c'], [
       m('a', 'b', [[25, 10], [25, 10]]),          // a 2-0

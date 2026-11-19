@@ -24,8 +24,8 @@ describe('tournament draft rules', () => {
   it('a fresh draft never shares its tiebreaker list with the defaults', () => {
     const a = newTournamentDraft()
     a.tiebreakers.reverse()
-    expect(newTournamentDraft().tiebreakers).toEqual(DEFAULT_TIEBREAKERS)
-    expect(DEFAULT_TOURNAMENT_DRAFT.tiebreakers).toEqual(DEFAULT_TIEBREAKERS)
+    expect(newTournamentDraft().tiebreakers).toEqual([...DEFAULT_TIEBREAKERS, 'sets_won'])
+    expect(DEFAULT_TOURNAMENT_DRAFT.tiebreakers).toEqual([...DEFAULT_TIEBREAKERS, 'sets_won'])
   })
 
   it('step 1 needs a name, a club and a start date', () => {
@@ -72,7 +72,7 @@ describe('saveTournamentArgs', () => {
     expect(args.p_tournament).not.toHaveProperty('created_by')
     expect(args.p_rules).toEqual({
       starting_score: 0, winning_score: 25, deciding_set_score: 15, win_by_margin: 2, point_cap: null, sets_to_win: 2,
-      tiebreakers: DEFAULT_TIEBREAKERS, third_place_match: false,
+      tiebreakers: [...DEFAULT_TIEBREAKERS, 'sets_won'], third_place_match: false,
     })
   })
 

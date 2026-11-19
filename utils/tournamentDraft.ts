@@ -4,6 +4,9 @@
  * (`app/(app)/tournament/create.tsx`) and its step sections only draw them.
  */
 import { DEFAULT_TIEBREAKERS } from '../lib/tournamentStandings'
+
+/** The wizard's list: the standard four, then sets won, so a host can move it up (a new tournament only reaches it when the others leave a tie). */
+const DRAFT_TIEBREAKERS = [...DEFAULT_TIEBREAKERS, 'sets_won'] as const
 import { cleanDate } from './index'
 import type { TournamentDraft, TournamentFormat, TournamentFormatOption, TournamentSaveStatus } from '../types'
 
@@ -33,13 +36,13 @@ export const DEFAULT_TOURNAMENT_DRAFT: TournamentDraft = {
   winByMargin: 2,
   pointCap: null,
   setsToWin: 2,
-  tiebreakers: [...DEFAULT_TIEBREAKERS],
+  tiebreakers: [...DRAFT_TIEBREAKERS],
   thirdPlaceMatch: false,
 }
 
 /** A fresh draft, with its own tiebreaker list. */
 export function newTournamentDraft(): TournamentDraft {
-  return { ...DEFAULT_TOURNAMENT_DRAFT, tiebreakers: [...DEFAULT_TIEBREAKERS] }
+  return { ...DEFAULT_TOURNAMENT_DRAFT, tiebreakers: [...DRAFT_TIEBREAKERS] }
 }
 
 export const TOURNAMENT_FORMAT_OPTIONS: readonly TournamentFormatOption[] = [
