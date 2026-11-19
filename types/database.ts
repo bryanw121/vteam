@@ -2415,6 +2415,32 @@ export type Database = {
           },
         ]
       }
+      tournament_public_snapshots: {
+        Row: {
+          built_at: string
+          payload: Json
+          tournament_id: string
+        }
+        Insert: {
+          built_at?: string
+          payload: Json
+          tournament_id: string
+        }
+        Update: {
+          built_at?: string
+          payload?: Json
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_public_snapshots_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: true
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_rules: {
         Row: {
           deciding_set_score: number
@@ -3369,6 +3395,7 @@ export type Database = {
           username: string
         }[]
       }
+      build_public_tournament: { Args: { p_id: string }; Returns: Json }
       get_my_conversations: {
         Args: never
         Returns: {
@@ -3397,6 +3424,7 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_public_tournament: { Args: { p_id: string }; Returns: Json }
       ingest_schelagg_feed: { Args: never; Returns: number }
       ingest_schelagg_programs: { Args: never; Returns: number }
       is_app_admin: { Args: never; Returns: boolean }

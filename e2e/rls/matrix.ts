@@ -96,6 +96,7 @@ export const RLS_MATRIX: Record<TableName, RlsExpectation> = {
   tournament_pool_teams: { anonSelect: 'none', anonInsert: 'none' },
   tournament_pools: { anonSelect: 'none', anonInsert: 'none' },
   tournament_prizes: { anonSelect: 'some', anonInsert: 'none', why: 'prizes of public (non-draft, non-club-only) tournaments' },
+  tournament_public_snapshots: { anonSelect: 'none', anonInsert: 'none', signedInSelect: 'none', why: 'saved copies behind get_public_tournament (embed widget); the function is the only reader' },
   tournament_rules: { anonSelect: 'some', anonInsert: 'none', why: 'rules of published tournaments' },
   tournament_sets: { anonSelect: 'none', anonInsert: 'none' },
   tournament_team_invitations: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'inviter_id', ownRowsOnly: false, noInsertAsOther: true } },
