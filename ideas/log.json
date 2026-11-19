@@ -517,5 +517,29 @@
     "status": "approved",
     "summary": "17% of screen_views and 38% of feed_first_paints have no session_id, 52 of ~130 sessions have no screen_view, feed_first_paint reports hours. Stamp pre-session events, re-send the screen on a new session, measure first paint from the right start; unit + e2e checks.",
     "issue": 326
+  },
+  {
+    "date": "2026-11-19",
+    "n": 1,
+    "title": "First visits: the server answers in 0.4 s, the phone draws at 2.9 s. Measure the app's start, and keep feature code out of the first load",
+    "bucket": "latency",
+    "status": "proposed",
+    "summary": "feed_first_paint wait_ms counts app start (live: server 160-380 ms vs recorded 1.5-8.6 s, all crawler-like). Record server_ms/boot_ms, label bots, move scorekeeper/tournament/metrics/legal (232 KB src, 17% of app code) out of __common via feature chunks with a CI guard; first-visit flow with a budget."
+  },
+  {
+    "date": "2026-11-19",
+    "n": 2,
+    "title": "People tab in pieces: one draggable roster card, a team board and two lists out of the app's largest file",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "PeopleTab.tsx 741 lines with two copied drag cards; useDraggableCard hook + RosterCard shell + TeamBoard/RequestList/WaitlistList; styles to shared/tokens; tests first."
+  },
+  {
+    "date": "2026-11-19",
+    "n": 3,
+    "title": "Court queue for open play: who's on, who's next, winners stay",
+    "bucket": "competitor-gap",
+    "status": "proposed",
+    "summary": "Host taps the winner, teams rotate by rule (stay max N / both off, 1-4 courts), players see their court live on the People tab. event_court_queues + save_court_queue RPC with version check + realtime. Cites PodPlay, PickleQ, Skedge."
   }
 ]
