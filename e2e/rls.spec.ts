@@ -119,6 +119,17 @@ test.describe('anon (guest browsing)', () => {
     expect(ins.error?.code).toBe(RLS_DENIED)
   })
 
+  test('public tournament read: the function answers guests, the tables stay closed', async () => {
+    const none = await q(() => anon.rpc('get_public_tournament', { p_id: '00000000-0000-4000-8000-000000000000' }), 'anon get_public_tournament')
+    expect(none.error, `anon get_public_tournament: ${none.error?.message}`).toBeNull()
+    expect(none.data).toBeNull()
+    const copies = await q(() => anon.from('tournament_public_snapshots').select('tournament_id').limit(1), 'anon tournament_public_snapshots')
+    if (copies.error) expect(copies.error.code).toBe(RLS_DENIED)
+    else expect(copies.data).toEqual([])
+    const build = await q(() => anon.rpc('build_public_tournament' as never, { p_id: '00000000-0000-4000-8000-000000000000' } as never), 'anon build_public_tournament')
+    expect(build.error, 'anon may not call build_public_tournament').not.toBeNull()
+  })
+
   test('cannot run the reminder job or read its ledger (#129)', async () => {
     const run = await q(() => anon.rpc('send_event_reminders'), 'anon send_event_reminders')
     expect(run.error, 'anon may not run send_event_reminders').not.toBeNull()
