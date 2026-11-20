@@ -80,3 +80,29 @@ export type WaitlistListProps = {
   memberActions: (profile: Profile) => RosterAction[]
   guestActions: (g: EventGuest) => RosterAction[]
 }
+
+/** The court queue card on the People tab (#333). */
+export type CourtQueueCardProps = {
+  eventId: string
+  /** Event start (ms) and length, for when the host is offered the queue. */
+  startMs: number
+  durationMinutes: number | null
+  cancelled: boolean
+  /** Team numbers with saved players (attending players and +1s). */
+  teams: number[]
+  /** The viewer's saved team, if they play. */
+  myTeam: number | null
+  /** Host or co-host: runs the courts. */
+  canRun: boolean
+}
+
+export type CourtQueueSetupSheetProps = {
+  visible: boolean
+  onDismiss: () => void
+  teamCount: number
+  courts: number
+  rule: import('./index').CourtQueueRule
+  onSave: (courts: number, rule: import('./index').CourtQueueRule) => void
+  /** Label of the save button (Start, Save). */
+  saveLabel: string
+}

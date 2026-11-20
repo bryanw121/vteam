@@ -94,4 +94,10 @@ export const ANALYTICS_EVENTS = {
   serverUnreachable: 'server_unreachable',
   /** A render error reached the error screen (#316). props: { screen (pattern, never an id), attempt (1 = first, 2+ = again within 30 s), had_snapshot } */
   appCrash: 'app_crash',
+  /** A host started the court queue (#333). props: { courts, rule (stay_N | stay_always | both_off), teams } */
+  courtQueueStarted: 'court_queue_started',
+  /** A game result was tapped (#333). props: { courts } (never which teams) */
+  courtQueueResult: 'court_queue_result',
+  /** The host ended the court queue (#333). props: { games } */
+  courtQueueEnded: 'court_queue_ended',
 } as const
