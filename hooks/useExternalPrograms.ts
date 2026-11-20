@@ -4,7 +4,7 @@ import { STALE } from '../constants/cache'
 import { queryKey, useFocusRefetch, useQuery } from '../lib/query'
 import { supabase } from '../lib/supabase'
 import { useToday } from './useToday'
-import { useFeedRegion } from './useUserSettings'
+import { useFeedRegion } from './useFeedCity'
 import { programsForRegion } from '../utils/externalPrograms'
 import type { ExternalProgram, ProgramsForRegion } from '../types'
 

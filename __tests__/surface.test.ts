@@ -16,7 +16,7 @@ describe('surface helpers', () => {
   })
 })
 
-import { regionSlug } from '../hooks/useUserSettings'
+import { regionSlug } from '../utils/feedRegion'
 
 describe('regionSlug', () => {
   it('turns a city name into a Schelagg region slug', () => {
