@@ -188,3 +188,17 @@ export const EVENT_CARD_LIST_SELECT_MINIMAL = `${EVENT_LIST_EVENT_COLUMNS}, prof
 // ─── Team colors (event People & Cheers tabs) ──────────────────────────────────
 export const TEAM_COLORS      = ['#6C47FF', '#E85D5D', '#2DA265', '#E07B00', '#1A8FD1', '#9C27B0']
 export const TEAM_COLOR_NAMES = ['Purple',  'Red',     'Green',   'Orange',  'Blue',    'Violet']
+
+/** Team `n` (1-based): its colour and name ("Purple"). */
+export function teamColor(n: number): string { return TEAM_COLORS[(n - 1) % TEAM_COLORS.length] }
+export function teamColorName(n: number): string { return TEAM_COLOR_NAMES[(n - 1) % TEAM_COLOR_NAMES.length] }
+
+/**
+ * A team colour at low strength, for surfaces drawn in it (#332): `avatar` the
+ * initials disc of a +1, `zone` / `zoneLine` a team's drop zone while a card
+ * is dragged over it.
+ */
+const TEAM_TINT_ALPHA = { avatar: '18', zone: '14', zoneLine: '60' } as const
+export function teamTint(color: string, use: keyof typeof TEAM_TINT_ALPHA): string {
+  return color + TEAM_TINT_ALPHA[use]
+}
