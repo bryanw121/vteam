@@ -544,5 +544,29 @@
     "status": "approved",
     "summary": "Host taps the winner, teams rotate by rule (stay max N / both off, 1-4 courts), players see their court live on the People tab. event_court_queues + save_court_queue RPC with version check + realtime. Cites PodPlay, PickleQ, Skedge.",
     "issue": 333
+  },
+  {
+    "date": "2026-11-20",
+    "n": 1,
+    "title": "Tournament page in pieces: one open-sheet state, pure results, and a sheet host out of a 566-line screen",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "Split app/(app)/tournament/[id].tsx (566 lines, 16 useState, 10 handlers): pure utils/tournamentView.ts (results, bracket seed preview, confirm copy) with its first tests, useTournamentScreen with one open-sheet union, TournamentSheetHost, and InviteModal onto BottomSheet. Screen under 250 lines, no visible change."
+  },
+  {
+    "date": "2026-11-20",
+    "n": 2,
+    "title": "Readable everywhere: fix the 366 low-contrast texts, six causes make 95% of them",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "color-contrast is the only serious axe rule left (366 baseline nodes; 100 on phone). Fix at token level: stack header title colour, locked badge label opacity, subtext on raised rows (new subtextOnRaised), primary-as-text to primaryText, Venmo fill, team ink colours; add a contrast token unit test and shrink the baseline to <=60."
+  },
+  {
+    "date": "2026-11-20",
+    "n": 3,
+    "title": "Coverage that only goes up: per-folder floors and changed-lines coverage on every PR",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "Global Jest floor (35/28/30/36) sits 12 points under today (47.6/38.9/40.6/48.2), hiding folder drops. scripts/coverage-ratchet.mjs with per-folder floors in coverage-floors.json (utils 89.5%, lib 86.3%, hooks 48.7%...) that only rise, plus >=70% changed-lines coverage in utils/lib/hooks, in CI job summary."
   }
 ]
