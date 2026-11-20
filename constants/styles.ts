@@ -470,6 +470,23 @@ export const shared = StyleSheet.create({
     fontSize: theme.font.size.smd,
     color: theme.colors.text,
   },
+  // ── Tournament page: public read-only copy (#282) ────────────────────────
+  tournamentPublicNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.primarySoft,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  tournamentPublicNoteText: {
+    flex: 1,
+    fontFamily: theme.fonts.body,
+    fontSize: theme.font.size.sm,
+    color: theme.colors.text,
+  },
   // ── Guest mode (SignInPrompt, SignInButton) ──────────────────────────────
   signInPromptContainer: {
     flex: 1,

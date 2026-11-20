@@ -207,3 +207,45 @@ export type UserTrophy = {
   tournament_date: string
   team_name: string
 }
+
+// ─── Public read (guests, non-members, the embed widget) ─────────────────────
+
+/** What `get_public_tournament(id)` answers: names, scores, courts and times only. */
+export type PublicTournamentPayload = {
+  id: string
+  title: string
+  status: string
+  start_date: string
+  location: string | null
+  format: string
+  bracket_type: string | null
+  price: number | null
+  registration_deadline: string | null
+  max_teams: number | null
+  description?: string | null
+  skill_levels?: string[] | null
+  min_roster_size?: number | null
+  max_roster_size?: number | null
+  teams_advance_per_pool?: number | null
+  has_refs?: boolean | null
+  schedule_published?: boolean | null
+  club: { id: string; name: string } | null
+  teams: { id: string; name: string; seed: number | null; players: { id: string; name: string; captain: boolean }[] }[]
+  pools: { id: string; name: string; display_order?: number; team_ids: string[] }[]
+  matches: {
+    id: string; stage: string; round: number; match_number: number; bracket_round_name: string | null
+    is_losers_bracket: boolean | null; pool_id: string | null; court: string | null; scheduled_at: string | null; status: string
+    team_a_id: string | null; team_b_id: string | null; winner_id: string | null; ref_team_id: string | null
+    sets: [number, number][]
+  }[]
+  built_at?: string
+}
+
+/** The public payload in the shapes the tournament page already draws. */
+export type PublicTournamentView = {
+  tournament: Tournament
+  club: { id: string; name: string } | null
+  teams: import('./index').TournamentTeamWithRoster[]
+  pools: TournamentPoolWithTeams[]
+  matches: import('./index').TournamentMatchRow[]
+}

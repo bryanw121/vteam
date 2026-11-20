@@ -3,8 +3,9 @@ import { getQueryData, queryKey } from '../../lib/query'
 import { DEFAULT_TIEBREAKERS } from '../../lib/tournamentStandings'
 import { COMMENTS_PAGE, keepLoadedOlder, mergeComments, missingParentIds, pageFromNewestFirst } from '../../utils/commentPages'
 import { searchMembers } from '../../lib/memberSearch'
+import { publicTournamentView } from '../../utils/publicTournament'
 import type {
-  GeneratedSchedule, MyRegistration, PendingInvite, Podium, SetScore, UserTrophy, TablesInsert, TimedBracketMatch, Tournament, TournamentCommentWithAuthor,
+  PublicTournamentPayload, PublicTournamentView, GeneratedSchedule, MyRegistration, PendingInvite, Podium, SetScore, UserTrophy, TablesInsert, TimedBracketMatch, Tournament, TournamentCommentWithAuthor,
   TournamentCommentsPage, TournamentCore, TournamentInviteCandidate, TournamentJoinRequestWithRequester, TournamentMatchRow,
   TournamentPoolWithTeams, TournamentPrize, TournamentResultWrites, TournamentRules, TournamentStatus, TournamentTeam,
   TournamentTeamWithRoster, TournamentViewer,
@@ -26,6 +27,8 @@ export const tournamentKeys = {
   comments: (id: string) => queryKey('tournament', id, 'comments'),
   matches: (id: string) => queryKey('tournament', id, 'matches'),
   pools: (id: string) => queryKey('tournament', id, 'pools'),
+  /** The public copy (guests and players outside the club). */
+  public: (id: string) => queryKey('tournament', id, 'public'),
   mine: (id: string, userId: string | null) => queryKey('tournament', id, 'mine', userId),
   /** Prefix covering `mine` for any user. */
   minePrefix: (id: string) => queryKey('tournament', id, 'mine'),
@@ -181,6 +184,16 @@ export async function fetchPools(id: string): Promise<TournamentPoolWithTeams[]>
     id: p.id, name: p.name, display_order: p.display_order,
     team_ids: (p.tournament_pool_teams ?? []).map(t => t.team_id),
   }))
+}
+
+/**
+ * The page for someone who can't read the tournament tables (a guest, or a
+ * player outside the club): the one public door, `get_public_tournament()`.
+ * null = no such tournament, or still a draft.
+ */
+export async function fetchPublicTournament(id: string): Promise<PublicTournamentView | null> {
+  const data = await ok(supabase.rpc('get_public_tournament', { p_id: id }))
+  return publicTournamentView(data as PublicTournamentPayload | null)
 }
 
 /**

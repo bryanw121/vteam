@@ -161,6 +161,9 @@ export const SCREENS = {
   'tournament-schedule': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-schedule', text: 'Schedule' }], sources: TOURNAMENT_DETAIL },
   'tournament-results': { route: `/tournament/${T.past}`, ready: 'Fall Doubles Cup', actions: [{ tap: 'tournament-tab-results', text: 'Results' }], sources: TOURNAMENT_DETAIL },
   'tournament-discussion': { route: `/tournament/${T.upcoming}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-discussion', text: 'Discussion' }], sources: TOURNAMENT_DETAIL },
+  // The public, read-only page (#282): a guest, and a signed-in player outside the club.
+  'tournament-public-guest': { route: `/tournament/${T.shared}`, signedIn: false, ready: 'Halloween Sand Classic', sources: [...TOURNAMENT_DETAIL, 'utils/publicTournament.ts'] },
+  'tournament-public-member-of-none': { route: `/tournament/${T.shared}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-teams', text: 'Teams' }], sources: [...TOURNAMENT_DETAIL, 'utils/publicTournament.ts'] },
   'tournament-create': { route: '/tournament/create', sources: ['app/(app)/tournament/create.tsx'] },
 
   // ── Auth and legal (signed out) ─────────────────────────────────────────

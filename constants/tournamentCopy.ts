@@ -56,3 +56,11 @@ export const PODIUM_LABELS = ['Champion', 'Runner-up', 'Third place'] as const
 
 /** Tournament wizard (#325): the club list couldn't load. */
 export const TOURNAMENT_CLUBS_ERROR = "Couldn't load your clubs."
+
+/** The read-only tournament page for guests and players outside the club (#282). */
+export function publicViewCopy(clubName: string | null, isGuest: boolean): { body: string; action: string; discussion: string } {
+  const club = clubName ?? 'the club'
+  return isGuest
+    ? { body: `You're viewing this as a guest. Sign in to register a team.`, action: 'Sign in', discussion: `Sign in and join ${club} to read and post in the discussion.` }
+    : { body: `Members of ${club} can register and chat.`, action: 'View club', discussion: `Join ${club} to read and post in the discussion.` }
+}

@@ -3,7 +3,7 @@ import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { Text } from '../../../components/ui/Text'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { theme } from '../../../constants'
-import { TOURNAMENT_TABS } from '../../../constants/tournamentCopy'
+import { publicViewCopy, TOURNAMENT_TABS } from '../../../constants/tournamentCopy'
 import type { TournamentTabName } from '../../../types'
 import { useSession } from '../../../contexts/session'
 import { useRequireSignIn } from '../../../hooks/useRequireSignIn'
@@ -17,7 +17,7 @@ import { avoidPoolRematches, computeStandings, DEFAULT_TIEBREAKERS, seedsFromPoo
 import { poolTables as buildPoolTables, resultWrites, tournamentPodium } from '../../../lib/tournamentResults'
 import { profileDisplayName } from '../../../utils'
 import { routes } from '../../../utils/routes'
-import { ConfirmDialog, ScreenHeader, ScreenState } from '../../../components/ui'
+import { ConfirmDialog, EmptyState, ScreenHeader, ScreenState } from '../../../components/ui'
 import { ShareLinkButton } from '../../../components/ShareLinkButton'
 import { useUrlParam } from '../../../hooks/useUrlParam'
 import { VIEW } from '../../../utils/urlViews'
@@ -26,6 +26,7 @@ import { MatchResultSheet } from '../../../components/tournament/MatchResultShee
 import { ResultsTab } from '../../../components/tournament/ResultsTab'
 import { SeedSheet } from '../../../components/tournament/SeedSheet'
 import { InviteModal } from '../../../components/tournament/InviteModal'
+import { PublicViewNote } from '../../../components/tournament/PublicViewNote'
 import { OverviewTab } from '../../../components/tournament/OverviewTab'
 import { ScheduleTab } from '../../../components/tournament/ScheduleTab'
 import type { TeamCardActions } from '../../../types'
@@ -58,7 +59,7 @@ export default function TournamentDetailScreen() {
 
   const {
     core, teams: teamsQ, comments: commentsQ, mine, matches: matchesQ, pools: poolsQ, mentionableUsers,
-    loadEarlierComments, loadingEarlierComments,
+    loadEarlierComments, loadingEarlierComments, publicView,
   } = useTournamentData(
     id, userId, { loadMatches: scheduleOpened || wantsMatches },
   )
@@ -146,6 +147,18 @@ export default function TournamentDetailScreen() {
       bracketExists: bracketRows.length > 0,
     }
   }, [tournament, teams, matches, pools, isCreator, tiebreakers])
+
+  // The public copy is read-only: registering needs an account in the club.
+  const clubName = publicView?.club?.name ?? null
+  const publicAction = () => {
+    if (!requireSignIn()) return
+    if (publicView?.club) router.push(routes.club(publicView.club.id))
+  }
+  const canAct = () => {
+    if (!publicView) return requireSignIn()
+    publicAction()
+    return false
+  }
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(routes.app()))
 
@@ -249,7 +262,7 @@ export default function TournamentDetailScreen() {
     onMarkPaid: teamId => { void actions.markPaid.mutate(teamId) },
     onRemove: (teamId, teamName) => setConfirm({ kind: 'removeTeam', teamId, teamName }),
     onAssign: setAssigningFreeAgent,
-    onRequestJoin: team => { if (requireSignIn()) setRequestingTeam(team) },
+    onRequestJoin: team => { if (canAct()) setRequestingTeam(team) },
     onApproveRequest: req => {
       void actions.approveJoinRequest.mutate({ requestId: req.id, requesterId: req.requester_id, teamId: req.team_id })
     },
@@ -339,6 +352,8 @@ export default function TournamentDetailScreen() {
               </ScrollView>
             </View>
 
+            {publicView && <PublicViewNote clubName={clubName} isGuest={!userId} onAction={publicAction} />}
+
             {activeTab === 'Overview' && (
               <OverviewTab
                 refreshControl={refreshControl}
@@ -356,7 +371,7 @@ export default function TournamentDetailScreen() {
                 acceptingInviteId={acceptingInviteId}
                 onGoToTeams={() => setActiveTab('Teams')}
                 onWithdraw={() => setConfirm({ kind: 'withdraw' })}
-                onRegister={() => { if (requireSignIn()) setShowRegister(true) }}
+                onRegister={() => { if (canAct()) setShowRegister(true) }}
                 onAcceptInvite={inviteId => { void acceptInvite(inviteId) }}
                 onDeclineInvite={inviteId => { void actions.declineInvite.mutate(inviteId) }}
                 onAddAnnouncement={() => setShowAnnouncement(true)}
@@ -428,7 +443,11 @@ export default function TournamentDetailScreen() {
               />
             )}
 
-            {activeTab === 'Discussion' && (
+            {activeTab === 'Discussion' && publicView && (
+              <EmptyState icon="chatbubbles-outline" title="Members only" body={publicViewCopy(clubName, !userId).discussion} />
+            )}
+
+            {activeTab === 'Discussion' && !publicView && (
               <DiscussionTab
                 refreshControl={refreshControl}
                 comments={comments}
