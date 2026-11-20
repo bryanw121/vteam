@@ -13,7 +13,7 @@
  * - <app>/api/startup       gone since #324; builds before it (the upgrade check's base) get a 404 and read Supabase
  */
 import { createDb } from './postgrest.mjs'
-import { buildFixtures, VIEWS, ME } from '../fixtures/index.mjs'
+import { buildFixtures, IDS, VIEWS, ME } from '../fixtures/index.mjs'
 import { PEOPLE } from '../fixtures/people.mjs'
 import { buildForecast } from '../fixtures/forecast.mjs'
 import { metricsRpc } from '../fixtures/metrics.mjs'
@@ -173,6 +173,36 @@ function rpcHandlers(db, signedIn, now) {
       return null
     },
     mark_notification_read: () => null,
+    // The public tournament page (#282): `shared` mirrors the upcoming tournament, as the real function would answer.
+    get_public_tournament: ({ p_id } = {}) => {
+      if (p_id !== IDS.tournament.shared) return null
+      const src = IDS.tournament.upcoming
+      const t = db.rowsOf('tournaments').find(r => r.id === src)
+      if (!t) return null
+      const club = db.rowsOf('clubs').find(c => c.id === t.club_id)
+      const name = id => { const p = profile(id); return [p.first_name, p.last_name].filter(Boolean).join(' ') || p.username || 'Player' }
+      const teams = db.rowsOf('tournament_teams').filter(r => r.tournament_id === src)
+      const pools = db.rowsOf('tournament_pools').filter(r => r.tournament_id === src)
+      return {
+        id: p_id, title: t.title, status: t.status, start_date: t.start_date, location: t.location, format: t.format, bracket_type: t.bracket_type,
+        price: t.price, registration_deadline: t.registration_deadline, max_teams: t.max_teams, description: t.description, skill_levels: t.skill_levels,
+        min_roster_size: t.min_roster_size, max_roster_size: t.max_roster_size, teams_advance_per_pool: t.teams_advance_per_pool, has_refs: t.has_refs,
+        schedule_published: t.schedule_published,
+        club: club ? { id: club.id, name: club.name } : null,
+        teams: teams.map(tm => ({
+          id: tm.id, name: tm.name, seed: tm.seed,
+          players: db.rowsOf('tournament_team_members').filter(m => m.team_id === tm.id).map(m => ({ id: m.user_id, name: name(m.user_id), captain: m.is_captain })),
+        })),
+        pools: pools.map(pl => ({ id: pl.id, name: pl.name, display_order: pl.display_order, team_ids: db.rowsOf('tournament_pool_teams').filter(x => x.pool_id === pl.id).map(x => x.team_id) })),
+        matches: db.rowsOf('tournament_matches').filter(m => m.tournament_id === src).map(m => ({
+          id: m.id, stage: m.stage, round: m.round, match_number: m.match_number, bracket_round_name: m.bracket_round_name ?? null,
+          is_losers_bracket: !!m.is_losers_bracket, pool_id: m.pool_id ?? null, court: m.court ?? null, scheduled_at: m.scheduled_at ?? null, status: m.status,
+          team_a_id: m.team_a_id, team_b_id: m.team_b_id, winner_id: m.winner_id ?? null, ref_team_id: m.ref_team_id ?? null,
+          sets: db.rowsOf('tournament_sets').filter(x => x.match_id === m.id).sort((a, b) => a.set_number - b.set_number).map(x => [x.team_a_score, x.team_b_score]),
+        })),
+        built_at: new Date(nowMs).toISOString(),
+      }
+    },
     mark_all_notifications_read: () => null,
     // The signed-in fixture viewer is an admin, so Profile shows Admin metrics and its screens have data.
     ...(signedIn ? metricsRpc(now) : { current_user_is_admin: () => false }),
