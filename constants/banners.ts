@@ -10,10 +10,10 @@ export const BANNERS = {
   austinPilot: {
     id: 'austin-pilot-v2',
     title: "We're piloting in Austin!",
-    body: "Set your home city in your profile and we'll show sessions near you as we add them. New to Vteam?",
+    body: 'Games around Austin, Dallas and Houston: tap the city above the feed to switch. New to vteam?',
     action: { label: 'Check out our tour', type: 'startTour', tourId: 'intro' },
   },
 } satisfies Record<string, BannerDef>
 
-/** Region shown to guests and to people who haven't set a home city (Schelagg region slug). */
-export const DEFAULT_FEED_REGION = 'austin'
+/** Region shown when nothing says where the viewer is (see constants/feedRegions.ts). */
+export { DEFAULT_FEED_REGION } from './feedRegions'

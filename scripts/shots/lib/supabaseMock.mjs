@@ -10,6 +10,7 @@
  * - /storage/v1/*          uploads succeed; object reads get a 1x1 PNG
  * - /realtime/v1/websocket joins succeed, nothing is ever pushed
  * - <app>/api/forecast      the weather proxy (#165): a fake NWS hourly series (fixtures/forecast.mjs)
+ * - <app>/api/where         the nearest covered city (#339): always Austin
  * - <app>/api/startup       gone since #324; builds before it (the upgrade check's base) get a 404 and read Supabase
  */
 import { createDb } from './postgrest.mjs'
@@ -220,6 +221,10 @@ export async function installSupabaseMock(page, { now, signedIn, seenIds = [], r
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) return route.fulfill({ status: 400 })
     return json(route, 200, buildForecast(now, lat, lng))
   })
+
+  // The nearest-city lookup (api/where.ts, #339) is a Vercel function too: answer as Vercel would
+  // for a viewer in Austin. Not logged: it is a call to the app's own host, not a database read.
+  await page.route(url => /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/api\/where\b/.test(url.href), route => json(route, 200, { region: 'austin' }))
 
   // Builds before #324 still ask for the startup config at /api/startup (the upgrade check
   // opens the base branch's export): answer 404 so they read Supabase at once, deterministically.
