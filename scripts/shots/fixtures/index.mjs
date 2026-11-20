@@ -386,6 +386,17 @@ export function buildFixtures(now) {
   const user_settings = [{ user_id: ME, home_city_id: IDS.city.austin, seen_banners: [], reminder_lead_minutes: 120, hidden_feed, updated_at: t.iso(-3) }]
   const chat_silences = [{ user_id: ME, silenced_user_id: P.hannahs, created_at: t.iso(-8) }]
 
+  // Court queue for open play (#333): Sundays' two teams, Purple on a two-game streak.
+  const event_court_queues = [{
+    event_id: E.sundaySand, courts: 1, rule: 'stay', stay_max: 3, version: 3, started_at: t.ago(40), ended_at: null,
+    updated_at: t.ago(2), updated_by: ME,
+    state: {
+      courts: [[1, 2]], queue: [], streaks: { 1: 2 },
+      games: [{ court: 0, winner: 1, loser: 2 }, { court: 0, winner: 1, loser: 2 }],
+      undo: [{ courts: [[1, 2]], queue: [], streaks: { 1: 1 }, gameCount: 1 }],
+    },
+  }]
+
   return {
     profiles: profiles(t),
     tags, major_cities, clubs, club_members, club_posts, club_post_likes, club_post_comments, club_polls, club_poll_options, club_poll_votes,
@@ -394,7 +405,7 @@ export function buildFixtures(now) {
     tournament_matches, tournament_sets, tournament_comments, tournament_team_invitations: [], tournament_team_join_requests: [],
     conversations, conversation_members, messages, message_reactions,
     notifications, user_badges, user_settings, chat_silences, event_bring_items, event_bring_claims,
-    app_config: [], push_tokens: [], feedback_submissions: [], app_events: [],
+    app_config: [], push_tokens: [], feedback_submissions: [], app_events: [], event_court_queues,
   }
 }
 
