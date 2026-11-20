@@ -2684,6 +2684,16 @@ export type ChatComposerProps = {
 /** A chat picture full screen; null = closed. */
 export type ImageViewerProps = { uri: string | null; onClose: () => void }
 
+/** The page's own Events feed request on a web first visit (#184, #331): server vs app start-up. */
+export type FeedPrefetchTiming = {
+  /** Request start → response arrived (server + network); null if it never arrived. */
+  serverMs: number | null
+  /** Request start → the app took the promise (download + start of the app). */
+  bootMs: number
+  /** Date.now() when the request started. */
+  at: number
+}
+
 // ─── Court queue for open play (#333) ────────────────────────────────────────
 /** Winners stay (up to `stayMax` wins in a row, or always when null), or both teams come off every game. */
 export type CourtQueueRule = { kind: 'stay'; stayMax: number | null } | { kind: 'both_off' }

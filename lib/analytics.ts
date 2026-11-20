@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 import { isServerDown, onServerRecovered } from './serverHealth'
 import { ANALYTICS_EVENTS } from '../constants/analytics'
 import { currentAppVersion } from '../utils/appVersion'
+import { browserAgent, isBotAgent } from '../utils/botAgent'
 import type { AnalyticsEventName, AnalyticsProps } from '../types'
 
 /**
@@ -273,6 +274,8 @@ function openSession(cold: boolean): void {
   session = { id: pendingSessionId ?? randomId(), userId: sessionUser }
   pendingSessionId = null
   const props: AnalyticsProps = { cold }
+  // A crawler-like browser (#331): labelled so first-visit numbers can leave it out.
+  if (isBotAgent(browserAgent())) props.bot = true
   if (cold) {
     const ref = webReferrer()
     if (ref) props.referrer = ref
