@@ -18,7 +18,7 @@ import { resolve } from 'path'
 import type { Page, Route } from '@playwright/test'
 
 export const SCHELAGG_API_BASE = 'https://schelagg.vercel.app'
-export const SCHELAGG_SITE_BASE = 'https://bryanw121.github.io/schelagg'
+export const SCHELAGG_SITE_BASE = 'https://bryanw121.github.io/skelly'
 export const COURTS_API_GLOB = `${SCHELAGG_API_BASE}/api/courts**`
 export const COURTS_STATIC_GLOB = `${SCHELAGG_SITE_BASE}/data/courts.json**`
 export const CHECK_API_GLOB = `${SCHELAGG_API_BASE}/api/check**`
