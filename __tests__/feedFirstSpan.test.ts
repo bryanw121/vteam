@@ -5,7 +5,7 @@
  */
 import { feedSpanArgs } from '../utils/feedFirstSpan'
 import { buildFeedPrefetchScript } from '../utils/feedPrefetchScript'
-import { takeFeedPrefetch } from '../lib/feedPrefetch.web'
+import { feedPrefetchTiming, takeFeedPrefetch } from '../lib/feedPrefetch.web'
 import { TIMEOUT_MESSAGE } from '../lib/serverHealth'
 import { HARD_TIMEOUT_MS } from '../utils/serverHealth'
 import { addMonths, monthEndIso, monthStartIso } from '../utils/monthKeys'
@@ -73,7 +73,16 @@ describe('buildFeedPrefetchScript', () => {
   }
 
   it('stays small', () => {
-    expect(script.length).toBeLessThan(1600)
+    // Inlined in every page's <head>; 1,600 before #331 added the response time.
+    expect(script.length).toBeLessThan(1700)
+  })
+
+  it('records when the response arrived, apart from when it started (#331)', async () => {
+    const { win } = run({})
+    const feed = (win.__vteamPrefetch as { feed: { at: number; doneAt?: number; promise: Promise<unknown> } }).feed
+    expect(typeof feed.at).toBe('number')
+    await feed.promise
+    expect(feed.doneAt).toBeGreaterThanOrEqual(feed.at)
   })
 
   it('on / posts the first span with the anon key for a guest', () => {
@@ -104,6 +113,20 @@ describe('buildFeedPrefetchScript', () => {
     const span = feedSpanArgs(Date.now(), true, EXTERNAL_SESSION_MAX_AGE_MS)
     expect(JSON.parse(wide.calls[0].init.body).p_end).toBe(span.p_end)
     expect(run({ path: '/event/abc' }).calls).toHaveLength(0)
+  })
+})
+
+describe('feedPrefetchTiming (#331)', () => {
+  it('splits server time from the app picking it up', async () => {
+    const at = Date.now() - 3_000
+    ;(window as unknown as { __vteamPrefetch: object }).__vteamPrefetch = {
+      feed: { start: 's', end: 'e', viewer: null, at, doneAt: at + 400, promise: Promise.resolve({ events: [] }) },
+    }
+    await takeFeedPrefetch('s', 'e', null)
+    const t = feedPrefetchTiming()
+    expect(t?.serverMs).toBe(400)
+    expect(t?.bootMs).toBeGreaterThanOrEqual(3_000)
+    expect(t?.at).toBe(at)
   })
 })
 

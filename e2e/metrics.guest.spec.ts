@@ -139,5 +139,11 @@ test.describe('usage metrics', () => {
     expect(paint).toMatchObject({ landing: true, source: expect.stringMatching(/^(prefetch|fetch|snapshot)$/) })
     expect(paint.ms).toEqual(expect.any(Number))
     expect(paint.ms as number).toBeLessThan(30_000)
+    // #331: the page's own request reports the server's time and the app's start separately.
+    if (paint.source === 'prefetch') {
+      expect(paint.server_ms).toEqual(expect.any(Number))
+      expect(paint.boot_ms).toEqual(expect.any(Number))
+      expect(paint.cold).toBe((paint.server_ms as number) > 1000)
+    }
   })
 })

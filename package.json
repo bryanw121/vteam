@@ -25,6 +25,8 @@
     "stability:baseline": "node scripts/shots/stability-flow.mjs --dist dist-mock --update-baseline",
     "startup": "node scripts/shots/startup-budget.mjs --dist dist-mock",
     "startup:baseline": "node scripts/shots/startup-budget.mjs --dist dist-mock --update",
+    "first-visit": "node scripts/shots/first-visit-flow.mjs --dist dist-mock",
+    "first-visit:baseline": "node scripts/shots/first-visit-flow.mjs --dist dist-mock --update",
     "og:render": "tsx scripts/render-og.tsx"
   },
   "jest": {

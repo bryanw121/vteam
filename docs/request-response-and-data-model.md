@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `8d81f3c2b41b`
+> Inventory fingerprint: `2851a91220bc`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -453,7 +453,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `ad_banners` | [`lib/startupConfig.ts:28`](../lib/startupConfig.ts#L28) |
 | `app_admins` | [`supabase/functions/generate-badge-art/index.ts:82`](../supabase/functions/generate-badge-art/index.ts#L82) |
 | `app_config` | [`lib/startupConfig.ts:24`](../lib/startupConfig.ts#L24) |
-| `app_events` | [`lib/analytics.ts:224`](../lib/analytics.ts#L224) |
+| `app_events` | [`lib/analytics.ts:225`](../lib/analytics.ts#L225) |
 | `badge_art` | [`hooks/useBadgeArt.ts:26`](../hooks/useBadgeArt.ts#L26)<br>[`supabase/functions/generate-badge-art/index.ts:130`](../supabase/functions/generate-badge-art/index.ts#L130) |
 | `chat_silences` | [`hooks/useSilencedUsers.ts:27`](../hooks/useSilencedUsers.ts#L27)<br>[`supabase/functions/send-chat-push/handler.ts:143`](../supabase/functions/send-chat-push/handler.ts#L143) |
 | `cheers` | [`hooks/event/useEventCheers.ts:16`](../hooks/event/useEventCheers.ts#L16)<br>[`hooks/useCheersSummary.ts:12`](../hooks/useCheersSummary.ts#L12)<br>[`hooks/useMyGameRecap.ts:18`](../hooks/useMyGameRecap.ts#L18)<br>[`hooks/useMyProfile.ts:72`](../hooks/useMyProfile.ts#L72)<br>[`hooks/useUserProfile.ts:21`](../hooks/useUserProfile.ts#L21)<br>[`utils/badges.ts:41`](../utils/badges.ts#L41) |
@@ -465,7 +465,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `conversation_members` | [`supabase/functions/send-chat-push/handler.ts:127`](../supabase/functions/send-chat-push/handler.ts#L127) |
 | `conversations` | [`hooks/useConversations.ts:276`](../hooks/useConversations.ts#L276)<br>[`supabase/functions/send-chat-push/handler.ts:126`](../supabase/functions/send-chat-push/handler.ts#L126) |
 | `event_attendee_denials` | [`hooks/event/useMyDenialReason.ts:8`](../hooks/event/useMyDenialReason.ts#L8) |
-| `event_attendees` | [`hooks/event/useEventAttendance.ts:110`](../hooks/event/useEventAttendance.ts#L110)<br>[`hooks/event/useEventTeams.ts:92`](../hooks/event/useEventTeams.ts#L92)<br>[`hooks/useMonthEvents.ts:625`](../hooks/useMonthEvents.ts#L625)<br>[`hooks/useMyGameRecap.ts:19`](../hooks/useMyGameRecap.ts#L19)<br>[`hooks/useMyUpcomingEvents.ts:100`](../hooks/useMyUpcomingEvents.ts#L100)<br>[`utils/badges.ts:25`](../utils/badges.ts#L25) |
+| `event_attendees` | [`hooks/event/useEventAttendance.ts:110`](../hooks/event/useEventAttendance.ts#L110)<br>[`hooks/event/useEventTeams.ts:92`](../hooks/event/useEventTeams.ts#L92)<br>[`hooks/useMonthEvents.ts:634`](../hooks/useMonthEvents.ts#L634)<br>[`hooks/useMyGameRecap.ts:19`](../hooks/useMyGameRecap.ts#L19)<br>[`hooks/useMyUpcomingEvents.ts:100`](../hooks/useMyUpcomingEvents.ts#L100)<br>[`utils/badges.ts:25`](../utils/badges.ts#L25) |
 | `event_cohosts` | [`hooks/event/useCohosts.ts:54`](../hooks/event/useCohosts.ts#L54)<br>[`hooks/event/useEventData.ts:62`](../hooks/event/useEventData.ts#L62) |
 | `event_comments` | [`hooks/event/useEventComments.ts:41`](../hooks/event/useEventComments.ts#L41)<br>[`hooks/event/useEventData.ts:82`](../hooks/event/useEventData.ts#L82) |
 | `event_court_queues` | [`hooks/event/useCourtQueue.ts:51`](../hooks/event/useCourtQueue.ts#L51) |
@@ -474,7 +474,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `event_payments` | [`hooks/event/useEventPayments.ts:13`](../hooks/event/useEventPayments.ts#L13) |
 | `events` | [`components/event/EventDetailScreen.tsx:279`](../components/event/EventDetailScreen.tsx#L279)<br>[`hooks/event/useEventData.ts:31`](../hooks/event/useEventData.ts#L31)<br>[`hooks/host/useHostContext.ts:44`](../hooks/host/useHostContext.ts#L44)<br>[`hooks/host/useHostForm.ts:63`](../hooks/host/useHostForm.ts#L63)<br>[`hooks/useClub.ts:46`](../hooks/useClub.ts#L46)<br>[`hooks/useEventHistory.ts:18`](../hooks/useEventHistory.ts#L18)<br>+5 more files |
 | `external_programs` | [`hooks/useExternalPrograms.ts:17`](../hooks/useExternalPrograms.ts#L17) |
-| `external_sessions` | [`hooks/useMonthEvents.ts:299`](../hooks/useMonthEvents.ts#L299) |
+| `external_sessions` | [`hooks/useMonthEvents.ts:308`](../hooks/useMonthEvents.ts#L308) |
 | `feedback_submissions` | [`app/(app)/(tabs)/settings/feedback.tsx:73`](../app/%28app%29/%28tabs%29/settings/feedback.tsx#L73)<br>[`supabase/functions/send-feedback-email/handler.ts:88`](../supabase/functions/send-feedback-email/handler.ts#L88) |
 | `friend_requests` | [`hooks/useFriends.ts:37`](../hooks/useFriends.ts#L37) |
 | `friendships` | [`hooks/useFriends.ts:36`](../hooks/useFriends.ts#L36) |
@@ -502,7 +502,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `tournament_team_members` | [`hooks/tournament/api.ts:195`](../hooks/tournament/api.ts#L195) |
 | `tournament_teams` | [`hooks/tournament/api.ts:126`](../hooks/tournament/api.ts#L126) |
 | `tournament_trophies` | [`hooks/tournament/api.ts:466`](../hooks/tournament/api.ts#L466) |
-| `tournaments` | [`hooks/tournament/api.ts:112`](../hooks/tournament/api.ts#L112)<br>[`hooks/useMonthEvents.ts:290`](../hooks/useMonthEvents.ts#L290)<br>[`hooks/useTournamentList.ts:22`](../hooks/useTournamentList.ts#L22) |
+| `tournaments` | [`hooks/tournament/api.ts:112`](../hooks/tournament/api.ts#L112)<br>[`hooks/useMonthEvents.ts:299`](../hooks/useMonthEvents.ts#L299)<br>[`hooks/useTournamentList.ts:22`](../hooks/useTournamentList.ts#L22) |
 | `user_badges` | [`hooks/useBadges.ts:53`](../hooks/useBadges.ts#L53)<br>[`hooks/useUserProfile.ts:22`](../hooks/useUserProfile.ts#L22)<br>[`utils/badges.ts:186`](../utils/badges.ts#L186) |
 | `user_event_templates` | [`app/(app)/host.tsx:142`](../app/%28app%29/host.tsx#L142)<br>[`hooks/host/useHostContext.ts:61`](../hooks/host/useHostContext.ts#L61) |
 | `user_settings` | [`hooks/useHiddenFeed.ts:28`](../hooks/useHiddenFeed.ts#L28)<br>[`hooks/useMyProfile.ts:127`](../hooks/useMyProfile.ts#L127)<br>[`hooks/useUserSettings.ts:26`](../hooks/useUserSettings.ts#L26)<br>[`supabase/functions/send-notification-push/handler.ts:107`](../supabase/functions/send-notification-push/handler.ts#L107) |
@@ -523,7 +523,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `admin_traffic_series` | [`hooks/useAdminMetrics.ts:94`](../hooks/useAdminMetrics.ts#L94) | [`supabase/migrations/20261120030000_admin_traffic_series.sql:10`](../supabase/migrations/20261120030000_admin_traffic_series.sql#L10) |
 | `admin_user_activity` | [`hooks/useAdminMetrics.ts:134`](../hooks/useAdminMetrics.ts#L134) | [`supabase/migrations/20261111120000_admin_metrics.sql:427`](../supabase/migrations/20261111120000_admin_metrics.sql#L427) |
 | `admin_users` | [`hooks/useAdminMetrics.ts:125`](../hooks/useAdminMetrics.ts#L125) | [`supabase/migrations/20261111120000_admin_metrics.sql:339`](../supabase/migrations/20261111120000_admin_metrics.sql#L339) |
-| `app_heartbeat` | [`lib/analytics.ts:296`](../lib/analytics.ts#L296) | [`supabase/migrations/20261110230000_usage_sessions.sql:74`](../supabase/migrations/20261110230000_usage_sessions.sql#L74) |
+| `app_heartbeat` | [`lib/analytics.ts:299`](../lib/analytics.ts#L299) | [`supabase/migrations/20261110230000_usage_sessions.sql:74`](../supabase/migrations/20261110230000_usage_sessions.sql#L74) |
 | `cancel_friend_request` | [`hooks/useFriends.ts:71`](../hooks/useFriends.ts#L71) | [`supabase/migrations/20261028203837_friends.sql:256`](../supabase/migrations/20261028203837_friends.sql#L256) |
 | `check_rate_limit` | [`supabase/functions/login-with-username/handler.ts:140`](../supabase/functions/login-with-username/handler.ts#L140) | [`supabase/migrations/20261028120200_rate_limit_core.sql:19`](../supabase/migrations/20261028120200_rate_limit_core.sql#L19) |
 | `claim_bring_item` | [`hooks/event/useEventBringList.ts:49`](../hooks/event/useEventBringList.ts#L49) | [`supabase/migrations/20261112190000_event_bring_items.sql:214`](../supabase/migrations/20261112190000_event_bring_items.sql#L214) |
@@ -537,7 +537,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `get_email_by_username` | [`supabase/functions/login-with-username/handler.ts:161`](../supabase/functions/login-with-username/handler.ts#L161) | Not checked in |
 | `get_event_bring_list` | [`hooks/event/useEventBringList.ts:16`](../hooks/event/useEventBringList.ts#L16) | [`supabase/migrations/20261112190000_event_bring_items.sql:78`](../supabase/migrations/20261112190000_event_bring_items.sql#L78) |
 | `get_event_card_attendee_previews` | [`utils/eventCardPreviews.ts:35`](../utils/eventCardPreviews.ts#L35) | [`supabase/migrations/20260811030000_event_card_attendee_previews_rpc.sql:2`](../supabase/migrations/20260811030000_event_card_attendee_previews_rpc.sql#L2) |
-| `get_feed_span` | [`hooks/useMonthEvents.ts:232`](../hooks/useMonthEvents.ts#L232) | [`supabase/migrations/20261025220000_get_feed_span.sql:33`](../supabase/migrations/20261025220000_get_feed_span.sql#L33) |
+| `get_feed_span` | [`hooks/useMonthEvents.ts:241`](../hooks/useMonthEvents.ts#L241) | [`supabase/migrations/20261025220000_get_feed_span.sql:33`](../supabase/migrations/20261025220000_get_feed_span.sql#L33) |
 | `get_friends_going` | [`hooks/useFriendsGoing.ts:37`](../hooks/useFriendsGoing.ts#L37) | [`supabase/migrations/20261028203837_friends.sql:354`](../supabase/migrations/20261028203837_friends.sql#L354) |
 | `get_my_conversations` | [`hooks/useConversations.ts:36`](../hooks/useConversations.ts#L36) | Not checked in |
 | `link_poll_event` | [`app/(app)/host.tsx:135`](../app/%28app%29/host.tsx#L135) | [`supabase/migrations/20261113180000_club_polls.sql:217`](../supabase/migrations/20261113180000_club_polls.sql#L217) |
@@ -642,8 +642,8 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Join intent (#229) | [`PendingAction`](../types/index.ts#L2437), [`PendingActionTake`](../types/index.ts#L2440), [`JoinOffer`](../types/index.ts#L2443), [`JoinIntentOutcome`](../types/index.ts#L2446) |
 | View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2451), [`FeedbackFieldErrors`](../types/index.ts#L2457), [`ReportReason`](../types/index.ts#L2460), [`ReportContextKind`](../types/index.ts#L2461), [`ReportStatus`](../types/index.ts#L2462), [`ReportAction`](../types/index.ts#L2463), [`ReportUserInput`](../types/index.ts#L2465), [`AdminReport`](../types/index.ts#L2474), [`ReportSheetTarget`](../types/index.ts#L2493), [`ReportSheetProps`](../types/index.ts#L2496), [`EventSeed`](../types/index.ts#L2512), [`MemberSearchResult`](../types/index.ts#L2524) |
 | What to bring (#256) | [`BringClaimer`](../types/index.ts#L2530), [`BringItem`](../types/index.ts#L2540), [`BringItemDraft`](../types/index.ts#L2551), [`BringItemAction`](../types/index.ts#L2561), [`BringViewer`](../types/index.ts#L2570), [`SaveBringItemsArgs`](../types/index.ts#L2578), [`ClaimBringItemArgs`](../types/index.ts#L2582), [`ReleaseBringItemArgs`](../types/index.ts#L2583), [`StartupConfig`](../types/index.ts#L2586), [`MyGameRecap`](../types/index.ts#L2593), [`YourGameCardProps`](../types/index.ts#L2595), [`RecapFooterProps`](../types/index.ts#L2604), [`RecapShareTarget`](../types/index.ts#L2615) |
-| Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2619), [`WeekStripContentProps`](../types/index.ts#L2621), [`MonthGridContentProps`](../types/index.ts#L2630), [`WeekPagerProps`](../types/index.ts#L2639), [`CrashMarker`](../types/index.ts#L2651), [`CrashReport`](../types/index.ts#L2654), [`ActiveMention`](../types/index.ts#L2656), [`ChatRoomHeaderProps`](../types/index.ts#L2659), [`ChatComposerBandProps`](../types/index.ts#L2668), [`ChatComposerProps`](../types/index.ts#L2677), [`ImageViewerProps`](../types/index.ts#L2685) |
-| Court queue for open play (#333) | [`CourtQueueRule`](../types/index.ts#L2689), [`CourtQueueGame`](../types/index.ts#L2691), [`CourtQueueState`](../types/index.ts#L2693), [`CourtQueueSnapshot`](../types/index.ts#L2702), [`CourtQueuePlace`](../types/index.ts#L2704), [`CourtQueue`](../types/index.ts#L2706), [`CourtQueueTally`](../types/index.ts#L2715) |
+| Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2619), [`WeekStripContentProps`](../types/index.ts#L2621), [`MonthGridContentProps`](../types/index.ts#L2630), [`WeekPagerProps`](../types/index.ts#L2639), [`CrashMarker`](../types/index.ts#L2651), [`CrashReport`](../types/index.ts#L2654), [`ActiveMention`](../types/index.ts#L2656), [`ChatRoomHeaderProps`](../types/index.ts#L2659), [`ChatComposerBandProps`](../types/index.ts#L2668), [`ChatComposerProps`](../types/index.ts#L2677), [`ImageViewerProps`](../types/index.ts#L2685), [`FeedPrefetchTiming`](../types/index.ts#L2688) |
+| Court queue for open play (#333) | [`CourtQueueRule`](../types/index.ts#L2699), [`CourtQueueGame`](../types/index.ts#L2701), [`CourtQueueState`](../types/index.ts#L2703), [`CourtQueueSnapshot`](../types/index.ts#L2712), [`CourtQueuePlace`](../types/index.ts#L2714), [`CourtQueue`](../types/index.ts#L2716), [`CourtQueueTally`](../types/index.ts#L2725) |
 
 ### Constrained string values
 

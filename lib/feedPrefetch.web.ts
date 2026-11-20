@@ -14,9 +14,12 @@ type FeedPrefetch = {
   viewer: string | null
   /** Date.now() when the request started. */
   at: number
+  /** Date.now() when the response arrived; null while it is in flight (#331). */
+  doneAt?: number | null
   promise: Promise<unknown>
 }
 
+import type { FeedPrefetchTiming } from '../types'
 import { readStoredSession } from './supabase'
 import { reportRequest, TIMEOUT_MESSAGE } from './serverHealth'
 import { HARD_TIMEOUT_MS, READ_TIMEOUT_MS } from '../utils/serverHealth'
@@ -45,7 +48,7 @@ export function takeFeedPrefetch(start: string, end: string, viewerId: string | 
   delete s.feed
   if (p.start !== start || p.end !== end || p.viewer !== viewerId) return null
   if (Date.now() - p.at > MAX_AGE_MS) return null
-  lastTakenAt = p.at
+  taken = { at: p.at, takenAt: Date.now(), slot: p }
   return withDeadline(p.promise, p.at + READ_TIMEOUT_MS, p.at + HARD_TIMEOUT_MS)
 }
 
@@ -70,9 +73,17 @@ function withDeadline(promise: Promise<unknown>, softAt: number, hardAt: number)
   })
 }
 
-let lastTakenAt: number | null = null
+let taken: { at: number; takenAt: number; slot: FeedPrefetch } | null = null
 
-/** When the taken prefetch started (Date.now()), for feed_first_paint; null if none was used. */
-export function feedPrefetchAge(): number | null {
-  return lastTakenAt
+/**
+ * For feed_first_paint (#331), once the taken prefetch has settled: `serverMs`
+ * is how long the page's own request took (start → response, the server and
+ * the network), `bootMs` how long the app took to start and pick it up
+ * (start → taken). Before #331 one number covered both and blamed the server.
+ * Null if no prefetch was used.
+ */
+export function feedPrefetchTiming(): FeedPrefetchTiming | null {
+  if (!taken) return null
+  const done = taken.slot.doneAt
+  return { serverMs: typeof done === 'number' ? done - taken.at : null, bootMs: taken.takenAt - taken.at, at: taken.at }
 }

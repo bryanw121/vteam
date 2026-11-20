@@ -242,6 +242,11 @@ jobs:
       - name: Startup budget (paint and reads)
         if: success() || failure()
         run: node scripts/shots/startup-budget.mjs --dist dist-mock --out a11y-report/startup
+      # A guest's first visit on a mid-range phone (#331): first-load script size and when
+      # the first event card shows, against first-visit-budget.json; the timings go to the summary.
+      - name: First visit (scripts and first card)
+        if: success() || failure()
+        run: node scripts/shots/first-visit-flow.mjs --dist dist-mock --out a11y-report/first-visit
       # When the server stops answering (#289): saved feed + "vteam isn't answering" within
       # 17 s, almost no requests while down, recovery on Retry, no endless spinner on a first visit.
       - name: Outage check
