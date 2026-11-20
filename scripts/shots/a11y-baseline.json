@@ -447,6 +447,14 @@
       "color-contrast": 3
     }
   },
+  "tournament-public-guest": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "tournament-public-member-of-none": {
+    "mobile": {},
+    "desktop": {}
+  },
   "tournament-results": {
     "mobile": {
       "color-contrast": 1

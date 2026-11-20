@@ -4,7 +4,8 @@ import { getQueryData, setQueryData, useFocusRefetch, useQuery } from '../../lib
 import { withOlderPage } from '../../utils/commentPages'
 import type { MentionUser, TournamentCommentsPage, TournamentTeamWithRoster } from '../../types'
 import {
-  fetchComments, fetchCommentsPage, fetchMatches, fetchMyRegistration, fetchPools, fetchTeams, fetchTournamentCore, tournamentKeys,
+  fetchComments, fetchCommentsPage, fetchMatches, fetchMyRegistration, fetchPools, fetchPublicTournament, fetchTeams,
+  fetchTournamentCore, tournamentKeys,
 } from './api'
 
 /** @-mention candidates: everyone on a roster, once each. */
@@ -37,6 +38,11 @@ export function mentionableFromTeams(teams: readonly TournamentTeamWithRoster[])
  */
 export function useTournamentData(id: string, userId: string | null, opts: { loadMatches: boolean }) {
   const core = useQuery(tournamentKeys.core(id), () => fetchTournamentCore(id), { staleMs: STALE.detail })
+  // The tables answer members only. When they hold nothing for this viewer (a
+  // guest, or a player outside the club), the public copy fills the page (#282).
+  const hidden = !!core.data && !core.data.tournament
+  const pub = useQuery(tournamentKeys.public(id), () => fetchPublicTournament(id), { staleMs: STALE.detail, enabled: hidden })
+  const publicView = hidden ? pub.data ?? null : null
   const teams = useQuery(tournamentKeys.teams(id), () => fetchTeams(id), { staleMs: STALE.detail })
   const comments = useQuery(tournamentKeys.comments(id), () => fetchComments(id), { staleMs: STALE.detail })
   const mine = useQuery(
@@ -56,13 +62,14 @@ export function useTournamentData(id: string, userId: string | null, opts: { loa
   })
 
   useFocusRefetch(tournamentKeys.core(id))
+  useFocusRefetch(hidden ? tournamentKeys.public(id) : null)
   useFocusRefetch(tournamentKeys.teams(id))
   useFocusRefetch(tournamentKeys.comments(id))
   useFocusRefetch(userId ? tournamentKeys.mine(id, userId) : null)
   useFocusRefetch(opts.loadMatches ? tournamentKeys.matches(id) : null)
   useFocusRefetch(opts.loadMatches ? tournamentKeys.pools(id) : null)
 
-  const teamList = teams.data
+  const teamList = publicView ? publicView.teams : teams.data
   const mentionableUsers = useMemo(() => mentionableFromTeams(teamList ?? []), [teamList])
 
   // "Load earlier": the page before the oldest loaded comment, merged into
@@ -85,5 +92,24 @@ export function useTournamentData(id: string, userId: string | null, opts: { loa
     }
   }, [id])
 
-  return { core, teams, comments, mine, matches, pools, mentionableUsers, loadEarlierComments, loadingEarlierComments }
+  const shown = useMemo(() => {
+    if (!hidden) return null
+    // Still asking for the public copy: keep the page on its spinner, not on "not found".
+    const asking = pub.data === undefined && !pub.error
+    const waiting = { isLoading: asking, error: pub.error, refetch: pub.refetch }
+    return {
+      core: { ...core, ...waiting, data: publicView ? { tournament: publicView.tournament, rules: core.data?.rules ?? null, prizes: core.data?.prizes ?? [] } : (pub.data === undefined ? undefined : core.data) },
+      teams: { ...teams, ...waiting, data: publicView?.teams },
+      matches: { ...matches, ...waiting, data: publicView?.matches },
+      pools: { ...pools, ...waiting, data: publicView?.pools },
+    }
+  }, [hidden, publicView, pub.data, pub.error, pub.refetch, core, teams, matches, pools])
+
+  return {
+    core: shown?.core ?? core, teams: shown?.teams ?? teams, comments, mine,
+    matches: shown?.matches ?? matches, pools: shown?.pools ?? pools,
+    /** Set when the page is the public copy: read-only, with the club to join. */
+    publicView,
+    mentionableUsers, loadEarlierComments, loadingEarlierComments,
+  }
 }

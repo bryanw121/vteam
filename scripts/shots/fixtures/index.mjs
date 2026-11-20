@@ -20,7 +20,8 @@ export const IDS = {
     morningDrills: id('e1000000', 9), pastSand: id('e1000000', 10), pastIndoor: id('e1000000', 11), pastHosted: id('e1000000', 12),
     nextWeekSand: id('e1000000', 13), nextWeekIndoor: id('e1000000', 14),
   },
-  tournament: { upcoming: id('d1000000', 1), past: id('d1000000', 2), open: id('d1000000', 3) },
+  // `shared`: not in the tables (as for a guest or a non-member); only get_public_tournament answers it (#282).
+  tournament: { upcoming: id('d1000000', 1), past: id('d1000000', 2), open: id('d1000000', 3), shared: id('d1000000', 9) },
   conversation: { jordan: id('f1000000', 1), clubChat: id('f1000000', 2), priya: id('f1000000', 3), aisha: id('f1000000', 4) },
   tag: { openPlay: id('b1000000', 1), tournament: id('b1000000', 2), clinic: id('b1000000', 3), league: id('b1000000', 4) },
   city: { austin: id('a2000000', 1), houston: id('a2000000', 2), dallas: id('a2000000', 3), sanAntonio: id('a2000000', 4) },
