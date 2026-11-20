@@ -326,8 +326,10 @@ export const HeroEventCard = EventCard
 
 // ─── Row Event Card (desktop secondary cards) ─────────────────────────────────
 
-function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, rsvpPending = false, friendsGoing, forecast, menuInset = false }: {
+function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, rsvpPending = false, friendsGoing, forecast, menuInset = false, hideDate = false }: {
   event: EventWithDetails
+  /** Leave out the date block: the desktop feed's day header already says the day. */
+  hideDate?: boolean
   from?: string
   currentUserId?: string | null
   onRsvp?: EventCardRsvpHandler
@@ -401,7 +403,7 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
       </View>
 
       {/* Date block */}
-      <View style={{
+      {!hideDate && <View style={{
         width: 56, flexShrink: 0, borderRadius: 14,
         backgroundColor: tourney
           ? theme.colors.warm + '22'
@@ -411,7 +413,7 @@ function RowEventCardInner({ event, from: fromOverride, currentUserId, onRsvp, r
       }}>
         <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, fontWeight: '700', letterSpacing: 1, color: accentColor }}>{day}</Text>
         <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.heading.xl, lineHeight: 30, color: accentColor, letterSpacing: -1.2 }}>{date}</Text>
-      </View>
+      </View>}
 
       {/* Content */}
       <View style={{ flex: 1, minWidth: 0 }}>

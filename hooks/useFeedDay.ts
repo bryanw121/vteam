@@ -11,11 +11,13 @@ import { VIEW } from '../utils/urlViews'
 import { getWeekStart, idxForMonth, idxForWeek } from '../utils/calendarWeeks'
 import type { EventWithDetails, FeedDaySection } from '../types'
 
-export function useFeedDay({ today, sections, docScrollActive, feedContentRef }: {
+export function useFeedDay({ today, sections, docScrollActive, feedContentRef, desktopScrollRef }: {
   today: string
   sections: FeedDaySection[]
   docScrollActive: boolean
   feedContentRef: { current: ViewInstance | null }
+  /** Wide web: the desktop feed registers how it scrolls to a day (EventsFeedDesktop). */
+  desktopScrollRef: { current: ((date: string) => void) | null }
 }) {
   // The view is in the URL (`/?day=2026-11-14`, utils/urlViews) so a copied link opens it.
   const [linkDay, setUrlDay] = useUrlParam('day', VIEW.feed.day, { tab: 'events' })
@@ -35,6 +37,11 @@ export function useFeedDay({ today, sections, docScrollActive, feedContentRef }:
     setCurMonthPage(idxForMonth(dateStr.substring(0, 7)))
     const sectionIndex = sections.findIndex(s => s.date === dateStr)
     setTimeout(() => {
+      // Wide web: the desktop feed scrolls its own list to the day (it used to do nothing).
+      if (desktopScrollRef.current) {
+        desktopScrollRef.current(dateStr)
+        return
+      }
       if (docScrollRef.current) {
         const y = sectionYRef.current[dateStr]
         if (y === undefined) return
@@ -58,7 +65,7 @@ export function useFeedDay({ today, sections, docScrollActive, feedContentRef }:
         }
       }
     }, 50)
-  }, [sections, today, setUrlDay, feedContentRef])
+  }, [sections, today, setUrlDay, feedContentRef, desktopScrollRef])
 
   // A link to a day (`?day=`) scrolls there once that day's games have loaded.
   const linkedDayRef = useRef<string | null>(selectedDate !== today ? selectedDate : null)

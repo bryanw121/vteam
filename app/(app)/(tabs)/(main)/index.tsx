@@ -151,6 +151,8 @@ export default function EventsScreen() {
   // inner ScrollView so browser URL bars collapse. Window listener handles
   // load-more (tab-bar hide/show is centralized in the tabs shell).
   const feedContentRef      = useRef<ViewInstance>(null)
+  // Wide web: set by EventsFeedDesktop to scroll its list to a picked day.
+  const desktopScrollRef    = useRef<((date: string) => void) | null>(null)
   // Narrow web: come back to the same place in the feed after an event page
   // (the browser's back remounts this screen; see hooks/useDocScrollMemory).
   // The whole screen stays hidden until the offset is back, header included (#254).
@@ -199,7 +201,7 @@ export default function EventsScreen() {
   const {
     selectedDate, curWeekPage, curMonthPage, selectDate,
     goPrevWeek, goNextWeek, goToday, goPrevMonth, goNextMonth, sectionListRef, sectionYRef,
-  } = useFeedDay({ today, sections, docScrollActive, feedContentRef })
+  } = useFeedDay({ today, sections, docScrollActive, feedContentRef, desktopScrollRef })
 
   // The month(s) the week strip is showing: a week can straddle two months.
   const visibleMonths = useMemo((): string[] => {
@@ -369,6 +371,7 @@ export default function EventsScreen() {
         {...layoutProps}
         header={<EventsHeader wide right={headerRight} />}
         revealedKeys={revealedKeys}
+        scrollToDayRef={desktopScrollRef}
         calendarLabel={!tournamentsOnly}
         month={monthForIdx(curMonthPage)}
         onPrevMonth={goPrevMonth}

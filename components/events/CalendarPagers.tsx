@@ -197,6 +197,7 @@ export const MonthGridContent = memo(function MonthGridContent({ month, selected
                 key={di}
                 onPress={() => onSelectDate(dateStr)}
                 style={{ flex: 1, alignItems: 'center', paddingVertical: 3 }}
+                testID={`calendar-day-${dateStr}`}
               >
                 <View style={{
                   width: 34, height: 34, borderRadius: 10,

@@ -10,3 +10,6 @@ export const BREAKPOINTS = {
    */
   sidebar: 768,
 } as const
+
+/** Desktop Events feed: a busy day shows this many games, then "Show N more". */
+export const DESKTOP_DAY_GAMES = 4
