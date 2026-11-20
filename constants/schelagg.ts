@@ -1,14 +1,18 @@
 /**
- * Schelagg (github.com/bryanw121/schelagg) is a separate public project that
+ * Schelagg (now named Skelly: github.com/bryanw121/skelly, skellyevents.com) is a separate public project that
  * aggregates Austin volleyball schedules and court availability. vteam only
  * reads from it: these are the only places its URLs are written.
  */
 
-/** Live API (Vercel): /api/courts and /api/check. Change here when the deploy URL is final. */
+/** Live API (Vercel): /api/courts and /api/check. The project kept this address when it was renamed Skelly. */
 export const SCHELAGG_API_BASE = 'https://schelagg.vercel.app'
 
-/** Static site (GitHub Pages). `data/courts.json` has the same shape as /api/courts, rebuilt ~every 15 min. */
-export const SCHELAGG_SITE_BASE = 'https://bryanw121.github.io/schelagg'
+/**
+ * Static site (GitHub Pages). `data/courts.json` has the same shape as /api/courts, rebuilt ~every 15 min.
+ * Pages follows the repository's name with no redirect: the repository was renamed schelagg -> skelly on
+ * Nov 19, 2026, which moved every file here (and the two database imports, see migration 20261120033000).
+ */
+export const SCHELAGG_SITE_BASE = 'https://bryanw121.github.io/skelly'
 
 /** Days of court availability to load (the booking screen's day strip). */
 export const COURTS_DAYS = 7
