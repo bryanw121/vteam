@@ -1038,6 +1038,8 @@ export type EventsFeedDesktopProps = EventsFeedLayoutBase & {
   onNextMonth: () => void
   nextUp: EventWithDetails | undefined
   onPressNextUp: () => void
+  /** The feed puts its scroll-to-a-day here, for the calendar (useFeedDay). */
+  scrollToDayRef: { current: ((date: string) => void) | null }
 }
 
 export type EventsFeedMobileProps = EventsFeedLayoutBase & {
@@ -2634,6 +2636,10 @@ export type MonthGridContentProps = {
   onSelectDate: (date: string) => void
   onPrevMonth: () => void
   onNextMonth: () => void
+  /** Games each day has in the feed: a number replaces the dot (desktop). */
+  counts?: ReadonlyMap<string, number>
+  /** The day at the top of the feed as it scrolls: ringed when it isn't the picked day. */
+  inViewDate?: string | null
 }
 
 export type WeekPagerProps = {
@@ -2723,3 +2729,13 @@ export type CourtQueue = {
 }
 /** A team's record tonight. */
 export type CourtQueueTally = { team: number; wins: number; losses: number }
+
+/** One day on the desktop Events feed (`desktopFeedMonths`, utils/feedDays). */
+export type DesktopFeedDay = FeedDaySection & {
+  /** "Thu, Nov 19". */
+  label: string
+  isToday: boolean
+}
+
+/** One month of days on the desktop Events feed. */
+export type DesktopFeedMonth = { month: string; label: string; days: DesktopFeedDay[] }

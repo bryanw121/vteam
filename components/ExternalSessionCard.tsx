@@ -17,6 +17,8 @@ type Props = {
   session: ExternalSession
   /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
   menuInset?: boolean
+  /** Leave out the date block: the desktop feed's day header already says the day. */
+  hideDate?: boolean
 }
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
@@ -74,7 +76,7 @@ function findingLabel(finding: Exclude<SessionLinkDecision, { action: 'open' }>)
  * Before opening, useOutsideSessionLink asks Schelagg whether the venue still
  * lists it (≤1.5s), and asks first if it was cancelled, moved or dropped.
  */
-function ExternalSessionCardInner({ session, menuInset = false }: Props) {
+function ExternalSessionCardInner({ session, menuInset = false, hideDate = false }: Props) {
   const start = new Date(session.starts_at)
   const surface = session.surface ? { label: SURFACE_LABELS[session.surface], color: SURFACE_ACCENTS[session.surface] } : null
   const accent = surface?.color ?? theme.colors.subtext
@@ -103,10 +105,10 @@ function ExternalSessionCardInner({ session, menuInset = false }: Props) {
       accessibilityLabel={`${session.title} at ${session.venue}. ${finding ? `${finding}. ` : confirmation.note ? `${confirmation.note}. ` : ''}${signupLabel ?? ''}`}
       testID="external-session-card"
     >
-      <View style={[shared.externalDateBlock, { backgroundColor: accent + '22' }]}>
+      {!hideDate && <View style={[shared.externalDateBlock, { backgroundColor: accent + '22' }]}>
         <Text style={[shared.externalDay, { color: accent }]}>{DAYS[start.getDay()]}</Text>
         <Text style={[shared.externalDate, { color: accent }]}>{start.getDate()}</Text>
-      </View>
+      </View>}
 
       <View style={shared.externalBody}>
         <Text style={[shared.externalKicker, menuInset && { paddingRight: 36 }]} numberOfLines={1}>

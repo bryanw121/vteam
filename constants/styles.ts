@@ -487,6 +487,29 @@ export const shared = StyleSheet.create({
     fontSize: theme.font.size.sm,
     color: theme.colors.text,
   },
+  // ── Desktop Events feed: games a day has, under its number in the calendar ──
+  calendarDayCount: {
+    fontFamily: theme.fonts.bodyBold,
+    fontSize: theme.font.size.xs,
+    lineHeight: 14,
+    color: theme.colors.primaryText,
+  },
+  // ── Desktop Events feed: a busy day's "Show N more" ─────────────────────
+  feedDayMore: {
+    marginTop: theme.spacing.sm,
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: theme.colors.fabMenuChipBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  feedDayMoreText: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.md,
+    color: theme.colors.primaryText,
+  },
   // ── Guest mode (SignInPrompt, SignInButton) ──────────────────────────────
   signInPromptContainer: {
     flex: 1,
