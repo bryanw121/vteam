@@ -170,3 +170,32 @@ describe('axisTop / axisTicks', () => {
     for (let max = 0; max <= 60; max++) for (const t of axisTicks(max)) expect(Number.isInteger(t)).toBe(true)
   })
 })
+
+describe('traffic spans (Live tab)', () => {
+  const { TRAFFIC_SPANS, trafficSpan, trafficTick, bucketLabel, onlineLine } = require('../utils/metrics') as typeof import('../utils/metrics')
+
+  it('lists spans from an hour to 30 days, shortest first', () => {
+    expect(TRAFFIC_SPANS.map(s => s.key)).toEqual(['1h', '3h', '12h', '1d', '3d', '1w', '30d'])
+    expect(TRAFFIC_SPANS.map(s => s.minutes)).toEqual([...TRAFFIC_SPANS.map(s => s.minutes)].sort((a, b) => a - b))
+    expect(trafficSpan('1w').minutes).toBe(7 * 24 * 60)
+  })
+
+  it('labels the x axis by how far back the chart goes (Chicago time)', () => {
+    const at = '2026-11-19T21:40:00Z' // Thursday 3:40 PM in Chicago
+    expect(trafficTick(at, 60)).toBe('3:40 PM')
+    expect(trafficTick(at, 4320)).toBe('Nov 19, 3 PM')
+    expect(trafficTick(at, 43200)).toBe('Nov 19')
+  })
+
+  it('says how long a point covers', () => {
+    expect(bucketLabel(60)).toBe('1 min')
+    expect(bucketLabel(1200)).toBe('20 min')
+    expect(bucketLabel(3600)).toBe('1 hour')
+    expect(bucketLabel(28800)).toBe('8 hours')
+  })
+
+  it('draws a gap in the samples as flat, not as a drop to zero', () => {
+    expect(onlineLine([{ online: null }, { online: 3 }, { online: null }, { online: null }, { online: 5 }])).toEqual([0, 3, 3, 3, 5])
+  })
+})
+

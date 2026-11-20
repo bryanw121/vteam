@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
 import { View } from 'react-native'
 import { Text } from '../ui/Text'
-import { ScreenState } from '../ui'
+import { Chip, ScreenState } from '../ui'
 import { theme } from '../../constants'
-import { useOnlineNow } from '../../hooks/useAdminMetrics'
-import { clockTime, minutesSince, PLATFORM_LABELS, platformVersion, screenLabel } from '../../utils/metrics'
+import { useOnlineNow, useTrafficSeries } from '../../hooks/useAdminMetrics'
+import { useUrlParam } from '../../hooks/useUrlParam'
+import { VIEW } from '../../utils/urlViews'
+import {
+  bucketLabel, clockTime, minutesSince, onlineLine, PLATFORM_LABELS, platformVersion, screenLabel, TRAFFIC_SPANS, trafficSpan, trafficTick,
+} from '../../utils/metrics'
 import type { MetricsPlatform } from '../../types'
 import { CountRows, MetricCard, PersonRow } from './MetricBits'
-import { MetricLineChart } from './MetricCharts'
+import { MetricBarChart, MetricLineChart } from './MetricCharts'
 import { metricsStyles as s } from './metricsStyles'
 
 type Props = {
@@ -19,6 +23,14 @@ type Props = {
 /** Metrics → Live: who has the app open right now. */
 export function LivePanel({ active, onOpenPerson }: Props) {
   const { data, isLoading, error, refetch } = useOnlineNow({ enabled: active })
+  const [spanKey, setSpanKey] = useUrlParam('span', VIEW.metrics.span)
+  const span = trafficSpan(spanKey)
+  const traffic = useTrafficSeries(span.minutes, { enabled: active })
+  const series = traffic.data
+  const line = series ? onlineLine(series.points) : []
+  const ticks: readonly [string, string] | undefined = series
+    ? [trafficTick(series.from, series.minutes), spanKey === '1h' ? 'now' : trafficTick(series.to, series.minutes)]
+    : undefined
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     if (!active) return
@@ -40,19 +52,48 @@ export function LivePanel({ active, onOpenPerson }: Props) {
               {`${data.signed_in} signed in · ${data.guests} ${data.guests === 1 ? 'guest' : 'guests'}`}
               {data.today_peak ? ` · today's peak ${data.today_peak.peak} at ${clockTime(data.today_peak.at)}` : ''}
             </Text>
-            {data.last_hour.length > 1 ? (
+            <View style={s.chips} role="radiogroup" aria-label="How far back">
+              {TRAFFIC_SPANS.map(t => (
+                <Chip key={t.key} label={t.label} active={t.key === spanKey} role="radio" size="touch" onPress={() => setSpanKey(t.key)} testID={`metrics-span-${t.key}`} />
+              ))}
+            </View>
+            {series && line.length > 1 ? (
               <>
                 <MetricLineChart
-                  values={data.last_hour.map(p => p.online)}
-                  height={88}
+                  values={line}
+                  height={120}
                   color={theme.colors.accent}
                   markLast
-                  xLabels={['60 min ago', 'now']}
-                  label={`People online over the last hour, between ${Math.min(...data.last_hour.map(p => p.online))} and ${Math.max(...data.last_hour.map(p => p.online))}`}
+                  xLabels={ticks}
+                  label={`People online over ${span.phrase}, between ${Math.min(...line)} and ${Math.max(...line)}`}
                 />
+                <Text style={s.note} testID="metrics-span-note">
+                  {series.totals.peak
+                    ? `Most at once in ${span.phrase}: ${series.totals.peak.online}, ${series.minutes <= 1440 ? 'at' : 'on'} ${trafficTick(series.totals.peak.at, series.minutes)}. Each point is ${bucketLabel(series.bucket_seconds)}.`
+                    : `No samples in ${span.phrase} yet.`}
+                </Text>
               </>
-            ) : null}
+            ) : traffic.error ? <Text style={s.note}>Could not load the chart.</Text> : null}
           </MetricCard>
+
+          {series ? (
+            <MetricCard title={`Visits in ${span.phrase}`} testID="metrics-visits">
+              <Text style={s.big}>{series.totals.visits.toLocaleString('en-US')}</Text>
+              <Text style={[s.label, { color: theme.colors.subtextStrong }]}>
+                {`${series.totals.visitors.toLocaleString('en-US')} ${series.totals.visitors === 1 ? 'person' : 'people'}: ${series.totals.signed_in_visitors.toLocaleString('en-US')} signed in, ${series.totals.guest_visitors.toLocaleString('en-US')} ${series.totals.guest_visitors === 1 ? 'guest' : 'guests'} · ${series.totals.screen_views.toLocaleString('en-US')} screens opened`}
+              </Text>
+              {series.totals.visits > 0 ? (
+                <MetricBarChart
+                  values={series.points.map(pt => pt.visits)}
+                  height={96}
+                  color={theme.colors.primary}
+                  xLabels={ticks}
+                  label={`Visits over ${span.phrase}: ${series.totals.visits} in all, ${series.totals.guest_visits} by guests`}
+                />
+              ) : null}
+              <Text style={s.note}>A visit is one time someone opens the app or the site, signed in or not. A guest is a device with no account signed in. Visitors that never run the page's code (most bots) aren't counted.</Text>
+            </MetricCard>
+          ) : null}
 
           <View style={s.grid2}>
             <View style={[s.gridCell]}>

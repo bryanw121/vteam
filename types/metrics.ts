@@ -8,6 +8,36 @@ export type MetricsTab = 'overview' | 'live' | 'people' | 'retention' | 'reports
 
 export type MetricsRangeDays = 7 | 30 | 90
 
+/** How far back the Live tab's charts look. */
+export type TrafficSpan = '1h' | '3h' | '12h' | '1d' | '3d' | '1w' | '30d'
+
+/** admin_traffic_series(): people online and visits in even buckets across a span. */
+export type TrafficPoint = {
+  at: string
+  /** Most people online at once in the bucket; null when no sample was taken (server asleep, or before sampling began). */
+  online: number | null
+  online_avg: number | null
+  visits: number
+  guest_visits: number
+}
+
+export type TrafficSeries = {
+  from: string
+  to: string
+  minutes: number
+  bucket_seconds: number
+  points: TrafficPoint[]
+  totals: {
+    visits: number
+    guest_visits: number
+    visitors: number
+    guest_visitors: number
+    signed_in_visitors: number
+    screen_views: number
+    peak: { online: number; at: string } | null
+  }
+}
+
 export type MetricsPlatform = 'ios' | 'android' | 'web'
 
 export type MetricsDay = {
