@@ -67,6 +67,7 @@ export const RLS_MATRIX: Record<TableName, RlsExpectation> = {
   event_bring_items: { anonSelect: 'all', anonInsert: 'none', why: 'the list shows on public event pages; hosts write through save_event_bring_items (#256)' },
   event_cohosts: { anonSelect: 'none', anonInsert: 'none' },
   event_comments: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: false, noInsertAsOther: true } },
+  event_court_queues: { anonSelect: 'all', anonInsert: 'none', why: 'court queue for open play (#333): everyone who can see the event follows the courts; written only by save_court_queue() (host / co-host)' },
   event_guests: { anonSelect: 'all', anonInsert: 'none', why: '+1 guests count toward the public roster' },
   event_payments: { anonSelect: 'none', anonInsert: 'none', owner: { column: 'user_id', ownRowsOnly: false, noInsertAsOther: true } },
   event_reminder_log: { anonSelect: 'none', anonInsert: 'none', signedInSelect: 'none', why: 'service-only (server jobs)' },

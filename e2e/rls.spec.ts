@@ -690,3 +690,33 @@ test.describe('search (#176)', () => {
     }
   })
 })
+
+test.describe('court queue for open play (#333)', () => {
+  const STATE = { courts: [[1, 2]], queue: [], streaks: {}, games: [], undo: [] }
+  const args = (eventId: string) => ({
+    p_event_id: eventId, p_courts: 1, p_rule: 'stay', p_stay_max: 3, p_state: STATE, p_expected: 0,
+  })
+
+  test('guests read the courts, and can neither write the table nor save', async () => {
+    const read = await q(() => anon.from('event_court_queues').select('event_id, courts, rule, stay_max, state, version'), 'anon court queues')
+    expect(read.error).toBeNull()
+    const insert = await q(() => anon.from('event_court_queues').insert({ event_id: '00000000-0000-4000-8000-000000000000', courts: 1, state: STATE }), 'anon insert court queue')
+    expect(insert.error?.code).toBe(RLS_DENIED)
+    const ev = await q(() => anon.from('events').select('id').limit(1), 'an event')
+    const id = ev.data?.[0]?.id ?? '00000000-0000-4000-8000-000000000000'
+    const save = await q(() => anon.rpc('save_court_queue', args(id)), 'anon save_court_queue')
+    expect(save.error).not.toBeNull()
+  })
+
+  test('a signed-in player who is not the host or a co-host cannot save', async () => {
+    const insert = await q(() => me.from('event_court_queues').insert({ event_id: '00000000-0000-4000-8000-000000000000', courts: 1, state: STATE }), 'insert court queue')
+    expect(insert.error?.code).toBe(RLS_DENIED)
+    const ev = await q(() => me.from('events').select('id').neq('created_by', myId).limit(20), 'events I do not host')
+    const cohosted = await q(() => me.from('event_cohosts').select('event_id').eq('user_id', myId), 'my co-hosting')
+    const mine = new Set((cohosted.data ?? []).map(r => r.event_id))
+    const other = (ev.data ?? []).find(e => !mine.has(e.id))
+    test.skip(!other, 'beta has no event hosted by someone else')
+    const save = await q(() => me.rpc('save_court_queue', args(other!.id)), 'save on someone else\'s event')
+    expect(save.error?.code).toBe(RLS_DENIED)
+  })
+})

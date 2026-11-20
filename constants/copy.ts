@@ -201,3 +201,42 @@ export const WEB_PUSH_COPY = {
 
 /** seen_banners id for the "Get a reminder?" line (#189): dismissed once, never shown again. */
 export const WEB_PUSH_NUDGE_ID = 'web-push-nudge-v1'
+
+/** Court queue for open play (#333): People tab. */
+export const COURT_QUEUE_COPY = {
+  title: 'Courts',
+  live: 'Live',
+  ended: 'Ended',
+  start: 'Start court queue',
+  startHint: 'Tap who won after each game; everyone sees who is on and who is next.',
+  needsTeams: 'Save at least two teams to run the courts.',
+  court: (n: number) => `Court ${n}`,
+  won: (team: string) => `${team} won`,
+  upNext: 'Up next',
+  nobodyWaiting: 'Every team is on a court.',
+  undo: 'Undo',
+  rules: 'Rules',
+  end: 'End',
+  restart: 'Start again',
+  streak: (team: string, n: number) => `${team}: ${n} ${n === 1 ? 'win' : 'wins'} in a row`,
+  ruleLabel: (stayMax: number | null | 'both_off') =>
+    stayMax === 'both_off' ? 'Both teams off each game' : stayMax === null ? 'Winners stay' : `Winners stay · max ${stayMax}`,
+  youOnCourt: (team: string, court: number) => `You're on ${team} · on Court ${court} now`,
+  youNext: (team: string) => `You're on ${team} · up next`,
+  youWaiting: (team: string, ahead: number) => `You're on ${team} · ${ahead} ${ahead === 1 ? 'team' : 'teams'} ahead of you`,
+  playing: (a: string, b: string) => `${a} vs ${b} is playing now`,
+  updated: (mins: number) => (mins < 1 ? 'updated just now' : `updated ${mins} min ago`),
+  tonight: 'Tonight',
+  record: (w: number, l: number) => `${w}–${l}`,
+  conflict: 'Someone else updated the courts. Showing their version.',
+  failed: "Couldn't update the courts",
+  setupTitle: 'Courts & rules',
+  courtsLabel: 'Courts',
+  ruleHeading: 'After each game',
+  stayOption: (n: number) => `Winners stay, up to ${n} in a row`,
+  stayAlways: 'Winners always stay',
+  bothOff: 'Both teams off',
+  save: 'Save',
+  moveUp: (team: string) => `Move ${team} up`,
+  moveDown: (team: string) => `Move ${team} down`,
+} as const

@@ -32,6 +32,8 @@ export const STALE = {
   liveScores: 10_000,
   /** Whether the viewer is an admin (Profile's Admin metrics row). Changes only by hand in app_admins. */
   adminCheck: 30 * 60_000,
+  /** An event's court queue (#333): realtime keeps it current while the People tab is open. */
+  courtQueue: 15_000,
   /** Admin metrics screens (Overview, People, Retention, one person): computed on demand, a minute is fresh enough. */
   metrics: 60_000,
   /** Metrics → Live: refetched every 15 s while on screen. */

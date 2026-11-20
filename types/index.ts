@@ -2683,3 +2683,33 @@ export type ChatComposerProps = {
 
 /** A chat picture full screen; null = closed. */
 export type ImageViewerProps = { uri: string | null; onClose: () => void }
+
+// ─── Court queue for open play (#333) ────────────────────────────────────────
+/** Winners stay (up to `stayMax` wins in a row, or always when null), or both teams come off every game. */
+export type CourtQueueRule = { kind: 'stay'; stayMax: number | null } | { kind: 'both_off' }
+/** One finished game, newest last. Teams are event team numbers (1-based, TEAM_COLORS). */
+export type CourtQueueGame = { court: number; winner: number; loser: number }
+/** The rotation: who is on each court (null: not enough teams for it), who waits, in order. */
+export type CourtQueueState = {
+  courts: ([number, number] | null)[]
+  queue: number[]
+  /** Wins in a row by the team now on court, by team number. */
+  streaks: Record<string, number>
+  games: CourtQueueGame[]
+  /** Earlier states for Undo, newest last (at most COURT_QUEUE_UNDO_DEPTH); games by count only, to keep the row small. */
+  undo: CourtQueueSnapshot[]
+}
+export type CourtQueueSnapshot = Omit<CourtQueueState, 'undo' | 'games'> & { gameCount: number }
+/** Where a team is now: on a court, or waiting with `ahead` teams before it. */
+export type CourtQueuePlace = { kind: 'court'; court: number } | { kind: 'queue'; ahead: number } | null
+/** The saved row (event_court_queues), as the app uses it. */
+export type CourtQueue = {
+  eventId: string
+  rule: CourtQueueRule
+  state: CourtQueueState
+  version: number
+  ended: boolean
+  updatedAt: string
+}
+/** A team's record tonight. */
+export type CourtQueueTally = { team: number; wins: number; losses: number }

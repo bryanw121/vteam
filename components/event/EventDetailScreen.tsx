@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, ScrollView, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
+import { useCourtQueue } from '../../hooks/event/useCourtQueue'
+import { courtQueueOffered } from '../../utils/courtQueue'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../lib/supabase'
 import { useMutation } from '../../lib/query'
@@ -108,6 +110,9 @@ export default function EventDetail() {
   const isOwner = !!event && event.created_by === userId
   const isHostOrCohost = isOwner || cohosts.some(c => c.user_id === userId)
   const eventOver = isEventOver(event)
+  // Around game time, load the court queue (#333) with the event, so the People tab
+  // opens with it in place instead of pushing the roster down when it arrives.
+  useCourtQueue(id, { enabled: !!event && courtQueueOffered(eventDateMs(event.event_date), event.duration_minutes, !!event.cancelled_at) })
 
   const attendance = useEventAttendance(data)
   const teams = useEventTeams(data, isHostOrCohost)
