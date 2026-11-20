@@ -32,7 +32,7 @@ create policy "Court queues are viewable by everyone"
   to anon, authenticated
   using (true);
 
-revoke insert, update, delete, truncate on public.event_court_queues from anon, authenticated;
+revoke insert, update, delete on public.event_court_queues from anon, authenticated;
 
 -- Save the rotation. p_expected is the version the caller started from (0 for a new queue):
 -- another phone that saved first makes this raise PT409 (HTTP 409), and the app reloads.
