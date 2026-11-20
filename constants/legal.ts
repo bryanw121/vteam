@@ -99,7 +99,7 @@ We may update these Terms. We'll change the effective date and, for material cha
 
 export const PRIVACY_MARKDOWN = String.raw`# vteam Privacy Policy
 
-Oct 27, 2026
+Nov 20, 2026
 
 ## About this policy
 
@@ -121,11 +121,12 @@ vteam is operated from Austin, Texas ("we", "us"). vteam is in beta, and our pra
 | Feedback | Bug reports and feature requests you submit | You |
 | Host payment info | A host's Venmo handle and the event price they set | Hosts |
 | Event locations | Venue address and map coordinates | Hosts |
+| Approximate location | The city vteam covers that is nearest to you, worked out from your network's approximate location or, if you tap "Use my location", from your device's location (see below) | Your device, automatically |
 | Guest names | First and last name of a guest a member adds to an event (guests may not have a vteam account) | The member who adds them |
 | Device and usage data | Platform (iOS, Android or web), app version, push notification token, a random device ID, when the app is open and the types of screens you use (for example "an event page", not which event), in-app actions (for example, tutorial steps viewed), notification preferences | Your device, automatically |
 | Crash and error reports | Error details, device model, OS version, your account ID, and your IP address | Your device, via our crash reporter |
 
-We do not collect your GPS location; event addresses are entered by hosts. If you add an event to your calendar, vteam writes that event to your device calendar but does not read it. If you choose a profile photo, vteam accesses only the photo you pick.
+To show games near you, vteam works out the nearest city it covers from your network's approximate location. If you tap "Use my location", your device's location is used once for the same purpose. Neither is saved to your account or kept on our servers; only the chosen city is remembered on your device. Event addresses are entered by hosts. If you add an event to your calendar, vteam writes that event to your device calendar but does not read it. If you choose a profile photo, vteam accesses only the photo you pick.
 
 vteam does not process payments. Payments between players and hosts happen outside vteam (for example, in Venmo) under that service's own terms, and vteam is not designed to collect card or bank details.
 

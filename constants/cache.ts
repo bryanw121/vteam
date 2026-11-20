@@ -26,6 +26,8 @@ export const STALE = {
   courts: 60_000,
   /** NWS hourly forecast per court (useForecast). The proxy's CDN copy is fresh for 30 min too. */
   forecast: 30 * 60_000,
+  /** The covered city nearest the viewer's network (useFeedCity, /api/where): a network rarely moves within a visit. */
+  where: 6 * 60 * 60_000,
   /** Outside leagues and tournaments (useExternalPrograms): Schelagg refreshes them twice a day. */
   programs: 30 * 60_000,
   /** Live scores from a tournament's Google Sheet (useSheetScores); the open screen also polls. */

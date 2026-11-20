@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { getQueryData, queryKey, setQueryData, useMutation, useQuery } from '../lib/query'
-import { DEFAULT_FEED_REGION, STALE } from '../constants'
+import { STALE } from '../constants'
 import { useSession } from '../contexts/session'
 import { notifyError } from '../utils/notify'
 import { DEFAULT_REMINDER_LEAD_MINUTES } from '../constants/notifications'
@@ -145,18 +145,6 @@ export function useUserSettings() {
     savingHomeCity: homeCity.isPending,
     setReminderLead,
   }
-}
-
-/** Schelagg region slug for a city name: "Austin" -> "austin", "San Antonio" -> "san-antonio". */
-export function regionSlug(cityName: string): string {
-  return cityName.trim().toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-}
-
-/** Which region's outside sessions the feed shows: the home city, else the pilot default. */
-export function useFeedRegion(): string {
-  const { settings } = useUserSettings()
-  const city = settings?.home_city?.city_name
-  return city ? regionSlug(city) : DEFAULT_FEED_REGION
 }
 
 /** Record a one-time banner as seen on the account (best effort; the device copy is the fallback). */

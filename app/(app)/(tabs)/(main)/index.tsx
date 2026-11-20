@@ -27,7 +27,8 @@ import { ANALYTICS_EVENTS } from '../../../../constants/analytics'
 import { TourTarget } from '../../../../components/tour/TourTarget'
 import { useTourWants } from '../../../../contexts/tour'
 import { IconButton, OneTimeBanner } from '../../../../components/ui'
-import { useFeedRegion } from '../../../../hooks/useUserSettings'
+import { useFeedRegion } from '../../../../hooks/useFeedCity'
+import { FeedCityLine } from '../../../../components/events/FeedCity'
 import type { EventCardRsvpHandler, FeedCardContext, FeedFilter, FeedFilterChip, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
 import { buildFeedSections } from '../../../../utils/feedSections'
 import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters } from '../../../../utils/feedFilters'
@@ -305,6 +306,7 @@ export default function EventsScreen() {
   const filterChips = (
     <>
       <OneTimeBanner banner={BANNERS.austinPilot} style={isMobile ? shared.feedStaleNoticeMobile : undefined} />
+      <FeedCityLine style={isMobile ? shared.feedStaleNoticeMobile : undefined} />
       <TourTarget id={TOUR_TARGETS.feedFilters}>
         <FilterChips
           chips={FILTER_CHIPS}

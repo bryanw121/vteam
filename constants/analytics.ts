@@ -66,6 +66,8 @@ export const ANALYTICS_EVENTS = {
   shareTapped: 'share_tapped',
   /** Changed the Events feed filters (not the restore on open). props: { filter, surface } */
   feedFilterChanged: 'feed_filter_changed',
+  /** Picked the city whose outside games the feed shows (#339). props: { region, how: list | device } */
+  feedCityChanged: 'feed_city_changed',
   /** A Scorekeeper match started or finished (device-only, so this is the only record). props: { stage: started | finished, sets (sets played), mode?: simple } */
   scorekeeperMatch: 'scorekeeper_match',
   /** A Share button sent or copied a screen's link. props: { screen (tournament, tournaments, leagues, events, profile), how: share | copy, filtered } */
