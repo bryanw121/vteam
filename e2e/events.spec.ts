@@ -33,6 +33,7 @@ import {
   clearPlacesCache,
 } from './placesMock'
 import { E2E_BASE_URL as BASE_URL } from './env'
+import { expectInFeed } from './feed'
 
 
 test.describe.configure({ mode: 'serial' })
@@ -89,22 +90,23 @@ test.describe('Events', () => {
     // active filter (it's a shortcut to your commitments, not a view of the
     // filter), so a page-wide count would always find the hosted fixtures.
     const feed = page.getByTestId('events-feed')
-    await expect(feed.getByText(OPEN_PLAY_EVENT).first()).toBeVisible({ timeout: 20000 })
+    // A busy day on desktop shows its first few games, then "Show N more": expectInFeed opens those.
+    await expectInFeed(page, feed.getByText(OPEN_PLAY_EVENT))
 
     // Tournament filter: tournament event shown, open-play event gone.
     await page.getByTestId('filter-tournament').first().dispatchEvent('click')
-    await expect(feed.getByText(TOURNAMENT_EVENT).first()).toBeVisible()
+    await expectInFeed(page, feed.getByText(TOURNAMENT_EVENT), 5000)
     await expect(feed.getByText(OPEN_PLAY_EVENT)).toHaveCount(0)
 
     // Open Play filter: open-play event back, tournament event gone.
     await page.getByTestId('filter-open_play').first().dispatchEvent('click')
-    await expect(feed.getByText(OPEN_PLAY_EVENT).first()).toBeVisible()
+    await expectInFeed(page, feed.getByText(OPEN_PLAY_EVENT), 5000)
     await expect(feed.getByText(TOURNAMENT_EVENT)).toHaveCount(0)
 
     // All: both visible again.
     await page.getByTestId('filter-all').first().dispatchEvent('click')
-    await expect(feed.getByText(TOURNAMENT_EVENT).first()).toBeVisible()
-    await expect(feed.getByText(OPEN_PLAY_EVENT).first()).toBeVisible()
+    await expectInFeed(page, feed.getByText(TOURNAMENT_EVENT), 5000)
+    await expectInFeed(page, feed.getByText(OPEN_PLAY_EVENT), 5000)
   })
 
   // Safety net for the event-detail refactor (splitting the four tab bodies into
@@ -319,8 +321,10 @@ test.describe('Events', () => {
 
     // Precondition: the fixture is tagged Open Play and shows under that chip.
     await page.getByTestId('filter-open_play').first().click()
-    await expect(feed.getByText(OPEN_PLAY_EVENT).first()).toBeVisible({ timeout: 20_000 })
+    await expectInFeed(page, feed.getByText(OPEN_PLAY_EVENT))
     await page.getByTestId('filter-all').first().click()
+
+    await expectInFeed(page, feed.getByText(OPEN_PLAY_EVENT))
 
     await feed.getByText(OPEN_PLAY_EVENT).first().click()
     await page.waitForURL(/\/event\//, { timeout: 20_000 })
@@ -349,10 +353,11 @@ test.describe('Events', () => {
     await page.goto(`${BASE_URL}/`)
     await expect(page.getByTestId('filter-all').first()).toBeVisible({ timeout: 20_000 })
     await page.getByTestId('filter-open_play').first().click()
-    await expect(feed.getByText(editedTitle).first()).toBeVisible({ timeout: 20_000 })
+    await expectInFeed(page, feed.getByText(editedTitle))
 
     // Restore the fixture name for reruns.
     await page.getByTestId('filter-all').first().click()
+    await expectInFeed(page, feed.getByText(editedTitle))
     await feed.getByText(editedTitle).first().click()
     await page.waitForURL(/\/event\//, { timeout: 20_000 })
     await renameTo(OPEN_PLAY_EVENT)
@@ -361,6 +366,7 @@ test.describe('Events', () => {
 
   test('a failed save keeps the host on the edit form and says nothing was saved', async ({ page }) => {
     const feed = page.getByTestId('events-feed')
+    await expectInFeed(page, feed.getByText(OPEN_PLAY_EVENT))
     await feed.getByText(OPEN_PLAY_EVENT).first().click()
     await page.waitForURL(/\/event\//, { timeout: 20_000 })
     await page.getByTestId('event-edit-button').first().click()
@@ -403,6 +409,7 @@ test.describe('Events', () => {
   // account's five most recent venues still include E2E Gym.)
   test('the venue picker writes a searched Google place onto the event', async ({ page }) => {
     const feed = page.getByTestId('events-feed')
+    await expectInFeed(page, feed.getByText(OPEN_PLAY_EVENT))
     await feed.getByText(OPEN_PLAY_EVENT).first().click()
     await page.waitForURL(/\/event\//, { timeout: 20_000 })
     const eventUrl = page.url()
@@ -473,6 +480,7 @@ test.describe('Events', () => {
   // as a bare, ambiguous street line.
   test('a street-address result is offered and saved with its city', async ({ page }) => {
     const feed = page.getByTestId('events-feed')
+    await expectInFeed(page, feed.getByText(TOURNAMENT_EVENT))
     await feed.getByText(TOURNAMENT_EVENT).first().click()
     await page.waitForURL(/\/event\//, { timeout: 20_000 })
     const eventUrl = page.url()

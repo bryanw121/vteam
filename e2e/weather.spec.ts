@@ -13,6 +13,7 @@ import { test, expect, type Page } from '@playwright/test'
 import { E2E_BASE_URL as BASE_URL, E2E_RUN_TAG, STALE_FIXTURE_HOURS } from './env'
 import { signInE2eClient } from './eventsFixtures'
 import { gotoReady, withNetworkRetry } from './retry'
+import { expectInFeed } from './feed'
 
 const PREFIX = `[e2e-wx ${E2E_RUN_TAG}]`
 const SAND_TITLE = `${PREFIX} Sand Doubles`
@@ -103,12 +104,13 @@ const card = (page: Page, title: string) =>
 
 test('the sand card shows a rain chip; the indoor card shows none; one request per court', async ({ page }) => {
   const requests = await routeForecast(page, 'rain')
-  await gotoReady(page, `${BASE_URL}/`, card(page, SAND_TITLE))
+  await gotoReady(page, `${BASE_URL}/`, page.getByTestId('events-feed'))
+  await expectInFeed(page, card(page, SAND_TITLE))
   const chip = card(page, SAND_TITLE).getByTestId('forecast-chip')
   await expect(chip).toBeVisible({ timeout: 20_000 })
   await expect(chip).toHaveText(/70% rain/)
   await expect(chip).toHaveAttribute('aria-label', 'Forecast: 70 percent chance of rain')
-  await expect(card(page, INDOOR_TITLE)).toBeVisible()
+  await expectInFeed(page, card(page, INDOOR_TITLE), 5000)
   await expect(card(page, INDOOR_TITLE).getByTestId('forecast-chip')).toHaveCount(0)
   // Rounded to the court: every request is for 30.26,-97.75 (other e2e or beta events may add courts).
   expect(requests.filter(u => /lat=30\.26&lng=-97\.75/.test(u))).toHaveLength(1)

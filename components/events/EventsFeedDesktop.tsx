@@ -158,6 +158,29 @@ export const EventsFeedDesktop = memo(function EventsFeedDesktop(p: EventsFeedDe
   }, [scrollToDayRef, tryScroll])
   useEffect(() => { tryScroll() }, [tryScroll])
 
+  // The day at the top of the list as it scrolls, ringed in the calendar.
+  const [inViewDate, setInViewDate] = useState<string | null>(null)
+  const scroller = useRef<HTMLElement | null>(null)
+  const updateInView = useCallback(() => {
+    const first = nodes.current.get(dayDates[0] ?? '') as unknown as HTMLElement | undefined
+    if (!first?.getBoundingClientRect) return
+    if (!scroller.current?.isConnected) {
+      let el: HTMLElement | null = first.parentElement
+      while (el && !(el.scrollHeight > el.clientHeight && /auto|scroll/.test(getComputedStyle(el).overflowY))) el = el.parentElement
+      scroller.current = el
+    }
+    const top = (scroller.current?.getBoundingClientRect().top ?? 0) + 80
+    let current: string | null = null
+    for (const date of dayDates) {
+      const node = nodes.current.get(date) as unknown as HTMLElement | undefined
+      if (!node?.getBoundingClientRect) continue
+      if (node.getBoundingClientRect().top > top) break
+      current = date
+    }
+    setInViewDate(prev => (prev === current ? prev : current))
+  }, [dayDates])
+  const counts = useMemo(() => new Map(p.sections.filter(s => s.data.length > 0).map(s => [s.date, s.data.length])), [p.sections])
+
   return (
     <View style={{ flex: 1, flexDirection: 'row', backgroundColor: theme.colors.background }}>
 
@@ -174,6 +197,7 @@ export const EventsFeedDesktop = memo(function EventsFeedDesktop(p: EventsFeedDe
           if (contentSize.height - contentOffset.y - layoutMeasurement.height < 400) {
             p.onNearBottom()
           }
+          updateInView()
         }}
         refreshControl={p.refreshControl}
       >
@@ -231,6 +255,8 @@ export const EventsFeedDesktop = memo(function EventsFeedDesktop(p: EventsFeedDe
               onSelectDate={p.onSelectDate}
               onPrevMonth={p.onPrevMonth}
               onNextMonth={p.onNextMonth}
+              counts={counts}
+              inViewDate={inViewDate}
             />
           </TourTarget>}
 
