@@ -54,6 +54,9 @@ export {
   CHEERS_MAX_PER_EVENT,
   TEAM_COLORS,
   TEAM_COLOR_NAMES,
+  teamColor,
+  teamColorName,
+  teamTint,
   SURFACE_ACCENTS,
 } from './events'
 export type { VenueLocation, EventTemplate, RecurrenceCadence, CheerTypeConfig } from './events'

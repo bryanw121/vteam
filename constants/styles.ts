@@ -767,6 +767,62 @@ export const shared = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  // ─── People tab pieces (#332, components/event/people) ───────────────────
+  peopleCellHalf:         { width: '50%' },
+  peopleCardRow:          { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  peopleCardGrab:         { flex: 1, minWidth: 0 },
+  peopleCardText:         { flex: 1, minWidth: 0 },
+  peopleCardDetail:       { fontSize: font.size.xs, color: colors.subtext, marginTop: 1 },
+  peopleCardGuestDetail:  { fontSize: font.size.xs, color: colors.subtext, lineHeight: 14 },
+  peopleCardDimmed:       { opacity: 0.45 },
+  peopleCardCorner:       { zIndex: 2, elevation: 2 },
+  peopleCardRemove:       { padding: 4 },
+  peoplePaidBadge: {
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginTop: 3, gap: 2,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: radius.full,
+    backgroundColor: colors.success + '1A', borderWidth: 1, borderColor: colors.success + '40',
+  },
+  peoplePaidBadgeText:    { fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.success },
+  peopleStepper:          { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  peopleStepBtn: {
+    width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center',
+  },
+  peopleStepBtnDisabled:  { opacity: 0.35 },
+  peopleStepBtnText:      { fontSize: font.size.lg, color: colors.primaryText, lineHeight: 22 },
+  peopleStepLabel: {
+    fontSize: font.size.md, fontWeight: font.weight.medium, color: colors.text, minWidth: 20, textAlign: 'center',
+  },
+  peopleHeaderRight:      { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  peopleModeRow:          { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm },
+  peoplePaidSummary:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.sm },
+  peopleDropZone:         { borderRadius: radius.md, borderWidth: 1, borderColor: 'transparent', padding: spacing.xs },
+  peopleDropZoneActive:   { backgroundColor: colors.subtext + '12', borderColor: colors.subtext + '40' },
+  peopleTeams:            { gap: spacing.sm },
+  peopleTeamChips:        { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginLeft: 'auto' },
+  peopleTeamEmpty:        { paddingHorizontal: spacing.xs, paddingBottom: spacing.xs },
+  peopleSplitWarning:     { marginTop: spacing.sm, color: colors.error },
+  peopleTeamActions:      { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md },
+  peopleTeamAction:       { flex: 1 },
+  peopleList:             { gap: spacing.xs },
+  peopleListRow:          { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  peopleListMain:         { flex: 1, minWidth: 0 },
+  peopleListDetail:       { marginTop: 2 },
+  peopleListPlace:        { minWidth: 20, fontWeight: font.weight.semibold, color: colors.primaryText },
+  peopleApprove: {
+    paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, backgroundColor: colors.success, borderRadius: radius.md,
+  },
+  peopleApproveWaitlist: {
+    paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, backgroundColor: colors.primary, borderRadius: radius.md,
+  },
+  peopleDeny: {
+    paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, backgroundColor: colors.error + '18',
+    borderRadius: radius.md, borderWidth: 1, borderColor: colors.error + '40',
+  },
+  peopleActionText:       { color: colors.white, fontSize: font.size.sm, fontWeight: font.weight.medium },
+  peopleDenyText:         { color: colors.error, fontSize: font.size.sm, fontWeight: font.weight.medium },
+  peopleListGuestName:    { flex: 1 },
+
   // ── Wrapping row of Chips (forms) ─────────────────────────
   // Game recap (#227): the footer on a finished game and the "Your game" card.
   recapFooter: {
