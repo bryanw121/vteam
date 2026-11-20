@@ -1,5 +1,5 @@
 import type { FeedFilter, SurfaceFilter, FeedbackKind, UrlCodec } from '../types'
-import type { MetricsRangeDays, AdminUserSort, MetricsTab } from '../types/metrics'
+import type { MetricsRangeDays, AdminUserSort, MetricsTab, TrafficSpan } from '../types/metrics'
 import { flag, oneOf, optionalOneOf, tabIndexCodec, text } from './urlState'
 
 /**
@@ -60,6 +60,7 @@ export const VIEW = {
       parse: raw => (raw === '7' ? 7 : raw === '90' ? 90 : 30),
       format: v => (v === 30 ? undefined : String(v)),
     } satisfies UrlCodec<MetricsRangeDays>,
+    span: oneOf<TrafficSpan>(['1h', '3h', '12h', '1d', '3d', '1w', '30d'], '1h'),
     q: text(60),
     sort: oneOf<AdminUserSort>(['last_seen', 'active', 'newest'], 'last_seen'),
   },

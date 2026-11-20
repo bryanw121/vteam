@@ -3349,6 +3349,7 @@ export type Database = {
         Returns: undefined
       }
       admin_retention: { Args: { p_weeks?: number }; Returns: Json }
+      admin_traffic_series: { Args: { p_minutes?: number }; Returns: Json }
       admin_user_activity: { Args: { p_user: string }; Returns: Json }
       admin_users: {
         Args: {

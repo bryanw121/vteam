@@ -590,6 +590,7 @@ test.describe('admin usage metrics (#232 part 2)', () => {
     ['admin_metrics_overview', { p_from: '2026-11-01', p_to: '2026-11-07' }],
     ['admin_metrics_events', { p_from: '2026-11-01', p_to: '2026-11-07' }],
     ['admin_online_now', {}],
+    ['admin_traffic_series', { p_minutes: 60 }],
     ['admin_retention', { p_weeks: 4 }],
     ['admin_users', { p_search: '', p_sort: 'last_seen', p_limit: 5, p_offset: 0 }],
     ['admin_user_activity', { p_user: BUDDY_ID }],

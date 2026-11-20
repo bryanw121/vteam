@@ -6,7 +6,7 @@ import type { QueryResult } from '../lib/query'
 import { STALE } from '../constants/cache'
 import { useSession } from '../contexts/session'
 import type {
-  AdminReport, AdminUserActivity, AdminUserSort, ReportAction, AdminUsersPage, MetricsEvents, MetricsOverview, OnlineNow, RetentionReport,
+  AdminReport, AdminUserActivity, AdminUserSort, ReportAction, AdminUsersPage, MetricsEvents, MetricsOverview, OnlineNow, RetentionReport, TrafficSeries,
 } from '../types'
 
 /**
@@ -17,6 +17,8 @@ import type {
  */
 
 export const LIVE_REFRESH_MS = 15_000
+/** The Live tab's charts: once a minute is as often as a new online sample exists. */
+export const TRAFFIC_REFRESH_MS = 60_000
 
 export function adminCheckKey(userId: string): string {
   return queryKey('admin', userId, 'isAdmin')
@@ -78,6 +80,27 @@ export function useOnlineNow(opts?: { enabled?: boolean }): QueryResult<OnlineNo
       if (AppState.currentState === 'active' || AppState.currentState === undefined) void refetch()
     }
     const timer = setInterval(tick, LIVE_REFRESH_MS)
+    return () => clearInterval(timer)
+  }, [enabled, refetch])
+  return result
+}
+
+/** People online and visits across the last `minutes`, refetched every minute while `enabled` and the app is in front. */
+export function useTrafficSeries(minutes: number, opts?: { enabled?: boolean }): QueryResult<TrafficSeries> {
+  const { userId } = useSession()
+  const enabled = opts?.enabled ?? true
+  const result = useQuery<TrafficSeries>(
+    userId ? queryKey('admin', userId, 'traffic', minutes) : null,
+    () => rpcJson(supabase.rpc('admin_traffic_series', { p_minutes: minutes })),
+    { staleMs: STALE.metrics, enabled, keepPreviousData: true },
+  )
+  const { refetch } = result
+  useEffect(() => {
+    if (!enabled) return
+    const tick = () => {
+      if (AppState.currentState === 'active' || AppState.currentState === undefined) void refetch()
+    }
+    const timer = setInterval(tick, TRAFFIC_REFRESH_MS)
     return () => clearInterval(timer)
   }, [enabled, refetch])
   return result
