@@ -12,7 +12,8 @@ import {
   STALE,
 } from '../constants'
 import { supabase } from '../lib/supabase'
-import { feedPrefetchAge, takeFeedPrefetch } from '../lib/feedPrefetch'
+import { feedPrefetchTiming, takeFeedPrefetch } from '../lib/feedPrefetch'
+import { browserAgent, isBotAgent } from '../utils/botAgent'
 import { landedOnFeed, msSinceOpen, track } from '../lib/analytics'
 import { ANALYTICS_EVENTS } from '../constants/analytics'
 import { getSessionUser } from '../lib/sessionUser'
@@ -102,22 +103,30 @@ export function __resetFeedState(): void {
  * feed_first_paint (#184): when the first feed rows were in hand, and from
  * where. `ms` is since the launch was first on screen (`msSinceOpen`), sent only
  * when the launch opened on the feed (`landing`); someone who opens Events hours
- * into a visit would otherwise report hours (#326). `wait_ms` is how long the
- * server took (prefetch: since the <head> request started); `cold` marks over
- * 1 s. Once per launch.
+ * into a visit would otherwise report hours (#326). For the page's own request
+ * (prefetch), `server_ms` is start → response and `boot_ms` start → the app
+ * took it (#331: before, `wait_ms` was the second and `cold` blamed the server
+ * for the app's own start-up); for the app's fetch, `server_ms` is the wait.
+ * `cold` marks a server over 1 s. `wait_ms` (prefetch: since the <head>
+ * request started) stays until early December 2026 so the two can be compared,
+ * then goes. `bot` labels a crawler-like browser (utils/botAgent). Once per launch.
  */
 let firstPaintTracked = false
 function trackFirstPaint(source: 'snapshot' | 'prefetch' | 'fetch', startedAt?: number): void {
   if (firstPaintTracked) return
   firstPaintTracked = true
-  const prefetchAt = feedPrefetchAge()
-  const waitMs = source === 'prefetch' && prefetchAt !== null ? Date.now() - prefetchAt
+  const timing = source === 'prefetch' ? feedPrefetchTiming() : null
+  const waitMs = timing ? Date.now() - timing.at
     : startedAt !== undefined ? Date.now() - startedAt : null
+  const serverMs = timing ? timing.serverMs : source === 'fetch' ? waitMs : null
   const landing = landedOnFeed()
   const sinceOpen = msSinceOpen()
-  const props: AnalyticsProps = { source, landing, cold: waitMs !== null && waitMs > 1000 }
+  const props: AnalyticsProps = { source, landing, cold: serverMs !== null && serverMs > 1000 }
   if (landing && sinceOpen !== null) props.ms = sinceOpen
   if (waitMs !== null) props.wait_ms = waitMs
+  if (serverMs !== null) props.server_ms = serverMs
+  if (timing) props.boot_ms = timing.bootMs
+  if (isBotAgent(browserAgent())) props.bot = true
   track(ANALYTICS_EVENTS.feedFirstPaint, props)
 }
 

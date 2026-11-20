@@ -2683,3 +2683,13 @@ export type ChatComposerProps = {
 
 /** A chat picture full screen; null = closed. */
 export type ImageViewerProps = { uri: string | null; onClose: () => void }
+
+/** The page's own Events feed request on a web first visit (#184, #331): server vs app start-up. */
+export type FeedPrefetchTiming = {
+  /** Request start → response arrived (server + network); null if it never arrived. */
+  serverMs: number | null
+  /** Request start → the app took the promise (download + start of the app). */
+  bootMs: number
+  /** Date.now() when the request started. */
+  at: number
+}
