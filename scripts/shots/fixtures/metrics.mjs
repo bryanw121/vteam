@@ -75,6 +75,31 @@ export function metricsRpc(now) {
     }
   }
 
+  /** admin_traffic_series: a plausible wave of people online and visits across the asked span. */
+  const traffic = body => {
+    const minutes = Math.min(Math.max(Number(body?.p_minutes) || 60, 60), 43200)
+    const bucket = minutes <= 60 ? 60 : minutes <= 180 ? 120 : minutes <= 720 ? 600 : minutes <= 1440 ? 1200 : minutes <= 4320 ? 3600 : minutes <= 10080 ? 7200 : 28800
+    const to = Math.floor(nowMs / (bucket * 1000)) * bucket * 1000 + bucket * 1000
+    const n = Math.round((minutes * 60) / bucket)
+    const points = Array.from({ length: n }, (_, i) => {
+      const wave = Math.sin((i / n) * Math.PI * (minutes > 1440 ? minutes / 720 : 2))
+      const online = Math.max(0, Math.round(4 + 3 * wave + (i % 5 === 0 ? 1 : 0)))
+      const visits = Math.max(0, Math.round((bucket / 600) * (2 + 2 * wave)) + (i % 7 === 0 ? 1 : 0))
+      return { at: iso(to - (n - i) * bucket * 1000), online, online_avg: online - 0.4, visits, guest_visits: Math.floor(visits * 0.6) }
+    })
+    const visits = points.reduce((sum, pt) => sum + pt.visits, 0)
+    const guestVisits = points.reduce((sum, pt) => sum + pt.guest_visits, 0)
+    const peak = points.reduce((best, pt) => (pt.online >= best.online ? pt : best), points[0])
+    return {
+      from: iso(to - minutes * 60_000), to: iso(to), minutes, bucket_seconds: bucket, points,
+      totals: {
+        visits, guest_visits: guestVisits,
+        visitors: Math.max(1, Math.round(visits * 0.45)), guest_visitors: Math.round(visits * 0.28), signed_in_visitors: Math.max(1, Math.round(visits * 0.45)) - Math.round(visits * 0.28),
+        screen_views: visits * 6, peak: { online: peak.online, at: peak.at },
+      },
+    }
+  }
+
   const retention = () => ({
     cohorts: [
       { week: '2026-09-14', size: 6, w1: 5, w2: 4, w4: 3, w8: 3 },
@@ -153,6 +178,7 @@ export function metricsRpc(now) {
     admin_metrics_events: events,
     admin_metrics_overview: overview,
     admin_online_now: online,
+    admin_traffic_series: traffic,
     admin_retention: retention,
     admin_users: users,
     admin_user_activity: activity,

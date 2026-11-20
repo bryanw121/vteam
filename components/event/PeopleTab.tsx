@@ -8,6 +8,7 @@ import { RosterActionsSheet } from './RosterActionsSheet'
 import { TeamBoard } from './people/TeamBoard'
 import { RequestList } from './people/RequestList'
 import { WaitlistList } from './people/WaitlistList'
+import { CourtQueueCard } from './people/CourtQueueCard'
 import { shared, theme } from '../../constants'
 import { NO_SHOW_HOST_NOTE } from '../../constants/copy'
 import type {
@@ -18,7 +19,8 @@ import type { RosterCardContext } from '../../types/people'
 import { profileDisplayName } from '../../utils'
 import { guestRowActions, hasRosterMenu, memberRowActions } from '../../utils/rosterActions'
 import { guestFullName } from '../../utils/guests'
-import { attendeesPaid, noShowUserIds, noShowWindow } from '../../hooks/event/derive'
+import { attendeesPaid, eventDateMs, noShowUserIds, noShowWindow } from '../../hooks/event/derive'
+import { savedTeams } from '../../utils/courtQueue'
 
 type Props = {
   event: EventWithDetails
@@ -113,6 +115,15 @@ export function PeopleTab({
             <Text style={shared.rosterNoteText}>{NO_SHOW_HOST_NOTE(noShows.size, pointsAt)}</Text>
           </View>
         )}
+        <CourtQueueCard
+          eventId={event.id}
+          startMs={eventDateMs(event.event_date)}
+          durationMinutes={event.duration_minutes}
+          cancelled={!!event.cancelled_at}
+          teams={savedTeams([...data.roster.attendingRows, ...guests])}
+          myTeam={data.roster.attendingRows.find(r => r.user_id === data.userId)?.team_number ?? null}
+          canRun={isHostOrCohost}
+        />
         <TeamBoard
           event={event}
           eventStatus={eventStatus}

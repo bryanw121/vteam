@@ -1,5 +1,5 @@
 import { EVENT_TIME_ZONE } from '../constants/time'
-import type { MetricsPlatform, MetricsRangeDays, RetentionCohort } from '../types'
+import type { MetricsPlatform, MetricsRangeDays, TrafficSpan, RetentionCohort } from '../types'
 
 /**
  * Pure helpers for the admin Metrics screens (settings/metrics). Days are America/Chicago days,
@@ -20,6 +20,47 @@ export function metricsRange(days: MetricsRangeDays, now: Date = new Date()): { 
   const [y, m, d] = to.split('-').map(Number)
   const from = new Date(Date.UTC(y, m - 1, d) - (days - 1) * DAY_MS).toISOString().slice(0, 10)
   return { from, to }
+}
+
+/** The Live tab's spans, shortest first: chip label, minutes for admin_traffic_series, and how to say it in a sentence. */
+export const TRAFFIC_SPANS: readonly { key: TrafficSpan; label: string; minutes: number; phrase: string }[] = [
+  { key: '1h', label: '1 hr', minutes: 60, phrase: 'the last hour' },
+  { key: '3h', label: '3 hr', minutes: 180, phrase: 'the last 3 hours' },
+  { key: '12h', label: '12 hr', minutes: 720, phrase: 'the last 12 hours' },
+  { key: '1d', label: '1 day', minutes: 1440, phrase: 'the last day' },
+  { key: '3d', label: '3 days', minutes: 4320, phrase: 'the last 3 days' },
+  { key: '1w', label: '1 week', minutes: 10080, phrase: 'the last week' },
+  { key: '30d', label: '30 days', minutes: 43200, phrase: 'the last 30 days' },
+]
+
+export function trafficSpan(key: TrafficSpan) {
+  return TRAFFIC_SPANS.find(s => s.key === key) ?? TRAFFIC_SPANS[0]
+}
+
+/** A time on a traffic chart's x axis: "3:40 PM" within a day, "Nov 19, 3 PM" within a week, "Nov 12" beyond. */
+export function trafficTick(iso: string, minutes: number): string {
+  const d = new Date(iso)
+  if (minutes <= 1440) return clockTime(iso)
+  if (minutes <= 10080) {
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', timeZone: EVENT_TIME_ZONE })
+  }
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: EVENT_TIME_ZONE })
+}
+
+/** How long one point on a traffic chart covers: "1 min", "20 min", "2 hours". */
+export function bucketLabel(seconds: number): string {
+  if (seconds < 3600) return `${Math.round(seconds / 60)} min`
+  const h = Math.round(seconds / 3600)
+  return h === 1 ? '1 hour' : `${h} hours`
+}
+
+/**
+ * Online counts ready to draw: a bucket with no sample takes the value before it (0 at the
+ * start), so a gap reads as flat, never as a drop to zero that didn't happen.
+ */
+export function onlineLine(points: readonly { online: number | null }[]): number[] {
+  let last = 0
+  return points.map(p => (last = p.online ?? last))
 }
 
 /** "Nov 7" for a YYYY-MM-DD day (no time zone shift: the day is already a calendar day). */

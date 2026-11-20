@@ -823,6 +823,42 @@ export const shared = StyleSheet.create({
   peopleDenyText:         { color: colors.error, fontSize: font.size.sm, fontWeight: font.weight.medium },
   peopleListGuestName:    { flex: 1 },
 
+  // ─── Court queue for open play (#333) ───────────────────────────────────
+  courtCard:              { gap: spacing.sm, marginBottom: spacing.md },
+  courtHeader:            { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  courtHeaderNote:        { fontSize: font.size.xs, color: colors.subtextStrong },
+  courtBox:               { borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing.sm, gap: spacing.sm },
+  courtRow:               { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  courtLabel:             { fontSize: font.size.sm, fontWeight: font.weight.semibold, color: colors.subtextStrong },
+  courtVs:                { fontSize: font.size.sm, color: colors.subtext },
+  courtTeam:              { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexShrink: 1 },
+  courtTeamName:          { fontSize: font.size.md, fontWeight: font.weight.bold, color: colors.text },
+  courtDot:               { width: 10, height: 10, borderRadius: 5 },
+  courtStreak: {
+    fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.timeInk, backgroundColor: colors.time,
+    borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: 2, overflow: 'hidden',
+  },
+  courtButtons:           { flexDirection: 'row', gap: spacing.sm },
+  courtButton:            { flex: 1 },
+  courtQueueRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 44,
+    paddingHorizontal: spacing.sm, borderRadius: radius.md, backgroundColor: colors.background,
+  },
+  courtQueueRowMine:      { borderWidth: 1, borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  courtQueuePlace:        { minWidth: 20, fontWeight: font.weight.bold, color: colors.primaryText },
+  courtSpacer:            { flex: 1 },
+  courtQueueNote:         { fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.primaryText },
+  courtBanner: {
+    borderWidth: 1, borderColor: colors.timeBorder, backgroundColor: colors.primarySoft, borderRadius: radius.md,
+    padding: spacing.sm, gap: 2, marginBottom: spacing.sm,
+  },
+  courtBannerTitle:       { fontSize: font.size.md, fontWeight: font.weight.semibold, color: colors.text },
+  courtBannerSub:         { fontSize: font.size.sm, color: colors.subtextStrong },
+  courtTally:             { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  courtTallyItem:         { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  courtSheetBody:         { gap: spacing.md, paddingBottom: spacing.md },
+  courtSheetOptions:      { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+
   // ── Wrapping row of Chips (forms) ─────────────────────────
   // Game recap (#227): the footer on a finished game and the "Your game" card.
   recapFooter: {

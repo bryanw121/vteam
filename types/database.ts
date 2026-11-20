@@ -1101,6 +1101,60 @@ export type Database = {
           },
         ]
       }
+      event_court_queues: {
+        Row: {
+          courts: number
+          ended_at: string | null
+          event_id: string
+          rule: string
+          started_at: string
+          state: Json
+          stay_max: number | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          courts: number
+          ended_at?: string | null
+          event_id: string
+          rule?: string
+          started_at?: string
+          state: Json
+          stay_max?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          courts?: number
+          ended_at?: string | null
+          event_id?: string
+          rule?: string
+          started_at?: string
+          state?: Json
+          stay_max?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_court_queues_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_court_queues_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_guests: {
         Row: {
           added_by: string
@@ -3349,6 +3403,7 @@ export type Database = {
         Returns: undefined
       }
       admin_retention: { Args: { p_weeks?: number }; Returns: Json }
+      admin_traffic_series: { Args: { p_minutes?: number }; Returns: Json }
       admin_user_activity: { Args: { p_user: string }; Returns: Json }
       admin_users: {
         Args: {
@@ -3605,6 +3660,18 @@ export type Database = {
       rollup_app_events: { Args: { p_days?: number }; Returns: number }
       rollup_app_online: { Args: { p_days?: number }; Returns: number }
       sample_app_online: { Args: never; Returns: undefined }
+      save_court_queue: {
+        Args: {
+          p_courts: number
+          p_ended?: boolean
+          p_event_id: string
+          p_expected: number
+          p_rule: string
+          p_state: Json
+          p_stay_max: number
+        }
+        Returns: Json
+      }
       save_event: {
         Args: {
           p_dates: string[]
