@@ -14,7 +14,7 @@ import {
 
 const root = join(__dirname, '..')
 const eventCard = readFileSync(join(root, 'components/EventCard.tsx'), 'utf8')
-const monthEvents = readFileSync(join(root, 'hooks/useMonthEvents.ts'), 'utf8')
+const monthEvents = readFileSync(join(root, 'hooks/feed/fallback.ts'), 'utf8')
 
 describe('the embed carries status', () => {
   it('selects the base table with a status column', () => {

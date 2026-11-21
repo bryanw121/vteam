@@ -4,13 +4,9 @@ import { act, render } from '@testing-library/react-native'
 import { __resetQueryCache, getQueryData, invalidate, setQueryData, useQuery } from '../lib/query'
 import { eventKeys } from '../hooks/event/keys'
 import { EVENT_JUST_FILLED_BODY, EVENT_JUST_FILLED_TITLE, GENERIC_ERROR_MESSAGE } from '../constants/copy'
-import {
-  __resetFeedState,
-  feedMonthKey,
-  useFeedRsvp,
-  useMonthEvents,
-  withMyAttendance,
-} from '../hooks/useMonthEvents'
+import { __resetFeedState, useMonthEvents } from '../hooks/feed/useMonthEvents'
+import { useFeedRsvp, withMyAttendance } from '../hooks/feed/useFeedRsvp'
+import { feedMonthKey } from '../hooks/feed/state'
 import { addMonths } from '../utils/monthKeys'
 import { localDateKey } from '../utils'
 import type { EventWithDetails } from '../types'
