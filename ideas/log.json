@@ -568,5 +568,29 @@
     "bucket": "testing",
     "status": "proposed",
     "summary": "Global Jest floor (35/28/30/36) sits 12 points under today (47.6/38.9/40.6/48.2), hiding folder drops. scripts/coverage-ratchet.mjs with per-folder floors in coverage-floors.json (utils 89.5%, lib 86.3%, hooks 48.7%...) that only rise, plus >=70% changed-lines coverage in utils/lib/hooks, in CI job summary."
+  },
+  {
+    "date": "2026-11-21",
+    "n": 1,
+    "title": "Weekly games that post themselves: one series, posted 6 days ahead, last week's players hear first",
+    "bucket": "competitor-gap",
+    "status": "proposed",
+    "summary": "event_series + pg_cron post_series_games posts each week's game N days ahead with tags/cohosts/bring list; regulars (last 2 games, no no-shows) get series_game push 12h before new-game alerts; Hosted lists series with edit future/skip/pause/end; Weekly chip. Evidence: 0 of 46 live events used Repeat, one host reposted a Wednesday game by hand 3 weeks. Reclub auto weekly activities, OpenSports recurring creator."
+  },
+  {
+    "date": "2026-11-21",
+    "n": 2,
+    "title": "Date labels at 1/50th the cost: one cached formatter module instead of 58 toLocale*String calls",
+    "bucket": "latency",
+    "status": "proposed",
+    "summary": "utils/dateFormat.ts with cached Intl.DateTimeFormat per format+zone, move 58 call sites in 35 files, guard test. Measured at 4x CPU: Events first paint spends 43-124 ms in 30-141 toLocale calls (0.4 ms each vs 0.008 cached)."
+  },
+  {
+    "date": "2026-11-21",
+    "n": 3,
+    "title": "Feed hook in pieces: useQueries in lib/query, and the 694-line useMonthEvents split into fetch, previews, snapshot and RSVP",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "Add useQueries to lib/query to replace the 24 fixed useQuery slots (only rules-of-hooks disable), split hooks/useMonthEvents.ts into hooks/feed/{feedFetch,feedPreviews,feedSnapshot,feedState,useMonthEvents,useFeedRsvp}; 28 existing tests as the net; 3 PRs."
   }
 ]
