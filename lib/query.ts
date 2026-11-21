@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { AppState } from 'react-native'
 import { isServerDown, onServerRecovered } from './serverHealth'
 import { useFocusEffect } from 'expo-router'
@@ -404,6 +404,88 @@ export function useQuery<T>(
       snap.invalidated || snap.fetchedAt === 0 || Date.now() - snap.fetchedAt >= staleMs,
     refetch,
   }
+}
+
+/**
+ * `useQuery` for a list of keys that changes length: one result per key, in
+ * order, with the same cache, dedupe, stale and refetch rules (#343). The feed
+ * reads one key per loaded month this way instead of a fixed row of 24
+ * `useQuery` slots. `fetcher(key, index)` fetches one key. No
+ * `keepPreviousData`: a key that is new to the list shows no data until it has some.
+ */
+export function useQueries<T>(
+  keys: readonly string[],
+  fetcher: (key: string, index: number) => Promise<T>,
+  opts?: Omit<QueryOptions, 'keepPreviousData'>,
+): QueryResult<T>[] {
+  const enabled = opts?.enabled ?? true
+  const staleMs = opts?.staleMs ?? DEFAULT_STALE_MS
+  // One identity per distinct list, so a parent re-rendering with an equal array doesn't resubscribe.
+  const joined = keys.join('\u0000')
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `joined` is the list's identity
+  const list = useMemo(() => [...keys], [joined])
+
+  const fetcherRef = useRef(fetcher)
+  fetcherRef.current = fetcher
+  const staleMsRef = useRef(staleMs)
+  staleMsRef.current = staleMs
+
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      const entries = list.map(getEntry)
+      entries.forEach(e => e.subscribers.add(onChange))
+      return () => entries.forEach(e => { e.subscribers.delete(onChange) })
+    },
+    [list],
+  )
+  // useSyncExternalStore needs the same array back while nothing changed.
+  const lastSnaps = useRef<Snapshot[]>([])
+  const getSnapshot = useCallback(() => {
+    const next = list.map(k => cache.get(k)?.snapshot ?? EMPTY_SNAPSHOT)
+    const prev = lastSnaps.current
+    if (prev.length === next.length && prev.every((s, i) => s === next[i])) return prev
+    lastSnaps.current = next
+    return next
+  }, [list])
+  const snaps = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+
+  useEffect(() => {
+    if (!enabled) return
+    const token = {}
+    const registered = list.map((key, i) => {
+      const entry = getEntry(key)
+      const ref = { current: () => fetcherRef.current(key, i) as Promise<unknown> }
+      entry.activeFetchers.set(token, ref)
+      entry.staleMs = staleMsRef.current
+      if (!entry.hasData || isEntryStale(entry, staleMsRef.current, Date.now())) {
+        void runFetch(key, () => fetcherRef.current(key, i), false)
+      }
+      return entry
+    })
+    return () => registered.forEach(entry => { entry.activeFetchers.delete(token) })
+  }, [list, enabled])
+
+  const refetchers = useMemo(
+    () => list.map((key, i) => (refetchOpts?: RefetchOptions): Promise<T | undefined> => {
+      if (!enabled) return Promise.resolve(undefined)
+      const entry = getEntry(key)
+      if (!refetchOpts?.force && entry.hasData && !isEntryStale(entry, staleMsRef.current, Date.now()) && !entry.promise) {
+        return Promise.resolve(entry.data as T)
+      }
+      return runFetch(key, () => fetcherRef.current(key, i), refetchOpts?.force ?? false)
+    }),
+    [list, enabled],
+  )
+
+  const now = Date.now()
+  return snaps.map((snap, i) => ({
+    data: (snap.hasData ? snap.data : undefined) as T | undefined,
+    error: snap.error,
+    isLoading: enabled && !snap.hasData && (snap.isFetching || snap.error === null),
+    isFetching: snap.isFetching,
+    isStale: snap.invalidated || snap.fetchedAt === 0 || now - snap.fetchedAt >= staleMs,
+    refetch: refetchers[i],
+  }))
 }
 
 export function useMutation<TVars, TResult>(
