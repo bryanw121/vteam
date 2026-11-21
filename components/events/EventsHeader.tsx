@@ -3,6 +3,7 @@ import { Text } from '../ui/Text'
 import { theme } from '../../constants'
 import { ScreenHeader } from '../ui'
 import type { EventsHeaderProps } from '../../types'
+import { formatDate } from '../../utils/dateFormat'
 
 /**
  * "OCTOBER 2026 / Events." header. Mobile is exactly `ScreenHeader` (no
@@ -13,7 +14,7 @@ import type { EventsHeaderProps } from '../../types'
 export function EventsHeader({ wide, right }: EventsHeaderProps) {
   // Mobile has no kicker: the week strip right below names the month it shows.
   if (!wide) return <ScreenHeader title="Events" titleDot right={right} />
-  const kicker = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const kicker = formatDate(new Date(), { month: 'long', year: 'numeric' })
   return (
     <View style={styles.row}>
       <View>

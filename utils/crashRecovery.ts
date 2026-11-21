@@ -1,5 +1,6 @@
 import type { CrashMarker, CrashReport } from '../types'
 import { EVENT_TIME_ZONE } from '../constants/time'
+import { formatDateTime } from './dateFormat'
 
 export type { CrashMarker }
 
@@ -46,5 +47,5 @@ export function parseCrashReport(raw: unknown): CrashReport | null {
 
 /** When it crashed, in the club's time zone (the report is read by the team, not the player). */
 export function crashReportTime(at: number): string {
-  return new Date(at).toLocaleString('en-US', { timeZone: EVENT_TIME_ZONE, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
+  return formatDateTime(new Date(at), { timeZone: EVENT_TIME_ZONE, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' })
 }

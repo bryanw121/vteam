@@ -76,6 +76,7 @@ import { profileDisplayName } from '../../utils'
 import { routes } from '../../utils/routes'
 import { toast } from '../../lib/toast'
 import type { ScrollViewInstance } from 'react-native'
+import { formatDate, formatTime } from '../../utils/dateFormat'
 
 const DETAILS_TAB = 0
 const PEOPLE_TAB = 1
@@ -267,7 +268,7 @@ export default function EventDetail() {
   const joinIntentWhen = event
     ? (() => {
         const start = new Date(eventDateMs(event.event_date))
-        return `${start.toLocaleDateString('en-US', { weekday: 'short' })} ${start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+        return `${formatDate(start, { weekday: 'short' })} ${formatTime(start, { hour: 'numeric', minute: '2-digit', hour12: true })}`
       })()
     : ''
 

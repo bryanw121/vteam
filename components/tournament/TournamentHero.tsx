@@ -8,6 +8,7 @@ import { FORMAT_LABELS } from '../../constants/tournamentCopy'
 import { SKILL_LEVEL_LABELS } from '../../constants/copy'
 import type { Tournament } from '../../types'
 import { HeroPill, TourneyStatusBadge } from './TournamentBits'
+import { formatDate } from '../../utils/dateFormat'
 
 function timeAgoOrCountdown(iso: string): string {
   const diff = new Date(iso).getTime() - Date.now()
@@ -92,7 +93,7 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack, action
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.5)" />
             <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: 'rgba(255,255,255,0.6)' }}>
-              {new Date(tournament.start_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+              {formatDate(new Date(tournament.start_date), { weekday: 'short', month: 'short', day: 'numeric' })}
             </Text>
           </View>
         </View>

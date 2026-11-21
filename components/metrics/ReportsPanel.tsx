@@ -13,6 +13,7 @@ import { routes } from '../../utils/routes'
 import { MetricCard } from './MetricBits'
 import { metricsStyles as s } from './metricsStyles'
 import type { AdminReport, ReportAction } from '../../types'
+import { formatDateTime } from '../../utils/dateFormat'
 
 type Props = { active: boolean }
 
@@ -55,7 +56,7 @@ export function ReportsPanel({ active }: Props) {
               </Text>
             </Pressable>
             <Text style={s.note}>
-              {`${REPORT_CONTEXT_LABELS[r.context_kind]} · reported by ${r.reporter_username ? `@${r.reporter_username}` : 'a deleted account'} · ${new Date(r.created_at).toLocaleString()}`}
+              {`${REPORT_CONTEXT_LABELS[r.context_kind]} · reported by ${r.reporter_username ? `@${r.reporter_username}` : 'a deleted account'} · ${formatDateTime(new Date(r.created_at), {}, [])}`}
               {r.target_open_reports > 1 ? ` · ${r.target_open_reports} open reports on this person` : ''}
             </Text>
             {r.context_snapshot ? (

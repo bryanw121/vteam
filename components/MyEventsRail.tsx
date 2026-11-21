@@ -5,6 +5,7 @@ import { theme } from '../constants'
 import { parseEventDate } from '../utils'
 import { MY_EVENTS_RAIL_CAP } from '../hooks/useMyUpcomingEvents'
 import { MyEventStatus, MyUpcomingEvent } from '../types'
+import { formatDate, formatTime } from '../utils/dateFormat'
 
 /**
  * "You're going" — a pinned rail of the events the viewer is committed to,
@@ -45,11 +46,11 @@ function statusStyle(status: MyEventStatus, waitlistPosition: number | null): St
 export function railTimeLabel(iso: string, durationMinutes: number, nowMs: number): string {
   const start = parseEventDate(iso)
   const startMs = start.getTime()
-  const time = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const time = formatTime(start, { hour: 'numeric', minute: '2-digit' })
 
   if (startMs <= nowMs) {
     const end = new Date(startMs + (durationMinutes ?? 0) * 60_000)
-    return `NOW · ends ${end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+    return `NOW · ends ${formatTime(end, { hour: 'numeric', minute: '2-digit' })}`
   }
 
   const now = new Date(nowMs)
@@ -66,9 +67,8 @@ export function railTimeLabel(iso: string, durationMinutes: number, nowMs: numbe
     start.getDate() === tomorrow.getDate()
   if (isTomorrow) return `TOMORROW ${time}`
 
-  // The approved mock reads "SAT AUG 16"; toLocaleDateString emits "Sat, Aug 16".
-  return start
-    .toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  // The approved mock reads "SAT AUG 16"; formatDate emits "Sat, Aug 16".
+  return formatDate(start, { weekday: 'short', month: 'short', day: 'numeric' })
     .replace(/,/g, '')
     .toUpperCase()
 }

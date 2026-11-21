@@ -1,5 +1,6 @@
 import { EVENT_TIME_ZONE } from '../constants/time'
 import type { MetricsPlatform, MetricsRangeDays, TrafficSpan, RetentionCohort } from '../types'
+import { formatDate, formatDateTime, formatTime, formatWith } from './dateFormat'
 
 /**
  * Pure helpers for the admin Metrics screens (settings/metrics). Days are America/Chicago days,
@@ -11,7 +12,7 @@ const DAY_MS = 86_400_000
 /** YYYY-MM-DD of `date` in the club's time zone. */
 export function chicagoDateKey(date: Date): string {
   // en-CA formats as YYYY-MM-DD.
-  return new Intl.DateTimeFormat('en-CA', { timeZone: EVENT_TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+  return formatWith(date, { timeZone: EVENT_TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }, 'en-CA')
 }
 
 /** The last `days` days, today included, as the `p_from` / `p_to` admin_metrics_overview takes. */
@@ -42,9 +43,9 @@ export function trafficTick(iso: string, minutes: number): string {
   const d = new Date(iso)
   if (minutes <= 1440) return clockTime(iso)
   if (minutes <= 10080) {
-    return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', timeZone: EVENT_TIME_ZONE })
+    return formatDateTime(d, { month: 'short', day: 'numeric', hour: 'numeric', timeZone: EVENT_TIME_ZONE })
   }
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: EVENT_TIME_ZONE })
+  return formatDate(d, { month: 'short', day: 'numeric', timeZone: EVENT_TIME_ZONE })
 }
 
 /** How long one point on a traffic chart covers: "1 min", "20 min", "2 hours". */
@@ -66,7 +67,7 @@ export function onlineLine(points: readonly { online: number | null }[]): number
 /** "Nov 7" for a YYYY-MM-DD day (no time zone shift: the day is already a calendar day). */
 export function shortDay(day: string): string {
   const [y, m, d] = day.split('-').map(Number)
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+  return formatDate(new Date(Date.UTC(y, m - 1, d)), { month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
 /**
@@ -87,17 +88,17 @@ export function axisTicks(max: number): number[] {
 /** "Sat Nov 7" for a YYYY-MM-DD day. */
 export function weekdayDay(day: string): string {
   const [y, m, d] = day.split('-').map(Number)
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
+  return formatDate(new Date(Date.UTC(y, m - 1, d)), { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
 }
 
 /** "7:42 PM" in the club's time zone. */
 export function clockTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: EVENT_TIME_ZONE })
+  return formatTime(new Date(iso), { hour: 'numeric', minute: '2-digit', timeZone: EVENT_TIME_ZONE })
 }
 
 /** "Sep 14, 2026" in the club's time zone. */
 export function joinedDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: EVENT_TIME_ZONE })
+  return formatDate(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric', timeZone: EVENT_TIME_ZONE })
 }
 
 /** Readable names for the screen types sessions report (route patterns and tab paths). */

@@ -1,4 +1,5 @@
 import type { DesktopFeedMonth, FeedDaySection } from '../types'
+import { formatDate } from './dateFormat'
 
 const DAY_LABEL: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' }
 const MONTH_LABEL: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' }
@@ -11,7 +12,7 @@ function localDay(date: string): Date {
 
 /** "Thu, Nov 19". */
 export function dayLabel(date: string): string {
-  return localDay(date).toLocaleDateString('en-US', DAY_LABEL)
+  return formatDate(localDay(date), DAY_LABEL)
 }
 
 /**
@@ -26,7 +27,7 @@ export function desktopFeedMonths(sections: readonly FeedDaySection[], today: st
     const month = section.date.substring(0, 7)
     let entry = months[months.length - 1]
     if (!entry || entry.month !== month) {
-      const label = localDay(`${month}-01`).toLocaleDateString('en-US', MONTH_LABEL)
+      const label = formatDate(localDay(`${month}-01`), MONTH_LABEL)
       entry = { month, label: month === today.substring(0, 7) ? `${label} · This month` : label, days: [] }
       months.push(entry)
     }

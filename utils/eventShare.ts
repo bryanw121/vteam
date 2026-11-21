@@ -11,27 +11,28 @@ import { SHARE_TIME_ZONE } from '../constants/share'
 import { parseEventDate } from './eventDate'
 import { formatPrice } from './price'
 import type { EventPreviewMeta, EventPreviewRow, EventPreviewState } from '../types'
+import { formatDate, formatDateTime, formatTime } from './dateFormat'
 
 /** Minutes an event runs when the row has no duration (matches `DEFAULT_DURATION_MINUTES`). */
 const FALLBACK_DURATION_MINUTES = 120
 
 /** "Sat, Oct 31" */
 export function formatShareDate(iso: string): string {
-  return parseEventDate(iso).toLocaleDateString('en-US', {
+  return formatDate(parseEventDate(iso), {
     timeZone: SHARE_TIME_ZONE, weekday: 'short', month: 'short', day: 'numeric',
   })
 }
 
 /** "4:00 PM" */
 export function formatShareTime(iso: string): string {
-  return parseEventDate(iso).toLocaleTimeString('en-US', {
+  return formatTime(parseEventDate(iso), {
     timeZone: SHARE_TIME_ZONE, hour: 'numeric', minute: '2-digit', hour12: true,
   })
 }
 
 /** "Fri 2:15 PM": when a preview's numbers were read. */
 function formatAsOf(now: Date): string {
-  return now.toLocaleString('en-US', {
+  return formatDateTime(now, {
     timeZone: SHARE_TIME_ZONE, weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true,
   })
 }
