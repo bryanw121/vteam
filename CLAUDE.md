@@ -115,6 +115,7 @@ components/
   (top level)                # Shared widgets: Button, Input, EventCard, Pager, Toast, MessageBubble, ...
 hooks/
   event/                     # useEventData, useEventAttendance, useEventComments, ... (keys.ts, derive.ts)
+  feed/                      # useMonthEvents (the Events feed on useQueries), useFeedRsvp; state, startup (device snapshot), fetch (batched span), fallback, previews (#343)
   tournament/                # api.ts + useTournamentData / useTournamentActions
   (top level)                # One hook per concern: useMyProfile, useMonthEvents, useConversations, useMessages, ...
 lib/

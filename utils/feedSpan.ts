@@ -3,7 +3,7 @@ import type { FeedSpanRows } from '../types'
 /**
  * Client half of `get_feed_span` (supabase/migrations/20261025220000_get_feed_span.sql):
  * the Events feed for a date range in one request instead of three queries plus
- * a preview round trip. hooks/useMonthEvents calls it and falls back to the
+ * a preview round trip. hooks/feed/fetch calls it and falls back to the
  * three-query path when it is unavailable.
  */
 

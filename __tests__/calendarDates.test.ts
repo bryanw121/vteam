@@ -142,7 +142,7 @@ describe('parseEventDate', () => {
 })
 
 describe('month range bounds', () => {
-  // Mirrors monthStart/monthEnd in hooks/useMonthEvents.ts, which are module-private.
+  // Mirrors monthStart/monthEnd in hooks/feed/fetch.ts, which are module-private.
   const monthStart = (month: string) => {
     const [y, m] = month.split('-').map(Number)
     return new Date(y, m - 1, 1, 0, 0, 0, 0).toISOString()
