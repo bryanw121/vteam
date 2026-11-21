@@ -7,6 +7,7 @@ import { shared, theme } from '../../constants'
 import { peekPendingAction } from '../../utils/pendingAction'
 import { eventDateMs } from '../../hooks/event/derive'
 import { routes } from '../../utils/routes'
+import { formatDate, formatTime } from '../../utils/dateFormat'
 
 type Props = {
   /** Which auth screen this is: the switch highlights it and replaces it with the other. */
@@ -16,8 +17,8 @@ type Props = {
 /** "Sun, Nov 15 · 9:00 AM" in the viewer's zone, like the join footer. */
 function whenLabel(startsAt: string): string {
   const start = new Date(eventDateMs(startsAt))
-  const day = start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-  const time = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  const day = formatDate(start, { weekday: 'short', month: 'short', day: 'numeric' })
+  const time = formatTime(start, { hour: 'numeric', minute: '2-digit', hour12: true })
   return `${day} · ${time}`
 }
 

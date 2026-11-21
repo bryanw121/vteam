@@ -8,6 +8,7 @@ import { eventDateMs } from '../../hooks/event'
 import { resolveJoinAction } from '../../hooks/event/derive'
 import type { AttendanceStatus } from '../../types'
 import type { EventAttendanceApi } from '../../types'
+import { formatDate, formatTime } from '../../utils/dateFormat'
 
 type Props = {
   /** `events.event_date`; restated above the button so nobody signs up for the wrong time. */
@@ -35,7 +36,7 @@ export function JoinFooter({ eventDate, eventStatus, requiresApproval, attendanc
   const action = resolveJoinAction({ ...eventStatus, requiresApproval })
   const signingUp = action === 'join' || action === 'request' || action === 'waitlist' || action === 'rerequest'
   const start = new Date(eventDateMs(eventDate))
-  const startLabel = `${start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} · ${start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+  const startLabel = `${formatDate(start, { weekday: 'short', month: 'short', day: 'numeric' })} · ${formatTime(start, { hour: 'numeric', minute: '2-digit', hour12: true })}`
   return (
     <View
       onLayout={e => onHeightChange(e.nativeEvent.layout.height)}

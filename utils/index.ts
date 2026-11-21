@@ -20,7 +20,7 @@ export function formatEventDate(dateString: string, style: 'short' | 'long' = 's
     minute: '2-digit',
     hour12: true,
   }
-  return date.toLocaleString('en-US', options)
+  return formatDateTime(date, options)
 }
 
 /**
@@ -30,7 +30,7 @@ export function formatEventDate(dateString: string, style: 'short' | 'long' = 's
  */
 export function formatCommentTime(iso: string): string {
   const normalized = /[Z+]/.test(iso) ? iso : iso + 'Z'
-  return new Date(normalized).toLocaleString('en-US', {
+  return formatDateTime(new Date(normalized), {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
@@ -127,6 +127,7 @@ export function startOfToday() {
 }
 
 import { parseEventDate } from './eventDate'
+import { formatDate, formatDateTime } from './dateFormat'
 
 export { parseEventDate }
 
@@ -150,7 +151,7 @@ export function dayLabel(dateKey: string, todayKey: string): string {
   if (dateKey === todayKey) return 'Today'
   const [y, m, d] = todayKey.split('-').map(Number)
   if (dateKey === localDateKey(new Date(y, m - 1, d + 1))) return 'Tomorrow'
-  return new Date(dateKey + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  return formatDate(new Date(dateKey + 'T00:00:00'), { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
 /** Calendar key for an event, in the viewer's timezone. */

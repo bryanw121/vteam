@@ -8,14 +8,15 @@ import { TimePill } from '../ui'
 import type { EventWithDetails } from '../../types'
 import { formatDuration } from '../../utils'
 import { eventDateMs } from '../../hooks/event/derive'
+import { formatDate, formatTime } from '../../utils/dateFormat'
 
 type Props = { event: EventWithDetails }
 
 /** The event page banner: date + type chips, title, location · duration. */
 export function EventHero({ event }: Props) {
   const d = new Date(eventDateMs(event.event_date))
-  const dayStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-  const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  const dayStr = formatDate(d, { weekday: 'short', month: 'short', day: 'numeric' })
+  const timeStr = formatTime(d, { hour: 'numeric', minute: '2-digit', hour12: true })
   const dur = formatDuration(event.duration_minutes ?? 120)
   const typeTags = (event.event_tags ?? []).filter(et => et.tags.category === 'event_type')
   const locationLabel = LOCATIONS.find(l => l.id === event.location)?.label ?? event.location ?? ''

@@ -3,6 +3,7 @@ import { COURT_GRID_START_MIN, COURT_MIN_FREE_MIN, COURTS_OLD_AFTER_MS } from '.
 import type {
   AustinNow, CourtsData, CourtsFacility, CourtsVenue, DayOption, FacilityDay, HHMMRange, MinuteRange,
 } from '../types'
+import { formatWith } from './dateFormat'
 
 /**
  * Pure helpers for the "Book a court" screen. Court data from Schelagg is in
@@ -29,10 +30,10 @@ const pad = (n: number) => String(n).padStart(2, '0')
 /** Today's date and the minute of the day in Austin. Falls back to device time if the engine lacks time zones. */
 export function austinNow(now: Date = new Date()): AustinNow {
   try {
-    const text = new Intl.DateTimeFormat('en-US', {
+    const text = formatWith(now, {
       timeZone: AUSTIN_TZ, year: 'numeric', month: '2-digit', day: '2-digit',
       hour: '2-digit', minute: '2-digit', hour12: false,
-    }).format(now)
+    })
     // "10/25/2026, 14:05" (some engines print "24:05" just after midnight)
     const m = /(\d{2})\/(\d{2})\/(\d{4}),?\s+(\d{1,2}):(\d{2})/.exec(text)
     if (m) return { iso: `${m[3]}-${m[1]}-${m[2]}`, minutes: (Number(m[4]) % 24) * 60 + Number(m[5]) }
@@ -45,9 +46,9 @@ export function austinNow(now: Date = new Date()): AustinNow {
 
 /** UTC offset (minutes) of `timeZone` at an instant, e.g. -300 for Austin in CDT. */
 function offsetMinutes(instant: Date, timeZone: string): number {
-  const text = new Intl.DateTimeFormat('en-US', {
+  const text = formatWith(instant, {
     timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
-  }).format(instant)
+  })
   const m = /(\d{2})\/(\d{2})\/(\d{4}),?\s+(\d{1,2}):(\d{2})/.exec(text)
   if (!m) throw new Error('unexpected date format')
   const asUtc = Date.UTC(Number(m[3]), Number(m[1]) - 1, Number(m[2]), Number(m[4]) % 24, Number(m[5]))

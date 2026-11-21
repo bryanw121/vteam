@@ -15,11 +15,12 @@ import { profileAvatarSmallUri, profileDisplayName } from '../utils'
 import { ProfileAvatar } from './ProfileAvatar'
 import { LinkedText } from './LinkedText'
 import { Spinner } from './ui/Spinner'
+import { formatDateTime } from '../utils/dateFormat'
 
 function formatPostTime(iso: string): string {
   const normalized = /[Z+]/.test(iso) ? iso : iso + 'Z'
   const d = new Date(normalized)
-  return d.toLocaleString('en-US', {
+  return formatDateTime(d, {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',

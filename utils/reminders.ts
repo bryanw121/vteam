@@ -1,5 +1,6 @@
 import { REMINDER_TIME_ZONE } from '../constants/notifications'
 import type { ReminderCopy, ReminderLeadMinutes } from '../types'
+import { formatDateParts } from './dateFormat'
 
 /**
  * Event reminder copy. The database writes the real reminders
@@ -13,10 +14,10 @@ import type { ReminderCopy, ReminderLeadMinutes } from '../types'
 
 function localParts(ms: number): { day: number; clock: string; weekday: string } {
   const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-US', {
+    formatDateParts(new Date(ms), {
       timeZone: REMINDER_TIME_ZONE, year: 'numeric', month: 'numeric', day: 'numeric',
       hour: 'numeric', minute: '2-digit', hour12: true, weekday: 'long',
-    }).formatToParts(new Date(ms)).map(p => [p.type, p.value]),
+    }).map(p => [p.type, p.value]),
   )
   return {
     // Days since the epoch for the local calendar date (only differences are used).

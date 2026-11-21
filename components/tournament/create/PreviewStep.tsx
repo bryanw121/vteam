@@ -8,11 +8,12 @@ import { Spinner } from '../../ui/Spinner'
 import { TOURNAMENT_FORMAT_LABELS } from '../../../utils/tournamentDraft'
 import { PreviewRow } from './CreateBits'
 import type { TournamentPreviewStepProps } from '../../../types'
+import { formatDate } from '../../../utils/dateFormat'
 
 /** Wizard step 5: how the tournament will look, then Publish or Save as Draft. */
 export function PreviewStep({ draft, clubs, onSaveDraft, onPublish, saving }: TournamentPreviewStepProps) {
   const club = clubs.find(c => c.id === draft.clubId)
-  const fmtDate = (d: Date | null) => d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'
+  const fmtDate = (d: Date | null) => d ? formatDate(d, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>

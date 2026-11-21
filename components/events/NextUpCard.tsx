@@ -3,6 +3,7 @@ import { Text } from '../ui/Text'
 import { theme } from '../../constants'
 import { localDateKey, parseEventDate } from '../../utils'
 import type { NextUpCardProps } from '../../types'
+import { formatDate } from '../../utils/dateFormat'
 
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
@@ -18,7 +19,7 @@ export function nextUpLabel(eventDate: string, now: Date = new Date()): string {
   if (dayKey === localDateKey(tomorrow)) return 'TOMORROW'
   const weekOut = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7)
   if (d < weekOut) return WEEKDAYS[d.getDay()]
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()
+  return formatDate(d, { month: 'short', day: 'numeric' }).toUpperCase()
 }
 
 /** Desktop right-rail card for the next club event in the feed. */

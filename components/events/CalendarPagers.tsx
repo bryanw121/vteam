@@ -15,6 +15,7 @@ import { weekMonthLabel } from '../../utils/monthKeys'
 import { localDateKey } from '../../utils'
 import { getWeekDays, weekForIdx } from '../../utils/calendarWeeks'
 import type { MonthGridContentProps, WeekPagerProps, WeekStripContentProps } from '../../types'
+import { formatDate } from '../../utils/dateFormat'
 
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
@@ -149,7 +150,7 @@ const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate
 export const MonthGridContent = memo(function MonthGridContent({ month, selectedDate, markedDates, onSelectDate, onPrevMonth, onNextMonth, counts, inViewDate }: MonthGridContentProps) {
   const today = useToday()
   const [year, mon] = month.split('-').map(Number)
-  const monthLabel  = new Date(year, mon - 1, 15).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  const monthLabel  = formatDate(new Date(year, mon - 1, 15), { month: 'long', year: 'numeric' })
   const startOffset = new Date(year, mon - 1, 1).getDay()
   const daysInMonth = new Date(year, mon, 0).getDate()
 

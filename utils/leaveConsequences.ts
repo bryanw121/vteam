@@ -8,6 +8,7 @@ import type {
 import { EVENT_TIME_ZONE } from '../constants/time'
 import { parseEventDate } from './eventDate'
 import { formatPrice } from './price'
+import { formatDate, formatTime } from './dateFormat'
 
 /**
  * The leave sheet's lines (#171): what leaving costs, worked out from what the
@@ -111,8 +112,8 @@ export function leaveConsequenceText(line: LeaveConsequence): string {
  */
 export function leaveShortTime(eventDate: string, timeZone?: string): string {
   const d = parseEventDate(eventDate)
-  const day = d.toLocaleDateString('en-US', { weekday: 'short', timeZone })
-  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone })
+  const day = formatDate(d, { weekday: 'short', timeZone })
+  const time = formatTime(d, { hour: 'numeric', minute: '2-digit', hour12: true, timeZone })
   return `${day} ${time}`
 }
 
