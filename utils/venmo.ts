@@ -14,6 +14,7 @@
  * memo itself is short and plain: "Open Play · Sat, Nov 1 · vteam".
  */
 import type { VenmoLinks } from '../types'
+import { formatDate } from './dateFormat'
 
 /** Venmo caps notes well above this; a long title is cut so the date stays visible. */
 const MAX_LABEL_LENGTH = 40
@@ -30,7 +31,7 @@ function parseDbDate(value: string): Date {
 export function formatVenmoDate(value: string, timeZone?: string): string {
   const date = parseDbDate(value)
   if (Number.isNaN(date.getTime())) return ''
-  return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', ...(timeZone ? { timeZone } : {}) })
+  return formatDate(date, { weekday: 'short', month: 'short', day: 'numeric', ...(timeZone ? { timeZone } : {}) })
 }
 
 /** Collapse whitespace and trim a title to `MAX_LABEL_LENGTH`, ending in an ellipsis when cut. */

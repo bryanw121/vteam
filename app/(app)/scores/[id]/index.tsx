@@ -20,6 +20,7 @@ import { Button } from '../../../../components/Button'
 import { bracketGroups, bracketRows, liveMatches, poolStandings, sheetExecUrl, upNext } from '../../../../utils/sheetScores'
 import type { SheetScoresView } from '../../../../types'
 import type { ScrollViewInstance } from 'react-native'
+import { formatTime } from '../../../../utils/dateFormat'
 
 const VIEWS: { key: SheetScoresView; label: string }[] = [
   { key: 'live', label: 'Live' },
@@ -65,7 +66,7 @@ export default function ProgramScoresScreen() {
   const bracket = useMemo(() => (state && division ? bracketRows(state, division) : []), [state, division])
 
   const title = program?.title ?? state?.settings.tournament_name ?? 'Scores'
-  const updated = state?.serverTime ? new Date(state.serverTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : null
+  const updated = state?.serverTime ? formatTime(new Date(state.serverTime), { hour: 'numeric', minute: '2-digit' }, []) : null
 
   async function refresh() {
     setRefreshing(true)

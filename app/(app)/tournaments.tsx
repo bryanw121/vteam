@@ -24,6 +24,7 @@ import { ShareLinkButton } from '../../components/ShareLinkButton'
 import { useUrlParam } from '../../hooks/useUrlParam'
 import { VIEW } from '../../utils/urlViews'
 import type { TournamentListItem } from '../../types'
+import { formatDate } from '../../utils/dateFormat'
 
 type Tab = 'upcoming' | 'past'
 
@@ -78,13 +79,13 @@ function TournamentRow({ item, onPress }: { item: TournamentListItem; onPress: (
     <TouchableOpacity
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${item.title}, ${d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}`}
+      accessibilityLabel={`${item.title}, ${formatDate(d, { weekday: 'long', month: 'long', day: 'numeric' })}`}
       style={ROW_STYLE}
       testID={`tournament-row-${item.id}`}
     >
       <View style={DATE_BLOCK_STYLE}>
         <Text style={MONTH_STYLE}>
-          {d.toLocaleDateString('en-US', { month: 'short' })}
+          {formatDate(d, { month: 'short' })}
         </Text>
         <Text style={DAY_STYLE}>{d.getDate()}</Text>
       </View>

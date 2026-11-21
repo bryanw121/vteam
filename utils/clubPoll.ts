@@ -1,4 +1,5 @@
 import type { ClubPoll, ClubPollDraftOption, ClubPollOption, ClubPollTally, ClubPostWithFeed } from '../types'
+import { formatDate, formatTime } from './dateFormat'
 
 export const POLL_QUESTION_MAX = 140
 export const POLL_OPTION_MAX = 80
@@ -77,8 +78,8 @@ export function pollDraftProblem(question: string, kind: ClubPoll['kind'], optio
 
 /** A label for a time option, in the club's zone: "Thu, Nov 19 · 7:00 PM". */
 export function timeOptionLabel(d: Date, timeZone: string): string {
-  const day = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone })
-  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone })
+  const day = formatDate(d, { weekday: 'short', month: 'short', day: 'numeric', timeZone })
+  const time = formatTime(d, { hour: 'numeric', minute: '2-digit', timeZone })
   return `${day} · ${time}`
 }
 

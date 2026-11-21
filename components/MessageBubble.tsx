@@ -9,6 +9,7 @@ import type { MessageWithDetails } from '../types'
 import { profileAvatarSmallUri } from '../utils'
 import { useChatImageUrl } from '../hooks/useChatImageUrl'
 import type { ViewInstance } from 'react-native'
+import { formatDate, formatTime as formatClock } from '../utils/dateFormat'
 
 const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '🔥', '👏']
 
@@ -353,12 +354,12 @@ function formatTime(iso: string): string {
   const now = new Date()
   const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000)
   if (diffDays === 0) {
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    return formatClock(d, { hour: '2-digit', minute: '2-digit' }, [])
   }
   if (diffDays < 7) {
-    return d.toLocaleDateString([], { weekday: 'short' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    return formatDate(d, { weekday: 'short' }, []) + ' ' + formatClock(d, { hour: '2-digit', minute: '2-digit' }, [])
   }
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+  return formatDate(d, { month: 'short', day: 'numeric' }, [])
 }
 
 export { REACTION_EMOJIS }

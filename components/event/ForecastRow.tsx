@@ -6,10 +6,11 @@ import { FORECAST_COPY } from '../../constants/weather'
 import { useForecast } from '../../hooks/useForecast'
 import { eventCourt, forecastSummary, forecastWindow, pickForecastHours } from '../../utils/forecast'
 import type { EventWithDetails, ForecastCell } from '../../types'
+import { formatTime } from '../../utils/dateFormat'
 
 type Props = { event: EventWithDetails }
 
-const hourLabel = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric' })
+const hourLabel = (iso: string) => formatTime(new Date(iso), { hour: 'numeric' })
 
 /** Desktop web: the NWS short forecast as the cell's hover tooltip. Native views have no `setAttribute`. */
 function useTitle(title: string) {
@@ -73,7 +74,7 @@ export function ForecastRow({ event }: Props) {
   if (!summary) return null
   const headColor = summary.tone === 'heat' ? theme.colors.warm : summary.tone === 'rain' ? theme.colors.accent : theme.colors.text
   const updated = new Date(forecast.updatedAt)
-  const updatedLabel = Number.isFinite(updated.getTime()) ? updated.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''
+  const updatedLabel = Number.isFinite(updated.getTime()) ? formatTime(updated, { hour: 'numeric', minute: '2-digit' }) : ''
 
   return (
     <>

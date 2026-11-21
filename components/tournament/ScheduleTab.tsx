@@ -12,6 +12,7 @@ import { ScheduleConfigForm } from './ScheduleConfigForm'
 import { ScheduleSectionLabel } from './TournamentBits'
 import { ts } from './tournamentStyles'
 import { Spinner } from '../ui/Spinner'
+import { formatTime } from '../../utils/dateFormat'
 
 type Props = {
   /** Pull-to-refresh for the whole tournament page. */
@@ -58,7 +59,7 @@ function setsWonLabel(m: TournamentMatchRow): string {
 }
 
 function timeLabel(iso: string | null): string | null {
-  return iso ? new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : null
+  return iso ? formatTime(new Date(iso), { hour: 'numeric', minute: '2-digit' }) : null
 }
 
 export function ScheduleTab(p: Props) {
