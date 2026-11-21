@@ -24,8 +24,7 @@ import {
   removeQueries,
   setQueryData,
   subscribeQueryCache,
-  useQuery,
-  type QueryResult,
+  useQueries,
 } from '../lib/query'
 import { useSession } from '../contexts/session'
 import { localDateKey, startOfToday } from '../utils'
@@ -59,9 +58,8 @@ import type { AnalyticsProps, EventCardPreviews, EventWithDetails, ExternalSessi
  *   avatar previews we had); previews arrive in a second round trip and are
  *   merged with `setQueryData` only if nothing touched that month in between.
  *
- * Hook calls can't vary in number and `lib/query` has no `useQueries`, so the
- * hook reads months through a fixed `MAX_FEED_MONTHS` row of `useQuery` slots;
- * unused slots get a `null` key and are inert.
+ * The hook reads every requested month at once with `useQueries` (#343:
+ * before it, a fixed row of `MAX_FEED_MONTHS` `useQuery` slots).
  */
 
 export const FEED_PREFIX = 'feed'
@@ -470,17 +468,9 @@ export function useMonthEvents() {
   const { userId, loading: sessionLoading } = useSession()
   const [months, setMonths] = useState<string[]>(() => requestedMonths)
 
-  // A fixed number of hook calls every render (see the file comment).
-  const slots: QueryResult<EventWithDetails[]>[] = []
-  for (let i = 0; i < MAX_FEED_MONTHS; i++) {
-    const month = months[i] ?? null
-    // eslint-disable-next-line react-hooks/rules-of-hooks -- constant trip count
-    slots.push(useQuery<EventWithDetails[]>(
-      month === null ? null : feedMonthKey(month),
-      () => fetchFeedMonth(month as string),
-      { staleMs: STALE.feed },
-    ))
-  }
+  // One cache entry per requested month (feedMonthKey), read together.
+  const keys = useMemo(() => months.map(feedMonthKey), [months])
+  const slots = useQueries<EventWithDetails[]>(keys, (_key, i) => fetchFeedMonth(months[i]), { staleMs: STALE.feed })
   const slotsRef = useRef(slots)
   slotsRef.current = slots
 
@@ -539,7 +529,14 @@ export function useMonthEvents() {
     return () => clearInterval(t)
   }, [])
 
-  const monthData = slots.map(s => s.data)
+  // The same array while no month's data changed, so the memos below can depend on it.
+  const monthDataRef = useRef<(EventWithDetails[] | undefined)[]>([])
+  const nextMonthData = slots.map(s => s.data)
+  const prevMonthData = monthDataRef.current
+  if (prevMonthData.length !== nextMonthData.length || prevMonthData.some((d, i) => d !== nextMonthData[i])) {
+    monthDataRef.current = nextMonthData
+  }
+  const monthData = monthDataRef.current
   // The minute tick only changes the list when an item actually ends; otherwise the previous
   // array is kept, so the feed doesn't re-render every minute.
   const lastEvents = useRef<EventWithDetails[] | null>(null)
@@ -553,13 +550,11 @@ export function useMonthEvents() {
     if (prev && prev.length === list.length && prev.every((e, i) => e === list[i])) return prev
     lastEvents.current = list
     return list
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...monthData, nowMs])
+  }, [monthData, nowMs])
 
   const loadedMonths = useMemo(
     () => months.filter((_, i) => monthData[i] !== undefined),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [months, ...monthData],
+    [months, monthData],
   )
   const isMonthLoaded = useCallback((month: string) => getQueryData(feedMonthKey(month)) !== undefined, [])
 

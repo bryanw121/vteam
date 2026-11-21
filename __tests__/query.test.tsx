@@ -4,6 +4,7 @@ import { render, act, screen } from '@testing-library/react-native'
 import {
   queryKey,
   useQuery,
+  useQueries,
   useMutation,
   invalidate,
   setQueryData,
@@ -417,5 +418,87 @@ describe('invalidate with no active reader', () => {
     resolve('pre-edit')
     await Promise.resolve(); await Promise.resolve()
     expect(getQueryData(key)).toBe('edited')
+  })
+})
+
+describe('useQueries (#343)', () => {
+  let many: QueryResult<string>[] = []
+  let renders = 0
+  function ManyReader({ keys, fetcher, staleMs }: { keys: string[]; fetcher: (key: string, i: number) => Promise<string>; staleMs?: number }) {
+    many = useQueries<string>(keys, fetcher, { staleMs })
+    renders++
+    return <Text testID="many">{many.map(q => q.data ?? (q.isLoading ? 'loading' : 'empty')).join(',')}</Text>
+  }
+  beforeEach(() => { many = []; renders = 0 })
+
+  it('reads one result per key, in order, and fetches each key once', async () => {
+    const fetcher = jest.fn((key: string, _index: number) => Promise.resolve(`v-${key}`))
+    render(<ManyReader keys={['m:1', 'm:2']} fetcher={fetcher} />)
+    expect(screen.getByTestId('many').props.children).toBe('loading,loading')
+    await flush()
+    expect(screen.getByTestId('many').props.children).toBe('v-m:1,v-m:2')
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(fetcher.mock.calls.map(c => c[1])).toEqual([0, 1])
+  })
+
+  it('grows and shrinks with the key list, fetching only the new key', async () => {
+    const fetcher = jest.fn((key: string) => Promise.resolve(`v-${key}`))
+    const view = render(<ManyReader keys={['m:1']} fetcher={fetcher} />)
+    await flush()
+    view.rerender(<ManyReader keys={['m:1', 'm:2', 'm:3']} fetcher={fetcher} />)
+    await flush()
+    expect(screen.getByTestId('many').props.children).toBe('v-m:1,v-m:2,v-m:3')
+    expect(fetcher).toHaveBeenCalledTimes(3)
+    view.rerender(<ManyReader keys={['m:2']} fetcher={fetcher} />)
+    await flush()
+    expect(screen.getByTestId('many').props.children).toBe('v-m:2')
+    expect(fetcher).toHaveBeenCalledTimes(3)
+  })
+
+  it('shares the cache and in-flight fetches with useQuery on the same key', async () => {
+    const d = deferred<string>()
+    const single = jest.fn(() => d.promise)
+    const listed = jest.fn(() => Promise.resolve('never used'))
+    render(<><Reader id="a" qkey="m:1" fetcher={single} /><ManyReader keys={['m:1']} fetcher={listed} /></>)
+    await act(async () => d.resolve('one'))
+    await flush()
+    expect(single).toHaveBeenCalledTimes(1)
+    expect(listed).not.toHaveBeenCalled()
+    expect(many[0].data).toBe('one')
+  })
+
+  it('a failed refetch keeps the last good data and sets error on that key only', async () => {
+    let fail = false
+    const fetcher = jest.fn((key: string) => (fail && key === 'm:2' ? Promise.reject(new Error('boom')) : Promise.resolve(`v-${key}`)))
+    render(<ManyReader keys={['m:1', 'm:2']} fetcher={fetcher} />)
+    await flush()
+    fail = true
+    await act(async () => { await many[1].refetch({ force: true }) })
+    expect(many[1].data).toBe('v-m:2')
+    expect(many[1].error?.message).toBe('boom')
+    expect(many[0].error).toBeNull()
+  })
+
+  it('invalidate refetches through a mounted list reader', async () => {
+    let n = 0
+    const fetcher = jest.fn((key: string) => Promise.resolve(`${key}#${++n}`))
+    render(<ManyReader keys={['m:1', 'm:2']} fetcher={fetcher} />)
+    await flush()
+    act(() => invalidate('m:2'))
+    await flush()
+    expect(many.map(q => q.data)).toEqual(['m:1#1', 'm:2#3'])
+  })
+
+  it('does not re-render for an equal key list or for writes to other keys', async () => {
+    const fetcher = (key: string) => Promise.resolve(`v-${key}`)
+    const view = render(<ManyReader keys={['m:1']} fetcher={fetcher} />)
+    await flush()
+    const before = renders
+    act(() => setQueryData('other', 'x'))
+    expect(renders).toBe(before)
+    view.rerender(<ManyReader keys={['m:1']} fetcher={fetcher} />)
+    await flush()
+    expect(renders).toBe(before + 1)
+    expect(getQueryData('m:1')).toBe('v-m:1')
   })
 })
