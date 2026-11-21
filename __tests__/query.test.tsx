@@ -432,7 +432,7 @@ describe('useQueries (#343)', () => {
   beforeEach(() => { many = []; renders = 0 })
 
   it('reads one result per key, in order, and fetches each key once', async () => {
-    const fetcher = jest.fn((key: string) => Promise.resolve(`v-${key}`))
+    const fetcher = jest.fn((key: string, _index: number) => Promise.resolve(`v-${key}`))
     render(<ManyReader keys={['m:1', 'm:2']} fetcher={fetcher} />)
     expect(screen.getByTestId('many').props.children).toBe('loading,loading')
     await flush()
