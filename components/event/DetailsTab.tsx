@@ -28,11 +28,12 @@ import type { EventData, EventPaymentsApi } from '../../types'
 import { profileDisplayName, profileInitial, formatDuration, formatPrice, formatPriceAmount, profileAvatarSmallUri, isSurface } from '../../utils'
 import { profilePrefetchProps } from '../../hooks/useUserProfile'
 import { toast } from '../../lib/toast'
+import { deviceTimeZone, formatDate, formatTime } from '../../utils/dateFormat'
 
 function formatEndTime(startIso: string, durationMinutes: number): string {
   const normalized = /[Z+]/.test(startIso) ? startIso : startIso + 'Z'
   const end = new Date(new Date(normalized).getTime() + durationMinutes * 60_000)
-  return end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  return formatTime(end, { hour: 'numeric', minute: '2-digit' }, [])
 }
 
 function openInMaps(address: string) {
@@ -84,7 +85,7 @@ async function addToCalendar(title: string, startIso: string, durationMinutes: n
     title,
     startDate,
     endDate,
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timeZone: deviceTimeZone(),
     ...(address ? { location: address } : {}),
   })
 
@@ -321,8 +322,8 @@ export function DetailsTab({
         {(() => {
           const normalized = /[Z+]/.test(event.event_date) ? event.event_date : event.event_date + 'Z'
           const d = new Date(normalized)
-          const dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-          const startStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+          const dateStr = formatDate(d, { weekday: 'long', month: 'long', day: 'numeric' })
+          const startStr = formatTime(d, { hour: 'numeric', minute: '2-digit', hour12: true })
           const endStr = formatEndTime(event.event_date, event.duration_minutes ?? 120)
           const dur = formatDuration(event.duration_minutes ?? 120)
           return (

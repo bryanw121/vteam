@@ -21,6 +21,7 @@ import { guestRowActions, hasRosterMenu, memberRowActions } from '../../utils/ro
 import { guestFullName } from '../../utils/guests'
 import { attendeesPaid, eventDateMs, noShowUserIds, noShowWindow } from '../../hooks/event/derive'
 import { savedTeams } from '../../utils/courtQueue'
+import { formatTime } from '../../utils/dateFormat'
 
 type Props = {
   event: EventWithDetails
@@ -74,7 +75,7 @@ export function PeopleTab({
   const noShowWin = noShowWindow(event)
   const canFlagNoShows = isHostOrCohost && noShowWin.open
   const noShows = isHostOrCohost ? noShowUserIds(data.roster.attendingRows) : new Set<string>()
-  const pointsAt = new Date(noShowWin.closesAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const pointsAt = formatTime(new Date(noShowWin.closesAt), { hour: 'numeric', minute: '2-digit' })
   const noShowAction = (profile: Profile) => canFlagNoShows
     ? { flagged: noShows.has(profile.id), until: pointsAt, onToggle: () => { void attendance.setNoShow(profile.id, !noShows.has(profile.id)) } }
     : undefined

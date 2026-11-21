@@ -3,6 +3,7 @@ import type {
   ConversationRow, DebouncedCall, Message, MessageReaction, MessageRecord, MessageWithDetails, ReplySnapshot, SenderProfile,
 } from '../types'
 import { toast } from '../lib/toast'
+import { formatDate } from './dateFormat'
 
 export function timeAgo(iso: string | null): string {
   if (!iso) return ''
@@ -14,7 +15,7 @@ export function timeAgo(iso: string | null): string {
   if (hrs < 24) return `${hrs}h`
   const days = Math.floor(hrs / 24)
   if (days < 7) return `${days}d`
-  return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' })
+  return formatDate(new Date(iso), { month: 'short', day: 'numeric' }, [])
 }
 
 export function lastMessagePreview(row: ConversationRow, myId: string, silencedIds?: Set<string>): string {

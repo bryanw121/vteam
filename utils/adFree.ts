@@ -1,5 +1,6 @@
 import { adsEnabled } from './feedAds'
 import type { AdFreeStatus } from '../types'
+import { formatDate } from './dateFormat'
 
 export type AdFreeView = {
   /** An ad-free period is running. */
@@ -29,5 +30,5 @@ export function adFreeView(status: AdFreeStatus, now: number = Date.now()): AdFr
 
 /** "Nov 27, 2026". */
 export function formatAdFreeDate(d: Date): string {
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return formatDate(d, { month: 'short', day: 'numeric', year: 'numeric' })
 }

@@ -3,6 +3,7 @@ import { Text } from '../ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../../constants/theme'
 import type { UserTrophy } from '../../types'
+import { formatDate } from '../../utils/dateFormat'
 
 /** Placeholder until received cheers can be listed on the profile. */
 export function RecentCheersPlaceholder() {
@@ -73,7 +74,7 @@ export function TrophyCase({ trophies = [], own = false }: Props) {
               <View style={{ flex: 1 }}>
                 <Text numberOfLines={1} style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.text }}>{t.tournament_title}</Text>
                 <Text numberOfLines={1} style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext }}>
-                  {PLACES.find(p => p.place === t.place)?.label} with {t.team_name} · {new Date(t.tournament_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {PLACES.find(p => p.place === t.place)?.label} with {t.team_name} · {formatDate(new Date(t.tournament_date), { month: 'short', day: 'numeric', year: 'numeric' })}
                 </Text>
               </View>
             </View>

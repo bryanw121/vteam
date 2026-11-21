@@ -1,4 +1,5 @@
 import { eventLocalDateKey } from './index'
+import { formatDate } from './dateFormat'
 
 /** `'2026-08'` + n months → `'2026-11'`. */
 export function addMonths(month: string, n: number): string {
@@ -75,5 +76,5 @@ export function shouldRefreshEventsOnFocus(
 export function weekMonthLabel(weekStart: Date): string {
   const end = new Date(weekStart)
   end.setDate(weekStart.getDate() + 6)
-  return end.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  return formatDate(end, { month: 'long', year: 'numeric' })
 }

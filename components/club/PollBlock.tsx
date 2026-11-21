@@ -10,6 +10,7 @@ import { useNow } from '../../hooks/useNow'
 import { nextPicks, tallyPoll, winningTimeOptions } from '../../utils/clubPoll'
 import { routes } from '../../utils/routes'
 import type { ClubPollOption, PollBlockProps } from '../../types'
+import { formatDateTime } from '../../utils/dateFormat'
 
 /**
  * A club poll inside its post (#175): one row per option with the count and a
@@ -27,7 +28,7 @@ export function PollBlock({ postId, clubId, poll, question, currentUserId, isOwn
 
   const status = tally.closed
     ? 'Closed'
-    : poll.closes_at ? `Closes ${new Date(poll.closes_at).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}` : 'Open'
+    : poll.closes_at ? `Closes ${formatDateTime(new Date(poll.closes_at), { weekday: 'short', hour: 'numeric', minute: '2-digit' })}` : 'Open'
 
   return (
     <View style={shared.pollBlock} testID={`poll-${postId}`}>
