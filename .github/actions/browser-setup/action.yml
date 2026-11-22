@@ -1,0 +1,37 @@
+name: Browser check setup
+description: >
+  Node, npm ci, Chromium (cached by Playwright version) and its system packages,
+  and the mocked web export from the Web build job, for the browser check jobs in
+  ci.yml (#349). Run actions/checkout first: this action lives in the repository.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: npm
+    - run: npm ci
+      shell: bash
+    - name: Playwright version
+      id: pw
+      shell: bash
+      run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+    - name: Cache Playwright browsers
+      id: pw-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+    - name: Install Chromium
+      if: steps.pw-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npx playwright install chromium
+    # System packages come from apt; the script falls back to archive.ubuntu.com when the
+    # runner's Azure mirror doesn't resolve, instead of failing every browser job.
+    - name: Install Chromium system deps
+      shell: bash
+      run: scripts/ci/install-playwright-deps.sh
+    - uses: actions/download-artifact@v4
+      with:
+        name: web-dist-mock
+        path: dist-mock/
