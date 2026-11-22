@@ -132,7 +132,10 @@ jobs:
       # answered from fixtures, so it needs no secrets and never touches beta.
       - name: Web build (shots mock, for a11y)
         # --clear: the first export warmed the Metro cache with the beta URL inlined.
-        run: npx expo export -p web --clear --source-maps --output-dir dist-mock
+        # event-chunk.json: the event chunk's preload tag, as build:web writes for dist (#347).
+        run: |
+          npx expo export -p web --clear --source-maps --output-dir dist-mock
+          node scripts/event-chunk.mjs --dist dist-mock
         env:
           CI: '1'
           EXPO_NO_TELEMETRY: '1'
@@ -232,6 +235,11 @@ jobs:
       - name: First visit (scripts and first card)
         if: success() || failure()
         run: node scripts/shots/first-visit-flow.mjs --dist dist-mock --out a11y-report/first-visit
+      # A guest opening a shared event link (#347): the page preloads the event screen's
+      # chunk (event-chunk.json, as api/event-page.ts serves it); Join against event-link-budget.json.
+      - name: Shared event link (preload and Join)
+        if: success() || failure()
+        run: node scripts/shots/event-link-flow.mjs --dist dist-mock --out a11y-report/event-link
       - name: Job summary
         if: always() && hashFiles('a11y-report/summary.md') != ''
         run: cat a11y-report/summary.md >> "$GITHUB_STEP_SUMMARY"

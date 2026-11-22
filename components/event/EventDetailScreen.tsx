@@ -34,6 +34,7 @@ import {
   eventDateMs,
 } from '../../hooks/event'
 import { useEventBack } from '../../hooks/event/useEventBack'
+import { useEventFirstPaint } from '../../hooks/event/useEventFirstPaint'
 import { Pager } from '../../components/Pager'
 import { ScreenState } from '../../components/ui'
 import { CheersTab } from '../../components/event/CheersTab'
@@ -114,6 +115,8 @@ export default function EventDetail() {
   // Around game time, load the court queue (#333) with the event, so the People tab
   // opens with it in place instead of pushing the roster down when it arrives.
   useCourtQueue(id, { enabled: !!event && courtQueueOffered(eventDateMs(event.event_date), event.duration_minutes, !!event.cancelled_at) })
+
+  useEventFirstPaint(!!event)
 
   const attendance = useEventAttendance(data)
   const teams = useEventTeams(data, isHostOrCohost)

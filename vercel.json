@@ -24,7 +24,7 @@
     },
     "api/event-page.ts": {
       "memory": 128,
-      "includeFiles": "dist/index.html"
+      "includeFiles": "dist/{index.html,event-chunk.json}"
     }
   }
 }

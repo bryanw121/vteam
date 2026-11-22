@@ -3,7 +3,7 @@
  * adds link-preview tags to the web app's index.html. PostgREST and the file
  * read are mocked; nothing hits the network.
  */
-import handler, { escapeHtml, eventSeedScript, EVENT_SEED_MAX_BYTES, injectHeadTags, loadIndexHtml, resetIndexHtmlCache } from '../api/event-page'
+import handler, { escapeHtml, eventSeedScript, EVENT_SEED_MAX_BYTES, injectHeadTags, loadEventChunkTag, loadIndexHtml, resetIndexHtmlCache } from '../api/event-page'
 import { usableEventSeed } from '../lib/eventSeed.web'
 import { fetchEventPreview, parseContentRangeTotal, requestOrigin, supabaseRestConfig } from '../api/_lib/eventPreview'
 import { EVENT_PREVIEW_COLUMNS } from '../constants/selects'
@@ -276,5 +276,49 @@ describe('event seed (#244)', () => {
     expect(usableEventSeed(seed, ID, 1_000_000 + 31 * 60_000)).toBeNull()
     expect(usableEventSeed({ ...seed, v: 2 }, ID, 1_000_000)).toBeNull()
     expect(usableEventSeed(null, ID)).toBeNull()
+  })
+})
+
+describe('event chunk preload (#347)', () => {
+  const SRC = '/_expo/static/js/web/EventDetailScreen-0f3a9c.js'
+  const TAG = `<link rel="preload" as="script" href="${SRC}">`
+  const files = (chunk: string | Error) => readFile.mockImplementation(async (path: string) => {
+    if (/event-chunk\.json$/.test(path)) { if (chunk instanceof Error) throw chunk; return chunk }
+    return SHELL
+  })
+
+  it('puts the preload for the event screen\'s chunk in the head, once', async () => {
+    files(JSON.stringify({ src: SRC, tag: TAG }))
+    mockPostgrest({ rows: [EVENT], attending: 3 })
+    const res = await call()
+    expect(head(res.body!).split(TAG)).toHaveLength(2)
+    expect(res.body!.endsWith(BODY)).toBe(true)
+  })
+
+  it('also for an unknown event (the screen still loads to say so)', async () => {
+    files(JSON.stringify({ src: SRC, tag: TAG }))
+    mockPostgrest({ rows: [] })
+    expect(head((await call()).body!)).toContain(TAG)
+  })
+
+  it('serves the page without it when the file is missing or odd', async () => {
+    files(new Error('ENOENT'))
+    mockPostgrest({ rows: [EVENT] })
+    let res = await call()
+    expect(res.statusCode).toBe(200)
+    expect(res.body).not.toContain('rel="preload"')
+
+    resetIndexHtmlCache()
+    files(JSON.stringify({ tag: '<script src="https://evil.example/x.js"></script>' }))
+    res = await call()
+    expect(res.statusCode).toBe(200)
+    expect(res.body).not.toContain('evil.example')
+  })
+
+  it('reads event-chunk.json once per instance', async () => {
+    files(JSON.stringify({ src: SRC, tag: TAG }))
+    await expect(loadEventChunkTag()).resolves.toBe(TAG)
+    await loadEventChunkTag()
+    expect(readFile.mock.calls.filter(c => /event-chunk\.json$/.test(c[0]))).toHaveLength(1)
   })
 })
