@@ -121,6 +121,11 @@ export function landedOnFeed(): boolean {
   return firstScreen === null || firstScreen === '/'
 }
 
+/** Did this web page load on an event page (`/event/<id>`, a shared link)? False on native. */
+export function landedOnEventPage(): boolean {
+  return Platform.OS === 'web' && loadPath !== null && loadPath.startsWith('/event/')
+}
+
 function webStorage(): Storage | null {
   if (Platform.OS !== 'web') return null
   try { return typeof window !== 'undefined' ? window.localStorage : null } catch { return null }
