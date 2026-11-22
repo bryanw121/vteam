@@ -47,6 +47,38 @@ export function loadIndexHtml(read: (path: string) => Promise<string> = p => rea
 /** Test hook: forget the cached shell. */
 export function resetIndexHtmlCache() {
   indexHtml = null
+  eventChunkTag = null
+}
+
+/**
+ * `dist/event-chunk.json`, written after the export by scripts/event-chunk.mjs (#347):
+ * the preload <link> for the event screen's lazy chunk. Also in `includeFiles`.
+ */
+const EVENT_CHUNK_PATH = join(process.cwd(), 'dist', 'event-chunk.json')
+/** What the tag must look like: a same-origin script under the export's static folder. */
+const PRELOAD_TAG_RE = /^<link rel="preload" as="script" href="\/_expo\/static\/js\/web\/EventDetailScreen-[A-Za-z0-9_-]+\.js">$/
+
+let eventChunkTag: Promise<string> | null = null
+
+/**
+ * The preload tag for the event chunk, read once per instance; '' (logged once) when the file
+ * is missing or doesn't hold a tag of the expected shape, so the page is served without it.
+ */
+export function loadEventChunkTag(read: (path: string) => Promise<string> = p => readFile(p, 'utf8')): Promise<string> {
+  if (!eventChunkTag) {
+    eventChunkTag = read(EVENT_CHUNK_PATH)
+      .then(text => {
+        const tag = (JSON.parse(text) as { tag?: unknown }).tag
+        if (typeof tag === 'string' && PRELOAD_TAG_RE.test(tag)) return tag
+        console.error('event-page: event-chunk.json has no usable preload tag')
+        return ''
+      })
+      .catch(err => {
+        console.error('event-page: event-chunk.json missing from the function bundle', err)
+        return ''
+      })
+  }
+  return eventChunkTag
 }
 
 const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
@@ -170,7 +202,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ? `${origin}/api/og/event`
     : `${origin}/api/og/event?id=${id}&v=${shortHash(meta.imageAlt + meta.state)}`
 
-  const html = injectHeadTags(shell, previewHeadTags(meta, pageUrl, imageUrl) + eventSeedScript(seed))
+  // The event screen's chunk starts downloading with the app scripts, not after the app starts (#347).
+  const preload = await loadEventChunkTag()
+  const html = injectHeadTags(shell, previewHeadTags(meta, pageUrl, imageUrl) + eventSeedScript(seed) + preload)
   res.setHeader('content-type', 'text/html; charset=utf-8')
   res.setHeader('cache-control', cacheControl)
   res.status(200).send(req.method === 'HEAD' ? '' : html)
