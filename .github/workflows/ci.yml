@@ -156,59 +156,32 @@ jobs:
   # against the mock export: no secrets, no Supabase, so it is not in the e2e
   # concurrency groups. Fails on a serious/critical violation that is not in
   # scripts/shots/a11y-baseline.json (see CLAUDE.md "Test layers").
-  a11y:
-    name: Accessibility (axe)
+  # Browser checks on the mocked export (#349): three jobs side by side after the
+  # build, each with its own runner, so timing budgets never share a CPU with the
+  # stability walk. "Accessibility (axe)" below reports their combined result.
+  browser-upgrade:
+    name: "Browser: upgrade"
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: [build-web]
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - name: Playwright version
-        id: pw
-        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-      - name: Cache Playwright browsers
-        id: pw-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
-      - name: Install Chromium
-        if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      # System packages come from apt; the script falls back to archive.ubuntu.com when the
-      # runner's Azure mirror doesn't resolve, instead of failing every browser job.
-      - name: Install Chromium system deps
-        run: scripts/ci/install-playwright-deps.sh
-      - uses: actions/download-artifact@v4
-        with:
-          name: web-dist-mock
-          path: dist-mock/
-      - name: Badge artwork browser check
-        run: node scripts/shots/badge-artwork-flow.mjs --dist dist-mock --out a11y-report/badge-artwork
-      - name: Feed city browser check
-        run: node scripts/shots/feed-city-flow.mjs --dist dist-mock --out a11y-report/feed-city
-      - name: Chat badge browser check
-        run: node scripts/shots/chat-unread-flow.mjs --dist dist-mock --out a11y-report/chat-unread
-      - name: Crash recovery browser check
-        run: node scripts/shots/crash-recovery-flow.mjs --dist dist-mock --out a11y-report/crash-recovery
+      - uses: ./.github/actions/browser-setup
       # Upgrade check (#317): this build opened on a device that last ran main. The
-      # base's mock export is cached by every push to main (below); on a miss it is
-      # exported from the PR's base commit.
+      # base's mock export is cached by every push to main (browser-flows, below);
+      # on a miss it is exported from the PR's base commit. Saved and restored under
+      # the same path (dist-base/): actions/cache versions entries by path, so a
+      # different path never hits, whatever the key.
       - name: Base build for the upgrade check (cache)
         id: base-dist
-        if: github.event_name == 'pull_request'
         uses: actions/cache/restore@v4
         with:
           path: dist-base/
           key: dist-mock-${{ github.event.pull_request.base.sha }}
           restore-keys: dist-mock-
       - name: Base build for the upgrade check (export)
-        if: github.event_name == 'pull_request' && steps.base-dist.outputs.cache-matched-key == ''
+        if: steps.base-dist.outputs.cache-matched-key == ''
         timeout-minutes: 12
         run: |
           git fetch --depth 1 origin ${{ github.event.pull_request.base.sha }}
@@ -224,21 +197,31 @@ jobs:
           EXPO_PUBLIC_SENTRY_DSN: ''
           EXPO_PUBLIC_APP_ENV: development
       - name: Upgrade check (this build on a device that ran main)
-        if: github.event_name == 'pull_request' && (success() || failure()) && hashFiles('dist-base/index.html') != ''
+        if: (success() || failure()) && hashFiles('dist-base/index.html') != ''
         run: |
           echo "Base build: ${{ steps.base-dist.outputs.cache-matched-key || 'exported from the base commit' }}"
           node scripts/shots/upgrade-flow.mjs --before dist-base --after dist-mock --out a11y-report/upgrade
       - name: Upgrade summary
         if: always() && hashFiles('a11y-report/upgrade/summary.md') != ''
         run: cat a11y-report/upgrade/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload report
+        if: always() && hashFiles('a11y-report/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report-upgrade
+          path: a11y-report/
+          retention-days: 14
+
+  browser-axe:
+    name: "Browser: axe and budgets"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [build-web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/browser-setup
       - name: axe scan vs baseline
         run: npm run a11y -- --dist dist-mock --out a11y-report
-      # Tours never skip a step, no jump or layout shift on refresh/Back, every
-      # VIEW link round-trips (#255). After axe so a failure in either still
-      # reports the other; findings beyond stability-baseline.json fail.
-      - name: Stability check (tours, refresh/Back, links)
-        if: success() || failure()
-        run: node scripts/shots/stability-flow.mjs --dist dist-mock --out a11y-report/stability
       # First screens don't get slower or send more reads (#225): paint on a slow
       # mocked server and every first-visit read, against startup-budget.json.
       - name: Startup budget (paint and reads)
@@ -249,27 +232,9 @@ jobs:
       - name: First visit (scripts and first card)
         if: success() || failure()
         run: node scripts/shots/first-visit-flow.mjs --dist dist-mock --out a11y-report/first-visit
-      # When the server stops answering (#289): saved feed + "vteam isn't answering" within
-      # 17 s, almost no requests while down, recovery on Retry, no endless spinner on a first visit.
-      - name: Outage check
-        if: success() || failure()
-        run: node scripts/shots/outage-flow.mjs --dist dist-mock --out a11y-report/outage
-      - name: Outage summary
-        if: always() && hashFiles('a11y-report/outage/summary.md') != ''
-        run: cat a11y-report/outage/summary.md >> "$GITHUB_STEP_SUMMARY"
       - name: Job summary
         if: always() && hashFiles('a11y-report/summary.md') != ''
         run: cat a11y-report/summary.md >> "$GITHUB_STEP_SUMMARY"
-      - name: Stability summary
-        if: always() && hashFiles('a11y-report/stability/summary.md') != ''
-        run: cat a11y-report/stability/summary.md >> "$GITHUB_STEP_SUMMARY"
-      # The next PRs' upgrade check opens their build on a device that ran this one.
-      - name: Keep this build for upgrade checks
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/cache/save@v4
-        with:
-          path: dist-mock/
-          key: dist-mock-${{ github.sha }}
       - name: Upload a11y report
         if: always() && hashFiles('a11y-report/**') != ''
         uses: actions/upload-artifact@v4
@@ -277,6 +242,77 @@ jobs:
           name: a11y-report
           path: a11y-report/
           retention-days: 14
+
+  browser-flows:
+    name: "Browser: flows"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [build-web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/browser-setup
+      # Tours never skip a step, no jump or layout shift on refresh/Back, every
+      # VIEW link round-trips (#255); findings beyond stability-baseline.json fail.
+      - name: Stability check (tours, refresh/Back, links)
+        run: node scripts/shots/stability-flow.mjs --dist dist-mock --out a11y-report/stability
+      # When the server stops answering (#289): saved feed + "vteam isn't answering" within
+      # 17 s, almost no requests while down, recovery on Retry, no endless spinner on a first visit.
+      - name: Outage check
+        if: success() || failure()
+        run: node scripts/shots/outage-flow.mjs --dist dist-mock --out a11y-report/outage
+      - name: Badge artwork browser check
+        if: success() || failure()
+        run: node scripts/shots/badge-artwork-flow.mjs --dist dist-mock --out a11y-report/badge-artwork
+      - name: Feed city browser check
+        if: success() || failure()
+        run: node scripts/shots/feed-city-flow.mjs --dist dist-mock --out a11y-report/feed-city
+      - name: Chat badge browser check
+        if: success() || failure()
+        run: node scripts/shots/chat-unread-flow.mjs --dist dist-mock --out a11y-report/chat-unread
+      - name: Crash recovery browser check
+        if: success() || failure()
+        run: node scripts/shots/crash-recovery-flow.mjs --dist dist-mock --out a11y-report/crash-recovery
+      - name: Stability summary
+        if: always() && hashFiles('a11y-report/stability/summary.md') != ''
+        run: cat a11y-report/stability/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Outage summary
+        if: always() && hashFiles('a11y-report/outage/summary.md') != ''
+        run: cat a11y-report/outage/summary.md >> "$GITHUB_STEP_SUMMARY"
+      # The next PRs' upgrade check opens their build on a device that ran this one.
+      # Saved from dist-base/, the path the upgrade job restores into (#349).
+      - name: Stage this build for upgrade checks
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: cp -r dist-mock dist-base
+      - name: Keep this build for upgrade checks
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: dist-base/
+          key: dist-mock-${{ github.sha }}
+      - name: Upload report
+        if: always() && hashFiles('a11y-report/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report-flows
+          path: a11y-report/
+          retention-days: 14
+
+  # The browser checks' combined result under the name they had as one job.
+  a11y:
+    name: Accessibility (axe)
+    runs-on: ubuntu-latest
+    needs: [browser-upgrade, browser-axe, browser-flows]
+    if: always()
+    steps:
+      - name: All browser checks passed
+        run: |
+          fail=0
+          for r in "upgrade=${{ needs.browser-upgrade.result }}" "axe=${{ needs.browser-axe.result }}" "flows=${{ needs.browser-flows.result }}"; do
+            # The upgrade job runs on pull requests only (skipped on pushes); a skip
+            # elsewhere means the build failed, which its own job reports.
+            case "${r#*=}" in success|skipped) ;; *) echo "::error::browser ${r%%=*}: ${r#*=}"; fail=1 ;; esac
+          done
+          exit $fail
 
   e2e-shard:
     name: E2E (${{ matrix.shard }})
