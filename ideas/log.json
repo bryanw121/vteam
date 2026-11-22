@@ -595,5 +595,29 @@
     "status": "approved",
     "summary": "Add useQueries to lib/query to replace the 24 fixed useQuery slots (only rules-of-hooks disable), split hooks/useMonthEvents.ts into hooks/feed/{feedFetch,feedPreviews,feedSnapshot,feedState,useMonthEvents,useFeedRsvp}; 28 existing tests as the net; 3 PRs.",
     "issue": 343
+  },
+  {
+    "date": "2026-11-22",
+    "n": 1,
+    "title": "Shared event links 0.6 s sooner: the page asks for the event screen's code itself",
+    "bucket": "latency",
+    "status": "proposed",
+    "summary": "api/event-page.ts preloads the 1,150 KB EventDetailScreen chunk next to the app scripts (measured: guest Join 4.09 s -> 3.53 s on a 4x phone); optional part 2 moves Reanimated/Gesture Handler (team drag) out of the chunk for players. CI budget via event-link-flow.mjs."
+  },
+  {
+    "date": "2026-11-22",
+    "n": 2,
+    "title": "Outside sessions say what the venue says: the note on the card, and a details sheet before you leave vteam",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "88 of 102 upcoming outside sessions have a venue note that is loaded but never shown. Show it on ExternalSessionCard; tap opens OutsideSessionSheet (time, venue + directions, price/level, note, other dates, sign-up via the venue check, Share, Hide), linkable as /?session=<id>."
+  },
+  {
+    "date": "2026-11-22",
+    "n": 3,
+    "title": "CI in half the time: three browser jobs side by side, and an upgrade-check cache that actually hits",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "Split the 14-minute a11y job (12 serial browser checks) into three parallel jobs behind an 'Accessibility (axe)' aggregator, and fix the dist-mock cache that never hits (saved from dist-mock/, restored to dist-base/). PR CI ~17.6 -> ~10 min."
   }
 ]
