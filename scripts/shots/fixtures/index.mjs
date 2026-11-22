@@ -13,6 +13,8 @@ export { ME, P }
 const id = (prefix, n) => `${prefix}-0000-4000-8000-${String(n).padStart(12, '0')}`
 
 export const IDS = {
+  /** Outside sessions (external_sessions), by fixture number. */
+  external: { sandOpenPlay: id('e6000000', 2) },
   club: { eastside: id('c1000000', 1), indoor: id('c1000000', 2), zilker: id('c1000000', 3), juniors: id('c1000000', 4) },
   event: {
     sundaySand: id('e1000000', 1), tuesdayIndoor: id('e1000000', 2), queensOfCourt: id('e1000000', 3), lunchPepper: id('e1000000', 4),
@@ -179,9 +181,11 @@ export function buildFixtures(now) {
   const ext = (n, f) => ({ id: id('e6000000', n), source_id: `shots-${n}`, region: 'austin', city: 'Austin', canceled: false, updated_at: t.ago(20), verified_at: t.ago(60 * 3), signup_label: 'Sign up', note: null, level: null, ...f })
   const external_sessions = [
     ext(1, { title: 'Open Gym', venue: 'Volleyworld Austin', surface: 'indoor', session_type: 'open play', price: '$12', starts_at: t.iso(0, 18, 0), ends_at: t.iso(0, 21, 0), signup_url: 'https://example.com/volleyworld', level: 'All levels' }),
-    ext(2, { title: 'Sand Open Play', venue: 'ATX Beach Volleyball', surface: 'sand', session_type: 'open play', price: '$8', starts_at: t.iso(2, 18, 30), ends_at: t.iso(2, 21, 0), signup_url: 'https://example.com/atxbeach' }),
+    ext(2, { title: 'Sand Open Play', venue: 'ATX Beach Volleyball', surface: 'sand', session_type: 'open play', price: '$8', starts_at: t.iso(2, 18, 30), ends_at: t.iso(2, 21, 0), signup_url: 'https://example.com/atxbeach', note: 'First come, first served; courts not guaranteed.' }),
     ext(3, { title: 'Intermediate Clinic', venue: 'ACES Volleyball', surface: 'indoor', session_type: 'clinic', price: '$25', starts_at: t.iso(3, 19, 0), ends_at: t.iso(3, 20, 30), signup_url: 'https://example.com/aces', level: 'B / BB' }),
     ext(4, { title: 'Reverse Co-ed 4s', venue: 'Volleyworld Austin', surface: 'indoor', session_type: 'open play', price: '$12', starts_at: t.iso(5, 19, 0), ends_at: t.iso(5, 22, 0), signup_url: 'https://example.com/volleyworld' }),
+    // The same weekly session a week later: the sheet's "Also on" (#348).
+    ext(5, { source_id: 'shots-2', title: 'Sand Open Play', venue: 'ATX Beach Volleyball', surface: 'sand', session_type: 'open play', price: '$8', starts_at: t.iso(7, 18, 30), ends_at: t.iso(7, 21, 0), signup_url: 'https://example.com/atxbeach', note: 'First come, first served; courts not guaranteed.' }),
   ]
 
   // Outside leagues and tournaments (Schelagg's programs feed).

@@ -31,7 +31,7 @@ function MobileCard({ item, cards, menu = true }: { item: EventWithDetails; card
   const { currentUserId } = cards
   const withMenu = menu && !(currentUserId && myStatusFor(item, currentUserId) !== null)
   const card = item._external ? (
-    <ExternalSessionCard session={item._external} menuInset={withMenu} />
+    <ExternalSessionCard session={item._external} menuInset={withMenu} onOpen={cards.onOpenSession} />
   ) : item._program ? (
     <ExternalProgramCard program={item._program} menuInset={withMenu} />
   ) : (

@@ -14,7 +14,11 @@ import type { ExternalSession, SessionLinkDecision, SessionLinkNotice } from '..
  * `finding` keeps the last cancelled / gone / changed result so the card can
  * show it after the dialog closes.
  */
-export function useOutsideSessionLink(session: Pick<ExternalSession, 'id' | 'signup_url'> & Partial<Pick<ExternalSession, 'venue'>>) {
+export function useOutsideSessionLink(
+  session: Pick<ExternalSession, 'id' | 'signup_url'> & Partial<Pick<ExternalSession, 'venue'>>,
+  /** Where the tap was, for `outside_link_opened` (#348). */
+  from: 'card' | 'sheet' = 'card',
+) {
   const [checking, setChecking] = useState(false)
   const [notice, setNotice] = useState<SessionLinkNotice | null>(null)
   const [finding, setFinding] = useState<Exclude<SessionLinkDecision, { action: 'open' }> | null>(null)
@@ -23,11 +27,11 @@ export function useOutsideSessionLink(session: Pick<ExternalSession, 'id' | 'sig
 
   const openNow = useCallback(async (target: string | null = url) => {
     if (!target) return
-    track(ANALYTICS_EVENTS.outsideLinkOpened, { kind: 'session', org: session.venue ?? 'unknown' })
+    track(ANALYTICS_EVENTS.outsideLinkOpened, { kind: 'session', org: session.venue ?? 'unknown', from })
     const opened = await openExternalUrl(target)
     // The browser blocked the new tab: a fresh tap on the dialog's button will open it.
     if (!opened) setNotice({ action: 'confirm', kind: 'blocked' })
-  }, [url, session.venue])
+  }, [url, session.venue, from])
 
   const open = useCallback(async () => {
     if (!url || inFlight.current) return

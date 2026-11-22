@@ -40,6 +40,20 @@ export function text(max = 80): UrlCodec<string> {
 }
 
 /** `1` / `true` → on. Off stays out. */
+const ROW_ID_RE = /^[A-Za-z0-9][A-Za-z0-9:._-]{0,119}$/
+
+/**
+ * A row id from a link (`?session=<id>`): uuids and the slug ids Skelly's rows use
+ * ("volleyworld-2026-11-22-1900"), up to 120 characters; anything else is '' (none).
+ */
+export const rowId: UrlCodec<string> = {
+  parse: raw => {
+    const v = (raw ?? '').trim()
+    return ROW_ID_RE.test(v) ? v : ''
+  },
+  format: v => (ROW_ID_RE.test(v) ? v : undefined),
+}
+
 export const flag: UrlCodec<boolean> = {
   parse: raw => raw === '1' || raw === 'true',
   format: v => (v ? '1' : undefined),

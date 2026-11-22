@@ -1,6 +1,6 @@
 import type { FeedFilter, SurfaceFilter, FeedbackKind, UrlCodec } from '../types'
 import type { MetricsRangeDays, AdminUserSort, MetricsTab, TrafficSpan } from '../types/metrics'
-import { flag, oneOf, optionalOneOf, tabIndexCodec, text } from './urlState'
+import { flag, oneOf, optionalOneOf, rowId, tabIndexCodec, text } from './urlState'
 
 /**
  * Each screen's URL params and how they parse (see utils/urlState). The one
@@ -22,6 +22,8 @@ export const VIEW = {
     type: oneOf<FeedFilter>(['all', 'open_play', 'tournament'], 'all'),
     surface: oneOf<SurfaceFilter>(SURFACES, 'any'),
     day: text(10),
+    /** An outside session's sheet over the feed (#348): `/?session=<external_sessions.id>`. */
+    session: rowId,
   },
   /** `r=1`: opened from a shared game recap (#227), counted once as `recap_link_opened`. */
   event: { tab: tabIndexCodec(EVENT_TAB_LABELS), r: flag },

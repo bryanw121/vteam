@@ -13,6 +13,7 @@ import { useSearch } from '../../hooks/useSearch'
 import { useRecentSearches } from '../../hooks/useRecentSearches'
 import { useFeedRegion } from '../../hooks/useFeedCity'
 import { useUrlParam } from '../../hooks/useUrlParam'
+import { useOutsideSessionSheet } from '../../hooks/useOutsideSessionSheet'
 import { track } from '../../lib/analytics'
 import { profileDisplayName } from '../../utils'
 import { routes } from '../../utils/routes'
@@ -35,6 +36,8 @@ export default function SearchScreen() {
   const scope: SearchScope = userId ? scopeParam : 'upcoming'
   const [text, setText] = useState(qParam)
   const search = useSearch(text, scope, region)
+  // An outside session opens its sheet here too (#348); not in the address (search's own params are).
+  const outside = useOutsideSessionSheet({ sessions: search.data?.external, inUrl: false, source: 'search' })
   const { recent, remember, clear } = useRecentSearches()
   const inputRef = useRef<React.ElementRef<typeof TextInput>>(null)
   const results = search.data
@@ -169,7 +172,7 @@ export default function SearchScreen() {
                 <View testID="search-games" style={{ marginTop: theme.spacing.md, gap: theme.spacing.sm }}>
                   <Text style={shared.subheading}>{scope === 'mine_past' ? 'Past games' : 'Games'}</Text>
                   {results.events.map(e => <EventCard key={e.id} event={e} currentUserId={userId ?? undefined} />)}
-                  {results.external.map(x => <ExternalSessionCard key={x.id} session={x} />)}
+                  {results.external.map(x => <ExternalSessionCard key={x.id} session={x} onOpen={outside.openSession} />)}
                 </View>
               ) : null}
               {results.hosts.length > 0 ? (
@@ -188,6 +191,7 @@ export default function SearchScreen() {
           ) : null}
         </ScrollView>
       </ScreenContainer>
+      {outside.sheet}
     </View>
   )
 }

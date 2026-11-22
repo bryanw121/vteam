@@ -13,7 +13,7 @@ import type { BottomSheetProps } from '../../types'
  * `onClosed` fires once the sheet is gone: on iOS from the Modal's own onDismiss (after the
  * slide-out, so another Modal can be presented), elsewhere as soon as `visible` turns false.
  */
-export function BottomSheet({ visible, onDismiss, title, children, onClosed }: BottomSheetProps) {
+export function BottomSheet({ visible, onDismiss, title, children, onClosed, maxWidth, accessibilityLabel }: BottomSheetProps) {
   const insets = useSafeAreaInsets()
   const onClosedRef = useRef(onClosed)
   onClosedRef.current = onClosed
@@ -42,10 +42,10 @@ export function BottomSheet({ visible, onDismiss, title, children, onClosed }: B
           testID="bottom-sheet-backdrop"
         />
         <View
-          style={[shared.sheetCard, { paddingBottom: insets.bottom + theme.spacing.lg }]}
+          style={[shared.sheetCard, { paddingBottom: insets.bottom + theme.spacing.lg }, maxWidth ? { width: '100%', maxWidth, alignSelf: 'center' } : null]}
           testID="bottom-sheet"
-          role={title ? 'dialog' : undefined}
-          aria-label={title || undefined}
+          role={title || accessibilityLabel ? 'dialog' : undefined}
+          aria-label={title || accessibilityLabel || undefined}
         >
           <View style={shared.sheetHandle} />
           {!!title && <Text style={shared.sheetTitle} accessibilityRole="header">{title}</Text>}

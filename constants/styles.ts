@@ -434,6 +434,62 @@ export const shared = StyleSheet.create({
     marginTop: theme.spacing.xxs,
   },
   externalFindingCanceled: { color: theme.colors.error },
+  /** The venue's note on an outside session card (#348): readable, not a warning. */
+  externalNote: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.font.size.sm,
+    lineHeight: 17,
+    color: theme.colors.subtextStrong,
+    marginTop: theme.spacing.xxs,
+  },
+  /** OutsideSessionSheet (#348). */
+  sessionSheetKicker: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.xs,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: theme.colors.subtext,
+  },
+  sessionSheetTitle: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.heading.sm,
+    color: theme.colors.text,
+    marginTop: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
+  },
+  sessionSheetRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    alignItems: 'flex-start',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.borderSoft,
+  },
+  sessionSheetRowMain: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.md,
+    color: theme.colors.text,
+  },
+  sessionSheetRowSub: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.font.size.smd,
+    color: theme.colors.subtext,
+    marginTop: 2,
+  },
+  sessionSheetLink: {
+    fontFamily: theme.fonts.bodySemiBold,
+    fontSize: theme.font.size.smd,
+    color: theme.colors.primaryText,
+  },
+  sessionSheetDates: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginTop: theme.spacing.xs },
+  sessionSheetActions: { flexDirection: 'row', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
+  sessionSheetFooter: {
+    fontFamily: theme.fonts.body,
+    fontSize: theme.font.size.xs,
+    color: theme.colors.subtext,
+    textAlign: 'center',
+    marginTop: theme.spacing.md,
+  },
   externalSignupLabel: {
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: theme.font.size.sm,

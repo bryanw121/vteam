@@ -54,6 +54,11 @@ export const SCREENS = {
     route: '/?type=tournament&surface=sand', ready: 'Lunchtime Pepper', fullPage: true,
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'hooks/useUrlParam.ts', 'utils/urlState.ts', 'utils/urlViews.ts', 'components/ShareLinkButton.tsx'],
   },
+  // An outside session's sheet from a shared link (#348): note, directions, Also on, sign-up.
+  'events-session-sheet': {
+    route: `/?session=${IDS.external.sandOpenPlay}`, signedIn: false, ready: 'Also on',
+    sources: ['components/events/OutsideSessionSheet.tsx', 'hooks/useOutsideSessionSheet.tsx', 'hooks/useOutsideSession.ts', 'utils/outsideSession.ts', 'components/ExternalSessionCard.tsx', 'components/ui/BottomSheet.tsx'],
+  },
   'events-feed-guest': {
     route: '/', signedIn: false, ready: 'Lunchtime Pepper',
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'hooks/useFeedDay.ts', 'hooks/useFeedHiding.ts', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/SignInButton.tsx', 'hooks/feed/**', 'utils/feed*.ts'],

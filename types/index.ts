@@ -1003,6 +1003,8 @@ export type FeedCardContext = {
   hiddenItemIds: ReadonlySet<string>
   onMore: (event: EventWithDetails) => void
   onUnhide: (event: EventWithDetails) => void
+  /** Open an outside session's sheet (#348). */
+  onOpenSession: (session: ExternalSession) => void
 }
 /** What both Events layouts take from the screen (#217 part 4). The screen builds the shared pieces once. */
 type EventsFeedLayoutBase = {
@@ -1259,6 +1261,20 @@ export type FriendManageSheetProps = {
   onToggleBest: (best: boolean) => void
   onRemove: () => void
   onDismiss: () => void
+  onClosed?: () => void
+}
+
+/** components/events/OutsideSessionSheet (#348). */
+export type OutsideSessionSheetProps = {
+  /** The session on show; null closes the sheet. */
+  session: ExternalSession | null
+  /** Later dates of the same session from the loaded feed (`alsoOn`). */
+  alsoOn: ExternalSession[]
+  onPickOther: (session: ExternalSession) => void
+  onDismiss: () => void
+  /** The feed's hide menu for this session; absent where there is none (search). */
+  onHide?: () => void
+  /** The sheet has finished closing (open another Modal from here: iOS can't present two at once). */
   onClosed?: () => void
 }
 
@@ -1628,6 +1644,10 @@ export type BottomSheetProps = {
    * another is still animating out.
    */
   onClosed?: () => void
+  /** Cap the sheet's width and center it (wide web), e.g. 560. Default: the full width. */
+  maxWidth?: number
+  /** Names the dialog for screen readers when there is no `title`. */
+  accessibilityLabel?: string
 }
 
 export type ScreenContainerProps = {

@@ -3,7 +3,7 @@ import { Platform, View, TouchableOpacity } from 'react-native'
 import { Text } from '../ui/Text'
 import { RefreshControl } from '../RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import * as Linking from 'expo-linking'
+import { openInMaps } from '../../lib/openInMaps'
 import * as Calendar from 'expo-calendar'
 import { ProfileAvatar } from '../ProfileAvatar'
 import { DocScrollView } from '../DocScrollView'
@@ -34,17 +34,6 @@ function formatEndTime(startIso: string, durationMinutes: number): string {
   const normalized = /[Z+]/.test(startIso) ? startIso : startIso + 'Z'
   const end = new Date(new Date(normalized).getTime() + durationMinutes * 60_000)
   return formatTime(end, { hour: 'numeric', minute: '2-digit' }, [])
-}
-
-function openInMaps(address: string) {
-  const encoded = encodeURIComponent(address)
-  if (Platform.OS === 'ios') {
-    void Linking.openURL(`maps:?q=${encoded}`)
-  } else if (Platform.OS === 'android') {
-    void Linking.openURL(`geo:0,0?q=${encoded}`)
-  } else {
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encoded}`, '_blank', 'noopener,noreferrer')
-  }
 }
 
 async function addToCalendar(title: string, startIso: string, durationMinutes: number, address?: string) {
