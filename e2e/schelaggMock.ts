@@ -182,7 +182,7 @@ export function fakeExternalSession() {
     ends_at: new Date(start.getTime() + 2 * 3600_000).toISOString(),
     signup_url: FAKE_SIGNUP_URL,
     signup_label: null,
-    note: null,
+    note: null as string | null,
     verified_at: new Date().toISOString(),
   }
 }
@@ -192,8 +192,8 @@ export function fakeExternalSession() {
  * exactly one outside session; the three-query fallback (if the RPC path is
  * ever skipped) returns the same. Read-only: nothing reaches the DB's tables.
  */
-export async function mockFeedWithOneOutsideSession(page: Page) {
-  const session = fakeExternalSession()
+export async function mockFeedWithOneOutsideSession(page: Page, over: Partial<ReturnType<typeof fakeExternalSession>> = {}) {
+  const session = { ...fakeExternalSession(), ...over }
   await page.route('**/rest/v1/rpc/get_feed_span**', route =>
     json(route, { events: [], tournaments: [], external: [session], previews: [] }))
   await page.route('**/rest/v1/external_sessions?**', route =>

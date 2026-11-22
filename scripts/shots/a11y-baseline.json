@@ -221,6 +221,14 @@
       "color-contrast": 6
     }
   },
+  "events-session-sheet": {
+    "mobile": {
+      "color-contrast": 17
+    },
+    "desktop": {
+      "color-contrast": 9
+    }
+  },
   "host-create": {
     "mobile": {},
     "desktop": {

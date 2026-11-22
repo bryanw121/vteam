@@ -33,7 +33,7 @@ describe('outside_link_opened', () => {
     global.fetch = jest.fn(async () => ({ ok: true, status: 200, json: async () => ({ status: 'scheduled' }) })) as unknown as typeof fetch
     const { result } = renderHook(() => useOutsideSessionLink({ id: 'x', signup_url: 'https://reclub.co/m/X', venue: 'Volleyworld' }))
     await act(async () => { await result.current.open() })
-    expect(track).toHaveBeenCalledWith(ANALYTICS_EVENTS.outsideLinkOpened, { kind: 'session', org: 'Volleyworld' })
+    expect(track).toHaveBeenCalledWith(ANALYTICS_EVENTS.outsideLinkOpened, { kind: 'session', org: 'Volleyworld', from: 'card' })
   })
 
   it('records the kind and organizer when an outside league or tournament card is tapped', () => {

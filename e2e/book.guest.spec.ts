@@ -182,6 +182,15 @@ test.describe('outside session last-mile check (guest)', () => {
     return card
   }
 
+  /** The card opens the session sheet (#348); its button leaves for the venue. */
+  async function signupButton(page: Page, card: Locator): Promise<Locator> {
+    await card.click()
+    const button = page.getByTestId('outside-session-signup')
+    await expect(button).toBeVisible({ timeout: 10_000 })
+    return button
+  }
+  const sheetFinding = (page: Page) => page.getByTestId('outside-session-sheet').getByTestId('external-session-finding')
+
   /** ConfirmDialog buttons arm after a short ghost-click guard. */
   async function confirmDialog(page: Page): Promise<Locator> {
     const dialog = page.getByTestId('confirm-dialog')
@@ -193,25 +202,26 @@ test.describe('outside session last-mile check (guest)', () => {
   test('scheduled: opens the sign-up link', async ({ page }) => {
     const asked = await mockSessionCheck(page, { kind: 'json', body: { id: FAKE_SESSION_ID, status: 'scheduled' } })
     const card = await feedCard(page)
-    const [popup] = await Promise.all([page.waitForEvent('popup'), card.click()])
+    const button = await signupButton(page, card)
+    const [popup] = await Promise.all([page.waitForEvent('popup'), button.click()])
     await expect.poll(() => popup.url()).toBe(FAKE_SIGNUP_URL)
     expect(asked).toEqual([FAKE_SESSION_ID])
     await expect(page.getByTestId('confirm-dialog')).toHaveCount(0)
   })
 
-  test('canceled: asks first, no popup, card marked cancelled', async ({ page }) => {
+  test('canceled: asks first, no popup, sheet marks it cancelled', async ({ page }) => {
     await mockSessionCheck(page, { kind: 'json', body: { id: FAKE_SESSION_ID, status: 'canceled' } })
     const card = await feedCard(page)
     let popups = 0
     page.on('popup', () => { popups++ })
 
-    await card.click()
+    await (await signupButton(page, card)).click()
     const dialog = await confirmDialog(page)
     await expect(dialog).toContainText('Cancelled at the venue')
     await dialog.getByTestId('confirm-dialog-cancel').click()
     await expect(page.getByTestId('confirm-dialog')).toHaveCount(0)
 
-    const finding = card.getByTestId('external-session-finding')
+    const finding = sheetFinding(page)
     await expect(finding).toHaveText('Cancelled at the venue')
     // Red: theme.colors.error (#FF5555), not the amber used for a changed time.
     await expect(finding).toHaveCSS('color', 'rgb(255, 85, 85)')
@@ -233,7 +243,7 @@ test.describe('outside session last-mile check (guest)', () => {
       },
     })
     const card = await feedCard(page)
-    await card.click()
+    await (await signupButton(page, card)).click()
     const dialog = await confirmDialog(page)
     const newTime = `${dayLong(date)} · 8:30–10pm`
     await expect(dialog).toContainText('The time changed')
@@ -246,7 +256,7 @@ test.describe('outside session last-mile check (guest)', () => {
     ])
     // No new link in the result, so it continues to the card's own sign-up URL.
     await expect.poll(() => popup.url()).toBe(FAKE_SIGNUP_URL)
-    await expect(card.getByTestId('external-session-finding')).toHaveText(`New time: ${newTime}`)
+    await expect(sheetFinding(page)).toHaveText(`New time: ${newTime}`)
   })
 
   test('check slower than 1.5s: opens the link anyway', async ({ page }) => {
@@ -256,8 +266,9 @@ test.describe('outside session last-mile check (guest)', () => {
       delayMs: 4_000,
     })
     const card = await feedCard(page)
+    const button = await signupButton(page, card)
     const started = Date.now()
-    const [popup] = await Promise.all([page.waitForEvent('popup', { timeout: 3_500 }), card.click()])
+    const [popup] = await Promise.all([page.waitForEvent('popup', { timeout: 3_500 }), button.click()])
     await expect.poll(() => popup.url()).toBe(FAKE_SIGNUP_URL)
     expect(Date.now() - started).toBeLessThan(3_500)
     await expect(page.getByTestId('confirm-dialog')).toHaveCount(0)

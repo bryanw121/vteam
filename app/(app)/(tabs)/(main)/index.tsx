@@ -50,6 +50,7 @@ import { useFeedForecasts } from '../../../../hooks/useForecast'
 import { planFeedAds } from '../../../../utils/feedAds'
 import { HideFeedSheet } from '../../../../components/events/FeedHiding'
 import { useFeedHiding } from '../../../../hooks/useFeedHiding'
+import { useOutsideSessionSheet } from '../../../../hooks/useOutsideSessionSheet'
 import { ShareLinkButton } from '../../../../components/ShareLinkButton'
 import { buildMarkedDates, monthForIdx, weekForIdx } from '../../../../utils/calendarWeeks'
 
@@ -239,6 +240,9 @@ export default function EventsScreen() {
   const friendEventIds = useMemo(() => events.filter(e => !e._external && !e._isTournament).map(e => e.id), [events])
   const friendsGoing = useFriendsGoing(friendEventIds)
 
+  // An outside session's details (#348): `?session=<id>` in the address, so a shared link opens it.
+  const outside = useOutsideSessionSheet({ events, onHide: openHideMenu })
+
   const railNode = (
     <MyEventsRail
       items={myUpcoming}
@@ -347,12 +351,13 @@ export default function EventsScreen() {
 
   const cards = useMemo((): FeedCardContext => ({
     currentUserId, onRsvp: handleRsvp, isRsvpPending, forecasts, friendsGoing, sponsoredIds, adPlan, hiddenItemIds,
-    onMore: openHideMenu, onUnhide: unhideItem,
-  }), [currentUserId, handleRsvp, isRsvpPending, forecasts, friendsGoing, sponsoredIds, adPlan, hiddenItemIds, openHideMenu, unhideItem])
+    onMore: openHideMenu, onUnhide: unhideItem, onOpenSession: outside.openSession,
+  }), [currentUserId, handleRsvp, isRsvpPending, forecasts, friendsGoing, sponsoredIds, adPlan, hiddenItemIds, openHideMenu, unhideItem, outside.openSession])
 
   const overlays = (
     <>
       {notifs.popup}
+      {outside.sheet}
       <HideFeedSheet
         visible={!!hideTarget}
         itemTitle={hideTarget?.title}

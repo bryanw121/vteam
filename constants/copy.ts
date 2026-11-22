@@ -240,3 +240,16 @@ export const COURT_QUEUE_COPY = {
   moveUp: (team: string) => `Move ${team} up`,
   moveDown: (team: string) => `Move ${team} down`,
 } as const
+
+/** The outside session sheet (#348): a session another venue runs, opened from its card. */
+export const OUTSIDE_SESSION_COPY = {
+  cardAction: 'Details & sign-up',
+  notOnVteam: 'Not run on vteam',
+  directions: 'Directions',
+  alsoOn: 'Also on',
+  share: 'Share',
+  hide: 'Hide',
+  close: 'Close',
+  gone: "That session isn't listed anymore",
+  loading: 'Loading the session',
+} as const

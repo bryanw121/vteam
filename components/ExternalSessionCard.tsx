@@ -12,6 +12,7 @@ import { useToday } from '../hooks/useToday'
 import { sessionConfirmation } from '../utils/externalFreshness'
 import { ConfirmDialog } from './ui'
 import { Spinner } from './ui/Spinner'
+import { OUTSIDE_SESSION_COPY } from '../constants/copy'
 
 type Props = {
   session: ExternalSession
@@ -19,6 +20,11 @@ type Props = {
   menuInset?: boolean
   /** Leave out the date block: the desktop feed's day header already says the day. */
   hideDate?: boolean
+  /**
+   * Open the session's sheet (#348) instead of the venue's page. The feed and search pass it;
+   * without it a tap still goes straight to the sign-up link (with the venue check).
+   */
+  onOpen?: (session: ExternalSession) => void
 }
 
 const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
@@ -71,12 +77,14 @@ function findingLabel(finding: Exclude<SessionLinkDecision, { action: 'open' }>)
 
 /**
  * A session another Austin venue or group runs (synced by Schelagg). Not a
- * vteam event: nobody RSVPs here, so the whole card links out to the venue's
- * own sign-up page. Dashed border keeps it visibly distinct from club events.
- * Before opening, useOutsideSessionLink asks Schelagg whether the venue still
- * lists it (≤1.5s), and asks first if it was cancelled, moved or dropped.
+ * vteam event: nobody RSVPs here. With `onOpen` (the feed, search) the card
+ * shows the venue's note and opens the session sheet (#348), whose button
+ * leaves for the sign-up page; without it the whole card links out. Dashed
+ * border keeps it visibly distinct from club events. Before opening,
+ * useOutsideSessionLink asks Schelagg whether the venue still lists it
+ * (≤1.5s), and asks first if it was cancelled, moved or dropped.
  */
-function ExternalSessionCardInner({ session, menuInset = false, hideDate = false }: Props) {
+function ExternalSessionCardInner({ session, menuInset = false, hideDate = false, onOpen }: Props) {
   const start = new Date(session.starts_at)
   const surface = session.surface ? { label: SURFACE_LABELS[session.surface], color: SURFACE_ACCENTS[session.surface] } : null
   const accent = surface?.color ?? theme.colors.subtext
@@ -84,7 +92,9 @@ function ExternalSessionCardInner({ session, menuInset = false, hideDate = false
   const meta = [session.level, session.price]
     .filter(Boolean)
     .join(' · ')
-  const signupLabel = session.signup_label ?? (session.signup_url ? `Sign up on ${signupHost(session.signup_url)}` : null)
+  const directLabel = session.signup_label ?? (session.signup_url ? `Sign up on ${signupHost(session.signup_url)}` : null)
+  const signupLabel = onOpen ? OUTSIDE_SESSION_COPY.cardAction : directLabel
+  const note = session.note?.trim() || null
 
   const host = session.signup_url ? signupHost(session.signup_url) : 'the venue'
   const link = useOutsideSessionLink(session)
@@ -97,12 +107,12 @@ function ExternalSessionCardInner({ session, menuInset = false, hideDate = false
     <>
     <TouchableOpacity
       activeOpacity={0.85}
-      onPress={() => void link.open()}
-      disabled={!session.signup_url || link.checking}
+      onPress={() => (onOpen ? onOpen(session) : void link.open())}
+      disabled={onOpen ? false : !session.signup_url || link.checking}
       style={shared.externalCard}
-      accessibilityRole="link"
+      accessibilityRole={onOpen ? 'button' : 'link'}
       accessibilityState={{ busy: link.checking }}
-      accessibilityLabel={`${session.title} at ${session.venue}. ${finding ? `${finding}. ` : confirmation.note ? `${confirmation.note}. ` : ''}${signupLabel ?? ''}`}
+      accessibilityLabel={`${session.title} at ${session.venue}. ${finding ? `${finding}. ` : confirmation.note ? `${confirmation.note}. ` : ''}${onOpen && note ? `${note} ` : ''}${signupLabel ?? ''}`}
       testID="external-session-card"
     >
       {!hideDate && <View style={[shared.externalDateBlock, { backgroundColor: accent + '22' }]}>
@@ -122,6 +132,8 @@ function ExternalSessionCardInner({ session, menuInset = false, hideDate = false
           {session.city ? `${session.venue} · ${session.city}` : session.venue}
         </Text>
         {meta ? <Text style={shared.externalMeta} numberOfLines={1}>{meta}</Text> : null}
+        {/* The venue's own note ("courts not guaranteed", "call first"), #348. */}
+        {onOpen && note ? <Text style={shared.externalNote} numberOfLines={2} testID="external-session-note">{note}</Text> : null}
         {!finding && confirmation.note ? (
           <Text style={shared.externalFinding} numberOfLines={2} testID="external-session-unconfirmed">{confirmation.note}</Text>
         ) : null}
@@ -139,7 +151,7 @@ function ExternalSessionCardInner({ session, menuInset = false, hideDate = false
             <Text style={shared.externalSignupLabel}>{link.checking ? 'Checking with the venue…' : signupLabel}</Text>
             {link.checking
               ? <Spinner size="small" color={theme.colors.text} testID="external-session-checking" />
-              : <Ionicons name="open-outline" size={13} color={theme.colors.text} />}
+              : <Ionicons name={onOpen ? 'chevron-forward' : 'open-outline'} size={13} color={theme.colors.text} />}
           </View>
         )}
       </View>

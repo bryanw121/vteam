@@ -54,8 +54,10 @@ export const ANALYTICS_EVENTS = {
   sessionStart: 'session_start',
   /** The screen type changed. props: { screen (route pattern, e.g. /event/[id], or a tab's path), from? } */
   screenView: 'screen_view',
-  /** Tapped through to a sign-up or booking page run outside vteam (Schelagg data). props: { kind: session | league | tournament | court, org (venue or organizer name, never a URL) } */
+  /** Tapped through to a sign-up or booking page run outside vteam (Schelagg data). props: { kind: session | league | tournament | court, org (venue or organizer name, never a URL), from? (sessions: sheet | card) } */
   outsideLinkOpened: 'outside_link_opened',
+  /** Opened an outside session's sheet (#348). props: { surface (indoor | sand | grass | none), has_note, source: card | search | link } */
+  outsideSessionOpened: 'outside_session_opened',
   /** Find a team (#304): put themselves on a program's list. props: { want: partner | team | players } */
   freeAgentListed: 'free_agent_listed',
   /** Find a team: tapped Message on someone's row. props: {} */
