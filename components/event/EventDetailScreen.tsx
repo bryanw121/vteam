@@ -1,37 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Platform, ScrollView, View } from 'react-native'
+import React, { useState } from 'react'
+import { Platform, View } from 'react-native'
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useCourtQueue } from '../../hooks/event/useCourtQueue'
-import { courtQueueOffered } from '../../utils/courtQueue'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { supabase } from '../../lib/supabase'
-import { useMutation } from '../../lib/query'
-import { setDocScrollClaim } from '../../lib/docScroll'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useIsNarrowWeb } from '../../hooks/useIsNarrowWeb'
 import { useOpenDm } from '../../hooks/useOpenDm'
 import { useSilencedUserIds } from '../../hooks/useSilencedUsers'
 import {
-  attendeeRemoveTarget,
-  computeEventStatus,
-  useMyDenialReason,
-  eventCardSeed,
-  forgetDeletedEvent,
-  guestRemoveTarget,
-  isEventOver,
-  isViewerNoShow,
-  paymentVisibility,
-  reportEventError,
-  useCohosts,
-  useEventAttendance,
-  useEventCheers,
-  useEventComments,
-  useEventData,
-  useEventPayments,
-  useEventTeams,
-  useKeyboardInset,
-  useRemoveDialog,
-  useTeamDrag,
-  eventDateMs,
+  attendeeRemoveTarget, eventCardSeed, guestRemoveTarget, isEventOver, isViewerNoShow,
+  useCohosts, useDeleteEvent, useEventAttendance, useEventData,
+  useEventDiscussion, useEventRecap, useEventTabs, useEventTeams, useEventViewerStatus, useJoinIntent,
+  useLeaveFlow, useRemoveDialog, useTeamDrag,
 } from '../../hooks/event'
 import { useEventBack } from '../../hooks/event/useEventBack'
 import { useEventFirstPaint } from '../../hooks/event/useEventFirstPaint'
@@ -45,51 +24,23 @@ import { EventHeaderActions } from '../../components/event/EventHeaderActions'
 import { EventHero } from '../../components/event/EventHero'
 import { EventDetailSkeleton } from '../../components/event/EventDetailSkeleton'
 import { EventTabBar } from '../../components/event/EventTabBar'
-import { useUrlParam } from '../../hooks/useUrlParam'
-import { VIEW } from '../../utils/urlViews'
-import { JoinFooter } from '../../components/event/JoinFooter'
-import { RecapFooter } from '../../components/event/RecapFooter'
-import { YourGameCard } from '../../components/event/YourGameCard'
-import { EventCard } from '../../components/EventCard'
-import { Text } from '../../components/ui/Text'
-import { useMyGameRecap } from '../../hooks/useMyGameRecap'
-import { useHostNextGame } from '../../hooks/useHostNextGame'
-import { pointsForEvent, pointsLine, recapEligible, recapImagePath } from '../../utils/recap'
-import { shareRecap } from '../../utils/shareRecap'
-import { shareUrl } from '../../constants/share'
+import { EventFooter } from '../../components/event/EventFooter'
+import { EventRecapCards } from '../../components/event/EventRecapCards'
+import { EventDialogs } from '../../components/event/EventDialogs'
 import { DragGhost } from '../../components/event/DragGhost'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import { AddGuestDialog } from '../../components/event/AddGuestDialog'
-import { CohostsDialog } from '../../components/event/CohostsDialog'
-import { DenyRequestDialog } from '../../components/event/DenyRequestDialog'
-import { DeleteEventDialog } from '../../components/event/DeleteEventDialog'
-import { RemoveParticipantDialog } from '../../components/event/RemoveParticipantDialog'
-import { LeaveSheet } from '../../components/event/LeaveSheet'
-import { JoinIntentSheet } from '../../components/event/JoinIntentSheet'
-import { usePlayerSetupNeeded } from '../../hooks/usePlayerSetupGate'
-import { shouldOfferJoin, takePendingAction } from '../../utils/pendingAction'
-import { ANALYTICS_EVENTS } from '../../constants/analytics'
-import { LEAVE_COPY, LEAVE_REASONS, shared, theme, SWIPE_NAVIGATION } from '../../constants'
-import { track } from '../../lib/analytics'
-import { hostWillBeTold, leaveConsequences, leaveDmText, leaveSubtitle } from '../../utils/leaveConsequences'
-import type { JoinIntentOutcome, JoinOffer, LeaveConsequence, LeaveReason, MentionUser, Profile } from '../../types'
+import { theme, SWIPE_NAVIGATION } from '../../constants'
+import { EVENT_TAB } from '../../utils/eventDetail'
 import { profileDisplayName } from '../../utils'
 import { routes } from '../../utils/routes'
-import { toast } from '../../lib/toast'
-import type { ScrollViewInstance } from 'react-native'
-import { formatDate, formatTime } from '../../utils/dateFormat'
-
-const DETAILS_TAB = 0
-const PEOPLE_TAB = 1
-const DISCUSSION_TAB = 2
-const CHEERS_TAB = 3
+import type { EventDialog } from '../../types'
 
 /**
  * Event detail: banner + Details / People / Discussion / Cheers tabs, the RSVP
- * footer and the host's dialogs. Data and writes live in `hooks/event/*`; this
- * screen wires them to the tab components and owns only layout state.
- */
-/**
+ * footer and the host's dialogs. This screen only composes (#354): data and
+ * writes live in `hooks/event/*` (tabs, discussion, join intent, leave, recap,
+ * delete), the decisions in `utils/eventDetail.ts`, and every sheet and dialog
+ * in `EventDialogs`.
+ *
  * Web loads this screen in its own chunk (EventDetailRoute.web.tsx), together
  * with Reanimated and Gesture Handler for the team drag (#193); the app root on
  * web has no GestureHandlerRootView, so the screen brings its own.
@@ -112,10 +63,6 @@ export default function EventDetail() {
   const isOwner = !!event && event.created_by === userId
   const isHostOrCohost = isOwner || cohosts.some(c => c.user_id === userId)
   const eventOver = isEventOver(event)
-  // Around game time, load the court queue (#333) with the event, so the People tab
-  // opens with it in place instead of pushing the roster down when it arrives.
-  useCourtQueue(id, { enabled: !!event && courtQueueOffered(eventDateMs(event.event_date), event.duration_minutes, !!event.cancelled_at) })
-
   useEventFirstPaint(!!event)
 
   const attendance = useEventAttendance(data)
@@ -127,279 +74,21 @@ export default function EventDetail() {
   // Only hosts/co-hosts get roster Message actions, so only they need silences.
   // One-directional by RLS: a host can't learn who has silenced *them*.
   const { silencedUserIds } = useSilencedUserIds(isHostOrCohost)
-  const [denyTarget, setDenyTarget] = useState<{ userId: string; displayName: string } | null>(null)
-  const [guestDialogOpen, setGuestDialogOpen] = useState(false)
-  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false)
-  // The leave sheet (#171): lines are frozen when it opens, so the optimistic
-  // leave doesn't reshuffle them under the spinner.
-  const [leaveSheet, setLeaveSheet] = useState<{ subtitle: string; lines: LeaveConsequence[]; showReason: boolean } | null>(null)
+  const [dialog, setDialog] = useState<EventDialog>(null)
 
-  // ── Tabs ───────────────────────────────────────────────────────────────────
-  // The tab is in the URL (`?tab=people`; older `?tab=1` links still work), so a copied link opens it.
-  const [activeTab, setActiveTab] = useUrlParam('tab', VIEW.event.tab)
-  // Lazy-mount each tab on first visit (People is prefetched next to Details).
-  const [mountedTabs, setMountedTabs] = useState(() => {
-    const start = activeTab
-    const initial = new Set<number>([DETAILS_TAB, start])
-    if (start === DETAILS_TAB) initial.add(PEOPLE_TAB)
-    return initial
-  })
-  useEffect(() => {
-    setMountedTabs(prev => (prev.has(activeTab) ? prev : new Set(prev).add(activeTab)))
-  }, [activeTab])
+  // ── Tabs (URL, mount on first visit, document scroll on mobile web) ───────
+  const { activeTab, selectTab, mountedTabs, docScrollActive, cheers } = useEventTabs(data, isMobileWeb)
+  const discussion = useEventDiscussion(data, { isHostOrCohost, active: activeTab === EVENT_TAB.discussion })
 
-  const cheers = useEventCheers(id, userId, activeTab === CHEERS_TAB && eventOver)
-  const selectTab = (next: number) => {
-    if (next !== CHEERS_TAB) cheers.clearDraft()
-    setActiveTab(next)
-  }
-
-  // ── Document-scroll mode (mobile web) — Details & People tabs only.
-  // Discussion/Cheers keep the app-shell layout (bottom-anchored composer).
-  // This page manages body.doc-scroll itself since the tabs shell can't see
-  // the inner tab state (CSS lives in app/+html.tsx).
-  const docScrollActive = isMobileWeb && (activeTab === DETAILS_TAB || activeTab === PEOPLE_TAB)
-  useEffect(() => {
-    if (Platform.OS !== 'web') return
-    setDocScrollClaim('event-detail', docScrollActive)
-    return () => setDocScrollClaim('event-detail', false)
-  }, [docScrollActive])
-  useEffect(() => {
-    if (docScrollActive) window.scrollTo(0, 0)
-  }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Discussion: chat-style pinned-to-bottom scroll ─────────────────────────
-  const discussionScrollRef = useRef<ScrollViewInstance>(null)
-  const [composerHeight, setComposerHeight] = useState(0)
-  const keyboardInset = useKeyboardInset(activeTab === DISCUSSION_TAB)
-  const scrollDiscussionToBottom = useCallback((animated: boolean) => {
-    // scrollToEnd can fail before layout; delay a frame.
-    requestAnimationFrame(() => discussionScrollRef.current?.scrollToEnd({ animated }))
-  }, [])
-  const discussion = useEventComments(data, { isHostOrCohost, onPosted: () => scrollDiscussionToBottom(true) })
-  useEffect(() => {
-    if (keyboardInset <= 0) return
-    const t = setTimeout(() => discussionScrollRef.current?.scrollToEnd({ animated: true }), 64)
-    return () => clearTimeout(t)
-  }, [keyboardInset])
-  // Keyed on the newest comment, not the count: "Load earlier" prepends and must not jump to the bottom.
-  const newestCommentId = data.comments[data.comments.length - 1]?.id
-  useEffect(() => {
-    if (activeTab === DISCUSSION_TAB) scrollDiscussionToBottom(false)
-  }, [activeTab, newestCommentId, composerHeight, scrollDiscussionToBottom])
-
-  // ── @mentions: attendees + co-hosts + host, excluding self ─────────────────
-  const mentionProfiles = useMemo(() => {
-    const list: Profile[] = [...roster.attendees]
-    cohosts.forEach(c => list.push(c.profiles as Profile))
-    if (event?.profiles) list.push(event.profiles as Profile)
-    return list
-  }, [roster.attendees, cohosts, event])
-  const mentionableUsers = useMemo<MentionUser[]>(() => {
-    const seen = new Set<string>()
-    const result: MentionUser[] = []
-    for (const p of mentionProfiles) {
-      if (!p || seen.has(p.id) || p.id === userId) continue
-      seen.add(p.id)
-      result.push({ id: p.id, username: p.username, displayName: profileDisplayName(p) })
-    }
-    return result
-  }, [mentionProfiles, userId])
-  // username → profile id, for tappable mentions in EventCommentRow.
-  const usernameToId = useMemo(() => {
-    const m = new Map<string, string>()
-    mentionProfiles.forEach(p => { if (p?.username) m.set(p.username, p.id) })
-    return m
-  }, [mentionProfiles])
-
-  const derivedStatus = computeEventStatus({
-    event,
-    rows: roster.rows,
-    attendingGuestCount: roster.attendingGuests.length,
-    userId,
-    isHostOrCohost,
-  })
-  const myDenialReason = useMyDenialReason(id, userId, derivedStatus.isDenied)
-  const eventStatus = derivedStatus.isDenied && !derivedStatus.denialReason
-    ? { ...derivedStatus, denialReason: myDenialReason }
-    : derivedStatus
-  // "I've paid" (#6): paid events only, for the attendee and the hosts.
-  const paymentAccess = paymentVisibility({ event, userId, status: eventStatus, isHostOrCohost })
-  const payments = useEventPayments(id, userId, {
-    enabled: paymentAccess.canToggle || paymentAccess.canSeeAll,
-    onRoster: eventStatus.isAttending || eventStatus.isWaitlisted,
-  })
-  // An explicit host setting; never inferred from price.
-  const requiresApproval = event?.requires_approval === true
+  const { status: eventStatus, paymentAccess, payments } = useEventViewerStatus(data, isHostOrCohost)
   const [footerHeight, setFooterHeight] = useState(80)
+  const hostName = event?.profiles ? profileDisplayName(event.profiles) : 'the host'
 
-  // ── Finishing a guest's Join (#229) ────────────────────────────────────────
-  // A guest who tapped Join signed up or in and is back here: offer the spot
-  // once, with one tap, using the same join as the footer button.
-  const setupNeeded = usePlayerSetupNeeded()
-  const [joinIntent, setJoinIntent] = useState<{ stage: 'offer' | 'setup'; offer: JoinOffer } | null>(null)
-  const joinIntentCheckedRef = useRef(false)
-  useEffect(() => {
-    if (joinIntentCheckedRef.current || !userId || !event || data.isLoading) return
-    joinIntentCheckedRef.current = true
-    const taken = takePendingAction(id)
-    if (!taken) return
-    if (taken.status === 'expired') {
-      track(ANALYTICS_EVENTS.joinIntentResumed, { outcome: 'expired' satisfies JoinIntentOutcome })
-      return
-    }
-    const offer = shouldOfferJoin(eventStatus, { cancelled: !!event.cancelled_at, over: eventOver, requiresApproval })
-    if (!offer) {
-      track(ANALYTICS_EVENTS.joinIntentResumed, { outcome: 'skipped' satisfies JoinIntentOutcome })
-      return
-    }
-    setJoinIntent({ stage: 'offer', offer })
-  }, [userId, event, data.isLoading]) // eslint-disable-line react-hooks/exhaustive-deps -- once, when the signed-in view is ready
-
-  async function confirmJoinIntent() {
-    if (!joinIntent) return
-    const run = joinIntent.offer === 'waitlist' ? attendance.joinWaitlist : joinIntent.offer === 'request' ? attendance.requestToJoin : attendance.join
-    const row = await run()
-    if (!row) { setJoinIntent(null); return } // failed: useEventAttendance already said so
-    track(ANALYTICS_EVENTS.joinIntentResumed, { outcome: 'joined' satisfies JoinIntentOutcome, offer: joinIntent.offer })
-    setJoinIntent(setupNeeded ? { ...joinIntent, stage: 'setup' } : null)
-  }
-  function dismissJoinIntent() {
-    if (joinIntent?.stage === 'offer') track(ANALYTICS_EVENTS.joinIntentResumed, { outcome: 'not_now' satisfies JoinIntentOutcome, offer: joinIntent.offer })
-    setJoinIntent(null)
-  }
-  const joinIntentWhen = event
-    ? (() => {
-        const start = new Date(eventDateMs(event.event_date))
-        return `${formatDate(start, { weekday: 'short' })} ${formatTime(start, { hour: 'numeric', minute: '2-digit', hour12: true })}`
-      })()
-    : ''
-
-  // ── Navigation + host actions ──────────────────────────────────────────────
+  const joinIntent = useJoinIntent({ eventId: id, userId, event, loading: data.isLoading, status: eventStatus, over: eventOver, requiresApproval: event?.requires_approval === true, attendance })
+  const leave = useLeaveFlow({ event, userId, status: eventStatus, isHostOrCohost, iPaid: payments.iPaid, hostName, attendance, sendDm, openDm })
+  const recap = useEventRecap({ eventId: id, userId, event, rows: roster.rows, over: eventOver })
   const goBack = useEventBack()
-
-  const deleteEvent = useMutation(
-    async () => {
-      const { error } = await supabase.from('events').delete().eq('id', id)
-      if (error) throw error
-    },
-    {
-      onSuccess: () => {
-        router.replace(routes.events())
-        forgetDeletedEvent(id)
-      },
-      onError: e => {
-        reportEventError(id, userId, 'confirmDelete', e)
-        toast.error("Couldn't delete the event", e)
-      },
-    },
-  )
-
-  const host = event?.profiles ?? null
-  const hostName = host ? profileDisplayName(host) : 'the host'
-
-  // ── Game recap (#227): a finished game shows "Your game" and the host's next one ──
-  const myRow = roster.rows.find(r => r.user_id === userId) ?? null
-  const attended = eventOver && recapEligible(myRow)
-  const recapData = useMyGameRecap(id, userId, event?.event_date ?? null, attended)
-  const hostNext = useHostNextGame(event?.created_by ?? null, eventOver && !event?.cancelled_at)
-  const [sharingRecap, setSharingRecap] = useState(false)
-  const recapPoints = event ? pointsForEvent((event.event_tags ?? []).map(t => t.tags?.name ?? '')) : 0
-  const recapShownFor = useRef<string | null>(null)
-  useEffect(() => {
-    if (attended && recapShownFor.current !== id) { recapShownFor.current = id; track(ANALYTICS_EVENTS.recapShown, {}) }
-  }, [attended, id])
-  const [fromRecap] = useUrlParam('r', VIEW.event.r)
-  const recapOpenCounted = useRef(false)
-  useEffect(() => {
-    if (fromRecap && !recapOpenCounted.current) { recapOpenCounted.current = true; track(ANALYTICS_EVENTS.recapLinkOpened, {}) }
-  }, [fromRecap])
-
-  async function shareMyRecap() {
-    if (!event || !userId || sharingRecap) return
-    setSharingRecap(true)
-    try {
-      const target = await shareRecap({
-        imageUrl: shareUrl(recapImagePath(event.id, userId, String(recapData.data?.cheers ?? 0))),
-        text: `I played ${event.title || 'volleyball'} on vteam.`,
-        link: shareUrl(routes.event(event.id, { r: true })),
-      })
-      if (target) track(ANALYTICS_EVENTS.recapShared, { target })
-    } catch (e) {
-      toast.error("Couldn't share your game", e)
-    } finally {
-      setSharingRecap(false)
-    }
-  }
-
-  const recapCards = eventOver && event ? (
-    <>
-      {attended ? (
-        <YourGameCard
-          points={recapPoints}
-          pointsLine={pointsLine(recapPoints, eventDateMs(event.event_date) + (event.duration_minutes ?? 120) * 60_000, recapData.data?.pointsPaid != null, Date.now())}
-          cheers={recapData.data?.cheers ?? 0}
-          gamesThisYear={recapData.data?.gamesThisYear ?? 1}
-          onShare={() => { void shareMyRecap() }}
-          sharing={sharingRecap}
-        />
-      ) : null}
-      {hostNext.data && hostNext.data.id !== event.id ? (
-        <View style={{ marginBottom: theme.spacing.md }} testID="host-next-game">
-          <Text style={[shared.subheading, { marginBottom: theme.spacing.sm }]}>{host?.first_name ? `${host.first_name} plays again` : 'The host plays again'}</Text>
-          <EventCard event={hostNext.data} currentUserId={userId ?? undefined} />
-        </View>
-      ) : null}
-    </>
-  ) : null
-
-  function openLeaveSheet() {
-    if (!event) return
-    const now = Date.now()
-    const lines = leaveConsequences({ ...event, hostName }, eventStatus, { isHostOrCohost, paid: payments.iPaid }, now)
-    const within24h = hostWillBeTold(event.event_date, now)
-    track(ANALYTICS_EVENTS.leaveSheetShown, { full: eventStatus.isFull, within24h, paid: payments.iPaid })
-    setLeaveSheet({
-      subtitle: leaveSubtitle(event.event_date, now),
-      lines,
-      // Only when the host is told anyway; then a reason gives it context.
-      showReason: lines.some(l => l.kind === 'hostNotified') && !!event.created_by && event.created_by !== userId,
-    })
-  }
-
-  function cancelLeave() {
-    track(ANALYTICS_EVENTS.leaveCancelled)
-    setLeaveSheet(null)
-  }
-
-  async function confirmLeave(reason: LeaveReason | null, note: string) {
-    if (!event) return
-    track(ANALYTICS_EVENTS.leaveConfirmed, { reason: reason ?? 'none' })
-    const text = leaveDmText({
-      title: event.title,
-      eventDate: event.event_date,
-      reasonLabel: LEAVE_REASONS.find(r => r.id === reason)?.label ?? null,
-      note,
-    })
-    const left = await attendance.leave()
-    setLeaveSheet(null)
-    // undefined: the leave failed (useEventAttendance already alerted). The note waits for a real leave.
-    if (left === undefined || !text) return
-    // The leave stands whatever happens to the message.
-    if (!(await sendDm(event.created_by, text))) {
-      const hostId = event.created_by
-      toast.show({ message: LEAVE_COPY.dmFailed, variant: 'error', duration: 8000, action: { label: LEAVE_COPY.messageHost, onPress: () => { void openDm(hostId) } } })
-    }
-  }
-
-  async function confirmRemove() {
-    const target = removeDialog.target
-    if (target && (await attendance.removeParticipant(target))) removeDialog.close()
-  }
-
-  async function confirmDeny(reason: string) {
-    if (denyTarget && (await attendance.denyRequest(denyTarget.userId, reason))) setDenyTarget(null)
-  }
+  const deleteEvent = useDeleteEvent(id, userId)
 
   const headerActions = (
     <EventHeaderActions
@@ -411,7 +100,7 @@ export default function EventDetail() {
       deleting={deleteEvent.isPending}
       onBack={goBack}
       onEdit={() => router.push(routes.host({ edit: id }))}
-      onDelete={() => setDeleteConfirmVisible(true)}
+      onDelete={() => setDialog({ kind: 'delete' })}
       onManageCohosts={isOwner ? cohostsApi.open : undefined}
     />
   )
@@ -427,7 +116,7 @@ export default function EventDetail() {
         // Doc-scroll mode: auto height so content extends the document (body scrolls)
         docScrollActive ? ({ minHeight: '100dvh' } as object) : { flex: 1 },
       ]}
-      pointerEvents={removeDialog.target !== null || denyTarget !== null ? 'none' : 'auto'}
+      pointerEvents={removeDialog.target !== null || dialog?.kind === 'deny' ? 'none' : 'auto'}
       onLayout={drag.measureContainerOffset}
     >
       <Stack.Screen options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
@@ -454,7 +143,7 @@ export default function EventDetail() {
               staticRender={isMobileWeb}
               autoHeight={docScrollActive}
             >
-              {mountedTabs.has(DETAILS_TAB) ? (
+              {mountedTabs.has(EVENT_TAB.details) ? (
                 <DetailsTab
                   event={event}
                   data={data}
@@ -470,11 +159,11 @@ export default function EventDetail() {
                   payments={paymentAccess.canToggle ? payments : null}
                   noShow={isViewerNoShow(roster.rows, userId)}
                   isHostOrCohost={isHostOrCohost}
-                  recap={recapCards}
+                  recap={eventOver ? <EventRecapCards event={event} userId={userId} recap={recap} /> : null}
                 />
               ) : placeholder}
 
-              {mountedTabs.has(PEOPLE_TAB) ? (
+              {mountedTabs.has(EVENT_TAB.people) ? (
                 <PeopleTab
                   event={event}
                   eventStatus={eventStatus}
@@ -488,30 +177,18 @@ export default function EventDetail() {
                   onOpenProfile={openProfile}
                   onRemoveAttendee={p => removeDialog.open(attendeeRemoveTarget(p))}
                   onRemoveGuest={g => removeDialog.open(guestRemoveTarget(g))}
-                  onDeny={(uid, displayName) => setDenyTarget({ userId: uid, displayName })}
+                  onDeny={(uid, displayName) => setDialog({ kind: 'deny', target: { userId: uid, displayName } })}
                   onMessage={uid => { void openDm(uid) }}
                   silencedUserIds={silencedUserIds}
                   payments={paymentAccess.canSeeAll ? payments : null}
                 />
               ) : placeholder}
 
-              {mountedTabs.has(DISCUSSION_TAB) ? (
-                <DiscussionTab
-                  discussion={discussion}
-                  data={data}
-                  isHostOrCohost={isHostOrCohost}
-                  usernameToId={usernameToId}
-                  mentionableUsers={mentionableUsers}
-                  scrollRef={discussionScrollRef}
-                  isActive={activeTab === DISCUSSION_TAB}
-                  scrollToBottom={scrollDiscussionToBottom}
-                  keyboardInset={keyboardInset}
-                  bottomInset={insets.bottom}
-                  onComposerLayout={setComposerHeight}
-                />
+              {mountedTabs.has(EVENT_TAB.discussion) ? (
+                <DiscussionTab {...discussion} data={data} isHostOrCohost={isHostOrCohost} isActive={activeTab === EVENT_TAB.discussion} bottomInset={insets.bottom} />
               ) : placeholder}
 
-              {mountedTabs.has(CHEERS_TAB) ? (
+              {mountedTabs.has(EVENT_TAB.cheers) ? (
                 <CheersTab
                   cheers={cheers}
                   isEventOver={eventOver}
@@ -525,25 +202,16 @@ export default function EventDetail() {
               ) : placeholder}
             </Pager>
 
-            {activeTab === DETAILS_TAB && !data.seedOnly && eventOver && !event.cancelled_at && (
-              <RecapFooter
-                attended={attended}
-                onShare={() => { void shareMyRecap() }}
-                onGiveCheers={() => selectTab(CHEERS_TAB)}
-                sharing={sharingRecap}
-                docScrollActive={docScrollActive}
-                bottomInset={insets.bottom}
-                onHeightChange={setFooterHeight}
-              />
-            )}
-            {activeTab === DETAILS_TAB && !data.seedOnly && !(eventOver && !event.cancelled_at) && (
-              <JoinFooter
-                eventDate={event.event_date}
-                eventStatus={eventStatus}
-                requiresApproval={requiresApproval}
+            {activeTab === EVENT_TAB.details && !data.seedOnly && (
+              <EventFooter
+                event={event}
+                over={eventOver}
+                status={eventStatus}
                 attendance={attendance}
-                onLeave={openLeaveSheet}
-                onAddGuest={() => setGuestDialogOpen(true)}
+                recap={recap}
+                onLeave={leave.open}
+                onAddGuest={() => setDialog({ kind: 'guest' })}
+                onGiveCheers={() => selectTab(EVENT_TAB.cheers)}
                 docScrollActive={docScrollActive}
                 bottomInset={insets.bottom}
                 onHeightChange={setFooterHeight}
@@ -554,57 +222,21 @@ export default function EventDetail() {
       </ScreenState>
       )}
 
-      {joinIntent && event && (
-        <JoinIntentSheet
-          stage={joinIntent.stage}
-          layout={Platform.OS === 'web' && !isMobileWeb ? 'dialog' : 'sheet'}
-          offer={joinIntent.offer}
-          firstName={data.viewerProfile?.first_name ?? null}
-          title={event.title}
-          when={joinIntentWhen}
-          spotsLeft={eventStatus.spotsLeft}
-          joining={attendance.joining}
-          onJoin={() => { void confirmJoinIntent() }}
-          onNotNow={dismissJoinIntent}
-          onSetup={() => { setJoinIntent(null); router.push(routes.welcome(routes.event(id))) }}
-          onLater={() => setJoinIntent(null)}
-        />
-      )}
-      <LeaveSheet
-        visible={leaveSheet !== null}
-        layout={Platform.OS === 'web' && !isMobileWeb ? 'dialog' : 'sheet'}
-        subtitle={leaveSheet?.subtitle ?? ''}
-        lines={leaveSheet?.lines ?? []}
+      <EventDialogs
+        event={event}
+        status={eventStatus}
         hostName={hostName}
-        showReason={leaveSheet?.showReason ?? false}
-        leaving={attendance.joining}
-        onLeave={(reason, note) => { void confirmLeave(reason, note) }}
-        onCancel={cancelLeave}
-      />
-      <AddGuestDialog
-        visible={guestDialogOpen}
-        adding={attendance.addingGuest}
-        onDismiss={() => setGuestDialogOpen(false)}
-        onSubmit={attendance.addGuest}
-      />
-      <CohostsDialog cohosts={cohostsApi} />
-      <DenyRequestDialog
-        target={denyTarget}
-        processing={attendance.processingRequest !== null}
-        onCancel={() => setDenyTarget(null)}
-        onConfirm={reason => { void confirmDeny(reason) }}
-      />
-      <RemoveParticipantDialog
-        target={removeDialog.target}
-        armed={removeDialog.armed}
-        removing={attendance.removing}
-        onCancel={removeDialog.close}
-        onConfirm={() => { void confirmRemove() }}
-      />
-      <DeleteEventDialog
-        visible={deleteConfirmVisible}
-        onCancel={() => setDeleteConfirmVisible(false)}
-        onConfirm={() => { setDeleteConfirmVisible(false); void deleteEvent.mutate(undefined) }}
+        viewerFirstName={data.viewerProfile?.first_name ?? null}
+        isMobileWeb={isMobileWeb}
+        dialog={dialog}
+        onCloseDialog={() => setDialog(null)}
+        attendance={attendance}
+        cohosts={cohostsApi}
+        removeDialog={removeDialog}
+        joinIntent={joinIntent}
+        leave={leave}
+        onPlayerSetup={() => router.push(routes.welcome(routes.event(id)))}
+        onConfirmDelete={() => { void deleteEvent.mutate(undefined) }}
       />
 
       {/* Native: floating pills over the banner (rendered last so they sit on top) */}

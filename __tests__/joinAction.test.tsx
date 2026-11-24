@@ -163,12 +163,17 @@ describe('JoinFooter', () => {
 
 describe('wiring: approval comes from the column, never from price', () => {
   const eventPage = source('components/event/EventDetailScreen.tsx')
+  const eventFooter = source('components/event/EventFooter.tsx')
   const footer = source('components/event/JoinFooter.tsx')
 
   it('the event page reads requires_approval from the event row', () => {
-    expect(eventPage).toMatch(/requiresApproval\s*=\s*event\?\.requires_approval/)
-    expect(eventPage).not.toMatch(/isPaidEvent/)
-    expect(eventPage).not.toMatch(/requiresApproval\s*=\s*\(?event\?\.price/)
+    // The screen hands it to the join offer, EventFooter to the Join button (#354).
+    expect(eventPage).toMatch(/requiresApproval:\s*event\?\.requires_approval === true/)
+    expect(eventFooter).toMatch(/requiresApproval=\{p\.event\.requires_approval === true\}/)
+    for (const src of [eventPage, eventFooter]) {
+      expect(src).not.toMatch(/isPaidEvent/)
+      expect(src).not.toMatch(/requiresApproval\s*[:=]\s*\{?\(?(p\.)?event\??\.price/)
+    }
   })
 
   it('the footer delegates the branch order to resolveJoinAction', () => {
