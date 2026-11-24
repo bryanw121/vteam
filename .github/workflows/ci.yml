@@ -280,6 +280,9 @@ jobs:
       - name: Crash recovery browser check
         if: success() || failure()
         run: node scripts/shots/crash-recovery-flow.mjs --dist dist-mock --out a11y-report/crash-recovery
+      - name: Production watch self-test (browser steps on the mocked export, #353)
+        if: success() || failure()
+        run: node scripts/production-watch.mjs --dist dist-mock --retry-wait 0 --out a11y-report/production-watch
       - name: Stability summary
         if: always() && hashFiles('a11y-report/stability/summary.md') != ''
         run: cat a11y-report/stability/summary.md >> "$GITHUB_STEP_SUMMARY"

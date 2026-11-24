@@ -1,0 +1,62 @@
+name: Production watch
+
+# Every 30 minutes (#353): is vteamvolleyball.com serving the build of the latest
+# main, and can a guest open it? scripts/production-watch.mjs compares live's
+# /version.json with main's head (allowing 40 minutes to deploy, and waiting while
+# "Live schema ready" waits for a migration), then opens the real site in Chromium
+# on phone and desktop: Events cards, the outside session sheet, Tournaments,
+# Leagues, Terms, the event link preview and the Edge routes. On Nov 14–16 five
+# merged PRs never deployed for 29.5 h, and on Nov 18 a failed build left live
+# 9.5 h behind; nothing said so. A failed run emails the repo owner. Read-only.
+on:
+  schedule:
+    - cron: '12,42 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: read
+  checks: read
+
+concurrency:
+  group: production-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    name: Live runs main and opens for guests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - name: Install Chromium
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+      - name: Install Chromium system deps
+        run: scripts/ci/install-playwright-deps.sh
+      - name: Check live
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/production-watch.mjs --out production-watch
+      - name: Keep screenshots of failed steps
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-watch
+          path: production-watch/
+          retention-days: 14
+          if-no-files-found: ignore
