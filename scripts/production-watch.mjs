@@ -184,6 +184,15 @@ async function httpChecks(site) {
   } catch (e) {
     results.push({ name: 'Event link preview', ok: false, detail: String(e.message ?? e) })
   }
+  // A file a deploy removed must answer 404, not the app's page cached for a year (#359).
+  try {
+    const r = await fetch(`${site}/_expo/static/js/web/missing-${Date.now().toString(36)}.js`, { signal: AbortSignal.timeout(20_000) })
+    const cache = r.headers.get('cache-control') ?? ''
+    const ok = r.status === 404 && !/immutable/.test(cache)
+    results.push({ name: 'Missing script answers 404', ok, detail: `HTTP ${r.status}, cache-control "${cache}"` })
+  } catch (e) {
+    results.push({ name: 'Missing script answers 404', ok: false, detail: String(e.message ?? e) })
+  }
   for (const [name, path, okStatuses] of [['/api/where', '/api/where', [200]], ['/api/forecast', '/api/forecast?lat=30.26&lng=-97.75', [200, 204]]]) {
     try {
       const r = await fetchText(`${site}${path}`)
