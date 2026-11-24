@@ -4,9 +4,8 @@ import { DEFAULT_TIEBREAKERS } from '../../lib/tournamentStandings'
 import { COMMENTS_PAGE, keepLoadedOlder, mergeComments, missingParentIds, pageFromNewestFirst } from '../../utils/commentPages'
 import { searchMembers } from '../../lib/memberSearch'
 import { publicTournamentView } from '../../utils/publicTournament'
-import { postSoloTeamsArgs } from '../../utils/soloTeams'
 import type {
-  PublicTournamentPayload, PublicTournamentView, SoloTeamDraft, GeneratedSchedule, MyRegistration, PendingInvite, Podium, SetScore, UserTrophy, TablesInsert, TimedBracketMatch, Tournament, TournamentCommentWithAuthor,
+  PublicTournamentPayload, PublicTournamentView, GeneratedSchedule, MyRegistration, PendingInvite, Podium, SetScore, UserTrophy, TablesInsert, TimedBracketMatch, Tournament, TournamentCommentWithAuthor,
   TournamentCommentsPage, TournamentCore, TournamentInviteCandidate, TournamentJoinRequestWithRequester, TournamentMatchRow,
   TournamentPoolWithTeams, TournamentPrize, TournamentResultWrites, TournamentRules, TournamentStatus, TournamentTeam,
   TournamentTeamWithRoster, TournamentViewer,
@@ -275,16 +274,6 @@ export async function registerTeam(args: { tournamentId: string; userId: string;
     await supabase.from('tournament_teams').delete().eq('id', team.id)
     throw error
   }
-}
-
-/** Organizer of a solo tournament (#282): the groups to keep together, saved so a shuffle later keeps them. */
-export async function saveTeamPins(tournamentId: string, pins: string[][]): Promise<void> {
-  await mustAffect(supabase.from('tournaments').update({ team_pins: pins }).eq('id', tournamentId).select('id'), 'Your pins')
-}
-
-/** Organizer of a solo tournament (#282): turn the solo sign-ups into these teams, in one transaction. */
-export async function postSoloTeams(tournamentId: string, teams: SoloTeamDraft[]): Promise<number> {
-  return (await ok(supabase.rpc('post_solo_teams', postSoloTeamsArgs(tournamentId, teams)))) ?? 0
 }
 
 export async function withdrawTeam(teamId: string): Promise<void> {

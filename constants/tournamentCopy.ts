@@ -8,8 +8,6 @@ export const TOURNAMENT_GENERIC_ERROR = GENERIC_ERROR_MESSAGE
 export const TOURNAMENT_ERROR_TITLE = {
   register: 'Registration failed',
   withdraw: 'Could not withdraw',
-  pins: "Couldn't save who stays together",
-  postTeams: "Couldn't post the teams",
   invite: 'Could not send invite',
   acceptInvite: 'Could not accept invitation',
   declineInvite: 'Could not decline invitation',

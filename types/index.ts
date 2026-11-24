@@ -1359,6 +1359,12 @@ export type Tournament = Override<Tables<'tournaments'>, {
 /** How a tournament's teams form (#282): captains register teams, or players sign up solo and the organizer makes teams. */
 export type TournamentTeamMode = 'captains' | 'solo'
 
+/** What Make teams reads (#282): the tournament's team settings and the solo sign-ups. */
+export type MakeTeamsData = {
+  tournament: Pick<Tournament, 'id' | 'created_by' | 'title' | 'team_mode' | 'team_size' | 'team_pins'> | null
+  signups: TournamentTeamWithRoster[]
+}
+
 /** One team the organizer drew from solo sign-ups (#282), before it is posted. `captain` is a member's user id. */
 export type SoloTeamDraft = { name: string; members: string[]; captain: string | null }
 

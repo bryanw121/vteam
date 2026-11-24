@@ -7,7 +7,7 @@ import { theme } from '../../constants'
 import { FORMAT_LABELS, TIEBREAKER_LABELS } from '../../constants/tournamentCopy'
 import { formatCommentTime, formatPriceAmount } from '../../utils'
 import { formatDateTime } from '../../utils/dateFormat'
-import { soloTeamCount } from '../../utils/soloTeams'
+import { soloTeamCount } from '../../utils/soloTeamCount'
 import { Button } from '../Button'
 import type {
   Tournament, TournamentCommentWithAuthor, TournamentPrize, TournamentRules, TournamentTeam, TournamentTeamWithRoster,

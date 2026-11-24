@@ -7,12 +7,10 @@ import { Text } from '../../../../components/ui/Text'
 import { Chip, ConfirmDialog, ScreenContainer, ScreenHeader, ScreenState } from '../../../../components/ui'
 import { Button } from '../../../../components/Button'
 import { useSession } from '../../../../contexts/session'
-import { STALE, theme } from '../../../../constants'
+import { theme } from '../../../../constants'
 import { SKILL_LEVEL_LABELS } from '../../../../constants/copy'
-import { useQuery } from '../../../../lib/query'
 import { toast } from '../../../../lib/toast'
-import { fetchTeams, fetchTournamentCore, tournamentKeys } from '../../../../hooks/tournament/api'
-import { useTournamentActions } from '../../../../hooks/tournament/useTournamentActions'
+import { useMakeTeams } from '../../../../hooks/tournament/useMakeTeams'
 import { profileDisplayName, volleyballPositionsAbbreviated } from '../../../../utils'
 import { routes } from '../../../../utils/routes'
 import {
@@ -55,17 +53,14 @@ export default function MakeTeamsScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { userId } = useSession()
-  const core = useQuery(tournamentKeys.core(id), () => fetchTournamentCore(id), { staleMs: STALE.detail })
-  const teamsQ = useQuery(tournamentKeys.teams(id), () => fetchTeams(id), { staleMs: STALE.detail })
-  const actions = useTournamentActions(id, userId)
+  const { query, savePins, postTeams } = useMakeTeams(id)
 
-  const tournament = core.data?.tournament ?? null
-  const players = useMemo(() => soloPlayers(teamsQ.data ?? []), [teamsQ.data])
+  const tournament = query.data?.tournament ?? null
+  const players = useMemo(() => soloPlayers(query.data?.signups ?? []), [query.data?.signups])
   const byId = useMemo(() => new Map(players.map(p => [p.id, p])), [players])
   const ids = useMemo(() => players.map(p => p.id), [players])
-  const savedPins = useMemo(() => cleanPins(tournament?.team_pins, ids), [tournament?.team_pins, ids])
-  const [pins, setPins] = useState<string[][] | null>(null)
-  const groups = pins ?? savedPins
+  // Saved as they change (optimistically, so the cached row is the one to read).
+  const groups = useMemo(() => cleanPins(tournament?.team_pins, ids), [tournament?.team_pins, ids])
   const pinnedIds = useMemo(() => new Set(groups.flat()), [groups])
 
   const [selected, setSelected] = useState<string[]>([])
@@ -81,8 +76,7 @@ export default function MakeTeamsScreen() {
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(routes.tournament(id)))
 
   function changePins(next: string[][]) {
-    setPins(next)
-    void actions.savePins.mutate(next)
+    void savePins.mutate(next)
   }
 
   function keepTogether() {
@@ -112,7 +106,7 @@ export default function MakeTeamsScreen() {
 
   async function post() {
     if (!draft) return
-    const done = await actions.postSoloTeams.mutate(draft)
+    const done = await postTeams.mutate(draft)
     setConfirmPost(false)
     if (!done) return
     toast.show({ variant: 'success', title: 'Teams posted', message: `${draft.length} teams are on the Teams tab.` })
@@ -120,7 +114,7 @@ export default function MakeTeamsScreen() {
   }
 
   // A missing row (not a club member, or no such tournament) is a refusal too.
-  const notAllowed = !!core.data && (!tournament || !isOrganizer || tournament.team_mode !== 'solo')
+  const notAllowed = !!query.data && (!tournament || !isOrganizer || tournament.team_mode !== 'solo')
   const kicker = tournament ? `${tournament.title} · ${draft ? 'draft, only you see it' : 'make teams'}` : undefined
 
   return (
@@ -135,13 +129,13 @@ export default function MakeTeamsScreen() {
           backLabel={draft ? 'Pins' : 'Back'}
         />
         <ScreenState
-          loading={core.isLoading || teamsQ.isLoading}
-          ready={!!core.data && !!teamsQ.data && !notAllowed}
-          error={core.error || teamsQ.error
+          loading={query.isLoading}
+          ready={!!query.data && !notAllowed}
+          error={query.error
             ? "Couldn't load the sign-ups."
             : notAllowed ? 'Only the organizer of a solo sign-up tournament can make teams.' : null}
-          onRetry={() => { void core.refetch({ force: true }); void teamsQ.refetch({ force: true }) }}
-          empty={!!core.data && !!teamsQ.data && players.length < 2}
+          onRetry={() => { void query.refetch({ force: true }) }}
+          empty={!!query.data && players.length < 2}
           emptyIcon="people-outline"
           emptyTitle="Not enough sign-ups yet"
           emptyBody="Teams can be made once two or more players have signed up solo."
@@ -279,7 +273,7 @@ export default function MakeTeamsScreen() {
         title={`Post ${draft?.length ?? 0} teams?`}
         body="Everyone signed up solo is placed on their team, and the teams show on the Teams tab. You can still move players there afterwards."
         confirmLabel="Post teams"
-        loading={actions.postSoloTeams.isPending}
+        loading={postTeams.isPending}
         onConfirm={() => { void post() }}
         onCancel={() => setConfirmPost(false)}
       />

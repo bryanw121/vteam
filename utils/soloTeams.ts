@@ -6,13 +6,10 @@
  * together" groups rather than a team number.
  */
 import { SKILL_POINTS, levelForPoints } from '../hooks/event/derive'
+import { soloTeamCount } from './soloTeamCount'
 import type { BalancePlayer, SoloTeamDraft, TeamMode, VolleyballSkillLevel } from '../types'
 
-/** How many teams `players` sign-ups make at `size` a team (at least 2 once there are 2 players). */
-export function soloTeamCount(players: number, size: number): number {
-  if (players < 2) return 0
-  return Math.max(2, Math.round(players / Math.max(1, size)))
-}
+export { soloTeamCount }
 
 /** Each team's size for `players` over `teams` teams: the first ones take the extra players. */
 export function soloTeamSizes(players: number, teams: number): number[] {
