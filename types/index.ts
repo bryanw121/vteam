@@ -2672,6 +2672,7 @@ export type WeekPagerProps = {
 }
 export * from './club'
 export * from './freeAgents'
+export * from './eventDetail'
 
 /** Kept on the device after a crash (#316): when, which screen type, how many in a row, and whether a way out was tried since. */
 export type CrashMarker = { at: number; count: number; screen: string; recovered?: boolean }
