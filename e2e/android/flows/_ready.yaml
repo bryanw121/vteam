@@ -1,11 +1,8 @@
-# Shared: wait until the Events tab has loaded, past any first-launch prompt.
+# Shared: wait until the Events tab has loaded, past any first-launch prompt or
+# system dialog (_dialogs.yaml).
 appId: com.vteamvolleyball.app
 ---
-- runFlow:
-    when:
-      visible: "Allow"
-    commands:
-      - tapOn: "Allow"
+- runFlow: _dialogs.yaml
 - extendedWaitUntil:
     visible:
       id: filter-all

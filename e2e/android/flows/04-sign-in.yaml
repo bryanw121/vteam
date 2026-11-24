@@ -32,10 +32,17 @@ tags: [signed-in]
       id: profile-points-count
     timeout: 30000
 - takeScreenshot: signed-in-profile
+# Center the row before tapping: right after scrolling it can sit under the tab
+# bar or still be moving, and the tap misses (#361: Nov 16 and 23).
 - scrollUntilVisible:
     element: "Experimental features"
     direction: DOWN
+    centerElement: true
 - tapOn: "Experimental features"
+- extendedWaitUntil:
+    visible:
+      id: experiment-scorekeeper
+    timeout: 15000
 - tapOn:
     id: experiment-scorekeeper
 - tapOn:

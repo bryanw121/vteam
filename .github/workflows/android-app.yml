@@ -99,7 +99,12 @@ jobs:
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
+      # e2e/android/run.sh: warm-up, the flows, and on failure what was on screen,
+      # in the log and the job summary (#361). It sets `failure`: `environment`
+      # when the app never reached Events in warm-up, `flows` when a flow failed.
       - name: Run the flows
+        id: flows
+        continue-on-error: true
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -108,7 +113,37 @@ jobs:
           profile: pixel_6
           disable-animations: true
           # One line: the action runs each script line in its own shell.
-          script: adb install -r apk/app-release.apk && mkdir -p test-results/android && maestro test e2e/android/flows -e EVENT_ID="$EVENT_ID" --format junit --output test-results/android/report.xml --test-output-dir test-results/android || (adb logcat -d > test-results/android/logcat.txt; grep -E "ReactNativeJS|FATAL|AndroidRuntime" test-results/android/logcat.txt | tail -80; exit 1)
+          script: bash e2e/android/run.sh
+      # An environment failure died before any test ran: one more try on a freshly
+      # booted emulator. A flow failure is never retried.
+      - name: Run the flows again (environment failure only)
+        id: retry
+        if: steps.flows.outcome == 'failure' && steps.flows.outputs.failure == 'environment'
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          # One line: the action runs each script line in its own shell.
+          script: bash e2e/android/run.sh
+      - name: Result
+        if: always()
+        env:
+          FIRST: ${{ steps.flows.outcome }}
+          FIRST_KIND: ${{ steps.flows.outputs.failure }}
+          RETRY: ${{ steps.retry.outcome }}
+        run: |
+          if [ "$FIRST" = "success" ]; then exit 0; fi
+          if [ "$FIRST_KIND" = "environment" ] && [ "$RETRY" = "success" ]; then
+            echo "::warning::The first emulator never reached Events (environment); the retry passed."
+            echo "Environment failure on the first emulator; passed on the retry." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "::error::Android flows failed (${FIRST_KIND:-unknown}${RETRY:+, retry: $RETRY}). See the job summary for what was on screen."
+          exit 1
       - name: Delete the event fixture
         if: always()
         run: node e2e/android/fixture.mjs delete || true
