@@ -49,12 +49,12 @@ export function PreviewStep({ draft, clubs, onSaveDraft, onPublish, saving }: To
         <View style={{ flexDirection: 'row', gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
           <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, backgroundColor: theme.colors.onPrimaryFill }}>
             <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.onPrimarySoft }}>
-              {draft.price > 0 ? `$${draft.price} entry` : 'Free entry'}
+              {draft.price > 0 ? `$${draft.price} entry${draft.teamMode === 'solo' ? ' each' : ''}` : 'Free entry'}
             </Text>
           </View>
           <View style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, backgroundColor: theme.colors.onPrimaryFill }}>
             <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.onPrimarySoft }}>
-              {draft.maxTeams ? `Up to ${draft.maxTeams} teams` : 'Unlimited teams'}
+              {draft.teamMode === 'solo' ? `Solo sign-up · teams of ${draft.teamSize}` : draft.maxTeams ? `Up to ${draft.maxTeams} teams` : 'Unlimited teams'}
             </Text>
           </View>
         </View>
@@ -65,7 +65,9 @@ export function PreviewStep({ draft, clubs, onSaveDraft, onPublish, saving }: To
         <PreviewRow icon="people-outline"      label="Club"               value={club?.name ?? '—'} />
         <PreviewRow icon="calendar-outline"    label="Registration closes" value={fmtDate(draft.registrationDeadline)} />
         <PreviewRow icon="git-network-outline" label="Bracket"            value={draft.bracketType === 'double' ? 'Double elimination' : 'Single elimination'} />
-        <PreviewRow icon="people-outline"      label="Roster size"        value={`${draft.minRosterSize}–${draft.maxRosterSize} players`} />
+        {draft.teamMode === 'solo'
+          ? <PreviewRow icon="shuffle-outline" label="Teams" value={`You make teams of ${draft.teamSize} from solo sign-ups`} />
+          : <PreviewRow icon="people-outline"  label="Roster size" value={`${draft.minRosterSize}–${draft.maxRosterSize} players`} />}
         <PreviewRow icon="flag-outline"        label="Refs"               value={draft.hasRefs ? 'Rotation enabled' : 'No refs'} />
       </View>
 

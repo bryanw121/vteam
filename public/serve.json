@@ -4,6 +4,7 @@
     { "source": "/event/:id", "destination": "/event/[id].html" },
     { "source": "/club/:id", "destination": "/club/[id].html" },
     { "source": "/profile/:id", "destination": "/profile/[id].html" },
+    { "source": "/tournament/make-teams/:id", "destination": "/tournament/make-teams/[id].html" },
     { "source": "/tournament/:id", "destination": "/tournament/[id].html" },
     { "source": "/scores/:id/keep", "destination": "/scores/[id]/keep.html" },
     { "source": "/scores/:id", "destination": "/scores/[id].html" },

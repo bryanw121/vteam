@@ -3,7 +3,7 @@ import { TOURNAMENT_ERROR_TITLE as T } from '../../constants/tournamentCopy'
 import { getQueryData, invalidate, queryKey, setQueryData, useMutation, type MutationOptions } from '../../lib/query'
 import { patchCommentRow } from '../../utils/commentPages'
 import type {
-  GeneratedSchedule, SetScore, TimedBracketMatch, TournamentCommentWithAuthor, TournamentCommentsPage, TournamentResultWrites,
+  GeneratedSchedule, SetScore, SoloTeamDraft, TimedBracketMatch, TournamentCommentWithAuthor, TournamentCommentsPage, TournamentResultWrites,
 } from '../../types'
 import * as api from './api'
 import { tournamentKeys } from './api'
@@ -48,6 +48,18 @@ export function useTournamentActions(id: string, userId: string | null) {
   const withdraw = useAction(
     (teamId: string) => api.withdrawTeam(teamId),
     { invalidates: roster, onError: e => notifyError(T.withdraw, e) },
+  )
+
+  /** Solo tournaments (#282): the organizer's keep-together groups, saved as they change. */
+  const savePins = useAction(
+    (pins: string[][]) => api.saveTeamPins(id, pins),
+    { invalidates: [tournamentKeys.core(id)], onError: e => notifyError(T.pins, e) },
+  )
+
+  /** Solo tournaments (#282): the drawn teams replace the solo sign-ups. */
+  const postSoloTeams = useAction(
+    (teams: SoloTeamDraft[]) => api.postSoloTeams(id, teams),
+    { invalidates: [tournamentKeys.core(id), ...roster], onError: e => notifyError(T.postTeams, e) },
   )
 
   const acceptInvite = useAction(
@@ -204,7 +216,7 @@ export function useTournamentActions(id: string, userId: string | null) {
   }, [id, userId])
 
   return {
-    register, withdraw, acceptInvite, declineInvite, sendInvite, sendJoinRequest,
+    register, withdraw, savePins, postSoloTeams, acceptInvite, declineInvite, sendInvite, sendJoinRequest,
     approveJoinRequest, declineJoinRequest, approveTeam, markPaid, removeTeam, movePlayer, assignFreeAgent,
     publishTournament, publishSchedule, replaceSchedule, seedBracket, recordResult, saveSeeds, saveMatch, addPrize, deletePrize,
     deleteComment, postAnnouncement, postComment,
