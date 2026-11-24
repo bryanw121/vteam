@@ -649,5 +649,29 @@
     "status": "approved",
     "summary": "components/event/EventDetailScreen.tsx: 616 lines, 29 distinct hooks, 9 useState, 8 useEffect, 5 dialogs + 2 sheets, a supabase.from delete. Extract useEventTabs, useDiscussionMentions, useJoinIntent, useLeaveFlow, useEventRecap, useDeleteEvent, EventDialogs with one open union; pure utils/eventDetail.ts with tests; screen under 250 lines; shots identical; 3 PRs.",
     "issue": 354
+  },
+  {
+    "date": "2026-11-24",
+    "n": 1,
+    "title": "A deploy never crashes an open tab: move to the new build instead of \"This screen hit a snag\"",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "The only live app_crash (Nov 20, guest, /leagues x2) is a stale-deploy chunk failure: web routes are lazy chunks, vercel.json answers a missing chunk with index.html (immutable). Reproduced on main (both HTML and 404 shapes). Fix: isChunkLoadError in ErrorFallback before noteCrash, check /version.json vs EXPO_PUBLIC_BUILD_SHA, one full reload to the same path (5-min guard), resume check after 30 min hidden, 404+no-store for missing static files, app_updated_in_tab metric, deploy-skew-flow.mjs in Browser: flows."
+  },
+  {
+    "date": "2026-11-24",
+    "n": 2,
+    "title": "Event cards in one piece: one card model for both layouts, and 65 inline styles into the stylesheet",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "components/EventCard.tsx 545 lines, EventCard and RowEventCard share 79 identical lines of derivations and press/RSVP code, 65 inline style objects, 28 hard-coded sizes, inline props types, 16 commits since Oct 1. Pure utils/eventCardModel.ts with tests, useEventCardActions, components/eventCard pieces, shared.eventCard* styles; zero screenshot diffs; 2 PRs."
+  },
+  {
+    "date": "2026-11-24",
+    "n": 3,
+    "title": "An Android nightly you can trust: 7 of the last 15 runs failed, none because of the app",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "android-app.yml: 8/15 passed; same commit passes and fails. 5 runs: all 4 flows stuck in _ready.yaml (filter-all not visible after 90 s, JS started); 2 runs: experiment-scorekeeper tap missed after scrollUntilVisible. Add screen description (uiautomator, focus, ANR, network, RN log) to log + step summary, system-dialog dismissals, launcher-idle + app warm-up reported as 'environment', one re-run for environment only, fix the sign-in flow tap; 10 green nights."
   }
 ]
