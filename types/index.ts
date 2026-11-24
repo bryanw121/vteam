@@ -2775,3 +2775,4 @@ export type DesktopFeedDay = FeedDaySection & {
 
 /** One month of days on the desktop Events feed. */
 export type DesktopFeedMonth = { month: string; label: string; days: DesktopFeedDay[] }
+export * from './eventCard'

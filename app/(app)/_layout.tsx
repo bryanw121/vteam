@@ -17,6 +17,9 @@ import { queryString } from '../../utils/urlState'
 import { tabParams } from '../../utils/tabViews'
 import { TourProvider } from '../../contexts/tour'
 import { ToastHost } from '../../components/ToastHost'
+import { toast } from '../../lib/toast'
+import { takeUpdateNotice } from '../../lib/staleBuild'
+import { UPDATE_COPY } from '../../constants/copy'
 import { ServerStatusBar } from '../../components/ServerStatusBar'
 import { TourTarget } from '../../components/tour/TourTarget'
 import { TOUR_TARGETS } from '../../constants'
@@ -67,6 +70,16 @@ function AppLayoutInner() {
   const [collapsed, setCollapsed] = useState(false)
   const chatUnread = useChatUnread()
   usePlayerSetupGate(pathname)
+
+  // After the tab reloaded into a newer build (#359), say why, once.
+  useEffect(() => {
+    // After the first paint, so ToastHost (a sibling, subscribed in its own effect) is listening.
+    const t = setTimeout(() => {
+      const how = takeUpdateNotice()
+      if (how) toast.show({ message: how === 'chunk' ? UPDATE_COPY.toastChunk : UPDATE_COPY.toastResume, variant: 'info', duration: 8000 })
+    }, 500)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     if (Platform.OS === 'web') return

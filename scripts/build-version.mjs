@@ -12,6 +12,7 @@
  * before the SPA fallback.
  *
  *   node scripts/build-version.mjs --dist dist
+ *   node scripts/build-version.mjs --print   # just the sha (build:web inlines it as EXPO_PUBLIC_BUILD_SHA, #359)
  */
 import { execFileSync } from 'node:child_process'
 import { writeFile } from 'node:fs/promises'
@@ -43,7 +44,11 @@ export async function writeBuildVersion(dist, { env = process.env, git = gitHead
   return body
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href && process.argv.includes('--print')) {
+  // `npm run build:web` inlines it as EXPO_PUBLIC_BUILD_SHA, so the app knows its own build (#359).
+  const sha = buildSha()
+  process.stdout.write(sha === 'unknown' ? '' : sha)
+} else if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const i = process.argv.indexOf('--dist')
   const dist = resolve(i > 0 ? process.argv[i + 1] : 'dist')
   const body = await writeBuildVersion(dist)

@@ -35,6 +35,7 @@ import { UpdateRequiredScreen } from '../components/UpdateRequiredScreen'
 import { startQuerySnapshot } from '../lib/querySnapshot'
 import { isSafeStart } from '../lib/crashRecovery'
 import { noteScreen, screenPattern, setUsageUser, startUsageTracking } from '../lib/analytics'
+import { startStaleBuildWatch } from '../lib/staleBuild'
 
 initSentry()
 // Last visit's profile / settings / chat list into the cache before the first render (web),
@@ -158,6 +159,11 @@ function RootNavigator() {
   // Usage metrics: sessions and heartbeats once the signed-in user is known; a new session when
   // the account changes; the screen type for every route outside the tab pager (the tabs
   // layout records which tab is on show there).
+  // A tab back after 10+ minutes hidden moves to a newer web build if one is live (#359).
+  useEffect(() => {
+    if (!navReady) return
+    return startStaleBuildWatch()
+  }, [navReady])
   useEffect(() => {
     if (!navReady) return
     startUsageTracking(userId)

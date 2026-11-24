@@ -1,0 +1,15 @@
+# Shared: dismiss what Android puts over the app on a slow emulator (#361):
+# "System UI isn't responding" / "<app> isn't responding" (Wait keeps it running)
+# and the notification permission prompt.
+appId: com.vteamvolleyball.app
+---
+- runFlow:
+    when:
+      visible: ".*isn.t responding.*"
+    commands:
+      - tapOn: "Wait"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
