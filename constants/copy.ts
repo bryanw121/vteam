@@ -48,6 +48,16 @@ export const CRASH_COPY = {
   reportTitle: (screen: string) => `App crashed on ${screen}`,
   reportDetails: (screen: string, when: string, version: string) => `Crashed on ${screen} at ${when} (app ${version}).\n\nWhat I was doing: `,
 } as const
+/** A deploy while the tab was open (#359): the tab reloads into the new build. */
+export const UPDATE_COPY = {
+  updatingTitle: 'Getting the latest vteam…',
+  updatingBody: 'vteam was just updated.',
+  toastChunk: 'vteam was updated while you were away. Tap again to open that screen.',
+  toastResume: 'vteam was updated while you were away.',
+  offlineTitle: "Couldn't load this screen",
+  offlineBody: "Check your connection, then try again.",
+  retry: 'Try again',
+} as const
 /** Events feed: a refresh failed while older (cached or saved) events are on screen. */
 export const FEED_STALE_NOTICE = "Couldn't refresh. These may be out of date. Tap to retry."
 

@@ -143,6 +143,8 @@ jobs:
           EXPO_PUBLIC_SUPABASE_ANON_KEY: shots-mock-anon-key
           EXPO_PUBLIC_SENTRY_DSN: ''
           EXPO_PUBLIC_APP_ENV: development
+          # The app knows its own build, so deploy-skew-flow can test the resume check (#359).
+          EXPO_PUBLIC_BUILD_SHA: ${{ github.sha }}
       # Reanimated, Gesture Handler and react-virtuoso load as their own chunks on
       # web; fail if a change pulls them back into the entry every visit downloads (#193).
       - name: Entry chunk stays light
@@ -280,6 +282,9 @@ jobs:
       - name: Crash recovery browser check
         if: success() || failure()
         run: node scripts/shots/crash-recovery-flow.mjs --dist dist-mock --out a11y-report/crash-recovery
+      - name: Deploy skew browser check (an open tab across a deploy, #359)
+        if: success() || failure()
+        run: node scripts/shots/deploy-skew-flow.mjs --dist dist-mock --sha ${{ github.sha }} --out a11y-report/deploy-skew
       - name: Production watch self-test (browser steps on the mocked export, #353)
         if: success() || failure()
         run: node scripts/production-watch.mjs --dist dist-mock --retry-wait 0 --out a11y-report/production-watch
