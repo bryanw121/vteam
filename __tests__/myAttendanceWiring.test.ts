@@ -13,7 +13,8 @@ import {
  */
 
 const root = join(__dirname, '..')
-const eventCard = readFileSync(join(root, 'components/EventCard.tsx'), 'utf8')
+// Both cards take attendance from eventCardModel (#360).
+const eventCard = readFileSync(join(root, 'utils/eventCardModel.ts'), 'utf8')
 const monthEvents = readFileSync(join(root, 'hooks/feed/fallback.ts'), 'utf8')
 
 describe('the embed carries status', () => {
@@ -29,13 +30,13 @@ describe('the embed carries status', () => {
 
 describe('EventCard distinguishes attending from merely present', () => {
   it('routes the RSVP check through isAttendingRow', () => {
-    const matches = eventCard.match(/my_attendance\.some\(a => a\.user_id === currentUserId && isAttendingRow\(a\)\)/g)
-    // Both the compact card and the row card derive this independently.
-    expect(matches).toHaveLength(2)
+    const matches = eventCard.match(/my_attendance\.some\(a => a\.user_id === userId && isAttendingRow\(a\)\)/g)
+    // One model for both the compact card and the row card.
+    expect(matches).toHaveLength(1)
   })
 
   it('never treats bare row presence as attending', () => {
-    expect(eventCard).not.toMatch(/my_attendance\.some\(a => a\.user_id === currentUserId\)/)
+    expect(eventCard).not.toMatch(/my_attendance\.some\(a => a\.user_id === userId\)/)
   })
 
   it('defaults a status-less row to attending, for rows from the old view', () => {
