@@ -7,7 +7,7 @@ type Props = { children: React.ReactNode }
 export function SentryErrorBoundary({ children }: Props) {
   return (
     <Sentry.ErrorBoundary
-      fallback={({ resetError }) => <ErrorFallback resetError={resetError} />}
+      fallback={({ resetError, error }) => <ErrorFallback resetError={resetError} error={error} />}
     >
       {children}
     </Sentry.ErrorBoundary>

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Sentry } from '../lib/sentry'
 import { ErrorFallback } from './ErrorFallback'
+import { isChunkLoadError } from '../utils/staleBuild'
 
 type Props = { children: React.ReactNode }
 type State = { error: Error | null }
@@ -19,6 +20,12 @@ export class SentryErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo): void {
+    // A screen's code a deploy took away (#359): ErrorFallback moves the tab to the
+    // new build and `app_updated_in_tab` counts it; it isn't a bug to report.
+    if (isChunkLoadError(error)) {
+      Sentry.addBreadcrumb({ category: 'stale-build', message: error.message.slice(0, 200), level: 'info' })
+      return
+    }
     Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack ?? '' } } })
   }
 
@@ -27,7 +34,7 @@ export class SentryErrorBoundary extends React.Component<Props, State> {
   }
 
   render() {
-    if (this.state.error) return <ErrorFallback resetError={this.resetError} />
+    if (this.state.error) return <ErrorFallback resetError={this.resetError} error={this.state.error} />
     return this.props.children
   }
 }
