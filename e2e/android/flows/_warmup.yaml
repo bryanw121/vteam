@@ -1,0 +1,14 @@
+# Run once before the suite (e2e/android/run.sh, #361): the first launch on a
+# freshly booted emulator is the slow one, and a system "isn't responding"
+# dialog from the boot can sit over everything. If Events never shows here, the
+# run fails as "environment", not as four flow failures.
+appId: com.vteamvolleyball.app
+name: Warm-up (app reaches Events)
+---
+- launchApp:
+    clearState: true
+- runFlow: _dialogs.yaml
+- extendedWaitUntil:
+    visible:
+      id: filter-all
+    timeout: 180000
