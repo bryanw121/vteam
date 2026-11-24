@@ -18,10 +18,11 @@ describe() {
   echo "::group::Screen: $heading"
   adb shell dumpsys window | grep -E 'mCurrentFocus|mFocusedApp' | tee -a "$OUT/focus.txt" || true
   adb shell dumpsys activity processes 2>/dev/null | grep -iE 'not ?responding|ANR' | head -5 || true
+  # ICMP can be blocked even when HTTPS works, so this is a hint, not a verdict.
   if adb shell ping -c 1 -W 3 uifolvbwtrbcmfrvelnl.supabase.co >/dev/null 2>&1; then
-    echo "network: the emulator reaches beta"; local net="reaches beta"
+    echo "network: ping to beta answered"; local net="ping to beta answered"
   else
-    echo "network: the emulator can't reach beta"; local net="**can't reach beta**"
+    echo "network: ping to beta got no answer (ICMP may just be blocked)"; local net="ping to beta got no answer (ICMP may just be blocked)"
   fi
   adb exec-out uiautomator dump /dev/tty 2>/dev/null | sed 's/UI hierchary dumped to.*//' > "$OUT/screen.xml" || true
   node e2e/android/describe-screen.js "$heading" < "$OUT/screen.xml" | tee "$OUT/screen.md"
@@ -48,6 +49,12 @@ fail() {
 }
 
 adb install -r apk/app-release.apk || { note "### Android app: install failed"; fail environment; }
+
+# The Pixel Launcher (NexusLauncher) is the one app that kept answering "isn't
+# responding" on the emulator (Nov 24) and nothing here needs a home screen:
+# Maestro launches vteam directly. Turn it off and close any dialog it left.
+adb shell pm disable-user --user 0 com.google.android.apps.nexuslauncher >/dev/null 2>&1 || true
+adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null 2>&1 || true
 
 # Warm-up: the first launch on a fresh emulator (180 s, system dialogs dismissed).
 if ! maestro test e2e/android/flows/_warmup.yaml --test-output-dir "$OUT/warmup"; then
