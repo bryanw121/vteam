@@ -637,15 +637,17 @@
     "n": 2,
     "title": "Production watch: know within the hour when vteamvolleyball.com isn't running main, or doesn't open",
     "bucket": "testing",
-    "status": "proposed",
-    "summary": "Nov 14-16 five merged PRs never deployed for 29.5 h (#315 ignore step); Nov 18 failed build left live 9.5 h behind. 30-min workflow: build sha meta tag vs main head (schema-gate aware, judgeDeploy unit-tested on those histories) + guest Playwright smoke on the real site (Events, session sheet, Tournaments, Leagues, event og preview, api routes)."
+    "status": "approved",
+    "summary": "Nov 14-16 five merged PRs never deployed for 29.5 h (#315 ignore step); Nov 18 failed build left live 9.5 h behind. 30-min workflow: build sha meta tag vs main head (schema-gate aware, judgeDeploy unit-tested on those histories) + guest Playwright smoke on the real site (Events, session sheet, Tournaments, Leagues, event og preview, api routes).",
+    "issue": 353
   },
   {
     "date": "2026-11-23",
     "n": 3,
     "title": "Event screen in pieces: join intent, leave, recap, mentions and delete out of a 616-line screen",
     "bucket": "refactor",
-    "status": "proposed",
-    "summary": "components/event/EventDetailScreen.tsx: 616 lines, 29 distinct hooks, 9 useState, 8 useEffect, 5 dialogs + 2 sheets, a supabase.from delete. Extract useEventTabs, useDiscussionMentions, useJoinIntent, useLeaveFlow, useEventRecap, useDeleteEvent, EventDialogs with one open union; pure utils/eventDetail.ts with tests; screen under 250 lines; shots identical; 3 PRs."
+    "status": "approved",
+    "summary": "components/event/EventDetailScreen.tsx: 616 lines, 29 distinct hooks, 9 useState, 8 useEffect, 5 dialogs + 2 sheets, a supabase.from delete. Extract useEventTabs, useDiscussionMentions, useJoinIntent, useLeaveFlow, useEventRecap, useDeleteEvent, EventDialogs with one open union; pure utils/eventDetail.ts with tests; screen under 250 lines; shots identical; 3 PRs.",
+    "issue": 354
   }
 ]
