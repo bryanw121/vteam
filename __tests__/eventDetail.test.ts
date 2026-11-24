@@ -53,7 +53,7 @@ describe('joinIntentOnReturn', () => {
   })
   it('offers the same signup the footer would', () => {
     expect(joinIntentOnReturn({ status: 'ok', action }, STATUS, OPEN)).toEqual({ offer: 'join' })
-    expect(joinIntentOnReturn({ status: 'ok', action }, { ...STATUS, isFull: true, spotsLeft: 0 }, OPEN)).toEqual({ offer: 'waitlist' })
+    expect(joinIntentOnReturn({ status: 'ok', action }, { ...STATUS, isFull: true }, OPEN)).toEqual({ offer: 'waitlist' })
     expect(joinIntentOnReturn({ status: 'ok', action }, STATUS, { ...OPEN, requiresApproval: true })).toEqual({ offer: 'request' })
   })
   it('skips when the viewer is already in, or the game is over or cancelled', () => {
