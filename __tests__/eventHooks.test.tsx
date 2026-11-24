@@ -496,9 +496,12 @@ describe('forgetDeletedEvent', () => {
   it('is what the event page runs after a successful delete', () => {
     const { readFileSync } = require('fs')
     const { join } = require('path')
+    // The screen deletes through useDeleteEvent (#354).
     const screen: string = readFileSync(join(__dirname, '..', 'components/event/EventDetailScreen.tsx'), 'utf8')
-    const del = screen.slice(screen.indexOf('const deleteEvent = useMutation('))
+    expect(screen).toMatch(/useDeleteEvent\(id, userId\)/)
+    const hook: string = readFileSync(join(__dirname, '..', 'hooks/event/useDeleteEvent.ts'), 'utf8')
+    const del = hook.slice(hook.indexOf('useMutation('))
     const onSuccess = del.slice(del.indexOf('onSuccess'), del.indexOf('onError'))
-    expect(onSuccess).toMatch(/forgetDeletedEvent\(id\)/)
+    expect(onSuccess).toMatch(/forgetDeletedEvent\(eventId\)/)
   })
 })

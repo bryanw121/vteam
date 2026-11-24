@@ -139,7 +139,9 @@ describe('guards against reintroducing sub-44pt header controls', () => {
 
   it('the event page still confirms before deleting', () => {
     const page = readFileSync(resolve(__dirname, '../components/event/EventDetailScreen.tsx'), 'utf8')
-    expect(page).toMatch(/onDelete=\{\(\) => setDeleteConfirmVisible\(true\)\}/)
-    expect(page).toMatch(/visible=\{deleteConfirmVisible\}/)
+    const dialogs = readFileSync(resolve(__dirname, '../components/event/EventDialogs.tsx'), 'utf8')
+    expect(page).toMatch(/onDelete=\{\(\) => setDialog\(\{ kind: 'delete' \}\)\}/)
+    expect(dialogs).toMatch(/<DeleteEventDialog\s+visible=\{p\.dialog\?\.kind === 'delete'\}/)
+    expect(dialogs).toMatch(/onConfirm=\{\(\) => \{ p\.onCloseDialog\(\); p\.onConfirmDelete\(\) \}\}/)
   })
 })

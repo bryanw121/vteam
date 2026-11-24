@@ -1941,6 +1941,22 @@ export type RemoveTarget =
   | { kind: 'attendee'; userId: string; firstName: string | null; lastName: string | null; username: string }
   | { kind: 'guest'; guestId: string; firstName: string; lastName: string }
 
+/** The event screen's one open host dialog (#354): add a +1, deny a join request, or confirm deleting the event. */
+export type EventDialog =
+  | { kind: 'guest' }
+  | { kind: 'deny'; target: { userId: string; displayName: string } }
+  | { kind: 'delete' }
+  | null
+
+/** `useJoinIntent`: the "Grab your spot?" sheet, offering the spot then player setup. */
+export type JoinIntentApi = ReturnType<typeof import('../hooks/event/useJoinIntent').useJoinIntent>
+/** `useLeaveFlow`: the leave sheet and its note to the host. */
+export type LeaveFlowApi = ReturnType<typeof import('../hooks/event/useLeaveFlow').useLeaveFlow>
+/** `useEventRecap`: "Your game", the host's next game and sharing. */
+export type EventRecapApi = ReturnType<typeof import('../hooks/event/useEventRecap').useEventRecap>
+/** `useRemoveDialog`: the armed Remove confirmation. */
+export type RemoveDialogApi = ReturnType<typeof import('../hooks/event/useRemoveDialog').useRemoveDialog>
+
 /** One entry in a People-tab row's ⋯ menu (Message / View profile / Remove). */
 export type RosterAction = {
   key: 'message' | 'message-adder' | 'profile' | 'no-show' | 'remove'
