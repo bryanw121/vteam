@@ -628,8 +628,9 @@
     "n": 1,
     "title": "A weekly games email: \"23 games around Austin this week\", every Monday",
     "bucket": "competitor-gap",
-    "status": "proposed",
-    "summary": "Live: 0 upcoming vteam games vs 101 outside sessions; 35 people in 21 days, 5 signed in. Monday email per account (city from home city, hidden_feed respected, >=3 items) via Resend from edge fn send-weekly-email + live-only pg_cron; links to /?session=<id>&ref=digest; user_settings.weekly_email switch, HMAC one-click unsubscribe, weekly_email_log. Cites Heylo's Monday newsletter."
+    "status": "tabled",
+    "summary": "Live: 0 upcoming vteam games vs 101 outside sessions; 35 people in 21 days, 5 signed in. Monday email per account (city from home city, hidden_feed respected, >=3 items) via Resend from edge fn send-weekly-email + live-only pg_cron; links to /?session=<id>&ref=digest; user_settings.weekly_email switch, HMAC one-click unsubscribe, weekly_email_log. Cites Heylo's Monday newsletter.",
+    "reason": "Bryan at review on 2026-11-23: current users never opted in to email and he doesn't want to email them right now. Don't re-propose emailing existing users (default-on digests or similar) unless he raises it; an opt-in-only version would need him to ask."
   },
   {
     "date": "2026-11-23",
