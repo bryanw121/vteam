@@ -46,7 +46,7 @@ export function RetentionPanel({ active }: Props) {
                           accessible
                           accessibilityLabel={`Signed up week of ${shortDay(c.week)}, ${WEEK_LABELS[w]}: ${pct === null ? 'not yet' : `${pct} percent`}`}
                         >
-                          <Text style={[styles.cellText, pct === null && { color: theme.colors.subtext }]} maxFontSizeMultiplier={COMPACT_TEXT_SCALE}>
+                          <Text style={[styles.cellText, pct === null && { color: theme.colors.subtext }, level === LEVEL_BG.length - 1 && { color: theme.colors.white }]} maxFontSizeMultiplier={COMPACT_TEXT_SCALE}>
                             {pct === null ? '–' : `${pct}%`}
                           </Text>
                         </View>

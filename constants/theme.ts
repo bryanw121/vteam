@@ -3,7 +3,7 @@ export const theme = {
   // Every text colour here is at least 4.5:1 on `background`, `card` and `primarySoft`.
   colors: {
     // Brand
-    primary:      '#7C4DFF',   // vteam purple: fills, and white on it (4.8:1)
+    primary:      '#7445F7',   // vteam purple: fills, white on it (5.3:1), and as text on background (4.9:1)
     primaryDark:  '#5B21B6',
     primarySoft:  '#EDE6FA',   // lavender tint for soft chip bgs
     primaryText:  '#6D28D9',   // purple for text and small icons on background/card (6.5:1)
@@ -38,7 +38,7 @@ export const theme = {
     /** Filled destructive buttons (Button variant danger): white label at 5.6:1. */
     dangerFill:   '#C62828',
     warning:      '#B45309',
-    success:      '#15803D',
+    success:      '#166534',
     // Toast surfaces (#228): light tints of each status colour, dark text on them.
     toastErrorBg:   '#FDE8EA',
     toastWarningBg: '#FDF0DE',
@@ -52,9 +52,10 @@ export const theme = {
     /** White text and lines on a `primary` fill at lower emphasis (heroes). */
     onPrimaryStrong: 'rgba(255,255,255,0.9)',
     onPrimarySoft:   'rgba(255,255,255,0.85)',
-    onPrimaryMuted:  'rgba(255,255,255,0.78)',
+    onPrimaryMuted:  'rgba(255,255,255,0.85)',
     onPrimaryLine:   'rgba(255,255,255,0.35)',
-    onPrimaryFill:   'rgba(255,255,255,0.16)',
+    /** A darker well on a `primary` fill (stats, buttons on heroes): white text stays above 4.5:1. */
+    onPrimaryFill:   'rgba(30,16,51,0.18)',
     /** Scrim behind dialogs and bottom sheets. */
     overlay:      'rgba(30,16,51,0.45)',
     overlayLight: 'rgba(30,16,51,0.4)',

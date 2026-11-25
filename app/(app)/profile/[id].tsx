@@ -243,7 +243,7 @@ export default function UserProfileDetail() {
             <View style={{
               flexDirection: 'row', gap: 1, marginTop: 14,
               borderRadius: 14, overflow: 'hidden',
-              backgroundColor: theme.colors.onPrimaryLine, width: '100%',
+              width: '100%',
             }}>
               <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}>
                 <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>
