@@ -1,46 +1,30 @@
 {
   "_notes": {
-    "about": "Accepted UI consistency findings (#377): screen → viewport → rule → count. Shrink-only: run `npm run ui:baseline` after a fix; never raise a count to get a PR through.",
-    "ci-offsets": "CI's runner counts 3 more font-family findings on event-people (desktop) and 1 more on event-discussion (desktop) than a local run, the same in every Nov 25 run; those two entries carry that offset. Take CI's numbers (the job log's Counts line) when shrinking them."
+    "about": "Accepted UI consistency findings (#377): screen → viewport → rule → count. Shrink-only: run `npm run ui:baseline` after a fix; never raise a count to get a PR through."
   },
   "events-feed": {
     "mobile": {
       "tap-target-44": 11
-    },
-    "desktop": {
-      "font-family": 1
     }
   },
   "events-feed-tournaments": {
     "mobile": {
       "tap-target-44": 8
-    },
-    "desktop": {
-      "font-family": 2
     }
   },
   "events-feed-link": {
     "mobile": {
       "tap-target-44": 10
-    },
-    "desktop": {
-      "font-family": 1
     }
   },
   "events-session-sheet": {
     "mobile": {
       "tap-target-44": 12
-    },
-    "desktop": {
-      "font-family": 1
     }
   },
   "events-feed-guest": {
     "mobile": {
       "tap-target-44": 11
-    },
-    "desktop": {
-      "font-family": 1
     }
   },
   "event-details": {
@@ -48,105 +32,49 @@
       "tap-target-44": 3
     }
   },
-  "event-past-recap": {
-    "mobile": {
-      "font-family": 1
-    },
-    "desktop": {
-      "font-family": 1
-    }
-  },
   "event-past-guest": {
     "mobile": {
       "tap-target-44": 2
     }
   },
-  "event-details-noshow": {
-    "mobile": {
-      "font-family": 1
-    },
-    "desktop": {
-      "font-family": 1
-    }
-  },
   "event-people": {
     "mobile": {
-      "font-family": 12,
       "tap-target-44": 2
-    },
-    "desktop": {
-      "font-family": 14
     }
   },
   "event-people-balanced": {
     "mobile": {
-      "font-family": 35,
       "tap-target-44": 2
-    },
-    "desktop": {
-      "font-family": 35
     }
   },
   "event-discussion": {
     "mobile": {
-      "font-family": 12,
       "tap-target-44": 6
-    },
-    "desktop": {
-      "font-family": 20
-    }
-  },
-  "event-cheers": {
-    "mobile": {
-      "font-family": 10
-    },
-    "desktop": {
-      "font-family": 10
     }
   },
   "event-paid-bottom": {
     "mobile": {
-      "font-family": 4,
       "tap-target-44": 3
-    },
-    "desktop": {
-      "font-family": 4
     }
   },
   "event-leave-sheet": {
     "mobile": {
-      "font-family": 2,
       "tap-target-44": 7
-    },
-    "desktop": {
-      "font-family": 3
     }
   },
   "event-guest": {
     "mobile": {
-      "font-family": 2,
       "tap-target-44": 3
-    },
-    "desktop": {
-      "font-family": 2
     }
   },
   "event-bring-list": {
     "mobile": {
-      "font-family": 15,
       "tap-target-44": 2
-    },
-    "desktop": {
-      "font-family": 15
     }
   },
   "event-bring-list-guest": {
     "mobile": {
-      "font-family": 13,
       "tap-target-44": 3
-    },
-    "desktop": {
-      "font-family": 13
     }
   },
   "host-create-bring": {
@@ -156,52 +84,12 @@
   },
   "host-create": {
     "mobile": {
-      "font-family": 1,
       "tap-target-44": 2
-    },
-    "desktop": {
-      "font-family": 1
     }
   },
   "host-edit": {
     "mobile": {
-      "font-family": 1,
       "tap-target-44": 2
-    },
-    "desktop": {
-      "font-family": 1
-    }
-  },
-  "welcome-position": {
-    "mobile": {
-      "font-family": 9
-    },
-    "desktop": {
-      "font-family": 9
-    }
-  },
-  "welcome-level": {
-    "mobile": {
-      "font-family": 14
-    },
-    "desktop": {
-      "font-family": 14
-    }
-  },
-  "welcome-city": {
-    "mobile": {
-      "font-family": 3
-    },
-    "desktop": {
-      "font-family": 3
-    }
-  },
-  "notifications": {
-    "mobile": {
-      "font-family": 15
-    },
-    "desktop": {
-      "font-family": 15
     }
   },
   "clubs-list": {
@@ -211,38 +99,22 @@
   },
   "club-detail": {
     "mobile": {
-      "font-family": 14,
       "tap-target-44": 3
-    },
-    "desktop": {
-      "font-family": 14
     }
   },
   "club-poll-composer": {
     "mobile": {
-      "font-family": 15,
       "tap-target-44": 11
-    },
-    "desktop": {
-      "font-family": 15
     }
   },
   "club-edit": {
     "mobile": {
-      "font-family": 10,
       "tap-target-44": 1
-    },
-    "desktop": {
-      "font-family": 10
     }
   },
   "club-delete-dialog": {
     "mobile": {
-      "font-family": 16,
       "tap-target-44": 3
-    },
-    "desktop": {
-      "font-family": 16
     }
   },
   "find-a-team": {
@@ -253,22 +125,6 @@
   "find-a-team-sheet": {
     "mobile": {
       "tap-target-44": 13
-    }
-  },
-  "club-detail-guest": {
-    "mobile": {
-      "font-family": 9
-    },
-    "desktop": {
-      "font-family": 9
-    }
-  },
-  "club-create": {
-    "mobile": {
-      "font-family": 3
-    },
-    "desktop": {
-      "font-family": 3
     }
   },
   "search": {
@@ -293,20 +149,12 @@
   },
   "chat-conversation": {
     "mobile": {
-      "font-family": 4,
       "tap-target-44": 1
-    },
-    "desktop": {
-      "font-family": 4
     }
   },
   "chat-club": {
     "mobile": {
-      "font-family": 3,
       "tap-target-44": 2
-    },
-    "desktop": {
-      "font-family": 3
     }
   },
   "profile-own": {
@@ -331,52 +179,12 @@
   },
   "settings-history": {
     "mobile": {
-      "font-family": 2,
       "tap-target-44": 2
-    },
-    "desktop": {
-      "font-family": 2
-    }
-  },
-  "settings-cheers": {
-    "mobile": {
-      "font-family": 8
-    },
-    "desktop": {
-      "font-family": 8
-    }
-  },
-  "settings-badges": {
-    "mobile": {
-      "font-family": 14
-    },
-    "desktop": {
-      "font-family": 24
-    }
-  },
-  "settings-badge-link": {
-    "mobile": {
-      "font-family": 27
-    },
-    "desktop": {
-      "font-family": 36
     }
   },
   "settings-hidden": {
     "mobile": {
-      "font-family": 5,
       "tap-target-44": 3
-    },
-    "desktop": {
-      "font-family": 5
-    }
-  },
-  "settings-silenced": {
-    "mobile": {
-      "font-family": 4
-    },
-    "desktop": {
-      "font-family": 4
     }
   },
   "tournaments-list": {
@@ -389,77 +197,9 @@
       "tap-target-44": 2
     }
   },
-  "tournament-schedule-link": {
-    "mobile": {
-      "font-family": 1
-    },
-    "desktop": {
-      "font-family": 1
-    }
-  },
-  "tournament-overview": {
-    "mobile": {
-      "font-family": 4
-    },
-    "desktop": {
-      "font-family": 4
-    }
-  },
-  "tournament-teams": {
-    "mobile": {
-      "font-family": 1
-    },
-    "desktop": {
-      "font-family": 1
-    }
-  },
-  "tournament-schedule": {
-    "mobile": {
-      "font-family": 1
-    },
-    "desktop": {
-      "font-family": 1
-    }
-  },
-  "tournament-results": {
-    "mobile": {
-      "font-family": 1
-    },
-    "desktop": {
-      "font-family": 1
-    }
-  },
   "tournament-discussion": {
     "mobile": {
-      "font-family": 13,
       "tap-target-44": 1
-    },
-    "desktop": {
-      "font-family": 13
-    }
-  },
-  "tournament-public-guest": {
-    "mobile": {
-      "font-family": 1
-    },
-    "desktop": {
-      "font-family": 1
-    }
-  },
-  "tournament-public-member-of-none": {
-    "mobile": {
-      "font-family": 1
-    },
-    "desktop": {
-      "font-family": 1
-    }
-  },
-  "tournament-solo-overview": {
-    "mobile": {
-      "font-family": 5
-    },
-    "desktop": {
-      "font-family": 5
     }
   },
   "tournament-make-teams": {
@@ -480,9 +220,6 @@
   "event-join-intent-sheet": {
     "mobile": {
       "tap-target-44": 3
-    },
-    "desktop": {
-      "font-family": 1
     }
   }
 }

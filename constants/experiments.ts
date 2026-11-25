@@ -1,7 +1,7 @@
 import type { Experiment } from '../types'
 import { routes } from '../utils/routes'
 
-/** Settings → Experimental features. Add a card here; remove it when the experiment ends. */
+/** Settings → Experiments. Add a card here; remove it when the experiment ends. */
 export const EXPERIMENTS: readonly Experiment[] = [
   {
     id: 'scorekeeper',

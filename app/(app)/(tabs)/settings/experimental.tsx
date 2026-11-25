@@ -10,7 +10,7 @@ import { shared, theme } from '../../../../constants'
 import { EXPERIMENTS } from '../../../../constants/experiments'
 import { routes } from '../../../../utils/routes'
 
-/** Settings → Experimental features: things we're trying out, one card each. */
+/** Settings → Experiments: things we're trying out, one card each. */
 export default function ExperimentalFeaturesScreen() {
   const router = useRouter()
   const { tabBarHeight } = useTabsShell()

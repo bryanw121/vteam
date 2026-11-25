@@ -35,10 +35,10 @@ tags: [signed-in]
 # Center the row before tapping: right after scrolling it can sit under the tab
 # bar or still be moving, and the tap misses (#361: Nov 16 and 23).
 - scrollUntilVisible:
-    element: "Experimental features"
+    element: "Experiments"
     direction: DOWN
     centerElement: true
-- tapOn: "Experimental features"
+- tapOn: "Experiments"
 - extendedWaitUntil:
     visible:
       id: experiment-scorekeeper

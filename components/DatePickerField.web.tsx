@@ -19,6 +19,7 @@ const HOURS12 = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
 const css = `
   .vteam-field-wrap {
+    font-family: '${theme.fonts.bodyMedium}', sans-serif; /* plain HTML: nothing above sets Outfit (#385) */
     display: flex;
     align-items: center;
     gap: ${theme.spacing.sm}px;
@@ -45,7 +46,6 @@ const css = `
     cursor: pointer;
     font-family: inherit !important;
     font-size: max(16px, ${theme.font.size.md}px) !important;
-    font-weight: ${theme.font.weight.medium} !important;
     color: ${theme.colors.text} !important;
   }
   .vteam-date-input::-webkit-calendar-picker-indicator {
@@ -63,7 +63,6 @@ const css = `
     cursor: pointer;
     font-family: inherit !important;
     font-size: max(16px, ${theme.font.size.md}px) !important;
-    font-weight: ${theme.font.weight.medium} !important;
     color: ${theme.colors.text} !important;
     padding: 0;
     appearance: none;
@@ -72,7 +71,6 @@ const css = `
   }
   .vteam-time-sep {
     font-size: ${theme.font.size.md}px;
-    font-weight: ${theme.font.weight.medium};
     color: ${theme.colors.subtext};
     user-select: none;
   }

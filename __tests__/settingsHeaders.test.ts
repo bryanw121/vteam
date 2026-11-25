@@ -33,8 +33,9 @@ describe('settings headers (#377)', () => {
 
   it('titles match the Profile menu rows that open them', () => {
     const menu = readFileSync(resolve(__dirname, '..', 'components', 'profile', 'ProfileMenu.tsx'), 'utf8')
-    for (const m of menu.matchAll(/\{ title: '([^']+)', icon: '[^']+', section: '([^']+)' \}/g)) {
-      const [, title, section] = m
+    const rows = [...menu.matchAll(/\{ title: '([^']+)'[^}]*?section: '([^']+)'[^}]*\}/g)]
+    expect(rows.length).toBeGreaterThan(10)
+    for (const [, title, section] of rows) {
       const key = section === 'metrics' ? 'metrics/index' : section
       expect([key, SETTINGS_SCREENS[key]?.title]).toEqual([key, title])
     }
