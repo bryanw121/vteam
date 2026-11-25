@@ -2414,6 +2414,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "tournament_matches_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_divisions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tournament_matches_pool_id_fkey"
             columns: ["pool_id"]
             isOneToOne: false
@@ -3435,6 +3442,7 @@ export type Database = {
       }
       app_version_key: { Args: { p_version: string }; Returns: number[] }
       award_event_points: { Args: never; Returns: number }
+      build_public_tournament: { Args: { p_id: string }; Returns: Json }
       can_read_chat_image: { Args: { p_name: string }; Returns: boolean }
       cancel_friend_request: { Args: { p_user_id: string }; Returns: string }
       check_rate_limit: {
@@ -3556,7 +3564,6 @@ export type Database = {
           username: string
         }[]
       }
-      build_public_tournament: { Args: { p_id: string }; Returns: Json }
       get_my_conversations: {
         Args: never
         Returns: {
@@ -3697,6 +3704,10 @@ export type Database = {
       save_event_bring_items: {
         Args: { p_event_id: string; p_items: Json }
         Returns: undefined
+      }
+      save_tournament: {
+        Args: { p_rules?: Json; p_tournament: Json }
+        Returns: string
       }
       schelagg_safe_date: { Args: { v: string }; Returns: string }
       schema_fingerprint: { Args: never; Returns: Json }
