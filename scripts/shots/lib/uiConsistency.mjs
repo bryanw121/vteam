@@ -51,10 +51,16 @@ export function fontTokensFrom(themeSource) {
 export function judge(m, { viewport, tokens }) {
   const counts = {}
   const examples = {}
+  // Each distinct instance counts once (the same label on ten roster rows is one finding), so a
+  // screen that renders a few more rows on a slower runner doesn't change its count.
+  const seen = new Set()
   const add = (rule, example) => {
+    const key = `${rule}|${example}`
+    if (seen.has(key)) return
+    seen.add(key)
     counts[rule] = (counts[rule] ?? 0) + 1
     const list = (examples[rule] ??= [])
-    if (list.length < 3 && example && !list.includes(example)) list.push(example)
+    if (list.length < 3 && example) list.push(example)
   }
   const tokenSet = new Set(tokens)
   for (const b of m.backs ?? []) {

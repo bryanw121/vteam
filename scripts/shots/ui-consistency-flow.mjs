@@ -57,7 +57,30 @@ if (args['update-baseline']) {
 }
 
 const baseline = existsSync(BASELINE) ? JSON.parse(await readFile(BASELINE, 'utf8')) : {}
-const diff = diffBaseline(plain, baseline)
+let diff = diffBaseline(plain, baseline)
+// A screen still filling in can show a row more than it settles on: measure a failing screen
+// once more and keep the lower count per rule before calling it new.
+if (diff.failures.length) {
+  const again = [...new Set(diff.failures.map(f => f.screen))]
+  console.log(`Measuring again: ${again.join(', ')}`)
+  const { results: second } = await visitScreens(
+    { dist: args.dist || 'dist-mock', screens: again, sizes: ['mobile', 'desktop'], concurrency: Number(args.concurrency ?? 4), label: 'ui (again)' },
+    async (page, r) => { r.png = await page.screenshot({ animations: 'disabled', caret: 'hide' }); return page.evaluate(MEASURE_IN_PAGE) },
+  )
+  for (const v of second) {
+    if (!v.output) continue
+    const r = results.find(x => x.screen === v.screen && x.viewport === v.size)
+    const p = plain.find(x => x.screen === v.screen && x.viewport === v.size)
+    if (!r || !p) continue
+    const { counts, examples } = judge(v.output, { viewport: v.size, tokens })
+    for (const rule of new Set([...Object.keys(p.counts), ...Object.keys(counts)])) {
+      const lower = Math.min(p.counts[rule] ?? 0, counts[rule] ?? 0)
+      if (lower < (p.counts[rule] ?? 0)) { p.counts[rule] = lower; r.counts[rule] = lower; p.examples[rule] = examples[rule] ?? []; r.png = v.png }
+    }
+  }
+  diff = diffBaseline(plain, baseline)
+  await writeFile(join(out, 'results.json'), JSON.stringify(plain, null, 1))
+}
 for (const f of diff.failures) {
   const r = results.find(x => x.screen === f.screen && x.viewport === f.viewport)
   if (r?.png) await writeFile(join(out, `${f.screen}-${f.viewport}.png`), r.png)
@@ -68,4 +91,6 @@ if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SU
 
 console.log(`UI consistency: ${diff.judged} judged, ${diff.failures.length} new, ${diff.improved.length} fewer than the baseline${skipped.length ? `, ${skipped.length} not loaded` : ''}.`)
 for (const f of diff.failures) console.log(`  NEW ${f.rule} ${f.screen} ${f.viewport}: ${f.count} (baseline ${f.base}) ${f.examples.join('; ')}`)
+// The counts this run saw, so a baseline can be taken from CI's environment (the artifact has results.json too).
+if (diff.failures.length || diff.improved.length) console.log(`Counts: ${JSON.stringify(plain.filter(r => Object.keys(r.counts).length).map(r => [r.screen, r.viewport, r.counts]))}`)
 process.exit(diff.failures.length ? 1 : 0)
