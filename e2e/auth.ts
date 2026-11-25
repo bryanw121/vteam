@@ -63,10 +63,8 @@ export async function loginForE2E(page: Page): Promise<void> {
           const creds = e2eCredentials()
           await identifier.fill(creds.username)
           await password.fill(creds.password)
-          // React Native Web's TouchableOpacity does not consistently expose a
-          // button role in the static export, so key this action on its exact
-          // visible label (the same contract the existing suites used).
-          await page.getByText('Sign in', { exact: true }).click()
+          // "Sign in" is also the tab above the form, so key the submit on its test id.
+          await page.getByTestId('login-submit').click()
         }
 
         // Poll the SPA route instead of waiting for a full-page `load` event.

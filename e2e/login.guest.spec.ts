@@ -12,7 +12,7 @@ test.describe('username sign-in (guest)', () => {
     await page.goto(`${BASE_URL}/login`)
     await page.getByPlaceholder('you@example.com or yourname').fill(`nobody-${Date.now()}`)
     await page.getByPlaceholder('••••••••').fill('not-a-real-password')
-    await page.getByText('Sign in', { exact: true }).click()
+    await page.getByTestId('login-submit').click()
     await expect(page.getByText('Incorrect username or password')).toBeVisible({ timeout: 20_000 })
     await expect(page).toHaveURL(/\/login/)
     expect(bodies.length).toBeGreaterThan(0)
