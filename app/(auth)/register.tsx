@@ -1,19 +1,16 @@
 import { useState, useRef } from 'react'
-import { View, TouchableOpacity } from 'react-native'
+import { View } from 'react-native'
 import { Text, TextInput } from '../../components/ui/Text'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { signInWithGoogle } from '../../lib/socialAuth'
-import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
-import { GoogleLogo } from '../../components/GoogleLogo'
-import { shared, theme } from '../../constants'
-import { routes, toRoute } from '../../utils/routes'
-import { takeGuestReturnPath } from '../../utils/authGate'
+import { shared } from '../../constants'
+import { routes } from '../../utils/routes'
 import { AgreementLine } from '../../components/legal/AgreementLine'
 import { TERMS_VERSION } from '../../constants/legal'
-import { Spinner } from '../../components/ui/Spinner'
+import { AuthScreen } from '../../components/auth/AuthScreen'
+import { AuthCta, GoogleButton, OrWithEmail } from '../../components/auth/AuthBits'
 import { JoinContextCard } from '../../components/auth/JoinContextCard'
 import { toast } from '../../lib/toast'
 
@@ -35,11 +32,11 @@ export default function Register() {
   const [socialLoading, setSocialLoading] = useState(false)
   const [socialError, setSocialError] = useState('')
 
-  async function handleSocialSignIn(provider: 'google') {
+  async function handleGoogleSignIn() {
     setSocialError('')
     setSocialLoading(true)
     try {
-      if (provider === 'google') await signInWithGoogle()
+      await signInWithGoogle()
     } catch (e: any) {
       const msg: string = e?.message ?? ''
       if (!msg.includes('cancel') && !msg.includes('dismiss') && !msg.includes('ERR_CANCELED')) {
@@ -119,55 +116,15 @@ export default function Register() {
   }
 
   return (
-    <LinearGradient colors={theme.gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={shared.authBackground}>
-      <View style={shared.authCard}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          <Text style={shared.authTitle}>vteam</Text>
-          <View style={{ backgroundColor: 'rgba(124,77,255,0.15)', borderWidth: 1, borderColor: 'rgba(124,77,255,0.4)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 2 }}>
-            <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, letterSpacing: 1 }}>BETA</Text>
-          </View>
-        </View>
-        <Text style={shared.authSubtitle}>create your account</Text>
-        <JoinContextCard screen="register" />
+    <AuthScreen heading="Join the game" sub="Find games, save your spot, earn points." tab="register">
+      <JoinContextCard />
+      {socialError ? <Text style={shared.authError}>{socialError}</Text> : null}
+      <GoogleButton loading={socialLoading} onPress={() => void handleGoogleSignIn()} />
+      <OrWithEmail />
 
-        {/* ── Social sign-up ── */}
-        {socialError ? (
-          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.error, textAlign: 'center', marginBottom: theme.spacing.sm }}>
-            {socialError}
-          </Text>
-        ) : null}
-
-        <View style={{ gap: theme.spacing.sm }}>
-          <TouchableOpacity
-            onPress={() => void handleSocialSignIn('google')}
-            disabled={socialLoading}
-            style={{
-              flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-              borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md,
-              paddingVertical: 12, paddingHorizontal: theme.spacing.md, gap: theme.spacing.sm,
-              backgroundColor: theme.colors.card,
-            }}
-          >
-            {socialLoading ? (
-              <Spinner size="small" color={theme.colors.subtext} />
-            ) : (
-              <GoogleLogo size={18} />
-            )}
-            <Text style={{ fontSize: theme.font.size.md, color: theme.colors.text, fontWeight: theme.font.weight.medium }}>
-              Continue with Google
-            </Text>
-          </TouchableOpacity>
-
-        </View>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: theme.spacing.md, gap: theme.spacing.sm }}>
-          <View style={{ flex: 1, height: 1, backgroundColor: theme.colors.border }} />
-          <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.subtext }}>or register with email</Text>
-          <View style={{ flex: 1, height: 1, backgroundColor: theme.colors.border }} />
-        </View>
-
+      <View style={shared.authNameRow}>
         <Input
-          label="First Name"
+          label="First name"
           value={firstName}
           onChangeText={setFirstName}
           placeholder="Jane"
@@ -176,10 +133,12 @@ export default function Register() {
           blurOnSubmit={false}
           onSubmitEditing={() => lastNameRef.current?.focus()}
           error={errors.firstName}
+          containerStyle={shared.authFieldFlex}
+          testID="register-first-name"
         />
         <Input
           ref={lastNameRef}
-          label="Last Name"
+          label="Last name"
           value={lastName}
           onChangeText={setLastName}
           placeholder="Smith"
@@ -188,62 +147,64 @@ export default function Register() {
           blurOnSubmit={false}
           onSubmitEditing={() => usernameRef.current?.focus()}
           error={errors.lastName}
+          containerStyle={shared.authFieldFlex}
+          testID="register-last-name"
         />
-        <Input
-          ref={usernameRef}
-          label="Username"
-          value={username}
-          onChangeText={setUsername}
-          placeholder="yourname"
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="next"
-          blurOnSubmit={false}
-          onSubmitEditing={() => emailRef.current?.focus()}
-          error={errors.username}
-        />
-        <Input
-          ref={emailRef}
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="you@example.com"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          returnKeyType="next"
-          blurOnSubmit={false}
-          onSubmitEditing={() => passwordRef.current?.focus()}
-          error={errors.email}
-        />
-        <Input
-          ref={passwordRef}
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          placeholder="••••••••"
-          secureTextEntry
-          showPasswordToggle
-          autoCapitalize="none"
-          returnKeyType="go"
-          onSubmitEditing={handleRegister}
-          error={errors.password}
-        />
-
-        <Button label="Create account" onPress={handleRegister} loading={loading} disabled={!firstName || !lastName || !username || !email || !password} />
-        {/* Covers every way to sign up on this screen (Google above, email here). */}
-        <AgreementLine
-          action="continuing or creating an account"
-          onOpenTerms={() => router.push(routes.terms())}
-          onOpenPrivacy={() => router.push(routes.privacy())}
-        />
-        <TouchableOpacity style={shared.authLink} onPress={() => router.push(routes.login())}>
-          <Text style={shared.authLinkText}>already have an account? sign in</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={shared.authLink} onPress={() => router.replace(toRoute(takeGuestReturnPath()))} testID="continue-as-guest">
-          <Text style={shared.authLinkSubtle}>Keep browsing without an account</Text>
-        </TouchableOpacity>
       </View>
-    </LinearGradient>
+      <Input
+        ref={usernameRef}
+        label="Username"
+        value={username}
+        onChangeText={setUsername}
+        placeholder="yourname"
+        autoCapitalize="none"
+        autoCorrect={false}
+        returnKeyType="next"
+        blurOnSubmit={false}
+        onSubmitEditing={() => emailRef.current?.focus()}
+        error={errors.username}
+        containerStyle={shared.authField}
+        testID="register-username"
+      />
+      <Input
+        ref={emailRef}
+        label="Email"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="you@example.com"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+        returnKeyType="next"
+        blurOnSubmit={false}
+        onSubmitEditing={() => passwordRef.current?.focus()}
+        error={errors.email}
+        containerStyle={shared.authField}
+        testID="register-email"
+      />
+      <Input
+        ref={passwordRef}
+        label="Password"
+        value={password}
+        onChangeText={setPassword}
+        placeholder="••••••••"
+        secureTextEntry
+        showPasswordToggle
+        autoCapitalize="none"
+        returnKeyType="go"
+        onSubmitEditing={handleRegister}
+        error={errors.password}
+        containerStyle={shared.authField}
+        testID="register-password"
+      />
+
+      <AuthCta label="Create account" onPress={handleRegister} loading={loading} disabled={!firstName || !lastName || !username || !email || !password} testID="register-submit" />
+      {/* Covers every way to sign up on this screen (Google above, email here). */}
+      <AgreementLine
+        action="continuing or creating an account"
+        onOpenTerms={() => router.push(routes.terms())}
+        onOpenPrivacy={() => router.push(routes.privacy())}
+      />
+    </AuthScreen>
   )
 }

@@ -10,6 +10,8 @@ export default function AuthLayout() {
         screenOptions={{
           headerShown: false,
           gestureEnabled: SWIPE_NAVIGATION.back,
+          // Sign in ⇄ Sign up is a tab switch (two routes), so it swaps in place rather than sliding.
+          animation: 'none',
           contentStyle: { backgroundColor: theme.colors.background },
         }}
       />
