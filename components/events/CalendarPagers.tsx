@@ -329,6 +329,18 @@ export function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate
               ))}
             </Animated.View>
           )}
+          {/* Before the width is known, the current week alone at full width: the strip has its
+              real height from the first frame, so nothing below it moves when the days appear. */}
+          {width === 0 && (
+            <WeekStripContent
+              weekDays={getWeekDays(weekForIdx(curWeekPage))}
+              selectedDate={selectedDate}
+              markedDates={markedDates}
+              onSelectDate={onSelectDate}
+              onPrevWeek={snapToPrev}
+              onNextWeek={snapToNext}
+            />
+          )}
         </View>
         <TouchableOpacity
           testID="week-next"

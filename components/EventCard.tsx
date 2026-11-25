@@ -42,14 +42,14 @@ function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, frien
       onPress={open}
       style={shared.ecHero}
     >
-      {/* Cover: a colour block per kind of game, with the time, day, type and title on it */}
+      {/* Cover: a colour block per kind of game, with the time, day, type and title on it.
+          The weather arrives later, so it sits in the body (below), where it can't wrap the chips onto a new line. */}
       <View style={[shared.ecCover, { backgroundColor: m.isTournament ? theme.colors.coverTournament : theme.colors.coverOpen }]}>
         <View pointerEvents="none" style={shared.ecCoverRing} />
         <View pointerEvents="none" style={shared.ecCoverDot} />
         <View style={[shared.ecHeroChips, { paddingRight: menuInset ? MENU_INSET : 0, marginBottom: 0 }]}>
           {hosted && <HostedBadge onCover />}
           <TimePill label={m.time} testID="event-card-time" />
-          {forecast && <ForecastChip summary={forecast} onCover />}
           <View style={shared.ecHeroDay}>
             <Text style={shared.ecHeroDayText}>{m.day}</Text>
           </View>
@@ -68,12 +68,14 @@ function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, frien
       </View>
 
       <View style={shared.ecBody}>
-        {(event.location || event.clubs) && (
+        {(event.location || event.clubs || forecast) && (
           <View style={shared.ecHeroLocation}>
             <Ionicons name="location-outline" size={14} color={theme.colors.subtext} />
-            <Text style={shared.ecHeroLocationText} numberOfLines={1}>
+            <Text style={[shared.ecHeroLocationText, { flexShrink: 1 }]} numberOfLines={1}>
               {[event.location, m.surfaceLabel, event.clubs?.name].filter(Boolean).join(', ')}
             </Text>
+            {/* The row is as tall as the chip, so the forecast landing doesn't move the card */}
+            {forecast && <View style={shared.ecHeroForecast}><ForecastChip summary={forecast} /></View>}
           </View>
         )}
 
