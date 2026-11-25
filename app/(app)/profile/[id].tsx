@@ -246,7 +246,7 @@ export default function UserProfileDetail() {
               backgroundColor: theme.colors.onPrimaryLine, width: '100%',
             }}>
               <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}>
-                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.accent }}>
+                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>
                   {profile.skill_level ? volleyballSkillLevelLabel(profile.skill_level) : '—'}
                 </Text>
                 <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Skill</Text>

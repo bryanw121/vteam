@@ -304,6 +304,8 @@ export const shared = StyleSheet.create({
   forecastChipLabel: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong },
   forecastChipLabelRain: { color: theme.colors.accent },
   forecastChipLabelHeat: { color: theme.colors.warm },
+  forecastChipOnCover: { backgroundColor: theme.colors.card, borderColor: theme.colors.card },
+  forecastChipLabelOnCover: { color: theme.colors.text },
   forecastCells: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: theme.spacing.sm },
   forecastCell: {
     minWidth: 56, flexGrow: 0, alignItems: 'center', paddingVertical: 6, paddingHorizontal: 8,

@@ -49,7 +49,7 @@ function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, frien
         <View style={[shared.ecHeroChips, { paddingRight: menuInset ? MENU_INSET : 0, marginBottom: 0 }]}>
           {hosted && <HostedBadge onCover />}
           <TimePill label={m.time} testID="event-card-time" />
-          {forecast && <ForecastChip summary={forecast} />}
+          {forecast && <ForecastChip summary={forecast} onCover />}
           <View style={shared.ecHeroDay}>
             <Text style={shared.ecHeroDayText}>{m.day}</Text>
           </View>

@@ -74,7 +74,7 @@ export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints,
       {!editing && (
         <View style={{ flexDirection: 'row', gap: 1, marginTop: 14, borderRadius: 14, overflow: 'hidden', backgroundColor: theme.colors.onPrimaryLine, width: '100%' }}>
           <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: theme.colors.accent }]}>
+            <Text style={styles.statValue}>
               {profile.skill_level ? volleyballSkillLevelLabel(profile.skill_level) : '—'}
             </Text>
             <Text style={STAT_LABEL}>Skill</Text>
