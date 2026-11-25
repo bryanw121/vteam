@@ -27,18 +27,18 @@ describe.each([
   it.each([
     ['waitlisted', 'Waitlisted'],
     ['requested', 'Requested'],
-  ])('shows a %s viewer a status, not RSVP, and never joins', (status, label) => {
+  ])('shows a %s viewer a status, not Join, and never joins', (status, label) => {
     const onRsvp = jest.fn(async () => {})
     const view = render(<Card event={event(status)} currentUserId="me" onRsvp={onRsvp} />)
-    expect(view.queryByText('RSVP')).toBeNull()
+    expect(view.queryByText('Join')).toBeNull()
     fireEvent.press(view.getByText(label), { stopPropagation: () => {} })
     expect(onRsvp).not.toHaveBeenCalled()
   })
 
-  it('still offers RSVP (join) to a viewer with no row, and Going (leave) to an attendee', () => {
+  it('still offers Join to a viewer with no row, and Going (leave) to an attendee', () => {
     const onRsvp = jest.fn(async () => {})
     const none = render(<Card event={event(undefined)} currentUserId="me" onRsvp={onRsvp} />)
-    fireEvent.press(none.getByText('RSVP'), { stopPropagation: () => {} })
+    fireEvent.press(none.getByText('Join'), { stopPropagation: () => {} })
     expect(onRsvp).toHaveBeenLastCalledWith('e1', 'join')
     const going = render(<Card event={event('attending')} currentUserId="me" onRsvp={onRsvp} />)
     fireEvent.press(going.getByText('Going ✓'), { stopPropagation: () => {} })
@@ -48,7 +48,7 @@ describe.each([
   it('never one-tap joins an approval-gated event; the pill opens the event instead', () => {
     const onRsvp = jest.fn(async () => {})
     const view = render(<Card event={event(undefined, true)} currentUserId="me" onRsvp={onRsvp} />)
-    expect(view.queryByText('RSVP')).toBeNull()
+    expect(view.queryByText('Join')).toBeNull()
     fireEvent.press(view.getByText('Needs approval'), { stopPropagation: () => {} })
     expect(onRsvp).not.toHaveBeenCalled()
   })
