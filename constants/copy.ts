@@ -4,6 +4,8 @@ import type { LeaveReason } from '../types'
 
 /** The app's name as people see it: the browser tab title on web and the iOS home-screen label. */
 export const APP_NAME = 'VTeam'
+/** Badge on feed cards for games and tournaments made in vteam (not outside sessions). */
+export const HOSTED_ON_VTEAM = `Hosted on ${APP_NAME}`
 
 /** Alert body for a failed write when there is nothing more specific to say. */
 export const GENERIC_ERROR_MESSAGE = 'Something went wrong. Please try again.'

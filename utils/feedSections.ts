@@ -15,6 +15,21 @@ export function matchesFeedType(event: EventWithDetails, filter: FeedFilter): bo
   return true
 }
 
+/**
+ * Hosted on vteam: a game or tournament made in vteam, not an outside session or
+ * an outside league/tournament from Skelly. These lead each day in the feed and
+ * carry the "Hosted on vteam" badge.
+ */
+export function isHostedOnVteam(event: EventWithDetails): boolean {
+  return !event._external && !event._program
+}
+
+/** Feed order within a day: vteam's own first, then by start time. */
+export function compareFeedItems(a: EventWithDetails, b: EventWithDetails): number {
+  const own = Number(isHostedOnVteam(b)) - Number(isHostedOnVteam(a))
+  return own !== 0 ? own : a.event_date.localeCompare(b.event_date)
+}
+
 export function buildFeedSections(
   events: readonly EventWithDetails[],
   { filter, surface, region, isHidden, revealed }: FeedSectionOptions,
@@ -27,7 +42,7 @@ export function buildFeedSections(
   })
   const grouped: Record<string, FeedDaySection> = {}
   const hiddenItemIds = new Set<string>()
-  for (const event of [...filtered].sort((a, b) => a.event_date.localeCompare(b.event_date))) {
+  for (const event of [...filtered].sort(compareFeedItems)) {
     // Local date, so the section header matches the time shown on the event
     // card, and the calendar dot, which uses the same helper.
     const date = eventLocalDateKey(event.event_date)
