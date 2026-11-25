@@ -6,6 +6,8 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../../constants'
 import { FORMAT_LABELS, TIEBREAKER_LABELS } from '../../constants/tournamentCopy'
 import { formatCommentTime, formatPriceAmount } from '../../utils'
+import { formatDateTime } from '../../utils/dateFormat'
+import { soloTeamCount } from '../../utils/soloTeamCount'
 import { Button } from '../Button'
 import type {
   Tournament, TournamentCommentWithAuthor, TournamentPrize, TournamentRules, TournamentTeam, TournamentTeamWithRoster,
@@ -35,6 +37,11 @@ type Props = {
   onGoToTeams: () => void
   onWithdraw: () => void
   onRegister: () => void
+  /** Solo tournaments (#282): sign up alone. */
+  onSignUpSolo: () => void
+  signingUp: boolean
+  /** Organizer of a solo tournament: open Make teams. */
+  onMakeTeams: () => void
   onAcceptInvite: (inviteId: string) => void
   onDeclineInvite: (inviteId: string) => void
   onAddAnnouncement: () => void
@@ -50,11 +57,36 @@ const PODIUM_ORDER = [1, 0, 2] // show 2nd left, 1st center, 3rd right
 
 export function OverviewTab(p: Props) {
   const { tournament, rules, prizes, myTeam, isCreator } = p
+  const solo = tournament.team_mode === 'solo'
+  const soloSignups = solo ? p.teams.filter(t => t.status === 'free_agent').length : 0
+  const soloSize = tournament.team_size ?? 6
   return (
     <ScrollView contentContainerStyle={ts.scrollContent} showsVerticalScrollIndicator={false} refreshControl={p.refreshControl}>
 
+      {/* Solo sign-up (#282): players join alone; the organizer makes the teams. */}
+      {solo && (!myTeam || myTeam.status === 'free_agent') && (p.registrationOpen || myTeam) && (
+        <SoloSignupCard
+          signups={soloSignups}
+          size={soloSize}
+          deadline={tournament.registration_deadline}
+          joined={!!myTeam}
+          busy={p.signingUp || p.withdrawing}
+          onJoin={p.onSignUpSolo}
+          onLeave={p.onWithdraw}
+        />
+      )}
+      {solo && isCreator && soloSignups >= 2 && (
+        <View style={[ts.card, { flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={ts.sectionTitle}>{soloSignups} players signed up</Text>
+            <Text style={ts.muted13}>Pin friends together, then shuffle and post the teams.</Text>
+          </View>
+          <Button label="Make teams" icon="shuffle-outline" onPress={p.onMakeTeams} testID="make-teams" fullWidth={false} />
+        </View>
+      )}
+
       {/* My team CTA card */}
-      {!isCreator && myTeam && (
+      {!isCreator && myTeam && !(solo && myTeam.status === 'free_agent') && (
         <View style={{
           backgroundColor: theme.colors.primarySoft, borderRadius: 18, padding: 14, marginBottom: 12,
           borderWidth: 1.5, borderColor: theme.colors.primary,
@@ -89,7 +121,7 @@ export function OverviewTab(p: Props) {
       )}
 
       {/* Registration CTA (organizers can enter a team of their own too) */}
-      {!myTeam && p.registrationOpen && (
+      {!solo && !myTeam && p.registrationOpen && (
         <Button label="Register Team" testID="register-team" onPress={p.onRegister} style={{ marginBottom: 12 }} />
       )}
       {!isCreator && !myTeam && !p.registrationOpen && tournament.status === 'published' && (
@@ -263,5 +295,46 @@ export function OverviewTab(p: Props) {
         <Button label="Publish Tournament" onPress={p.onPublish} loading={p.publishing} />
       )}
     </ScrollView>
+  )
+}
+
+type SoloSignupProps = {
+  signups: number
+  size: number
+  deadline: string | null
+  joined: boolean
+  busy: boolean
+  onJoin: () => void
+  onLeave: () => void
+}
+
+/** "Sign up alone, get placed on a team": how many are in, about how many teams that makes, and Sign up / Leave (#282). */
+function SoloSignupCard({ signups, size, deadline, joined, busy, onJoin, onLeave }: SoloSignupProps) {
+  const teams = soloTeamCount(signups, size)
+  const closes = deadline ? formatDateTime(new Date(deadline), { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : null
+  return (
+    <View style={[ts.card, { borderColor: theme.colors.primary, borderWidth: 1.5 }]} testID="solo-signup">
+      {joined ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <Ionicons name="checkmark-circle" size={18} color={theme.colors.primary} />
+          <Text style={ts.sectionTitle}>You're in</Text>
+        </View>
+      ) : (
+        <Text style={[ts.sectionTitle, { marginBottom: 4 }]}>Sign up alone, get placed on a team</Text>
+      )}
+      <Text style={[ts.muted13, { marginBottom: 10 }]}>
+        {joined
+          ? "You'll see your team here once the host makes the teams."
+          : `Teams of ${size}, made by the host${closes ? ` after sign-up closes ${closes}` : ' when sign-up closes'}. Want to play with a friend? Ask the host to keep you together.`}
+      </Text>
+      <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.text, marginBottom: 12 }}>
+        {signups} {signups === 1 ? 'player' : 'players'} signed up{teams > 0 ? ` · about ${teams} teams` : ''}
+      </Text>
+      {joined ? (
+        <Button label="Leave" variant="secondary" onPress={onLeave} loading={busy} testID="solo-leave" />
+      ) : (
+        <Button label="Sign up solo" onPress={onJoin} loading={busy} testID="solo-sign-up" />
+      )}
+    </View>
   )
 }

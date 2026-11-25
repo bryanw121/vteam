@@ -24,6 +24,8 @@ export const DEFAULT_TOURNAMENT_DRAFT: TournamentDraft = {
   format: 'pool_bracket',
   bracketType: 'single',
   teamsAdvancePerPool: 2,
+  teamMode: 'captains',
+  teamSize: 6,
   maxTeams: null,
   minRosterSize: 6,
   maxRosterSize: 10,
@@ -75,7 +77,8 @@ export function validateTournamentStep(step: number, draft: TournamentDraft): st
     if (!draft.startDate) return 'Please set a start date.'
   }
   if (step === 2) {
-    if (draft.minRosterSize > draft.maxRosterSize) return 'Min roster cannot exceed max.'
+    if (draft.teamMode === 'captains' && draft.minRosterSize > draft.maxRosterSize) return 'Min roster cannot exceed max.'
+    if (draft.teamMode === 'solo' && (draft.teamSize < 2 || draft.teamSize > 9)) return 'Teams need 2 to 9 players.'
   }
   return null
 }
@@ -105,6 +108,9 @@ export function moveItem<T>(items: readonly T[], i: number, by: -1 | 1): T[] {
  */
 export function saveTournamentArgs(draft: TournamentDraft, status: TournamentSaveStatus) {
   const bracket = formatHasBracket(draft.format)
+  // Solo (#282): sign-ups are one-player entries, so there is no team cap, and a
+  // drawn team holds the chosen size or one more (sign-ups rarely divide evenly).
+  const solo = draft.teamMode === 'solo'
   return {
     p_tournament: {
       club_id:                draft.clubId,
@@ -117,13 +123,15 @@ export function saveTournamentArgs(draft: TournamentDraft, status: TournamentSav
       status,
       format:                 draft.format,
       bracket_type:           bracket ? draft.bracketType : null,
-      max_teams:              draft.maxTeams,
-      min_roster_size:        draft.minRosterSize,
-      max_roster_size:        draft.maxRosterSize,
+      max_teams:              solo ? null : draft.maxTeams,
+      min_roster_size:        solo ? Math.max(1, draft.teamSize - 1) : draft.minRosterSize,
+      max_roster_size:        solo ? draft.teamSize + 1 : draft.maxRosterSize,
       teams_advance_per_pool: draft.teamsAdvancePerPool,
       has_refs:               draft.hasRefs,
       price:                  draft.price,
       venmo_handle:           draft.price > 0 ? (draft.venmoHandle.trim() || null) : null,
+      team_mode:              draft.teamMode,
+      team_size:              solo ? draft.teamSize : null,
     },
     p_rules: {
       starting_score:     draft.startingScore,

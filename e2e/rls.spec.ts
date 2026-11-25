@@ -720,3 +720,17 @@ test.describe('court queue for open play (#333)', () => {
     expect(save.error?.code).toBe(RLS_DENIED)
   })
 })
+
+test.describe('solo sign-up tournaments (#282)', () => {
+  const TEAMS = [{ name: 'A', members: [crypto.randomUUID()] }, { name: 'B', members: [crypto.randomUUID()] }]
+
+  test('guests cannot post teams', async () => {
+    const res = await q(() => anon.rpc('post_solo_teams', { p_tournament_id: '00000000-0000-4000-8000-000000000000', p_teams: TEAMS }), 'anon post_solo_teams')
+    expect(res.error).not.toBeNull()
+  })
+
+  test('only the organizer can post teams', async () => {
+    const res = await q(() => me.rpc('post_solo_teams', { p_tournament_id: '00000000-0000-4000-8000-000000000000', p_teams: TEAMS }), 'post_solo_teams on a tournament I do not run')
+    expect(res.error?.code).toBe(RLS_DENIED)
+  })
+})

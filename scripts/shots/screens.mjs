@@ -170,6 +170,9 @@ export const SCREENS = {
   'tournament-public-guest': { route: `/tournament/${T.shared}`, signedIn: false, ready: 'Halloween Sand Classic', sources: [...TOURNAMENT_DETAIL, 'utils/publicTournament.ts'] },
   'tournament-public-member-of-none': { route: `/tournament/${T.shared}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-teams', text: 'Teams' }], sources: [...TOURNAMENT_DETAIL, 'utils/publicTournament.ts'] },
   'tournament-create': { route: '/tournament/create', sources: ['app/(app)/tournament/create.tsx'] },
+  'tournament-solo-overview': { route: `/tournament/${T.open}`, ready: 'Winter 4s Shuffle', sources: [...TOURNAMENT_DETAIL, 'utils/soloTeams.ts'] },
+  'tournament-make-teams': { route: `/tournament/make-teams/${T.open}`, ready: 'Emma', sources: ['app/(app)/tournament/make-teams/[id].tsx', 'utils/soloTeams.ts'] },
+  'tournament-make-teams-drawn': { route: `/tournament/make-teams/${T.open}`, ready: 'Emma', actions: [{ tap: 'shuffle-teams', text: 'Shuffle teams' }, { wait: 400 }], sources: ['app/(app)/tournament/make-teams/[id].tsx', 'utils/soloTeams.ts'] },
 
   // ── Auth and legal (signed out) ─────────────────────────────────────────
   login: { route: '/login', signedIn: false, sources: ['app/(auth)/login.tsx', 'app/(auth)/_layout.tsx', 'components/legal/**', 'components/GoogleLogo.tsx', 'components/Input.tsx', 'components/Button.tsx'] },

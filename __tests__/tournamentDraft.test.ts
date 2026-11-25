@@ -82,6 +82,17 @@ describe('saveTournamentArgs', () => {
     expect(saveTournamentArgs(ready({ price: 20, venmoHandle: ' me ' }), 'draft').p_tournament.venmo_handle).toBe('me')
   })
 
+  it('captains by default; solo sends the team size, no team cap and rosters around it (#282)', () => {
+    expect(saveTournamentArgs(ready({ maxTeams: 8 }), 'draft').p_tournament).toMatchObject({ team_mode: 'captains', team_size: null, max_teams: 8, min_roster_size: 6, max_roster_size: 10 })
+    expect(saveTournamentArgs(ready({ teamMode: 'solo', teamSize: 4, maxTeams: 8 }), 'draft').p_tournament)
+      .toMatchObject({ team_mode: 'solo', team_size: 4, max_teams: null, min_roster_size: 3, max_roster_size: 5 })
+  })
+
+  it('checks the team size in solo and the roster only with captains', () => {
+    expect(validateTournamentStep(2, ready({ teamMode: 'solo', minRosterSize: 11, maxRosterSize: 10 }))).toBeNull()
+    expect(validateTournamentStep(2, ready({ teamMode: 'solo', teamSize: 1 }))).toBe('Teams need 2 to 9 players.')
+  })
+
   it('plays a third-place match only in a single-elimination bracket', () => {
     const third = (patch: Partial<TournamentDraft>) => saveTournamentArgs(ready({ thirdPlaceMatch: true, ...patch }), 'draft').p_rules.third_place_match
     expect(third({})).toBe(true)

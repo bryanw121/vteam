@@ -42,6 +42,10 @@ export function publicTournamentView(p: PublicTournamentPayload | null | undefin
     house_rule: null,
     pool_matches_per_team: null,
     warmup_minutes: 0,
+    // The public copy doesn't say how teams form (#282): it reads like a captains tournament.
+    team_mode: 'captains',
+    team_size: null,
+    team_pins: [],
   } as Tournament
 
   const teams: TournamentTeamWithRoster[] = p.teams.map(t => ({
