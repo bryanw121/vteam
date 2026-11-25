@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { TouchableOpacity, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text, TextInput } from '../ui/Text'
+import { BackButton } from '../ui/BackButton'
 import { ts } from '../tournament/tournamentStyles'
 import { theme } from '../../constants'
 import { record, teamDetail, teamList } from '../../utils/sheetScores'
@@ -32,14 +33,7 @@ export function SheetTeamsView({ state, team, onSelectTeam }: SheetTeamsViewProp
     ]
     return (
       <View testID="scores-team">
-        <TouchableOpacity
-          onPress={() => onSelectTeam('')}
-          accessibilityRole="button"
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44, alignSelf: 'flex-start' }}
-        >
-          <Ionicons name="chevron-back" size={16} color={theme.colors.primaryText} />
-          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primaryText }}>All teams</Text>
-        </TouchableOpacity>
+        <BackButton label="All teams" onPress={() => onSelectTeam('')} />
         <View style={ts.card}>
           <Text accessibilityRole="header" style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.md, color: theme.colors.text }}>{detail.name}</Text>
           <Text style={[ts.muted13, { marginTop: 2 }]}>

@@ -1,8 +1,7 @@
 import React, { useRef, useState } from 'react'
-import { ScrollView, View, TouchableOpacity } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { Text } from '../../components/ui/Text'
 import { RefreshControl } from '../../components/RefreshControl'
-import Ionicons from '@expo/vector-icons/Ionicons'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { supabase } from '../../lib/supabase'
 import { Sentry } from '../../lib/sentry'
@@ -22,6 +21,7 @@ import { SaveTemplateSection } from '../../components/host/SaveTemplateSection'
 import { HostResultModal } from '../../components/host/HostResultModal'
 import { HostSubmitButton } from '../../components/host/HostSubmitButton'
 import { ScreenState } from '../../components/ui'
+import { BackButton } from '../../components/ui'
 import { shared, theme, GENERIC_ERROR_MESSAGE } from '../../constants'
 import { routes } from '../../utils/routes'
 import { useSession } from '../../contexts/session'
@@ -199,9 +199,7 @@ export default function HostEventScreen() {
   const backHeaderOptions = {
     title: '',
     headerLeft: () => (
-      <TouchableOpacity onPress={goBack} style={{ paddingRight: 8 }} accessibilityRole="button" accessibilityLabel="Go back">
-        <Ionicons name="chevron-back" size={24} color={theme.colors.primaryText} />
-      </TouchableOpacity>
+      <BackButton onPress={goBack} testID="host-back" />
     ),
   }
 

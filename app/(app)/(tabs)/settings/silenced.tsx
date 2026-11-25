@@ -4,7 +4,6 @@ import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFocusEffect } from 'expo-router'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useSilencedUsers } from '../../../../hooks/useSilencedUsers'
 import { shared, theme } from '../../../../constants'
 import { profileAvatarSmallUri, profileDisplayName } from '../../../../utils'
@@ -17,7 +16,6 @@ function displayName(p: { first_name: string | null; last_name: string | null; u
 }
 
 export default function SilencedPeopleScreen() {
-  useStackBackTitle('Silenced people')
   const { entries, loading, refresh, unsilenceUser } = useSilencedUsers()
   const [refreshing, setRefreshing] = React.useState(false)
 
