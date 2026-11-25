@@ -40,6 +40,8 @@ export type EventCardProps = {
   forecast?: ForecastSummary | null
   /** Leave room top-right for the feed's ⋯ button (`FeedItemShell`). */
   menuInset?: boolean
+  /** The Events feed marks vteam's own games among outside ones: outline + "Hosted on vteam" badge. */
+  hosted?: boolean
 }
 
 export type RowEventCardProps = EventCardProps & {

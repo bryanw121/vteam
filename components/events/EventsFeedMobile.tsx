@@ -43,6 +43,7 @@ function MobileCard({ item, cards, menu = true }: { item: EventWithDetails; card
       friendsGoing={cards.friendsGoing.get(item.id)}
       forecast={cards.forecasts.get(item.id)}
       menuInset={withMenu}
+      hosted
     />
   )
   return (
