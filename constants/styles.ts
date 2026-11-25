@@ -1565,6 +1565,10 @@ export const shared = StyleSheet.create({
     backgroundColor: colors.card, borderRadius: 20, padding: 14, marginBottom: spacing.sm, flexDirection: 'row', gap: 14,
     borderWidth: 1, borderColor: colors.border, overflow: 'hidden', position: 'relative',
   },
+  // Hosted on vteam (feed only): a purple outline and a solid badge first in the chip row
+  ecHosted: { borderWidth: 1.5, borderColor: colors.primary },
+  ecHostedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.full, backgroundColor: colors.primary },
+  ecHostedBadgeText: { fontFamily: fonts.bodySemiBold, fontSize: font.size.xs, color: colors.onPrimary },
   ecHeroWatermark: { position: 'absolute', right: -10, top: -20 },
   ecHeroWatermarkText: { fontSize: font.watermark.xl, opacity: 0.13 },
   ecRowWatermark: { position: 'absolute', right: -6, top: -14 },

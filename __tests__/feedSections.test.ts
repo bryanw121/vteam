@@ -1,5 +1,5 @@
 /** #217 part 2: the Events feed's section rules, without the screen. */
-import { buildFeedSections, matchesFeedType } from '../utils/feedSections'
+import { buildFeedSections, isHostedOnVteam, matchesFeedType } from '../utils/feedSections'
 import { normalizeExternalSessions } from '../utils/feedItems'
 import { localDate } from './helpers/clock'
 import type { EventWithDetails, ExternalSession, FeedSectionOptions } from '../types'
@@ -28,17 +28,25 @@ const [elsewhere] = normalizeExternalSessions([{ ...session, id: 'x2', region: '
 const all = [cup, open, outside, elsewhere, early]
 
 describe('buildFeedSections', () => {
-  it('groups by local day, sorted by time, and drops other regions', () => {
+  it('groups by local day, vteam games first then by time, and drops other regions', () => {
     const { sections } = buildFeedSections(all, base)
     expect(sections.map(s => s.date)).toEqual(['2026-11-20', '2026-11-21'])
-    expect(sections[0].data.map(e => e.id)).toEqual(['early', outside.id, 'open'])
+    // The outside session (6 PM) comes after both vteam games, even the 7 PM one.
+    expect(sections[0].data.map(e => e.id)).toEqual(['early', 'open', outside.id])
     expect(sections.flatMap(s => s.data).some(e => e.id === elsewhere.id)).toBe(false)
+  })
+
+  it('knows what is hosted on vteam', () => {
+    expect(isHostedOnVteam(open)).toBe(true)
+    expect(isHostedOnVteam(ev('t', at(2026, 11, 21), { _isTournament: true } as Partial<EventWithDetails>))).toBe(true)
+    expect(isHostedOnVteam(outside)).toBe(false)
+    expect(isHostedOnVteam(ev('p', at(2026, 11, 21), { _program: {} } as unknown as Partial<EventWithDetails>))).toBe(false)
   })
 
   it('filters by type', () => {
     const ids = (filter: FeedSectionOptions['filter']) =>
       buildFeedSections(all, { ...base, filter }).sections.flatMap(s => s.data.map(e => e.id))
-    expect(ids('open_play')).toEqual([outside.id, 'open'])
+    expect(ids('open_play')).toEqual(['open', outside.id])
     expect(ids('tournament')).toEqual(['cup'])
   })
 

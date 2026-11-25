@@ -3,6 +3,7 @@ import { TouchableOpacity, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from './ui/Text'
 import { TimePill } from './ui'
+import { HostedBadge } from './eventCard/HostedBadge'
 import { FriendsGoingLine } from './FriendsGoingLine'
 import { ForecastChip } from './event/ForecastChip'
 import { AttendeeStack } from './eventCard/AttendeeStack'
@@ -29,7 +30,7 @@ function barWidth(fillRatio: number) {
 
 // ─── EventCard: phone feed, search, history, hosted, club page, recap ─────────
 
-function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, friendsGoing, forecast, menuInset = false }: EventCardProps) {
+function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, friendsGoing, forecast, menuInset = false, hosted = false }: EventCardProps) {
   const m = useMemo(() => eventCardModel(event, currentUserId), [event, currentUserId])
   const { open, rsvp, rsvpLoading } = useEventCardActions(event, { from, onRsvp, rsvpPending })
 
@@ -39,7 +40,7 @@ function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, frien
       testID="event-card"
       {...(event._isTournament ? null : eventPrefetchProps(event.id))}
       onPress={open}
-      style={shared.ecHero}
+      style={[shared.ecHero, hosted && shared.ecHosted]}
     >
       {m.typeTags.length > 0 && (
         <View pointerEvents="none" style={shared.ecHeroWatermark}>
@@ -49,6 +50,7 @@ function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, frien
       <View>
         {/* Time, day, type, skill, club */}
         <View style={[shared.ecHeroChips, { paddingRight: menuInset ? MENU_INSET : 0 }]}>
+          {hosted && <HostedBadge />}
           <TimePill label={m.time} testID="event-card-time" />
           {forecast && <ForecastChip summary={forecast} />}
           <View style={shared.ecHeroDay}>
@@ -117,7 +119,7 @@ export const EventCard = memo(EventCardInner) as typeof EventCardInner
 
 // ─── RowEventCard: desktop feed ───────────────────────────────────────────────
 
-function RowEventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, friendsGoing, forecast, menuInset = false, hideDate = false }: RowEventCardProps) {
+function RowEventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, friendsGoing, forecast, menuInset = false, hideDate = false, hosted = false }: RowEventCardProps) {
   const m = useMemo(() => eventCardModel(event, currentUserId), [event, currentUserId])
   const { open, rsvp, rsvpLoading } = useEventCardActions(event, { from, onRsvp, rsvpPending })
   const tint = m.isTournament ? theme.colors.warm + '22' : theme.colors.primary + '18'
@@ -128,7 +130,7 @@ function RowEventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, fr
       testID="event-card"
       {...(event._isTournament ? null : eventPrefetchProps(event.id))}
       onPress={open}
-      style={shared.ecRow}
+      style={[shared.ecRow, hosted && shared.ecHosted]}
     >
       <View pointerEvents="none" style={shared.ecRowWatermark}>
         <Text style={shared.ecRowWatermarkText}>{m.isTournament ? '🏆' : '🏐'}</Text>
@@ -143,6 +145,7 @@ function RowEventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, fr
 
       <View style={shared.ecRowBody}>
         <View style={[shared.ecRowTime, { paddingRight: menuInset ? MENU_INSET : 0 }]}>
+          {hosted && <HostedBadge />}
           <TimePill label={m.time} testID="event-card-time" />
           {forecast && <ForecastChip summary={forecast} />}
         </View>

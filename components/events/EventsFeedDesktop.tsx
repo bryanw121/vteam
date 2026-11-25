@@ -36,6 +36,7 @@ function RowCard({ event, cards, menuInset = false }: { event: EventWithDetails;
       forecast={cards.forecasts.get(event.id)}
       menuInset={menuInset}
       friendsGoing={cards.friendsGoing.get(event.id)}
+      hosted
     />
   )
 }
