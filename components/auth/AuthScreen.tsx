@@ -28,7 +28,12 @@ export function AuthScreen({ heading, sub, tab, children }: AuthScreenProps) {
   const form = (
     <View style={wide ? shared.authFormWide : shared.authForm}>
       <View style={wide ? shared.authIntroWide : shared.authIntro}>
-        {!wide && <VteamMark size={56} />}
+        {!wide && (
+          <View style={shared.authBrandRow}>
+            <VteamMark size={56} />
+            <BetaTag />
+          </View>
+        )}
         <Text style={wide ? shared.authHeadingWide : shared.authHeading} accessibilityRole="header">{heading}</Text>
         <Text style={wide ? shared.authSubWide : shared.authSub}>{sub}</Text>
       </View>
@@ -106,11 +111,21 @@ function AuthPanel() {
       <View style={shared.authPanelBrand}>
         <VteamMark size={48} inverted />
         <Text style={shared.authPanelWordmark}>vteam</Text>
+        <BetaTag onPurple />
       </View>
       <View>
         <Text style={shared.authPanelTitle}>Volleyball around Austin, in one place.</Text>
         <Text style={shared.authPanelBody}>Open play, tournaments and leagues. Save your spot, give cheers, earn points.</Text>
       </View>
+    </View>
+  )
+}
+
+/** The BETA tag that sits beside the vteam name everywhere (loading screen, sidebar). */
+function BetaTag({ onPurple = false }: { onPurple?: boolean }) {
+  return (
+    <View style={onPurple ? shared.authBetaOnPurple : shared.authBeta}>
+      <Text style={onPurple ? shared.authBetaTextOnPurple : shared.authBetaText} maxFontSizeMultiplier={1.3}>BETA</Text>
     </View>
   )
 }

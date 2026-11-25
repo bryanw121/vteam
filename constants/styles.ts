@@ -75,17 +75,6 @@ export const shared = StyleSheet.create({
   badgeText: { color: colors.white, fontSize: font.size.sm, fontWeight: font.weight.semibold },
 
   // ─── Auth ─────────────────────────────────────────────────
-  authBackground: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
-  authCard: {
-    backgroundColor: colors.card,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    width: '100%',
-    maxWidth: 400,
-    ...shadow.md,
-  },
-  authTitle:    { fontSize: font.size.xxl, fontWeight: font.weight.bold, color: colors.primaryText, marginBottom: spacing.xs, textAlign: 'center' },
-  authSubtitle: { fontSize: font.size.md, color: colors.subtext, marginBottom: spacing.xl, textAlign: 'center' },
   authLink:     { marginTop: spacing.md, alignItems: 'center' },
   authLinkText: { fontFamily: theme.fonts.bodySemiBold, color: colors.primaryText, fontSize: font.size.md },
   // Join intent (#229): the game a guest was joining, on the sign-up / sign-in card.
@@ -108,6 +97,11 @@ export const shared = StyleSheet.create({
   },
   authForm:        { width: '100%', maxWidth: 400, gap: 14, paddingTop: spacing.sm },
   authFormWide:    { width: 400, gap: 14 },
+  authBrandRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  authBeta:        { borderWidth: 1, borderColor: colors.timeBorder, backgroundColor: colors.primarySoft, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  authBetaText:    { fontFamily: theme.fonts.bodyBold, fontSize: font.size.xs, letterSpacing: 1, color: colors.primaryText },
+  authBetaOnPurple: { borderWidth: 1, borderColor: colors.onPrimaryLine, backgroundColor: colors.onPrimaryFill, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  authBetaTextOnPurple: { fontFamily: theme.fonts.bodyBold, fontSize: font.size.xs, letterSpacing: 1, color: colors.white },
   authIntro:       { alignItems: 'center', gap: 10, marginBottom: spacing.xs },
   authIntroWide:   { gap: 6 },
   authHeading:     { fontFamily: theme.fonts.display, fontSize: font.heading.xl, letterSpacing: -0.8, color: colors.text, textAlign: 'center' },
