@@ -37,7 +37,7 @@ export const theme = {
     error:        '#C62828',
     /** Filled destructive buttons (Button variant danger): white label at 5.6:1. */
     dangerFill:   '#C62828',
-    warning:      '#B45309',
+    warning:      '#92400E',
     success:      '#166534',
     // Toast surfaces (#228): light tints of each status colour, dark text on them.
     toastErrorBg:   '#FDE8EA',
@@ -51,8 +51,8 @@ export const theme = {
     onPrimary:    '#FFFFFF',
     /** White text and lines on a `primary` fill at lower emphasis (heroes). */
     onPrimaryStrong: 'rgba(255,255,255,0.9)',
-    onPrimarySoft:   'rgba(255,255,255,0.85)',
-    onPrimaryMuted:  'rgba(255,255,255,0.85)',
+    onPrimarySoft:   'rgba(255,255,255,0.92)',
+    onPrimaryMuted:  'rgba(255,255,255,0.92)',
     onPrimaryLine:   'rgba(255,255,255,0.35)',
     /** A darker well on a `primary` fill (stats, buttons on heroes): white text stays above 4.5:1. */
     onPrimaryFill:   'rgba(30,16,51,0.18)',
