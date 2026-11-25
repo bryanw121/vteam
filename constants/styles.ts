@@ -1572,7 +1572,7 @@ export const shared = StyleSheet.create({
   ecCoverDot: { position: 'absolute', right: 44, bottom: -44, width: 92, height: 92, borderRadius: 46, backgroundColor: colors.onPrimaryFill },
   ecBody: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 14 },
   ecHostedBadgeOnCover: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.full, backgroundColor: colors.white },
-  ecHostedBadgeOnCoverText: { fontFamily: fonts.bodyBold, fontSize: font.size.xs, color: colors.primaryText },
+  ecHostedBadgeOnCoverText: { fontFamily: fonts.bodyBold, fontSize: font.size.xs, color: colors.primaryDark },
   ecRow: {
     backgroundColor: colors.card, borderRadius: 20, padding: 14, marginBottom: spacing.sm, flexDirection: 'row', gap: 14,
     borderWidth: 1, borderColor: colors.border, overflow: 'hidden', position: 'relative',

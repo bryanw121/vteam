@@ -78,7 +78,7 @@ export function eventCardModel(event: EventWithDetails, userId: string | null | 
     typeTags,
     skillTags: tagsOf(event, 'skill_level'),
     isTournament,
-    accent: isTournament ? theme.colors.warm : theme.colors.primary,
+    accent: isTournament ? theme.colors.warm : theme.colors.primaryText,
     previews,
     overflow: attendeeCount > previews.length ? attendeeCount - previews.length : 0,
     surfaceLabel: surface ? SURFACE_LABELS[surface] : null,

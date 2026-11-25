@@ -97,7 +97,7 @@ export function ProfileAvatar({ uri, border, size, loading = false, onPress, onD
   const picture = (
     <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: theme.colors.border, alignItems: 'center', justifyContent: 'center' }}>
       {loading ? (
-        <Spinner color={theme.colors.primary} />
+        <Spinner color={theme.colors.primaryText} />
       ) : uri ? (
         <Image source={{ uri }} style={{ width: size, height: size }} contentFit="cover" transition={200} accessibilityIgnoresInvertColors />
       ) : (

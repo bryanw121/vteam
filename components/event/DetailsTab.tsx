@@ -254,7 +254,7 @@ export function DetailsTab({
               const isTournament = name.includes('tournament')
               const bg     = isOpenPlay ? theme.colors.success + '1A' : isTournament ? theme.colors.warning + '1A' : theme.colors.primary + '1A'
               const border = isOpenPlay ? theme.colors.success + '40' : isTournament ? theme.colors.warning + '40' : theme.colors.primary + '40'
-              const color  = isOpenPlay ? theme.colors.success : isTournament ? theme.colors.warning : theme.colors.primary
+              const color  = isOpenPlay ? theme.colors.success : isTournament ? theme.colors.warning : theme.colors.primaryText
               return (
                 <View key={et.tag_id} style={{ paddingHorizontal: 10, paddingVertical: 3, borderRadius: theme.radius.full, backgroundColor: bg, borderWidth: 1, borderColor: border }}>
                   <Text style={{ fontSize: theme.font.size.sm, fontWeight: theme.font.weight.semibold, color }}>{et.tags.name}</Text>
@@ -318,7 +318,7 @@ export function DetailsTab({
           return (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.md, paddingBottom: theme.spacing.md }}>
           <View style={{ width: 36, height: 36, borderRadius: theme.radius.sm, backgroundColor: theme.colors.primary + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Ionicons name="calendar-outline" size={18} color={theme.colors.primary} />
+            <Ionicons name="calendar-outline" size={18} color={theme.colors.primaryText} />
           </View>
           <View style={{ flex: 1, gap: theme.spacing.xs, paddingTop: 2 }}>
             <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.text }}>
@@ -346,7 +346,7 @@ export function DetailsTab({
               <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
                 Add to calendar
               </Text>
-              <Ionicons name="arrow-forward" size={12} color={theme.colors.primary} />
+              <Ionicons name="arrow-forward" size={12} color={theme.colors.primaryText} />
             </TouchableOpacity>
           </View>
         </View>
@@ -363,7 +363,7 @@ export function DetailsTab({
               <View style={{ height: 1, backgroundColor: theme.colors.border }} />
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.md, paddingVertical: theme.spacing.md }}>
                 <View style={{ width: 36, height: 36, borderRadius: theme.radius.sm, backgroundColor: theme.colors.primary + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Ionicons name="location-outline" size={18} color={theme.colors.primary} />
+                  <Ionicons name="location-outline" size={18} color={theme.colors.primaryText} />
                 </View>
                 <View style={{ flex: 1, paddingTop: 2 }}>
                   <Text testID="event-location-name" style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.text }}>
@@ -381,7 +381,7 @@ export function DetailsTab({
                     <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
                       Show in Maps
                     </Text>
-                    <Ionicons name="arrow-forward" size={12} color={theme.colors.primary} />
+                    <Ionicons name="arrow-forward" size={12} color={theme.colors.primaryText} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -403,7 +403,7 @@ export function DetailsTab({
               <View style={{ height: 1, backgroundColor: theme.colors.border }} />
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, paddingVertical: theme.spacing.md }}>
                 <View style={{ width: 36, height: 36, borderRadius: theme.radius.sm, backgroundColor: theme.colors.primary + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Ionicons name="speedometer-outline" size={18} color={theme.colors.primary} />
+                  <Ionicons name="speedometer-outline" size={18} color={theme.colors.primaryText} />
                 </View>
                 <View style={{ flex: 1, gap: 6 }}>
                   <Text style={{ fontSize: theme.font.size.xs, fontWeight: theme.font.weight.semibold, color: theme.colors.subtext, textTransform: 'uppercase', letterSpacing: 0.5 }}>
@@ -429,7 +429,7 @@ export function DetailsTab({
           <View style={{ height: 1, backgroundColor: theme.colors.border }} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md, paddingVertical: theme.spacing.md }}>
             <View style={{ width: 36, height: 36, borderRadius: theme.radius.sm, backgroundColor: theme.colors.primary + '14', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Ionicons name="cash-outline" size={18} color={theme.colors.primary} />
+              <Ionicons name="cash-outline" size={18} color={theme.colors.primaryText} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: theme.font.size.xs, fontWeight: theme.font.weight.semibold, color: theme.colors.subtext, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>
@@ -492,7 +492,7 @@ export function DetailsTab({
           onPress={onManageCohosts}
           style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginBottom: theme.spacing.md }}
         >
-          <Ionicons name="person-add-outline" size={14} color={theme.colors.primary} />
+          <Ionicons name="person-add-outline" size={14} color={theme.colors.primaryText} />
           <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.medium }}>
             Manage Co-hosts{cohosts.length > 0 ? ` (${cohosts.length})` : ''}
           </Text>

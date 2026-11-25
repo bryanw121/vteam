@@ -63,7 +63,7 @@ function PositionOptionChip({ label, rank, onPress }: { label: string; rank?: nu
       <Text style={{
         fontSize: theme.font.size.sm, lineHeight: theme.font.lineHeight.tight,
         fontWeight: active ? theme.font.weight.semibold : theme.font.weight.regular,
-        color: active ? theme.colors.primary : theme.colors.text,
+        color: active ? theme.colors.primaryText : theme.colors.text,
       }}>
         {label}
       </Text>
@@ -158,7 +158,7 @@ export function EditProfileForm({ profile, badges, saving, onSave, onSetBorder, 
                 <Text style={{
                   fontSize: theme.font.size.sm,
                   fontWeight: active ? theme.font.weight.semibold : theme.font.weight.regular,
-                  color: active ? theme.colors.primary : theme.colors.text,
+                  color: active ? theme.colors.primaryText : theme.colors.text,
                 }}>
                   {opt.label}
                 </Text>

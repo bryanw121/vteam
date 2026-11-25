@@ -38,7 +38,7 @@ export function ClubLocationCard({ club }: Props) {
       ]}
     >
       <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}>
-        <Ionicons name="location" size={20} color={theme.colors.primary} />
+        <Ionicons name="location" size={20} color={theme.colors.primaryText} />
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={{ fontSize: theme.font.size.xs, fontWeight: theme.font.weight.semibold, color: theme.colors.subtext, textTransform: 'uppercase', letterSpacing: 0.5 }}>

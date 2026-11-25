@@ -17,7 +17,7 @@ export function ChatRoomHeader({ title, avatarUri, isClub, onBack, onOpenMenu }:
   return (
     <View style={[shared.chatRoomHeader, { paddingTop: insets.top + theme.spacing.sm }]}>
       <TouchableOpacity onPress={onBack} style={shared.chatRoomBack} accessibilityRole="button" accessibilityLabel="Back to chats">
-        <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+        <Ionicons name="chevron-back" size={24} color={theme.colors.primaryText} />
       </TouchableOpacity>
       <View style={[shared.chatRoomAvatar, isClub && shared.chatRoomAvatarClub]}>
         {avatarUri ? (

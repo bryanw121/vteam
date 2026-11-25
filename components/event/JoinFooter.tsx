@@ -92,7 +92,7 @@ export function JoinFooter({ eventDate, eventStatus, requiresApproval, attendanc
             accessibilityLabel="Add a +1 guest"
             style={styles.addGuest}
           >
-            <Ionicons name="person-add-outline" size={20} color={theme.colors.primary} />
+            <Ionicons name="person-add-outline" size={20} color={theme.colors.primaryText} />
           </TouchableOpacity>
         )}
       </View>

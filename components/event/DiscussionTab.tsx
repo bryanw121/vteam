@@ -89,7 +89,7 @@ export function DiscussionTab({
       >
         {commentsLoading && comments.length === 0 ? (
           <View style={{ paddingVertical: theme.spacing.lg, alignItems: 'center' }}>
-            <Spinner color={theme.colors.primary} />
+            <Spinner color={theme.colors.primaryText} />
           </View>
         ) : comments.length === 0 ? (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -107,7 +107,7 @@ export function DiscussionTab({
                 style={shared.loadEarlierButton}
               >
                 {loadingEarlier
-                  ? <Spinner size="small" color={theme.colors.primary} />
+                  ? <Spinner size="small" color={theme.colors.primaryText} />
                   : <Text style={shared.loadEarlierLabel}>Load earlier comments</Text>}
               </TouchableOpacity>
             ) : null}

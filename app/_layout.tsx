@@ -10,6 +10,7 @@ import {
   Outfit_800ExtraBold,
 } from '@expo-google-fonts/outfit'
 import { LinearGradient } from 'expo-linear-gradient'
+import { StatusBar } from 'expo-status-bar'
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router'
 import Head from 'expo-router/head'
 import { GestureRoot } from '../components/GestureRoot'
@@ -20,6 +21,7 @@ import { isAppPath, routes, toRoute } from '../utils/routes'
 import { isProtectedPath, returnPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
 import { recoveryLinkAtStart } from '../lib/supabase'
 import { APP_NAME, theme, SWIPE_NAVIGATION } from '../constants'
+import { colorScheme } from '../constants/theme'
 import { initSentry, Sentry } from '../lib/sentry'
 import { SentryErrorBoundary } from '../components/SentryErrorBoundary'
 import { registerPushToken, subscribeToPushTaps } from '../utils/pushNotifications'
@@ -220,11 +222,13 @@ function RootNavigator() {
           <title>{APP_NAME}</title>
         </Head>
       )}
+      {/* Status bar text: dark on the light theme, light on the dark one (native; no-op on web) */}
+      {Platform.OS !== 'web' && <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />}
       {hydrated && (
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: theme.colors.background },
-            headerTintColor: theme.colors.primary,
+            headerTintColor: theme.colors.primaryText,
             headerShadowVisible: false,
             gestureEnabled: SWIPE_NAVIGATION.back,
           }}

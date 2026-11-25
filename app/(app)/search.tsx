@@ -200,7 +200,7 @@ function HostRow({ host, onPress }: SearchHostRowProps) {
   const name = profileDisplayName(host)
   return (
     <TouchableOpacity onPress={onPress} style={shared.searchResultRow} accessibilityRole="link" accessibilityLabel={`${name}, ${host.upcoming} upcoming`} testID={`search-host-${host.id}`}>
-      <Ionicons name="person-circle-outline" size={28} color={theme.colors.primary} />
+      <Ionicons name="person-circle-outline" size={28} color={theme.colors.primaryText} />
       <View style={{ flex: 1 }}>
         <Text style={shared.body} numberOfLines={1}>{name}</Text>
         <Text style={shared.caption}>{host.upcoming === 1 ? '1 upcoming game' : `${host.upcoming} upcoming games`}</Text>
@@ -214,7 +214,7 @@ function ClubRow({ club, onPress }: SearchClubRowProps) {
   const meta = [club.location_name, club.members === 1 ? '1 member' : `${club.members} members`].filter(Boolean).join(' · ')
   return (
     <TouchableOpacity onPress={onPress} style={shared.searchResultRow} accessibilityRole="link" accessibilityLabel={`${club.name}, ${meta}`} testID={`search-club-${club.id}`}>
-      <Ionicons name="people-circle-outline" size={28} color={theme.colors.primary} />
+      <Ionicons name="people-circle-outline" size={28} color={theme.colors.primaryText} />
       <View style={{ flex: 1 }}>
         <Text style={shared.body} numberOfLines={1}>{club.name}</Text>
         <Text style={shared.caption} numberOfLines={1}>{meta}</Text>

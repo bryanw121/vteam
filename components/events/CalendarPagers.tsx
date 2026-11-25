@@ -123,7 +123,7 @@ const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate
                 fontFamily: theme.fonts.display,
                 fontSize: theme.font.heading.sm,
                 lineHeight: 22,
-                color: isSelected ? theme.colors.white : isToday ? theme.colors.primary : theme.colors.text,
+                color: isSelected ? theme.colors.white : isToday ? theme.colors.primaryText : theme.colors.text,
               }}>
                 {day.getDate()}
               </Text>
@@ -212,7 +212,7 @@ export const MonthGridContent = memo(function MonthGridContent({ month, selected
                   <Text style={{
                     fontFamily: theme.fonts.display,
                     fontSize: theme.font.size.md,
-                    color: isSelected ? theme.colors.white : isToday ? theme.colors.primary : theme.colors.text,
+                    color: isSelected ? theme.colors.white : isToday ? theme.colors.primaryText : theme.colors.text,
                   }}>
                     {day}
                   </Text>

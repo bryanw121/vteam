@@ -112,7 +112,7 @@ function HistoryChip({ label, active, onPress }: { label: string; active: boolea
         fontSize: theme.font.size.md,
         lineHeight: theme.font.lineHeight.normal,
         fontWeight: active ? theme.font.weight.semibold : theme.font.weight.regular,
-        color: active ? theme.colors.primary : theme.colors.text,
+        color: active ? theme.colors.primaryText : theme.colors.text,
       }}>
         {label}
       </Text>

@@ -191,7 +191,7 @@ export default function MakeTeamsScreen() {
                         <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.text }}>{p.name}</Text>
                         <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext }}>{p.line}</Text>
                       </View>
-                      {pinnedIds.has(p.id) && <Ionicons name="link" size={18} color={theme.colors.primary} accessibilityElementsHidden importantForAccessibility="no" />}
+                      {pinnedIds.has(p.id) && <Ionicons name="link" size={18} color={theme.colors.primaryText} accessibilityElementsHidden importantForAccessibility="no" />}
                     </TouchableOpacity>
                   )
                 })}

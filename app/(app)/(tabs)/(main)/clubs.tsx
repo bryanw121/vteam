@@ -424,7 +424,7 @@ export default function ClubsScreen() {
               refreshing={refreshing}
               onRefresh={() => void onRefresh()}
               tintColor={theme.colors.primary}
-              colors={[theme.colors.primary]}
+              colors={[theme.colors.primaryText]}
             />
           }
           ListEmptyComponent={emptyBody}

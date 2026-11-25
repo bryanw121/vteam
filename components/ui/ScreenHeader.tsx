@@ -22,7 +22,7 @@ export function ScreenHeader({ kicker, title, titleDot, right, onBack, backLabel
           testID="screen-header-back"
           style={shared.screenHeaderBack}
         >
-          <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
+          <Ionicons name="chevron-back" size={20} color={theme.colors.primaryText} />
           <Text style={shared.screenHeaderBackLabel}>{backLabel}</Text>
         </TouchableOpacity>
       )}

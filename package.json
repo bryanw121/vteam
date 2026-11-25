@@ -1,7 +1,7 @@
 {
   "name": "vteam",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "scripts": {
     "build:web": "EXPO_PUBLIC_BUILD_SHA=$(node scripts/build-version.mjs --print) expo export --platform web && node scripts/event-chunk.mjs --dist dist && node scripts/build-version.mjs --dist dist",
     "start": "expo start",

@@ -39,7 +39,7 @@ export function ReauthCard({ email, onPassword, onSendCode, onVerifyCode }: Prop
   return (
     <View style={[shared.card, { gap: theme.spacing.sm }]} testID="reauth-card">
       <View style={[shared.row, { gap: theme.spacing.sm }]}>
-        <Ionicons name="lock-closed-outline" size={20} color={theme.colors.primary} />
+        <Ionicons name="lock-closed-outline" size={20} color={theme.colors.primaryText} />
         <Text style={shared.subheading}>Confirm it's you</Text>
       </View>
       <Text style={shared.caption}>

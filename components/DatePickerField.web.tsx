@@ -30,10 +30,10 @@ const css = `
     cursor: pointer;
   }
   .vteam-field-wrap:hover {
-    border-color: ${theme.colors.primary}80;
+    border-color: ${theme.colors.primaryText}80;
   }
   .vteam-field-wrap:focus-within {
-    border-color: ${theme.colors.primary};
+    border-color: ${theme.colors.primaryText};
     box-shadow: 0 0 0 3px ${theme.colors.primary}28;
   }
   .vteam-date-input {

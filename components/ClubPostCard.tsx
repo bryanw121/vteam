@@ -138,7 +138,7 @@ export function ClubPostCard({
           accessibilityLabel={likedByMe ? 'Unlike' : 'Like'}
         >
           {likeBusy ? (
-            <Spinner size="small" color={theme.colors.primary} />
+            <Spinner size="small" color={theme.colors.primaryText} />
           ) : (
             <Ionicons
               name={likedByMe ? 'heart' : 'heart-outline'}
@@ -194,8 +194,8 @@ export function ClubPostCard({
                 style={[styles.commentSend, (!commentDraft.trim() || commentBusy) && { opacity: 0.45 }]}
               >
                 {commentBusy
-                  ? <Spinner size="small" color={theme.colors.primary} />
-                  : <Ionicons name="send" size={18} color={theme.colors.primary} />
+                  ? <Spinner size="small" color={theme.colors.primaryText} />
+                  : <Ionicons name="send" size={18} color={theme.colors.primaryText} />
                 }
               </TouchableOpacity>
             </View>

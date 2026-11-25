@@ -28,7 +28,7 @@ export function ClubUpdates({ clubId, posts, likedPostIds, loading, userId, memb
         )}
       </View>
       {loading ? (
-        <Spinner color={theme.colors.primary} style={{ marginVertical: theme.spacing.lg }} />
+        <Spinner color={theme.colors.primaryText} style={{ marginVertical: theme.spacing.lg }} />
       ) : posts.length === 0 ? (
         <View style={[shared.card, { marginHorizontal: theme.spacing.md, marginBottom: theme.spacing.md, alignItems: 'center', paddingVertical: theme.spacing.lg, gap: theme.spacing.sm }]}>
           <Text style={shared.caption}>No updates yet.</Text>

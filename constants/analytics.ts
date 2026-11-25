@@ -52,7 +52,7 @@ export const ANALYTICS_EVENTS = {
   joinIntentSaved: 'join_intent_saved',
   /** Back on the game after signing in. props: { outcome: joined | not_now | skipped | expired, offer? } */
   joinIntentResumed: 'join_intent_resumed',
-  /** A session opened: launch, back after 30 min away, or a different account signed in. props: { cold, referrer? (web, cold only: direct | internal | search | link) } */
+  /** A session opened: launch, back after 30 min away, or a different account signed in. props: { cold, scheme (light | dark), referrer? (web, cold only: direct | internal | search | link) } */
   sessionStart: 'session_start',
   /** The screen type changed. props: { screen (route pattern, e.g. /event/[id], or a tab's path), from? } */
   screenView: 'screen_view',
@@ -110,4 +110,6 @@ export const ANALYTICS_EVENTS = {
   courtQueueResult: 'court_queue_result',
   /** The host ended the court queue (#333). props: { games } */
   courtQueueEnded: 'court_queue_ended',
+  /** Settings → Display → Appearance. props: { to (system | light | dark), applied (unchanged | reloading | next-launch) } */
+  appearanceChanged: 'appearance_changed',
 } as const

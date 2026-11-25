@@ -41,7 +41,7 @@ export function WebStackContentTransition() {
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
+            <Ionicons name="chevron-back" size={20} color={theme.colors.primaryText} />
             <Text style={styles.backLabel}>Back</Text>
           </TouchableOpacity>
         </View>

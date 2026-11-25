@@ -139,7 +139,7 @@ export default function TournamentsScreen() {
     </View>
   ) : null
   const outsideLoading = tab === 'upcoming' && programs.isLoading && !programs.data
-    ? <Spinner label="Loading tournaments" style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+    ? <Spinner label="Loading tournaments" style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primaryText} />
     : null
   const clubLoading = list.isLoading && !list.data
   const clubHeader = clubLoading ? (

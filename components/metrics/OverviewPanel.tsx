@@ -92,7 +92,7 @@ function Overview({ data, events, days, onOpenLive }: { data: MetricsOverview; e
         <MetricLineChart
           values={data.daily.map(d => d.active)}
           height={132}
-          color={theme.colors.primary}
+          color={theme.colors.primaryText}
           markMax
           xLabels={[shortDay(data.from), shortDay(data.to)]}
           label={`Daily active people from ${shortDay(data.from)} to ${shortDay(data.to)}: active on ${activeDays.length} days${busiest ? `, most ${busiest.active} on ${weekdayDay(busiest.day)}` : ''}`}

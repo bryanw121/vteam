@@ -187,7 +187,7 @@ function AppLayoutInner() {
                     <Ionicons
                       name={tab.icon}
                       size={20}
-                      color={active ? theme.colors.primary : theme.colors.subtext}
+                      color={active ? theme.colors.primaryText : theme.colors.subtext}
                     />
                     {badge > 0 && (
                       <View testID="chat-unread-badge" style={{
@@ -223,7 +223,7 @@ function AppLayoutInner() {
             <Stack
               screenOptions={{
                 headerStyle: { backgroundColor: theme.colors.background },
-                headerTintColor: theme.colors.primary,
+                headerTintColor: theme.colors.primaryText,
                 headerShadowVisible: false,
                 gestureEnabled: SWIPE_NAVIGATION.back,
                 contentStyle: { backgroundColor: theme.colors.background },
@@ -305,7 +305,7 @@ function AppLayoutInner() {
     <Stack
       screenOptions={{
         headerStyle: { backgroundColor: theme.colors.background },
-        headerTintColor: theme.colors.primary,
+        headerTintColor: theme.colors.primaryText,
         headerShadowVisible: false,
         gestureEnabled: SWIPE_NAVIGATION.back,
         contentStyle: { backgroundColor: theme.colors.background },

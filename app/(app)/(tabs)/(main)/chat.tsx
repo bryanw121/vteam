@@ -98,7 +98,7 @@ function NewDMModal({ visible, onDismiss, onSelect, silencedUserIds, myId }: {
 
         {searching ? (
           <View style={{ padding: theme.spacing.xl, alignItems: 'center' }}>
-            <Spinner color={theme.colors.primary} />
+            <Spinner color={theme.colors.primaryText} />
           </View>
         ) : (
           <FlatList
@@ -261,7 +261,7 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
             >
               {title}
             </Text>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: hasUnread ? theme.colors.primary : theme.colors.subtext, flexShrink: 0 }}>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: hasUnread ? theme.colors.primaryText : theme.colors.subtext, flexShrink: 0 }}>
               {time}
             </Text>
           </View>

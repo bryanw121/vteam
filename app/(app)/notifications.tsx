@@ -99,7 +99,7 @@ export default function NotificationsScreen() {
           }}
           ListEmptyComponent={
             loading ? (
-              <Spinner color={theme.colors.primary} style={{ marginTop: theme.spacing.xl }} />
+              <Spinner color={theme.colors.primaryText} style={{ marginTop: theme.spacing.xl }} />
             ) : (
               <View style={{ alignItems: 'center', paddingTop: theme.spacing.xl, gap: theme.spacing.sm }}>
                 <Ionicons name="notifications-off-outline" size={40} color={theme.colors.subtext} />

@@ -1,3 +1,4 @@
+import { colorScheme } from '../constants/theme'
 import { AppState, Platform } from 'react-native'
 import { supabase } from './supabase'
 import { isServerDown, onServerRecovered } from './serverHealth'
@@ -278,7 +279,8 @@ function openSession(cold: boolean): void {
   if (isDisabled()) return
   session = { id: pendingSessionId ?? randomId(), userId: sessionUser }
   pendingSessionId = null
-  const props: AnalyticsProps = { cold }
+  // Light or dark this run (Settings → Display → Appearance, or the device's own setting).
+  const props: AnalyticsProps = { cold, scheme: colorScheme }
   // A crawler-like browser (#331): labelled so first-visit numbers can leave it out.
   if (isBotAgent(browserAgent())) props.bot = true
   if (cold) {

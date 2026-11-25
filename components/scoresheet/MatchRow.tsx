@@ -27,7 +27,7 @@ export function MatchRow({ match, onPress, highlight }: Props) {
       ]}
     >
       <View style={[styles.icon, live ? styles.iconLive : null]}>
-        <Ionicons name={live ? 'play' : 'checkmark-done'} size={18} color={live ? theme.colors.onPrimary : theme.colors.primary} />
+        <Ionicons name={live ? 'play' : 'checkmark-done'} size={18} color={live ? theme.colors.onPrimary : theme.colors.primaryText} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         {highlight && <Text style={styles.kicker}>Match in progress</Text>}

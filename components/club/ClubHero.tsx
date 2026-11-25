@@ -66,7 +66,7 @@ export function ClubHero({ club, coverUri, avatarUri, topInset, owner, editing, 
           <View style={shared.clubAvatarRing}>
             <View style={shared.clubAvatar}>
               {uploading.avatar ? (
-                <Spinner color={theme.colors.primary} />
+                <Spinner color={theme.colors.primaryText} />
               ) : avatarUri ? (
                 <Image source={{ uri: avatarUri }} style={shared.clubAvatarImage} resizeMode="cover" />
               ) : (

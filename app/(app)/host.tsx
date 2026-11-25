@@ -200,7 +200,7 @@ export default function HostEventScreen() {
     title: '',
     headerLeft: () => (
       <TouchableOpacity onPress={goBack} style={{ paddingRight: 8 }} accessibilityRole="button" accessibilityLabel="Go back">
-        <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+        <Ionicons name="chevron-back" size={24} color={theme.colors.primaryText} />
       </TouchableOpacity>
     ),
   }

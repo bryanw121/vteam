@@ -40,7 +40,7 @@ export function ScreenState({
   if (loading && !ready) {
     return (
       <View style={shared.screenStateCenter} testID="screen-state-loading">
-        <Spinner color={theme.colors.primary} />
+        <Spinner color={theme.colors.primaryText} />
       </View>
     )
   }

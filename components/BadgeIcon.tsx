@@ -117,7 +117,6 @@ export function BadgeIcon({ def, tier, size = 'sm', showLabel = false, slotNumbe
             color: earned ? theme.colors.text : theme.colors.subtext,
             textAlign: 'center',
             lineHeight: LABEL_LINE,
-            opacity: earned ? 1 : 0.5,
             width: fs - 4,
           }}
         >

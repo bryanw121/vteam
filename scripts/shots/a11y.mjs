@@ -51,7 +51,7 @@ async function scan(page) {
 export async function runA11y(o) {
   const t = Date.now()
   const { results } = await visitScreens(
-    { dist: o.dist, screens: o.screens, sizes: o.mobileOnly ? ['mobile'] : ['mobile', 'desktop'], src: o.src, now: o.now, label: 'a11y', concurrency: o.concurrency },
+    { dist: o.dist, screens: o.screens, sizes: o.mobileOnly ? ['mobile'] : ['mobile', 'desktop'], src: o.src, now: o.now, label: 'a11y', concurrency: o.concurrency, scheme: o.scheme },
     scan,
   )
   const scans = results.map(r => ({
@@ -66,7 +66,7 @@ export async function runA11y(o) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = parseArgs(process.argv.slice(2))
   if (args.help) {
-    console.log('node scripts/shots/a11y.mjs [--dist dist-mock] [--out a11y-report] [--screens a,b] [--mobile-only] [--update-baseline] [--src .] [--now ISO]')
+    console.log('node scripts/shots/a11y.mjs [--dist dist-mock] [--out a11y-report] [--screens a,b] [--mobile-only] [--update-baseline] [--src .] [--now ISO] [--scheme dark]')
     process.exit(0)
   }
   const out = typeof args.out === 'string' ? args.out : 'a11y-report'
@@ -78,6 +78,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     concurrency: args.concurrency ? Number(args.concurrency) : 6,
     src: typeof args.src === 'string' ? args.src : undefined,
     now: typeof args.now === 'string' ? new Date(args.now) : undefined,
+    // The baseline is the light theme's; a dark run (local) reports against it.
+    scheme: args.scheme === 'dark' ? 'dark' : 'light',
   })
   const baseline = existsSync(BASELINE_FILE) ? JSON.parse(readFileSync(BASELINE_FILE, 'utf8')) : {}
 

@@ -1,11 +1,14 @@
 import { ScrollViewStyleReset, useServerDocumentContext } from 'expo-router/html'
-import { theme } from '../constants/theme'
+import { DOCUMENT_BACKGROUND } from '../constants/colorScheme'
+import { buildColorSchemeScript } from '../utils/colorSchemeScript'
 import { APP_NAME } from '../constants/copy'
 import { buildFeedPrefetchScript } from '../utils/feedPrefetchScript'
 
 // Read at build time (static export inlines EXPO_PUBLIC_*). Empty in tests.
 const SUPABASE_ORIGIN = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').replace(/\/+$/, '')
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''
+
+const COLOR_SCHEME_SCRIPT = buildColorSchemeScript()
 
 /** Family names match theme.font.* (the names expo-font registers on native). */
 const WEB_FONT_FACES = `@font-face { font-family: 'Outfit_400Regular'; src: url('/fonts/outfit-latin-400-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Outfit_500Medium'; src: url('/fonts/outfit-latin-500-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Outfit_600SemiBold'; src: url('/fonts/outfit-latin-600-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Outfit_700Bold'; src: url('/fonts/outfit-latin-700-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Outfit_800ExtraBold'; src: url('/fonts/outfit-latin-800-normal.woff2') format('woff2'); font-display: swap; }`
@@ -29,10 +32,16 @@ export default function Root({ children }: { children: React.ReactNode }) {
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
         />
-        {/* Tint browser chrome (iOS status bar area, Chrome toolbar) to match the app background */}
-        <meta name="theme-color" content={theme.colors.background} />
-        {/* Dark browser UI (scrollbars, form controls, chrome fallbacks) */}
-        <meta name="color-scheme" content="dark" />
+        {/* Tint browser chrome (iOS status bar area, Chrome toolbar) to match the app background; the script below switches it for dark */}
+        <meta name="theme-color" content={DOCUMENT_BACKGROUND.light} />
+        {/* Browser UI (scrollbars, form controls) follows the scheme set on <html> by the script below */}
+        <meta name="color-scheme" content="light dark" />
+        {/*
+          Light or dark before anything paints (Settings → Display → Appearance): the
+          same rule as lib/colorSchemeInit.web.ts, which the app runs first. Without it
+          a dark page flashes the light background while the scripts download.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: COLOR_SCHEME_SCRIPT }} />
         {/* PWA / Add to Home Screen */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -86,6 +95,9 @@ export default function Root({ children }: { children: React.ReactNode }) {
             interfering with the app's own scroll views.
           */
           body { overscroll-behavior-y: contain; }
+
+          html, body { background: ${DOCUMENT_BACKGROUND.light}; color-scheme: light; }
+          html[data-theme=dark], html[data-theme=dark] body { background: ${DOCUMENT_BACKGROUND.dark}; color-scheme: dark; }
 
           /*
             Suppress double-tap-to-zoom everywhere (pinch zoom still works).

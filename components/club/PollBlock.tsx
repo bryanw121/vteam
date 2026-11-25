@@ -55,7 +55,7 @@ export function PollBlock({ postId, clubId, poll, question, currentUserId, isOwn
               <Ionicons
                 name={t.mine ? (poll.multi ? 'checkbox' : 'radio-button-on') : (poll.multi ? 'square-outline' : 'radio-button-off')}
                 size={18}
-                color={t.mine ? theme.colors.primary : theme.colors.subtext}
+                color={t.mine ? theme.colors.primaryText : theme.colors.subtext}
               />
               <Text style={[shared.body, { flex: 1 }]} numberOfLines={2}>{t.option.label}</Text>
               {t.winner ? <Ionicons name="trophy" size={14} color={theme.colors.medalGold} accessibilityLabel="Winner" /> : null}

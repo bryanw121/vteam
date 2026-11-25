@@ -31,11 +31,11 @@ export function StepIndicator({ current }: WizardStepIndicatorProps) {
                 alignItems: 'center', justifyContent: 'center',
               }}>
                 {done
-                  ? <Ionicons name="checkmark" size={14} color={theme.colors.primary} />
+                  ? <Ionicons name="checkmark" size={14} color={theme.colors.primaryText} />
                   : <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.xs, color: active ? theme.colors.onPrimary : theme.colors.subtext }}>{i + 1}</Text>
                 }
               </View>
-              <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: active ? theme.colors.primary : theme.colors.subtext, letterSpacing: 0.3 }}>
+              <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: active ? theme.colors.primaryText : theme.colors.subtext, letterSpacing: 0.3 }}>
                 {label}
               </Text>
             </View>

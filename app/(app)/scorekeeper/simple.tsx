@@ -46,7 +46,7 @@ export default function SimpleScoreScreen() {
     return (
       <View style={[shared.screen, { alignItems: 'center', justifyContent: 'center' }]}>
         <Stack.Screen options={{ headerShown: false }} />
-        <Spinner color={theme.colors.primary} />
+        <Spinner color={theme.colors.primaryText} />
       </View>
     )
   }

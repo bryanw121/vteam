@@ -43,6 +43,6 @@ const styles = StyleSheet.create({
   pill: { paddingHorizontal: theme.spacing.sm, paddingVertical: 3, borderRadius: theme.radius.full, backgroundColor: theme.colors.accent },
   pillText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.accentInk },
   title: { fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lgm, letterSpacing: -0.3, color: theme.colors.onPrimary, marginBottom: theme.spacing.xs },
-  // Same look as the old rgba(255,255,255,0.7) without a literal.
-  location: { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.onPrimary, opacity: 0.7 },
+  // White at 90%: 4.5:1 or better on the purple card.
+  location: { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.onPrimary, opacity: 0.9 },
 })

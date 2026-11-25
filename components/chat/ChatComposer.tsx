@@ -12,7 +12,7 @@ import type { TextInputInstance } from 'react-native'
 function ComposerBand({ icon, title, body, cancelLabel, onCancel }: ChatComposerBandProps) {
   return (
     <View style={shared.chatComposerBand}>
-      <Ionicons name={icon} size={16} color={theme.colors.primary} />
+      <Ionicons name={icon} size={16} color={theme.colors.primaryText} />
       <View style={shared.chatComposerQuote}>
         <Text style={shared.chatComposerQuoteTitle}>{title}</Text>
         <Text style={shared.chatComposerQuoteBody} numberOfLines={1}>{body}</Text>

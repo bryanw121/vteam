@@ -23,12 +23,12 @@ function Row({ title, subtitle, destructive, outcome }: RowProps) {
       <Ionicons
         name={destructive ? 'trash-outline' : 'swap-horizontal-outline'}
         size={18}
-        color={destructive ? theme.colors.error : theme.colors.primary}
+        color={destructive ? theme.colors.error : theme.colors.primaryText}
       />
       <View style={{ flex: 1 }}>
         <Text style={shared.body} numberOfLines={2}>{title}</Text>
         {!!subtitle && <Text style={shared.caption}>{subtitle}</Text>}
-        <Text style={[shared.caption, { color: destructive ? theme.colors.error : theme.colors.primary }]}>{outcome}</Text>
+        <Text style={[shared.caption, { color: destructive ? theme.colors.error : theme.colors.primaryText }]}>{outcome}</Text>
       </View>
     </View>
   )

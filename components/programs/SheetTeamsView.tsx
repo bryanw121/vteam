@@ -37,8 +37,8 @@ export function SheetTeamsView({ state, team, onSelectTeam }: SheetTeamsViewProp
           accessibilityRole="button"
           style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44, alignSelf: 'flex-start' }}
         >
-          <Ionicons name="chevron-back" size={16} color={theme.colors.primary} />
-          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primary }}>All teams</Text>
+          <Ionicons name="chevron-back" size={16} color={theme.colors.primaryText} />
+          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.primaryText }}>All teams</Text>
         </TouchableOpacity>
         <View style={ts.card}>
           <Text accessibilityRole="header" style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.md, color: theme.colors.text }}>{detail.name}</Text>

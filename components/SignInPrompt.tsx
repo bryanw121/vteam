@@ -19,7 +19,7 @@ export function SignInPrompt({ icon, title, body, extra }: Props) {
   return (
     <View style={shared.signInPromptContainer} testID="sign-in-prompt">
       <View style={shared.signInPromptIcon}>
-        <Ionicons name={icon} size={30} color={theme.colors.primary} />
+        <Ionicons name={icon} size={30} color={theme.colors.primaryText} />
       </View>
       <Text style={shared.signInPromptTitle} accessibilityRole="header">{title}</Text>
       <Text style={shared.signInPromptBody}>{body}</Text>

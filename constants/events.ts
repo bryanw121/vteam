@@ -1,5 +1,5 @@
 import type { Surface } from '../types'
-import { theme } from './theme'
+import { colorScheme, theme } from './theme'
 // ─── Venues ───────────────────────────────────────────────────────────────────
 // Add new locations here — the form picker reads from this array automatically.
 
@@ -100,9 +100,9 @@ export const SURFACE_OPTIONS: { id: Surface; label: string }[] = [
 
 export const SURFACE_LABELS: Record<Surface, string> = { indoor: 'Indoor', sand: 'Sand', grass: 'Grass' }
 
-/** Accent per surface: outside-session cards and Book a court venues. */
+/** Accent per surface: outside-session cards and Book a court venues. Also used as text, so text-safe tokens. */
 export const SURFACE_ACCENTS: Record<Surface, string> = {
-  indoor: theme.colors.primary,
+  indoor: theme.colors.primaryText,
   sand:   theme.colors.warm,
   grass:  theme.colors.cool,
 }
@@ -186,7 +186,10 @@ export const EXTERNAL_SESSION_MAX_AGE_MS = 12 * 60 * 60 * 1000
 export const EVENT_CARD_LIST_SELECT_MINIMAL = `${EVENT_LIST_EVENT_COLUMNS}, profiles!events_created_by_fkey (id, username, first_name, last_name, avatar_url), event_attendees_attending(count), event_guests_attending(count), event_attendees_waitlisted(count)`
 
 // ─── Team colors (event People & Cheers tabs) ──────────────────────────────────
-export const TEAM_COLORS      = ['#6C47FF', '#E85D5D', '#2DA265', '#E07B00', '#1A8FD1', '#9C27B0']
+// Used for dots, borders and team names, so the dark theme takes lighter shades that read on its surfaces.
+export const TEAM_COLORS = colorScheme === 'dark'
+  ? ['#A98EFF', '#FF9C9C', '#5FD49A', '#FFB45C', '#6CC4F5', '#E28AF2']
+  : ['#6C47FF', '#E85D5D', '#2DA265', '#E07B00', '#1A8FD1', '#9C27B0']
 export const TEAM_COLOR_NAMES = ['Purple',  'Red',     'Green',   'Orange',  'Blue',    'Violet']
 
 /** Team `n` (1-based): its colour and name ("Purple"). */
