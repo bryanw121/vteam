@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `0ef96e132334`
+> Inventory fingerprint: `4109bf039a36`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -514,8 +514,8 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | RPC | Call sites | SQL definition |
 |---|---|---|
 | `accept_tournament_invite` | [`hooks/tournament/api.ts:285`](../hooks/tournament/api.ts#L285) | [`supabase/migrations/20261025120000_tournament_rpcs.sql:18`](../supabase/migrations/20261025120000_tournament_rpcs.sql#L18) |
-| `admin_metrics_events` | [`hooks/useAdminMetrics.ts:62`](../hooks/useAdminMetrics.ts#L62) | [`supabase/migrations/20261111150000_admin_metrics_events.sql:12`](../supabase/migrations/20261111150000_admin_metrics_events.sql#L12) |
-| `admin_metrics_overview` | [`hooks/useAdminMetrics.ts:52`](../hooks/useAdminMetrics.ts#L52) | [`supabase/migrations/20261111120000_admin_metrics.sql:33`](../supabase/migrations/20261111120000_admin_metrics.sql#L33)<br>[`supabase/migrations/20261112090000_metrics_excluded_users.down.sql:4`](../supabase/migrations/20261112090000_metrics_excluded_users.down.sql#L4)<br>[`supabase/migrations/20261112090000_metrics_excluded_users.sql:27`](../supabase/migrations/20261112090000_metrics_excluded_users.sql#L27) |
+| `admin_metrics_events` | [`hooks/useAdminMetrics.ts:62`](../hooks/useAdminMetrics.ts#L62) | [`supabase/migrations/20261111150000_admin_metrics_events.sql:12`](../supabase/migrations/20261111150000_admin_metrics_events.sql#L12)<br>[`supabase/migrations/20261124030000_metrics_skip_bot_sessions.down.sql:168`](../supabase/migrations/20261124030000_metrics_skip_bot_sessions.down.sql#L168)<br>[`supabase/migrations/20261124030000_metrics_skip_bot_sessions.sql:175`](../supabase/migrations/20261124030000_metrics_skip_bot_sessions.sql#L175) |
+| `admin_metrics_overview` | [`hooks/useAdminMetrics.ts:52`](../hooks/useAdminMetrics.ts#L52) | [`supabase/migrations/20261111120000_admin_metrics.sql:33`](../supabase/migrations/20261111120000_admin_metrics.sql#L33)<br>[`supabase/migrations/20261112090000_metrics_excluded_users.down.sql:4`](../supabase/migrations/20261112090000_metrics_excluded_users.down.sql#L4)<br>[`supabase/migrations/20261112090000_metrics_excluded_users.sql:27`](../supabase/migrations/20261112090000_metrics_excluded_users.sql#L27)<br>[`supabase/migrations/20261124030000_metrics_skip_bot_sessions.down.sql:3`](../supabase/migrations/20261124030000_metrics_skip_bot_sessions.down.sql#L3)<br>[`supabase/migrations/20261124030000_metrics_skip_bot_sessions.sql:7`](../supabase/migrations/20261124030000_metrics_skip_bot_sessions.sql#L7) |
 | `admin_online_now` | [`hooks/useAdminMetrics.ts:73`](../hooks/useAdminMetrics.ts#L73) | [`supabase/migrations/20261111120000_admin_metrics.sql:200`](../supabase/migrations/20261111120000_admin_metrics.sql#L200) |
 | `admin_reports` | [`hooks/useAdminMetrics.ts:144`](../hooks/useAdminMetrics.ts#L144) | [`supabase/migrations/20261113010000_user_reports.sql:123`](../supabase/migrations/20261113010000_user_reports.sql#L123) |
 | `admin_resolve_report` | [`hooks/useAdminMetrics.ts:154`](../hooks/useAdminMetrics.ts#L154) | [`supabase/migrations/20261113010000_user_reports.sql:157`](../supabase/migrations/20261113010000_user_reports.sql#L157) |
