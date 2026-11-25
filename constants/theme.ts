@@ -260,3 +260,9 @@ export const theme = {
 }
 
 export type Theme = typeof theme
+
+/**
+ * Club tiles (Clubs tab): saturated fills that carry white initials in both themes
+ * (the same in light and dark, like the feed covers). Picked per club from its name.
+ */
+export const CLUB_TILE_COLORS: readonly string[] = ['#7C3AED', '#DB2777', '#0891B2', '#EA580C', '#15803D', '#4F46E5', '#B45309', '#0F766E']
