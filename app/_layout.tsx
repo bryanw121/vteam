@@ -62,6 +62,11 @@ function AvatarPrefetch() {
 /** When this launch's splash went up: navigation start on web (the splash is in the static HTML), module load on native. */
 const SPLASH_SHOWN_AT = Platform.OS === 'web' && typeof performance !== 'undefined' ? 0 : Date.now()
 const splashElapsed = () => (Platform.OS === 'web' && typeof performance !== 'undefined' ? performance.now() : Date.now() - SPLASH_SHOWN_AT)
+/** Automated browsers (e2e, the shots flows) skip the one-bounce hold, as they do analytics, unless localStorage `vteam.splashHold` is 'on'. */
+function automatedBrowser(): boolean {
+  if (Platform.OS !== 'web' || typeof navigator === 'undefined' || !navigator.webdriver) return false
+  try { return localStorage.getItem('vteam.splashHold') !== 'on' } catch { return true }
+}
 
 function AppSplash({ opacity }: { opacity: Animated.Value }) {
   return (
@@ -126,7 +131,7 @@ function RootNavigator() {
     const timer = setTimeout(() => {
       Animated.timing(splashOpacity, { toValue: 0, duration: SPLASH_FADE_MS, useNativeDriver: true })
         .start(() => setSplashVisible(false))
-    }, splashHoldMs(splashElapsed(), reducedMotion))
+    }, splashHoldMs(splashElapsed(), reducedMotion || automatedBrowser()))
     return () => clearTimeout(timer)
   }, [ready, splashVisible, splashOpacity, reducedMotion])
 

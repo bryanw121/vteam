@@ -1,6 +1,6 @@
 {
   "events": {
-    "paintMs": 2350,
+    "paintMs": 1200,
     "requests": 14,
     "allowedDuplicates": [],
     "requestList": [
@@ -21,7 +21,7 @@
     ]
   },
   "profile": {
-    "paintMs": 2150,
+    "paintMs": 1000,
     "requests": 16,
     "allowedDuplicates": [],
     "requestList": [
@@ -44,7 +44,7 @@
     ]
   },
   "chat": {
-    "paintMs": 2250,
+    "paintMs": 1100,
     "requests": 8,
     "allowedDuplicates": [],
     "requestList": [
@@ -59,7 +59,7 @@
     ]
   },
   "tournaments": {
-    "paintMs": 2150,
+    "paintMs": 1000,
     "requests": 8,
     "allowedDuplicates": [],
     "requestList": [
@@ -74,7 +74,7 @@
     ]
   },
   "events-guest": {
-    "paintMs": 2450,
+    "paintMs": 1300,
     "requests": 6,
     "allowedDuplicates": [],
     "requestList": [
