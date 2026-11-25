@@ -1,24 +1,8 @@
-import { View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { Text } from '../ui/Text'
-import Ionicons from '@expo/vector-icons/Ionicons'
 import { theme } from '../../constants/theme'
 import type { UserTrophy } from '../../types'
 import { formatDate } from '../../utils/dateFormat'
-
-/** Placeholder until received cheers can be listed on the profile. */
-export function RecentCheersPlaceholder() {
-  return (
-    <View style={{ marginTop: theme.spacing.lg }}>
-      <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lg, color: theme.colors.text, marginBottom: theme.spacing.sm }}>Recent cheers</Text>
-      <View style={{ backgroundColor: theme.colors.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center', gap: theme.spacing.sm }}>
-        <Ionicons name="star-outline" size={28} color={theme.colors.border} />
-        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext, textAlign: 'center' }}>
-          Cheers you receive from teammates will show up here.
-        </Text>
-      </View>
-    </View>
-  )
-}
 
 const PLACES = [
   { place: 1, color: theme.colors.medalGold, label: '1st place' },
@@ -26,8 +10,8 @@ const PLACES = [
   { place: 3, color: theme.colors.medalBronze, label: '3rd place' },
 ] as const
 
-/** How many recent trophies are listed under the podium counts. */
-const RECENT = 5
+/** How many recent trophies are shown. */
+const RECENT = 4
 
 type Props = {
   trophies?: UserTrophy[]
@@ -35,46 +19,45 @@ type Props = {
   own?: boolean
 }
 
-/** Podium counts (1st / 2nd / 3rd) and the latest trophies, from tournament_trophies. */
+/** Trophies: a medal count per place beside the heading, then the latest trophies as tiles. */
 export function TrophyCase({ trophies = [], own = false }: Props) {
-  const color = (place: number) => PLACES.find(p => p.place === place)?.color ?? theme.colors.border
+  const place = (n: number) => PLACES.find(p => p.place === n)
   return (
-    <View style={{ marginTop: theme.spacing.md }} testID="trophy-case">
-      <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lg, color: theme.colors.text, marginBottom: theme.spacing.sm }}>Trophy case</Text>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        {PLACES.map(t => {
-          const count = trophies.filter(x => x.place === t.place).length
-          return (
-            <View
-              key={t.place}
-              accessible
-              accessibilityLabel={`${t.label}: ${count}`}
-              style={{ flex: 1, backgroundColor: theme.colors.card, borderRadius: 16, padding: 12, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center' }}
-            >
-              <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: t.color, alignItems: 'center', justifyContent: 'center', marginBottom: 6, opacity: count > 0 ? 1 : 0.45 }}>
-                <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.lg, color: theme.colors.background }}>{t.place}</Text>
+    <View style={styles.wrap} testID="trophy-case">
+      <View style={styles.head}>
+        <Text style={styles.title} accessibilityRole="header">Trophies</Text>
+        <View style={styles.counts}>
+          {PLACES.map(t => {
+            const count = trophies.filter(x => x.place === t.place).length
+            return (
+              <View key={t.place} style={[styles.count, count === 0 && styles.countEmpty]} accessible accessibilityLabel={`${t.label}: ${count}`}>
+                <View style={[styles.dot, { backgroundColor: t.color }]} />
+                <Text testID={`trophy-count-${t.place}`} style={styles.countText}>{count > 0 ? count : '—'}</Text>
               </View>
-              <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.subtext, textAlign: 'center' }}>{t.label}</Text>
-              <Text testID={`trophy-count-${t.place}`} style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.lg, color: count > 0 ? theme.colors.text : theme.colors.subtext, marginTop: 2 }}>
-                {count > 0 ? count : '—'}
-              </Text>
-            </View>
-          )
-        })}
+            )
+          })}
+        </View>
       </View>
       {trophies.length === 0 ? (
-        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: theme.spacing.sm, textAlign: 'center' }}>
+        <Text style={styles.empty}>
           {own ? 'Finish on a tournament podium to earn your first trophy.' : 'No tournament trophies yet.'}
         </Text>
       ) : (
-        <View style={{ marginTop: theme.spacing.sm, gap: 6 }}>
+        <View style={styles.grid}>
           {trophies.slice(0, RECENT).map(t => (
-            <View key={t.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: theme.colors.card, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 12, borderWidth: 1, borderColor: theme.colors.border }}>
-              <Ionicons name="trophy" size={18} color={color(t.place)} />
-              <View style={{ flex: 1 }}>
-                <Text numberOfLines={1} style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.text }}>{t.tournament_title}</Text>
-                <Text numberOfLines={1} style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext }}>
-                  {PLACES.find(p => p.place === t.place)?.label} with {t.team_name} · {formatDate(new Date(t.tournament_date), { month: 'short', day: 'numeric', year: 'numeric' })}
+            <View
+              key={t.id}
+              style={styles.tile}
+              accessible
+              accessibilityLabel={`${place(t.place)?.label ?? ''}, ${t.tournament_title}, with ${t.team_name}`}
+            >
+              <View style={[styles.medal, { backgroundColor: place(t.place)?.color ?? theme.colors.border }]}>
+                <Text style={styles.medalText}>{t.place}</Text>
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text numberOfLines={1} style={styles.tileTitle}>{t.tournament_title}</Text>
+                <Text numberOfLines={1} style={styles.tileSub}>
+                  {formatDate(new Date(t.tournament_date), { month: 'short', year: 'numeric' })}
                 </Text>
               </View>
             </View>
@@ -84,3 +67,38 @@ export function TrophyCase({ trophies = [], own = false }: Props) {
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  wrap: { marginTop: theme.spacing.lg },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: theme.spacing.sm },
+  title: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lg, color: theme.colors.text },
+  counts: { flexDirection: 'row', gap: 6 },
+  count: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.card,
+  },
+  countEmpty: { opacity: 0.7 },
+  dot: { width: 10, height: 10, borderRadius: 5 },
+  countText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.text },
+  empty: { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  tile: {
+    flexGrow: 1,
+    flexBasis: '45%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: theme.colors.card,
+    borderRadius: 18,
+    padding: 12,
+  },
+  medal: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  medalText: { fontFamily: theme.fonts.display, fontSize: theme.font.size.md, color: theme.colors.black },
+  tileTitle: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.text },
+  tileSub: { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext },
+})

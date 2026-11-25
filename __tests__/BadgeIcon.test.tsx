@@ -19,13 +19,17 @@ it('renders the earned tier rather than the first-tier image', () => {
   const view = render(<BadgeIcon def={attendee} tier={5} showLabel />)
   expect(view.getByTestId('badge-artwork-event_attendee').props.source).toBe(105)
   expect(view.getByText('Legend')).toBeTruthy()
+  // Earned art sits on the full-strength plate, so dark pieces read on the dark theme.
+  expect(StyleSheet.flatten(view.getByTestId('badge-plate-event_attendee').props.style).opacity).toBe(1)
 })
 
 it.each([undefined, 0])('previews first-tier art dimmed when locked (tier %s)', tier => {
   const view = render(<BadgeIcon def={attendee} tier={tier} />)
   const image = view.getByTestId('badge-artwork-event_attendee')
   expect(image.props.source).toBe(101)
-  expect(StyleSheet.flatten(image.props.style).opacity).toBe(0.25)
+  // Art and its plate both dim: about a quarter of full strength together.
+  const plate = view.getByTestId('badge-plate-event_attendee')
+  expect(StyleSheet.flatten(image.props.style).opacity * StyleSheet.flatten(plate.props.style).opacity).toBeCloseTo(0.225)
   expect(image.props.accessibilityLabel).toBe('Newcomer (locked)')
 })
 

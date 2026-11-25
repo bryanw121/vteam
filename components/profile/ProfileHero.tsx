@@ -1,18 +1,21 @@
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import type { ReactNode } from 'react'
+import { Pressable, StyleSheet, View } from 'react-native'
+import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../ui/Text'
-import { LinearGradient } from 'expo-linear-gradient'
 import { BADGE_DEFINITIONS, theme } from '../../constants'
 import { profileFullName, volleyballSkillLevelLabel } from '../../utils'
 import { BadgeIcon } from '../BadgeIcon'
-import { AvatarUploader } from './AvatarUploader'
 import { shortPositionLabel } from './options'
-import type { AvatarUploader as AvatarUploaderState } from '../../types'
 import type { Profile, UserBadge } from '../../types'
 
 type Props = {
   profile: Profile
-  uploader: AvatarUploaderState
-  mode: 'menu' | 'edit'
+  /** The picture (the owner's uploader, or a plain ProfileAvatar), drawn at PROFILE_HERO_AVATAR. */
+  avatar: ReactNode
+  /** Under the name: Edit profile on your own, the friend button on someone else's. */
+  actions?: ReactNode
+  /** At the right of the name row (Share). */
+  trailing?: ReactNode
   totalCheers: number
   /** Accumulated points (`point_balances`). */
   totalPoints: number
@@ -20,82 +23,42 @@ type Props = {
   trophyCount?: number
   /** Badges pinned to the display slots, in slot order. */
   displayedBadges: UserBadge[]
-  onEdit: () => void
+  /** `profile` on your own (Profile tab), `user-profile` on someone else's. */
+  testIdPrefix?: 'profile' | 'user-profile'
 }
 
-const STAT_LABEL = { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 } as const
+export const PROFILE_HERO_AVATAR = 72
 
-/** The profile card at the top of the Profile tab: avatar, name, stats and pinned badges. */
-export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints, trophyCount = 0, displayedBadges, onEdit }: Props) {
-  const editing = mode === 'edit'
+/** "@bryan · OH · BB": who this is on court, in one line. */
+function subline(profile: Profile): string {
+  return [
+    profile.username ? `@${profile.username}` : null,
+    ...(profile.position ?? []).slice(0, 2).map(shortPositionLabel),
+    profile.skill_level ? volleyballSkillLevelLabel(profile.skill_level) : null,
+  ].filter(Boolean).join(' · ')
+}
 
+/**
+ * The top of a profile (Party invite layout): avatar and name on the page, pinned
+ * badges, bio, then three colour-coded counts. Shared by the Profile tab and other
+ * players' profiles.
+ */
+export function ProfileHero({ profile, avatar, actions, trailing, totalCheers, totalPoints, trophyCount = 0, displayedBadges, testIdPrefix = 'profile' }: Props) {
+  const line = subline(profile)
   return (
-    <View style={styles.card}>
-      {/* Radial gradient decoration */}
-      <LinearGradient
-        colors={[theme.colors.onPrimaryFill, 'transparent']}
-        start={{ x: 1, y: 0 }}
-        end={{ x: 0.3, y: 0.7 }}
-        style={{ position: 'absolute', top: 0, right: 0, width: 200, height: 200, borderRadius: 100, opacity: 0.55 }}
-        pointerEvents="none"
-      />
-
-      {editing ? (
-        <View style={{ alignItems: 'center', gap: theme.spacing.xs, width: '100%' }}>
-          <AvatarUploader profile={profile} uploader={uploader} editMode />
+    <View style={styles.wrap} testID={`${testIdPrefix}-hero`}>
+      <View style={styles.head}>
+        {avatar}
+        <View style={styles.headText}>
+          <Text style={styles.name} numberOfLines={2}>{profileFullName(profile)}</Text>
+          {line ? <Text style={styles.subline} numberOfLines={1}>{line}</Text> : null}
+          {actions ? <View style={styles.headActions}>{actions}</View> : null}
         </View>
-      ) : (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, width: '100%' }}>
-          <AvatarUploader profile={profile} uploader={uploader} editMode={false} />
-          <View style={{ flex: 1, gap: 4 }}>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 1, textTransform: 'uppercase' }}>
-              Member since {new Date(profile.created_at).getFullYear().toString().slice(2)}
-            </Text>
-            <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.md, letterSpacing: -0.5, color: theme.colors.white, lineHeight: 24 }}>
-              {profileFullName(profile)}
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 2 }}>
-              {profile.position.slice(0, 2).map(pos => (
-                <View key={pos} style={{ paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full, backgroundColor: theme.colors.accent }}>
-                  <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.xs, color: theme.colors.accentInk }}>{shortPositionLabel(pos)}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
-      )}
-
-      {profile.bio ? (
-        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.onPrimaryMuted, lineHeight: 18, marginTop: 4, width: '100%' }}>
-          {profile.bio}
-        </Text>
-      ) : null}
-
-      {!editing && (
-        <View style={{ flexDirection: 'row', gap: 1, marginTop: 14, borderRadius: 14, overflow: 'hidden', width: '100%' }}>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>
-              {profile.skill_level ? volleyballSkillLevelLabel(profile.skill_level) : '—'}
-            </Text>
-            <Text style={STAT_LABEL}>Skill</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text testID="profile-cheers-count" style={styles.statValue}>{totalCheers}</Text>
-            <Text style={STAT_LABEL}>Cheers</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text testID="profile-points-count" style={styles.statValue}>{totalPoints}</Text>
-            <Text style={STAT_LABEL}>Points</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text testID="profile-trophies-count" style={styles.statValue}>{trophyCount}</Text>
-            <Text style={STAT_LABEL}>Trophies</Text>
-          </View>
-        </View>
-      )}
+        {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
+      </View>
 
       {displayedBadges.length > 0 && (
-        <View style={styles.badgeRow}>
+        <View style={styles.badges}>
           {displayedBadges.map(badge => {
             const def = BADGE_DEFINITIONS.find(d => d.type === badge.badge_type)
             if (!def) return null
@@ -104,52 +67,77 @@ export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints,
         </View>
       )}
 
-      {!editing && (
-        <View style={{ alignSelf: 'stretch', marginTop: theme.spacing.sm }}>
-          <TouchableOpacity
-            onPress={onEdit}
-            accessibilityRole="button"
-            style={{ paddingVertical: 11, borderRadius: theme.radius.md, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}
-          >
-            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.white }}>Edit profile</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
+
+      <View style={styles.stats}>
+        <Stat value={totalPoints} label="points" color={theme.colors.primaryText} testID={`${testIdPrefix}-points-count`} />
+        <Stat value={totalCheers} label="cheers" color={theme.colors.hot} testID={`${testIdPrefix}-cheers-count`} />
+        <Stat value={trophyCount} label={trophyCount === 1 ? 'trophy' : 'trophies'} color={theme.colors.text} testID={`${testIdPrefix}-trophies-count`} />
+      </View>
+    </View>
+  )
+}
+
+/** The small "Edit profile" pill under your own name. */
+export function EditProfilePill({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Edit profile"
+      hitSlop={6}
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [styles.editPill, (pressed || hovered) && styles.editPillActive]}
+    >
+      <Ionicons name="create-outline" size={15} color={theme.colors.primaryText} />
+      <Text style={styles.editText}>Edit profile</Text>
+    </Pressable>
+  )
+}
+
+function Stat({ value, label, color, testID }: { value: number; label: string; color: string; testID: string }) {
+  return (
+    <View style={styles.stat} accessible accessibilityLabel={`${value} ${label}`}>
+      <Text testID={testID} style={[styles.statValue, { color }]}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 24,
-    padding: 18,
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    overflow: 'hidden',
-    position: 'relative',
+  wrap: { gap: theme.spacing.md },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  headText: { flex: 1, gap: 2, minWidth: 0 },
+  trailing: { alignSelf: 'flex-start' },
+  name: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.heading.md,
+    letterSpacing: -0.5,
+    color: theme.colors.text,
   },
+  subline: { fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext },
+  headActions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: theme.spacing.sm, marginTop: theme.spacing.xs },
+  badges: { flexDirection: 'row', gap: theme.spacing.md, justifyContent: 'center' },
+  editPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    minHeight: 32,
+    paddingHorizontal: 12,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primarySoft,
+  },
+  editPillActive: { backgroundColor: theme.colors.primary + '33' },
+  editText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.primaryText },
+  bio: { fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext, lineHeight: 20 },
+  stats: { flexDirection: 'row', gap: 10 },
   stat: {
     flex: 1,
+    backgroundColor: theme.colors.card,
+    borderRadius: 18,
     paddingVertical: 12,
-    paddingHorizontal: 10,
-    backgroundColor: theme.colors.onPrimaryFill,
+    paddingHorizontal: 8,
     alignItems: 'center',
   },
-  statValue: {
-    fontFamily: theme.fonts.display,
-    fontSize: theme.font.heading.lg,
-    letterSpacing: -1,
-    color: theme.colors.white,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.sm,
-    paddingTop: theme.spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.onPrimaryLine,
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-  },
+  statValue: { fontFamily: theme.fonts.display, fontSize: theme.font.heading.md, letterSpacing: -0.5 },
+  statLabel: { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext },
 })

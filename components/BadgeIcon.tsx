@@ -45,8 +45,9 @@ export function BadgeIcon({ def, tier, size = 'sm', showLabel = false, slotNumbe
   const resolvedImageSource = generatedUri
     ? { uri: generatedUri }
     : bundledArtwork ?? (resolvedImageUri ? { uri: resolvedImageUri } : undefined)
-  // The bundled PNGs share a padded canvas; keep the art inside the label gap.
-  const imageScale = generatedUri ? 1.4 : bundledArtwork ? 1.15 : def.tierImageUris ? 1.4 : 1.2
+  // The art sits on a round plate (theme.colors.badgePlate) so dark and light pieces both read
+  // in either theme; the bundled PNGs share a padded canvas, so they fill the plate.
+  const imageScale = generatedUri ? 1.2 : bundledArtwork ? 1.0 : def.tierImageUris ? 1.2 : 1.05
 
   return (
     <View style={{ alignItems: 'center', gap }}>
@@ -55,14 +56,25 @@ export function BadgeIcon({ def, tier, size = 'sm', showLabel = false, slotNumbe
       <View style={{ width: fs, height: fs, alignItems: 'center', justifyContent: 'center' }}>
 
         {resolvedImageSource ? (
-          // Image badge — renders larger as a free-form sticker using image transparency
-          <Image
-            source={resolvedImageSource}
-            testID={`badge-artwork-${def.type}`}
-            accessibilityLabel={earned ? label : `${label} (locked)`}
-            style={{ width: fs * imageScale, height: fs * imageScale, opacity: earned ? 1 : 0.25 }}
-            resizeMode="contain"
-          />
+          // Image badge: the artwork on a round plate, light in both themes.
+          <View
+            testID={`badge-plate-${def.type}`}
+            style={{
+              width: fs, height: fs, borderRadius: r,
+              backgroundColor: theme.colors.badgePlate,
+              borderWidth: 1, borderColor: theme.colors.badgePlateBorder,
+              alignItems: 'center', justifyContent: 'center',
+              opacity: earned ? 1 : 0.45,
+            }}
+          >
+            <Image
+              source={resolvedImageSource}
+              testID={`badge-artwork-${def.type}`}
+              accessibilityLabel={earned ? label : `${label} (locked)`}
+              style={{ width: fs * imageScale, height: fs * imageScale, opacity: earned ? 1 : 0.5 }}
+              resizeMode="contain"
+            />
+          </View>
         ) : (
           // Standard badge — gradient circle
           <View style={{ width: fs, height: fs, borderRadius: r, overflow: 'hidden', opacity: earned ? 1 : 0.35 }}>
