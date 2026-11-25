@@ -3,14 +3,11 @@ import { View, ScrollView, TouchableOpacity } from 'react-native'
 import { Text } from '../../../components/ui/Text'
 import { RefreshControl } from '../../../components/RefreshControl'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { shared, theme } from '../../../constants'
-import { BadgeIcon } from '../../../components/BadgeIcon'
 import { ProfileAvatar } from '../../../components/ProfileAvatar'
 import { toast } from '../../../lib/toast'
-import { BADGE_DEFINITIONS } from '../../../constants/badges'
 import { userProfileKey, useUserProfile } from '../../../hooks/useUserProfile'
 import { useFocusRefetch } from '../../../lib/query'
 import { ScreenState } from '../../../components/ui'
@@ -21,25 +18,14 @@ import { useOpenDm } from '../../../hooks/useOpenDm'
 import { FriendButton } from '../../../components/profile/FriendButton'
 import { useUserTrophies } from '../../../hooks/useUserTrophies'
 import { TrophyCase } from '../../../components/profile/TrophyCase'
+import { PROFILE_HERO_AVATAR, ProfileHero } from '../../../components/profile/ProfileHero'
 import { usePointsBalance } from '../../../hooks/usePoints'
 import { ReportSheet } from '../../../components/ReportSheet'
 import { useRequireSignIn } from '../../../hooks/useRequireSignIn'
 import {
-  volleyballSkillLevelLabel,
   profileFullName,
   confirmDestructive,
 } from '../../../utils'
-
-const POS_ABBREV: Record<string, string> = {
-  setter: 'S',
-  libero: 'L',
-  outside_hitter: 'OH',
-  middle_blocker: 'MB',
-  defensive_specialist: 'DS',
-  opposite_hitter: 'OPP',
-}
-
-const AVATAR_SIZE = 88
 
 export default function UserProfileDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -156,131 +142,20 @@ export default function UserProfileDetail() {
             <RefreshControl refreshing={refreshing} onRefresh={() => void handleRefresh()} tintColor={theme.colors.primary} />
           }
         >
-          {/* ── Hero card ── */}
-          <View style={{
-            backgroundColor: theme.colors.primary,
-            borderRadius: 24,
-            padding: 18,
-            alignItems: 'center',
-            gap: theme.spacing.xs,
-            overflow: 'hidden',
-            position: 'relative',
-          }}>
-            {/* Radial gradient decoration */}
-            <LinearGradient
-              colors={[theme.colors.onPrimaryFill, 'transparent']}
-              start={{ x: 1, y: 0 }}
-              end={{ x: 0.3, y: 0.7 }}
-              style={{
-                position: 'absolute', top: 0, right: 0,
-                width: 200, height: 200, borderRadius: 100,
-                opacity: 0.55,
-              }}
-              pointerEvents="none"
-            />
-
-            {/* Avatar + name row */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, width: '100%' }}>
-              <ProfileAvatar
-                uri={avatarUri}
-                border={profile.selected_border ?? null}
-                size={AVATAR_SIZE}
-              />
-              <View style={{ flex: 1, gap: 4 }}>
-                <Text style={{
-                  fontFamily: theme.fonts.body,
-                  fontSize: theme.font.size.xs, fontWeight: '700',
-                  color: theme.colors.onPrimaryMuted,
-                  letterSpacing: 1, textTransform: 'uppercase',
-                }}>
-                  Member since '{new Date(profile.created_at).getFullYear().toString().slice(2)}
-                </Text>
-                <Text style={{
-                  fontFamily: theme.fonts.display,
-                  fontSize: theme.font.heading.md, letterSpacing: -0.5,
-                  color: theme.colors.white, lineHeight: 24,
-                }}>
-                  {displayName}
-                </Text>
-                {/* Position chips */}
-                {(profile.position?.length ?? 0) > 0 && (
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 2 }}>
-                    {profile.position.slice(0, 2).map(pos => (
-                      <View key={pos} style={{
-                        paddingHorizontal: 9, paddingVertical: 4,
-                        borderRadius: theme.radius.full,
-                        backgroundColor: theme.colors.accent,
-                      }}>
-                        <Text style={{
-                          fontFamily: theme.fonts.displaySemiBold,
-                          fontSize: theme.font.size.xs, color: theme.colors.accentInk,
-                        }}>{POS_ABBREV[pos] ?? pos}</Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
+          <ProfileHero
+            profile={profile}
+            avatar={<ProfileAvatar uri={avatarUri} border={profile.selected_border ?? null} size={PROFILE_HERO_AVATAR} />}
+            actions={
+              <View style={{ flex: 1 }} testID="profile-friend-action">
+                <FriendButton userId={id} profile={profile} onMessage={showToast} />
               </View>
-            </View>
-
-            {/* Bio */}
-            {profile.bio ? (
-              <Text style={{
-                fontFamily: theme.fonts.body,
-                fontSize: theme.font.size.sm,
-                color: theme.colors.onPrimaryMuted,
-                lineHeight: 18, marginTop: 4, width: '100%',
-              }}>
-                {profile.bio}
-              </Text>
-            ) : null}
-
-            {/* Friend: Add friend / Requested / Accept + Decline / Friends (#15) */}
-            <View style={{ width: '100%', marginTop: theme.spacing.sm }} testID="profile-friend-action">
-              <FriendButton userId={id} profile={profile} onMessage={showToast} />
-            </View>
-
-            {/* Stats */}
-            <View style={{
-              flexDirection: 'row', gap: 1, marginTop: 14,
-              borderRadius: 14, overflow: 'hidden',
-              width: '100%',
-            }}>
-              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}>
-                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>
-                  {profile.skill_level ? volleyballSkillLevelLabel(profile.skill_level) : '—'}
-                </Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Skill</Text>
-              </View>
-              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}>
-                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{totalCheers}</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Cheers</Text>
-              </View>
-              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}>
-                <Text testID="user-profile-points-count" style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{points.data ?? 0}</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Points</Text>
-              </View>
-              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}>
-                <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{trophies.data?.length ?? 0}</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Trophies</Text>
-              </View>
-            </View>
-
-            {/* Displayed badges */}
-            {displayBadges.length > 0 && (
-              <View style={{
-                flexDirection: 'row', gap: theme.spacing.md,
-                marginTop: theme.spacing.sm, justifyContent: 'center',
-                borderTopWidth: 1, borderTopColor: theme.colors.onPrimaryLine,
-                paddingTop: theme.spacing.sm, width: '100%',
-              }}>
-                {displayBadges.map(badge => {
-                  const def = BADGE_DEFINITIONS.find(d => d.type === badge.badge_type)
-                  if (!def) return null
-                  return <BadgeIcon key={badge.badge_type} def={def} tier={badge.display_tier ?? badge.tier} size="sm" />
-                })}
-              </View>
-            )}
-          </View>
+            }
+            totalCheers={totalCheers}
+            totalPoints={points.data ?? 0}
+            trophyCount={trophies.data?.length ?? 0}
+            displayedBadges={displayBadges}
+            testIdPrefix="user-profile"
+          />
 
           {/* ── Trophy case ── */}
           <View style={{ marginTop: theme.spacing.sm }}>

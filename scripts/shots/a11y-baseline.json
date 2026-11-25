@@ -254,30 +254,20 @@
     "desktop": {}
   },
   "profile-edit-link": {
-    "mobile": {
-      "color-contrast": 4
-    },
-    "desktop": {
-      "color-contrast": 2
-    }
+    "mobile": {},
+    "desktop": {}
   },
   "profile-other": {
     "mobile": {},
-    "desktop": {
-      "color-contrast": 1
-    }
+    "desktop": {}
   },
   "profile-own": {
     "mobile": {},
-    "desktop": {
-      "color-contrast": 1
-    }
+    "desktop": {}
   },
   "profile-own-guest": {
     "mobile": {},
-    "desktop": {
-      "color-contrast": 1
-    }
+    "desktop": {}
   },
   "register": {
     "mobile": {},
