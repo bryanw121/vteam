@@ -1,6 +1,7 @@
 import { ScrollViewStyleReset, useServerDocumentContext } from 'expo-router/html'
 import { DOCUMENT_BACKGROUND } from '../constants/colorScheme'
 import { buildColorSchemeScript } from '../utils/colorSchemeScript'
+import { SPLASH_CSS } from '../components/splash/splashCss'
 import { APP_NAME } from '../constants/copy'
 import { buildFeedPrefetchScript } from '../utils/feedPrefetchScript'
 
@@ -82,6 +83,9 @@ export default function Root({ children }: { children: React.ReactNode }) {
         <link rel="preload" href="/fonts/outfit-latin-800-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* @ts-ignore */}
         <style dangerouslySetInnerHTML={{ __html: WEB_FONT_FACES }} />
+        {/* The loading screen's look (components/splash): it animates before the scripts arrive. */}
+        {/* @ts-ignore */}
+        <style dangerouslySetInnerHTML={{ __html: SPLASH_CSS }} />
         {/* @ts-ignore */}
         <style dangerouslySetInnerHTML={{ __html: `
           /*
