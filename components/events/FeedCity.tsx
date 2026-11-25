@@ -38,6 +38,32 @@ export function FeedCityLine({ style }: FeedCityLineProps) {
   )
 }
 
+/**
+ * "Austin ▾": the same control as FeedCityLine, small enough for the row above the phone
+ * feed's days (Party invite). Same test id and spoken label, so the city flow checks either.
+ */
+export function FeedCityPill() {
+  const city = useFeedCity()
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <TouchableOpacity
+        onPress={() => setOpen(true)}
+        style={styles.pill}
+        hitSlop={{ top: 6, bottom: 6 }}
+        accessibilityRole="button"
+        accessibilityLabel={`${FEED_CITY_COPY.line} ${city.name}. ${FEED_CITY_COPY.change}`}
+        testID="feed-city"
+      >
+        <Ionicons name="location-outline" size={15} color={theme.colors.primaryText} />
+        <Text style={styles.pillText} numberOfLines={1}>{city.name}</Text>
+        <Ionicons name="chevron-down" size={14} color={theme.colors.subtext} />
+      </TouchableOpacity>
+      <FeedCitySheet visible={open} onDismiss={() => setOpen(false)} city={city} />
+    </>
+  )
+}
+
 /** The browser's location API; the phone apps don't have a location module yet (next store build). */
 const canLocate = (): boolean =>
   Platform.OS === 'web' && typeof navigator !== 'undefined' && !!navigator.geolocation
@@ -115,6 +141,11 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.card,
   },
+  pill: {
+    flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 36, paddingHorizontal: 12,
+    borderRadius: theme.radius.full, backgroundColor: theme.colors.card,
+  },
+  pillText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.text, maxWidth: 140 },
   lineText: { flex: 1, fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext },
   lineCity: { fontFamily: theme.fonts.bodySemiBold, color: theme.colors.text },
   change: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.timeText },

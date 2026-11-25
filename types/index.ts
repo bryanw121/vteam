@@ -1047,6 +1047,8 @@ export type EventsFeedDesktopProps = EventsFeedLayoutBase & {
 export type EventsFeedMobileProps = EventsFeedLayoutBase & {
   /** The header's right side (Today button already added when off this week). */
   headerRight: ReactNode
+  /** "Austin ▾": next to the month above the days, or on its own row when the strip is hidden. */
+  cityPill: ReactNode
   curWeekPage: number
   onPrevWeek: () => void
   onNextWeek: () => void
@@ -1099,6 +1101,8 @@ export type SurfaceFilterProps = {
   onSelect: (id: SurfaceFilter) => void
   /** Desktop wraps the row; mobile scrolls it horizontally. */
   wide: boolean
+  /** Only the chips, for a row the caller draws (phones put both filter sets in one scrolling row). */
+  bare?: boolean
 }
 
 export type FeedRsvpAction = 'join' | 'leave'
@@ -1121,6 +1125,8 @@ export type FilterChipsProps = {
   onSelect: (id: FeedFilter) => void
   /** Desktop wraps the row; mobile scrolls it horizontally. */
   wide: boolean
+  /** Only the chips, for a row the caller draws (phones put both filter sets in one scrolling row). */
+  bare?: boolean
 }
 
 export type FeedEmptyProps = {
@@ -2702,6 +2708,8 @@ export type WeekPagerProps = {
   onSelectDate: (date: string) => void
   onPrevWeek: () => void
   onNextWeek: () => void
+  /** Right of the month name (the city pill on the Events feed). */
+  right?: import('react').ReactNode
 }
 export * from './club'
 export * from './freeAgents'

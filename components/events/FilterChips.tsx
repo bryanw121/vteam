@@ -4,7 +4,7 @@ import { Chip } from '../ui'
 import type { FilterChipsProps } from '../../types'
 
 /** The Events filter row. Desktop wraps; mobile scrolls sideways under the week strip. */
-export function FilterChips({ chips, active, onSelect, wide }: FilterChipsProps) {
+export function FilterChips({ chips, active, onSelect, wide, bare }: FilterChipsProps) {
   const items = chips.map(chip => (
     <Chip
       key={chip.id}
@@ -15,6 +15,7 @@ export function FilterChips({ chips, active, onSelect, wide }: FilterChipsProps)
     />
   ))
 
+  if (bare) return <>{items}</>
   if (wide) return <View style={styles.wrap}>{items}</View>
   return (
     <ScrollView

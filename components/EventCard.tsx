@@ -24,6 +24,11 @@ import type { EventCardProps, RowEventCardProps } from '../types'
 /** Room kept top-right for the feed's ⋯ button (32pt plus a gap). */
 const MENU_INSET = 36
 
+/** "WED" → "Wed" for the body line. */
+function dayName(day: string) {
+  return day.charAt(0) + day.slice(1).toLowerCase()
+}
+
 function barWidth(fillRatio: number) {
   return { width: `${Math.round(fillRatio * 100)}%` as `${number}%` }
 }
@@ -42,56 +47,38 @@ function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, frien
       onPress={open}
       style={shared.ecHero}
     >
-      {/* Cover: a colour block per kind of game, with the time, day, type and title on it.
-          The weather arrives later, so it sits in the body (below), where it can't wrap the chips onto a new line. */}
+      {/* Cover (Party invite): a colour block per kind of game, carrying only the
+          "Hosted on vteam" mark and the title. Time, place and people are in the body. */}
       <View style={[shared.ecCover, { backgroundColor: m.isTournament ? theme.colors.coverTournament : theme.colors.coverOpen }]}>
         <View pointerEvents="none" style={shared.ecCoverRing} />
         <View pointerEvents="none" style={shared.ecCoverDot} />
-        <View style={[shared.ecHeroChips, { paddingRight: menuInset ? MENU_INSET : 0, marginBottom: 0 }]}>
-          {hosted && <HostedBadge onCover />}
-          <TimePill label={m.time} testID="event-card-time" />
-          <View style={shared.ecHeroDay}>
-            <Text style={shared.ecHeroDayText}>{m.day}</Text>
+        {hosted && (
+          <View style={[shared.ecHeroChips, { paddingRight: menuInset ? MENU_INSET : 0, marginBottom: 0 }]}>
+            <HostedBadge onCover />
           </View>
-          {m.typeTags.map(tag => (
-            <View key={tag.id} style={shared.ecHeroTypeChip}>
-              <Text style={shared.ecHeroTypeText}>{tag.name}</Text>
-            </View>
-          ))}
-          {m.skillTags.slice(0, 1).map(tag => (
-            <View key={tag.id} style={shared.ecHeroQuietChip}>
-              <Text style={shared.ecHeroQuietText}>{tag.name}</Text>
-            </View>
-          ))}
-        </View>
+        )}
         <Text style={shared.ecHeroTitle} numberOfLines={2}>{event.title}</Text>
       </View>
 
       <View style={shared.ecBody}>
-        {(event.location || event.clubs || forecast) && (
-          <View style={shared.ecHeroLocation}>
-            <Ionicons name="location-outline" size={14} color={theme.colors.subtext} />
-            <Text style={[shared.ecHeroLocationText, { flexShrink: 1 }]} numberOfLines={1}>
-              {[event.location, m.surfaceLabel, event.clubs?.name].filter(Boolean).join(', ')}
-            </Text>
-            {/* The row is as tall as the chip, so the forecast landing doesn't move the card */}
-            {forecast && <View style={shared.ecHeroForecast}><ForecastChip summary={forecast} /></View>}
-          </View>
-        )}
-
-        <FriendsGoingLine going={friendsGoing} />
-
-        {/* Who's going, how many spots, RSVP */}
-        <View style={shared.ecHeroPeople}>
-          <View style={shared.ecHeroPeopleLeft}>
-            <AttendeeStack previews={m.previews} overflow={m.overflow} variant="hero" />
-            <View>
-              <Text style={shared.ecHeroCount}>
-                {m.attendeeCount}
-                {event.max_attendees ? <Text style={shared.ecHeroCountMax}>/{event.max_attendees}</Text> : null}
+        <View style={shared.ecHeroMain}>
+          <View style={shared.ecHeroInfo}>
+            {/* When: the time is its own pill, so nobody misreads it. The row is as tall as the
+                weather chip, so a forecast arriving later never moves the card. */}
+            <View style={shared.ecHeroWhen}>
+              <TimePill label={m.time} testID="event-card-time" />
+              <Text style={shared.ecHeroDayName}>{dayName(m.day)}</Text>
+              {forecast && <ForecastChip summary={forecast} />}
+            </View>
+            {(event.location || m.surfaceLabel) && (
+              <Text style={shared.ecHeroWhere} numberOfLines={1}>
+                {[event.location, m.surfaceLabel].filter(Boolean).join(', ')}
               </Text>
-              <Text style={shared.ecHeroSpots}>
-                {m.isFull ? 'Full' : `${m.spotsLeft ?? '∞'} spot${m.spotsLeft !== 1 ? 's' : ''} left`}
+            )}
+            <View style={shared.ecHeroWho}>
+              <AttendeeStack previews={m.previews} overflow={m.overflow} variant="hero" />
+              <Text style={shared.ecHeroSpots} numberOfLines={1}>
+                {m.attendeeCount}{event.max_attendees ? `/${event.max_attendees}` : ''} · {m.isFull ? 'Full' : `${m.spotsLeft ?? '∞'} spot${m.spotsLeft !== 1 ? 's' : ''} left`}
               </Text>
             </View>
           </View>
@@ -99,6 +86,9 @@ function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, frien
             <RsvpButton variant="hero" isAttending={m.isAttending} awaiting={m.awaiting} loading={rsvpLoading} onToggle={() => void rsvp(m.isAttending)} />
           )}
         </View>
+
+        <FriendsGoingLine going={friendsGoing} />
+        {!!event.clubs?.name && <Text style={shared.ecHeroClub} numberOfLines={1}>{event.clubs.name}</Text>}
 
         {event.max_attendees != null && (
           <View style={shared.ecHeroBar}>

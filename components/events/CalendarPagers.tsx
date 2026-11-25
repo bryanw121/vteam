@@ -101,10 +101,9 @@ const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate
               style={{
                 flex: 1,
                 paddingVertical: 10,
-                borderRadius: 14,
-                backgroundColor: isSelected ? theme.colors.primary : 'transparent',
-                borderWidth: isSelected ? 0 : 1,
-                borderColor: theme.colors.border,
+                // Party invite: soft pills, filled when picked
+                borderRadius: theme.radius.full,
+                backgroundColor: isSelected ? theme.colors.primary : theme.colors.card,
                 alignItems: 'center',
                 gap: 3,
               }}
@@ -241,7 +240,7 @@ export const MonthGridContent = memo(function MonthGridContent({ month, selected
 
 // ─── Week Pager ──────────────────────────────────────────────────────────────
 
-export function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPrevWeek, onNextWeek }: WeekPagerProps) {
+export function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate, onPrevWeek, onNextWeek, right }: WeekPagerProps) {
   const [width, setWidth] = useState(0)
   const widthRef = useRef(0)
   const translateX = useRef(new Animated.Value(0)).current
@@ -282,16 +281,19 @@ export function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate
 
   return (
     <View>
-      {/* Which month the strip is on. */}
-      <Text
-        testID="week-month-label"
-        accessibilityRole="header"
-        accessibilityLiveRegion="polite"
-        numberOfLines={1}
-        style={weekNavStyles.month}
-      >
-        {monthLabel}
-      </Text>
+      {/* Which month the strip is on, and (Events) the city pill on its right. */}
+      <View style={weekNavStyles.monthRow}>
+        <Text
+          testID="week-month-label"
+          accessibilityRole="header"
+          accessibilityLiveRegion="polite"
+          numberOfLines={1}
+          style={[weekNavStyles.month, !!right && weekNavStyles.monthWithRight]}
+        >
+          {monthLabel}
+        </Text>
+        {!!right && <View style={weekNavStyles.monthRight}>{right}</View>}
+      </View>
       {/* ‹ days › : arrows either side of the week step it a week at a time. */}
       <View style={weekNavStyles.row}>
         <TouchableOpacity
@@ -371,7 +373,11 @@ export const weekNavStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  monthRow: { flexDirection: 'row', alignItems: 'center' },
+  monthRight: { marginRight: theme.spacing.lg, paddingTop: theme.spacing.xs },
+  monthWithRight: { flex: 1, textAlign: 'left' },
   month: {
+    flex: 1,
     textAlign: 'center',
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.xs,
