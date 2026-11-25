@@ -52,6 +52,11 @@ test('tap targets count on phones only, and never inline text links', () => {
   assert.deepEqual(judge(m, { viewport: 'desktop', tokens }).counts, {})
 })
 
+test('the same finding repeated on a screen counts once', () => {
+  const texts = Array.from({ length: 10 }, () => ({ text: 'Maya Chen', family: '-apple-system', size: 14 }))
+  assert.deepEqual(judge({ texts: [...texts, { text: 'Zoey Lin', family: '-apple-system', size: 14 }], docWidth: 0, viewportWidth: 0 }, { viewport: 'desktop', tokens }).counts, { 'font-family': 2 })
+})
+
 test('a page wider than the viewport is a finding', () => {
   assert.deepEqual(judge({ docWidth: 420, viewportWidth: 390 }, { viewport: 'mobile', tokens }).counts, { 'page-overflow': 1 })
   assert.deepEqual(judge({ docWidth: 391, viewportWidth: 390 }, { viewport: 'mobile', tokens }).counts, {})
