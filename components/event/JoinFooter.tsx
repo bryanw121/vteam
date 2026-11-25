@@ -54,45 +54,46 @@ export function JoinFooter({ eventDate, eventStatus, requiresApproval, attendanc
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: theme.spacing.sm }}>
         <View style={{ flex: 1 }}>
           {action === 'leave' ? (
-            <Button label="Leave event" onPress={onLeave} loading={joining} variant="secondary" testID="leave-event" />
+            <Button label="Leave event" onPress={onLeave} loading={joining} style={shared.evFooterButton} variant="secondary" testID="leave-event" />
           ) : action === 'leave-waitlist' ? (
             <View style={{ gap: theme.spacing.xs }}>
-              <Button label="Leave Waitlist" onPress={() => { void attendance.leaveWaitlist() }} loading={joining} variant="secondary" />
+              <Button label="Leave Waitlist" onPress={() => { void attendance.leaveWaitlist() }} loading={joining} style={shared.evFooterButton} variant="secondary" />
               <Text style={[shared.caption, { textAlign: 'center' }]}>
                 You are #{eventStatus.waitlistPosition} on the waitlist
               </Text>
             </View>
           ) : action === 'cancel-request' ? (
             <View style={{ gap: theme.spacing.xs }}>
-              <Button label="Cancel Request" onPress={() => { void attendance.cancelRequest() }} loading={joining} variant="secondary" />
+              <Button label="Cancel Request" onPress={() => { void attendance.cancelRequest() }} loading={joining} style={shared.evFooterButton} variant="secondary" />
               <Text style={[shared.caption, { textAlign: 'center' }]}>Pending host approval</Text>
             </View>
           ) : action === 'rerequest' ? (
             <View style={{ gap: theme.spacing.xs }}>
-              <Button label="Request Again" onPress={() => { void attendance.rerequest() }} loading={joining} />
+              <Button label="Request Again" onPress={() => { void attendance.rerequest() }} loading={joining} style={shared.evFooterButton} />
               <Text style={[shared.caption, { textAlign: 'center', color: theme.colors.error }]}>
                 Request denied{eventStatus.denialReason ? `: "${eventStatus.denialReason}"` : ''}
               </Text>
             </View>
           ) : action === 'waitlist' ? (
-            <Button label="Join Waitlist" onPress={() => { void attendance.joinWaitlist() }} loading={joining} />
+            <Button label="Join Waitlist" onPress={() => { void attendance.joinWaitlist() }} loading={joining} style={shared.evFooterButton} />
           ) : action === 'request' ? (
             <View style={{ gap: theme.spacing.xs }}>
-              <Button label="Request to Join" onPress={() => { void attendance.requestToJoin() }} loading={joining} />
+              <Button label="Request to Join" onPress={() => { void attendance.requestToJoin() }} loading={joining} style={shared.evFooterButton} />
               <Text style={[shared.caption, { textAlign: 'center' }]}>{APPROVAL_REQUIRED_NOTE}</Text>
             </View>
           ) : (
-            <Button label="Join event" onPress={() => { void attendance.join() }} loading={joining} />
+            <Button label="Join event" onPress={() => { void attendance.join() }} loading={joining} style={shared.evFooterButton} />
           )}
         </View>
         {(eventStatus.isAttending || eventStatus.isOwner) && (
           <TouchableOpacity
             onPress={onAddGuest}
             hitSlop={8}
+            accessibilityRole="button"
             accessibilityLabel="Add a +1 guest"
             style={styles.addGuest}
           >
-            <Ionicons name="person-add-outline" size={20} color={theme.colors.primaryText} />
+            <Text style={styles.addGuestText}>+1 guest</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -114,13 +115,13 @@ const styles = StyleSheet.create({
     borderTopColor: theme.colors.border,
   },
   addGuest: {
-    width: 44,
-    height: 44,
-    borderRadius: theme.radius.md,
-    borderWidth: 1,
+    minHeight: 52,
+    paddingHorizontal: 18,
+    borderRadius: theme.radius.full,
+    borderWidth: 2,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  addGuestText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.text },
 })

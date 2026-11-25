@@ -1,13 +1,6 @@
 {
   "_notes": {
-    "about": "Accepted findings for scripts/shots/stability-flow.mjs (#255): check → screen → viewport → kind → largest value. Shrink-only: lower or remove an entry when a fix lands (npm run stability:baseline); never raise one to get a PR through.",
-    "scroll/event": "Event page: the Price detail row settles once when the Details tab lays out (0.019; #306 removed the late header row and the skeleton offset)."
+    "about": "Accepted findings for scripts/shots/stability-flow.mjs (#255): check → screen → viewport → kind → largest value. Shrink-only: lower or remove an entry when a fix lands (npm run stability:baseline); never raise one to get a PR through."
   },
-  "scroll": {
-    "event": {
-      "phone": {
-        "reload:layout-shift": 0.019
-      }
-    }
-  }
+  "scroll": {}
 }

@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `fb7527a3df01`
+> Inventory fingerprint: `fb1d9fff0739`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -647,6 +647,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2680), [`WeekStripContentProps`](../types/index.ts#L2682), [`MonthGridContentProps`](../types/index.ts#L2691), [`WeekPagerProps`](../types/index.ts#L2704), [`CrashMarker`](../types/index.ts#L2718), [`CrashReport`](../types/index.ts#L2721), [`ActiveMention`](../types/index.ts#L2723), [`ChatRoomHeaderProps`](../types/index.ts#L2726), [`ChatComposerBandProps`](../types/index.ts#L2735), [`ChatComposerProps`](../types/index.ts#L2744), [`ImageViewerProps`](../types/index.ts#L2752), [`FeedPrefetchTiming`](../types/index.ts#L2755) |
 | Court queue for open play (#333) | [`CourtQueueRule`](../types/index.ts#L2766), [`CourtQueueGame`](../types/index.ts#L2768), [`CourtQueueState`](../types/index.ts#L2770), [`CourtQueueSnapshot`](../types/index.ts#L2779), [`CourtQueuePlace`](../types/index.ts#L2781), [`CourtQueue`](../types/index.ts#L2783), [`CourtQueueTally`](../types/index.ts#L2792), [`DesktopFeedDay`](../types/index.ts#L2795), [`DesktopFeedMonth`](../types/index.ts#L2802), [`ColorScheme`](../types/index.ts#L2806), [`AppearancePref`](../types/index.ts#L2808), [`AppearanceApplied`](../types/index.ts#L2810) |
 | Sign in / sign up (Nov 2026 redesign) | [`AuthTab`](../types/index.ts#L2814), [`AuthScreenProps`](../types/index.ts#L2815), [`AuthCtaProps`](../types/index.ts#L2823), [`GoogleButtonProps`](../types/index.ts#L2830), [`VteamMarkProps`](../types/index.ts#L2831) |
+| Event page (Party invite layout) | [`EventHeroProps`](../types/index.ts#L2838), [`EventWhenWhereProps`](../types/index.ts#L2843), [`EventWhoIsInProps`](../types/index.ts#L2847), [`EventHostNoteProps`](../types/index.ts#L2856), [`EventFactChipsProps`](../types/index.ts#L2862) |
 
 ### Constrained string values
 
