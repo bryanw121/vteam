@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `1f64cdb8302d`
+> Inventory fingerprint: `fb7527a3df01`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -484,7 +484,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `notifications` | [`hooks/event/useCohosts.ts:66`](../hooks/event/useCohosts.ts#L66)<br>[`hooks/event/useEventAttendance.ts:91`](../hooks/event/useEventAttendance.ts#L91)<br>[`hooks/useNotifications.ts:35`](../hooks/useNotifications.ts#L35)<br>[`utils/badges.ts:233`](../utils/badges.ts#L233) |
 | `point_balances` | [`hooks/usePoints.ts:24`](../hooks/usePoints.ts#L24) |
 | `point_events` | [`hooks/useMyGameRecap.ts:17`](../hooks/useMyGameRecap.ts#L17) |
-| `profiles` | [`app/(auth)/register.tsx:69`](../app/%28auth%29/register.tsx#L69)<br>[`hooks/event/useEventData.ts:110`](../hooks/event/useEventData.ts#L110)<br>[`hooks/tournament/api.ts:221`](../hooks/tournament/api.ts#L221)<br>[`hooks/useMessages.ts:68`](../hooks/useMessages.ts#L68)<br>[`hooks/useMyProfile.ts:112`](../hooks/useMyProfile.ts#L112)<br>[`hooks/useUserProfile.ts:20`](../hooks/useUserProfile.ts#L20)<br>+4 more files |
+| `profiles` | [`app/(auth)/register.tsx:66`](../app/%28auth%29/register.tsx#L66)<br>[`hooks/event/useEventData.ts:110`](../hooks/event/useEventData.ts#L110)<br>[`hooks/tournament/api.ts:221`](../hooks/tournament/api.ts#L221)<br>[`hooks/useMessages.ts:68`](../hooks/useMessages.ts#L68)<br>[`hooks/useMyProfile.ts:112`](../hooks/useMyProfile.ts#L112)<br>[`hooks/useUserProfile.ts:20`](../hooks/useUserProfile.ts#L20)<br>+4 more files |
 | `program_free_agents` | [`hooks/useFreeAgents.ts:39`](../hooks/useFreeAgents.ts#L39) |
 | `push_receipts` | [`supabase/functions/check-push-receipts/handler.ts:42`](../supabase/functions/check-push-receipts/handler.ts#L42)<br>[`supabase/functions/send-chat-push/handler.ts:225`](../supabase/functions/send-chat-push/handler.ts#L225)<br>[`supabase/functions/send-notification-push/handler.ts:174`](../supabase/functions/send-notification-push/handler.ts#L174) |
 | `push_tokens` | [`supabase/functions/check-push-receipts/handler.ts:87`](../supabase/functions/check-push-receipts/handler.ts#L87)<br>[`supabase/functions/send-chat-push/handler.ts:152`](../supabase/functions/send-chat-push/handler.ts#L152)<br>[`supabase/functions/send-notification-push/handler.ts:109`](../supabase/functions/send-notification-push/handler.ts#L109)<br>[`utils/pushNotifications.ts:101`](../utils/pushNotifications.ts#L101)<br>[`utils/pushNotifications.web.ts:66`](../utils/pushNotifications.web.ts#L66) |
@@ -581,9 +581,9 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Auth | `signInWithIdToken` | [`lib/socialAuth.ts:78`](../lib/socialAuth.ts#L78) |
 | Auth | `signInWithOAuth` | [`lib/socialAuth.ts:38`](../lib/socialAuth.ts#L38) |
 | Auth | `signInWithOtp` | [`lib/socialAuth.ts:89`](../lib/socialAuth.ts#L89) |
-| Auth | `signInWithPassword` | [`app/(auth)/login.tsx:119`](../app/%28auth%29/login.tsx#L119)<br>[`hooks/useAccountDeletion.ts:70`](../hooks/useAccountDeletion.ts#L70) |
+| Auth | `signInWithPassword` | [`app/(auth)/login.tsx:86`](../app/%28auth%29/login.tsx#L86)<br>[`hooks/useAccountDeletion.ts:70`](../hooks/useAccountDeletion.ts#L70) |
 | Auth | `signOut` | [`app/(app)/(tabs)/settings/account.tsx:54`](../app/%28app%29/%28tabs%29/settings/account.tsx#L54)<br>[`app/(auth)/reset-password.tsx:67`](../app/%28auth%29/reset-password.tsx#L67)<br>[`hooks/useAccountDeletion.ts:63`](../hooks/useAccountDeletion.ts#L63) |
-| Auth | `signUp` | [`app/(auth)/register.tsx:79`](../app/%28auth%29/register.tsx#L79) |
+| Auth | `signUp` | [`app/(auth)/register.tsx:76`](../app/%28auth%29/register.tsx#L76) |
 | Auth | `startAutoRefresh` | [`lib/supabase.ts:75`](../lib/supabase.ts#L75) |
 | Auth | `stopAutoRefresh` | [`lib/supabase.ts:76`](../lib/supabase.ts#L76) |
 | Auth | `updateUser` | [`app/(auth)/reset-password.tsx:64`](../app/%28auth%29/reset-password.tsx#L64) |
@@ -646,6 +646,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | What to bring (#256) | [`BringClaimer`](../types/index.ts#L2585), [`BringItem`](../types/index.ts#L2595), [`BringItemDraft`](../types/index.ts#L2606), [`BringItemAction`](../types/index.ts#L2616), [`BringViewer`](../types/index.ts#L2625), [`SaveBringItemsArgs`](../types/index.ts#L2633), [`ClaimBringItemArgs`](../types/index.ts#L2637), [`ReleaseBringItemArgs`](../types/index.ts#L2638), [`StartupConfig`](../types/index.ts#L2641), [`MyGameRecap`](../types/index.ts#L2648), [`YourGameCardProps`](../types/index.ts#L2650), [`RecapFooterProps`](../types/index.ts#L2659), [`RecapShareTarget`](../types/index.ts#L2670) |
 | Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2674), [`WeekStripContentProps`](../types/index.ts#L2676), [`MonthGridContentProps`](../types/index.ts#L2685), [`WeekPagerProps`](../types/index.ts#L2698), [`CrashMarker`](../types/index.ts#L2710), [`CrashReport`](../types/index.ts#L2713), [`ActiveMention`](../types/index.ts#L2715), [`ChatRoomHeaderProps`](../types/index.ts#L2718), [`ChatComposerBandProps`](../types/index.ts#L2727), [`ChatComposerProps`](../types/index.ts#L2736), [`ImageViewerProps`](../types/index.ts#L2744), [`FeedPrefetchTiming`](../types/index.ts#L2747) |
 | Court queue for open play (#333) | [`CourtQueueRule`](../types/index.ts#L2758), [`CourtQueueGame`](../types/index.ts#L2760), [`CourtQueueState`](../types/index.ts#L2762), [`CourtQueueSnapshot`](../types/index.ts#L2771), [`CourtQueuePlace`](../types/index.ts#L2773), [`CourtQueue`](../types/index.ts#L2775), [`CourtQueueTally`](../types/index.ts#L2784), [`DesktopFeedDay`](../types/index.ts#L2787), [`DesktopFeedMonth`](../types/index.ts#L2794), [`ColorScheme`](../types/index.ts#L2798), [`AppearancePref`](../types/index.ts#L2800), [`AppearanceApplied`](../types/index.ts#L2802) |
+| Sign in / sign up (Nov 2026 redesign) | [`AuthTab`](../types/index.ts#L2806), [`AuthScreenProps`](../types/index.ts#L2807), [`AuthCtaProps`](../types/index.ts#L2815), [`GoogleButtonProps`](../types/index.ts#L2822), [`VteamMarkProps`](../types/index.ts#L2823) |
 
 ### Constrained string values
 
@@ -657,6 +658,7 @@ TypeScript `enum` keyword.
 | `AccountDeletionBlock` | `reauth_required`, `plan_changed` | [`types/index.ts:2396`](../types/index.ts#L2396) |
 | `AppearanceApplied` | `unchanged`, `reloading`, `next-launch` | [`types/index.ts:2802`](../types/index.ts#L2802) |
 | `AppearancePref` | `system`, `light`, `dark` | [`types/index.ts:2800`](../types/index.ts#L2800) |
+| `AuthTab` | `login`, `register` | [`types/index.ts:2806`](../types/index.ts#L2806) |
 | `BadgeStat` | `events_attended_past`, `events_hosted_past`, `cheers_received_total`, `cheers_given_events`, `spike_cheers`, `serve_cheers`, `block_cheers`, `set_cheers`, `dig_pass_cheers`, `communication_cheers`, `beta_active`, `tournament_hosted`, `profile_complete`, `vex_member` | [`constants/badges.ts:43`](../constants/badges.ts#L43) |
 | `BadgeType` | `event_attendee`, `event_host`, `cheers_received`, `cheers_given`, `spike_cheer`, `serve_cheer`, `block_cheer`, `set_cheer`, `dig_pass_cheer`, `communication_cheer`, `beta_tester`, `tournament_director`, `profile_complete`, `vex_spirit` | [`types/index.ts:1310`](../types/index.ts#L1310) |
 | `CardBgType` | `ember`, `frost`, `aurora` | [`types/index.ts:1308`](../types/index.ts#L1308) |
