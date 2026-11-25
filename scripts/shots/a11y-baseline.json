@@ -163,7 +163,7 @@
   },
   "event-people-balanced": {
     "mobile": {
-      "color-contrast": 1
+      "color-contrast": 2
     },
     "desktop": {
       "color-contrast": 2
