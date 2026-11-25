@@ -54,7 +54,7 @@ const MENU_GROUPS: readonly MenuGroup[] = [
       { title: 'Silenced people', icon: 'eye-off-outline', tone: 'primary', section: 'silenced' },
       { title: 'Account settings', icon: 'settings-outline', tone: 'primary', section: 'account' },
       { title: 'Go ad-free', icon: 'sparkles-outline', tone: 'warning', section: 'ad-free' },
-      { title: 'Experimental features', icon: 'flask-outline', tone: 'cool', section: 'experimental' },
+      { title: 'Experiments', icon: 'flask-outline', tone: 'cool', section: 'experimental' },
     ],
   },
   {

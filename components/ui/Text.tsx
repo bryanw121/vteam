@@ -1,12 +1,17 @@
-import { forwardRef } from 'react'
+import { Children, createContext, forwardRef, isValidElement, useContext } from 'react'
 import { Platform, Text as RNText, TextInput as RNTextInput } from 'react-native'
 import type { TextInputProps, TextProps } from 'react-native'
 import { useTextScale } from '../../contexts/textScale'
 import { MAX_TEXT_SCALE } from '../../constants/textSize'
-import { scaleTextStyle, textScaleFor } from '../../utils/textScale'
+import { scaleTextStyle, textScaleFor, withDefaultFamily } from '../../utils/textScale'
 import type { TextInstance, TextInputInstance } from 'react-native'
 
 const PLATFORM = Platform.OS === 'web' ? 'web' : 'native'
+/**
+ * True inside another app `Text`: nested text inherits its parent's font, so only the
+ * outermost one gets the default family (#385); a bold word in a display title stays display.
+ */
+const InsideText = createContext(false)
 /** Web inputs below 16px make iOS Safari zoom the page on focus. */
 const WEB_INPUT_MIN_FONT = 16
 
@@ -18,17 +23,22 @@ const WEB_INPUT_MIN_FONT = 16
  * `maxFontSizeMultiplier` caps the *combined* scale (in-app × OS), not only the
  * OS part as in React Native. Default `MAX_TEXT_SCALE` (2×); pass
  * `TIGHT_TEXT_SCALE` for fixed-size UI (tab bar labels, pips).
+ *
+ * A style without a `fontFamily` is drawn in Outfit, at the file for its weight (#385).
  */
-export const Text = forwardRef<TextInstance, TextProps>(function Text({ style, maxFontSizeMultiplier, ...rest }, ref) {
+export const Text = forwardRef<TextInstance, TextProps>(function Text({ style, maxFontSizeMultiplier, children, ...rest }, ref) {
   const { appScale, osScale } = useTextScale()
+  const nested = useContext(InsideText)
   const { factor, maxFontSizeMultiplier: osCap } = textScaleFor(PLATFORM, appScale, osScale, maxFontSizeMultiplier ?? MAX_TEXT_SCALE)
   return (
     <RNText
       ref={ref}
       {...rest}
-      style={scaleTextStyle(style, factor)}
+      style={scaleTextStyle(nested ? style : withDefaultFamily(style), factor)}
       maxFontSizeMultiplier={PLATFORM === 'native' ? osCap : undefined}
-    />
+    >
+      {nested || !Children.toArray(children).some(isValidElement) ? children : <InsideText.Provider value>{children}</InsideText.Provider>}
+    </RNText>
   )
 })
 
@@ -40,7 +50,7 @@ export const TextInput = forwardRef<TextInputInstance, TextInputProps>(function 
     <RNTextInput
       ref={ref}
       {...rest}
-      style={scaleTextStyle(style, factor, PLATFORM === 'web' ? WEB_INPUT_MIN_FONT : 0)}
+      style={scaleTextStyle(withDefaultFamily(style), factor, PLATFORM === 'web' ? WEB_INPUT_MIN_FONT : 0)}
       maxFontSizeMultiplier={PLATFORM === 'native' ? osCap : undefined}
     />
   )
