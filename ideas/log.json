@@ -682,23 +682,26 @@
     "n": 1,
     "title": "The event page comes back where you left it",
     "bucket": "end-user-experience",
-    "status": "proposed",
-    "summary": "Health-check fix: event Details/People DocScrollView has no memoryKey, so Back from a profile lands at 0 px (was 297). Add per-tab keys, a signed-in stability child, and a test that long DocScrollViews have a memoryKey."
+    "status": "approved",
+    "summary": "Health-check fix: event Details/People DocScrollView has no memoryKey, so Back from a profile lands at 0 px (was 297). Add per-tab keys, a signed-in stability child, and a test that long DocScrollViews have a memoryKey.",
+    "issue": 376
   },
   {
     "date": "2026-11-25",
     "n": 2,
     "title": "Check in at the court: \"I'm here\" for players, a live head count for hosts, and no-shows in one tap",
     "bucket": "competitor-gap",
-    "status": "proposed",
-    "summary": "OpenSports/Spond-style check-in: event_checkins + check_in() RPC, host sees N of M here on People, after the game a one-tap no-show list using set_no_show (#151)."
+    "status": "rejected",
+    "summary": "OpenSports/Spond-style check-in: event_checkins + check_in() RPC, host sees N of M here on People, after the game a one-tap no-show list using set_no_show (#151).",
+    "reason": "Adds another touchpoint for the user (one more thing to tap at the court)."
   },
   {
     "date": "2026-11-25",
     "n": 3,
     "title": "UX/UI consistency in CI, starting with one 44-pt Back on every screen",
     "bucket": "testing",
-    "status": "proposed",
-    "summary": "scripts/shots/ui-consistency-flow.mjs with a shrink-only baseline (titles, back, 44-pt targets, font tokens/family, primary buttons, width) in Browser: flows; then one BackButton and ScreenHeader on settings/notifications/create (7 Back shapes, 5 under 44 pt today)."
+    "status": "approved",
+    "summary": "scripts/shots/ui-consistency-flow.mjs with a shrink-only baseline (titles, back, 44-pt targets, font tokens/family, primary buttons, width) in Browser: flows; then one BackButton and ScreenHeader on settings/notifications/create (7 Back shapes, 5 under 44 pt today).",
+    "issue": 377
   }
 ]
