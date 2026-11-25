@@ -12,6 +12,8 @@ import { isAppPath, routes } from './routes'
 const PROTECTED_ROUTES: string[] = [
   routes.host(),
   routes.tournamentCreate(),
+  // Make teams for a solo tournament (#282), any id.
+  routes.tournamentMakeTeams('').replace(/\/$/, ''),
   routes.notifications(),
   routes.settings(),
   routes.clubCreate(),

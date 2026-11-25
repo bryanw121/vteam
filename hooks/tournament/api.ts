@@ -36,8 +36,11 @@ export const tournamentKeys = {
 
 // ─── Select lists (explicit columns, no select('*')) ──────────────────────────
 
-export const TOURNAMENT_COLUMNS =
+const TOURNAMENT_BASE_COLUMNS =
   'id, club_id, created_by, title, description, location, skill_levels, start_date, registration_deadline, status, format, bracket_type, max_teams, min_roster_size, max_roster_size, teams_advance_per_pool, has_refs, price, venmo_handle, schedule_published, match_duration_minutes, break_duration_minutes, num_courts, schedule_generated_at, published_at, cancelled_at, created_at'
+
+/** With how teams form (#282): solo sign-up, team size and the organizer's pins. */
+export const TOURNAMENT_COLUMNS = `${TOURNAMENT_BASE_COLUMNS}, team_mode, team_size, team_pins`
 
 const RULES_BASE_COLUMNS =
   'tournament_id, starting_score, winning_score, deciding_set_score, win_by_margin, point_cap, sets_to_win'
@@ -110,9 +113,21 @@ async function fetchRules(id: string): Promise<TournamentRules | null> {
   return old ? { ...old, tiebreakers: [...DEFAULT_TIEBREAKERS], third_place_match: false, pool_sets_played: null } : null
 }
 
+/**
+ * The tournament row. While a deploy is ahead of the #282 migration, the older
+ * columns are read and it is a captains tournament, as every one was then.
+ */
+async function fetchTournamentRow(id: string) {
+  const res = await supabase.from('tournaments').select(TOURNAMENT_COLUMNS).eq('id', id).maybeSingle()
+  if (!res.error) return res.data
+  if (!isMissingSchema(res.error)) throw res.error
+  const old = await ok(supabase.from('tournaments').select(TOURNAMENT_BASE_COLUMNS).eq('id', id).maybeSingle())
+  return old ? { ...old, team_mode: 'captains', team_size: null, team_pins: [] } : null
+}
+
 export async function fetchTournamentCore(id: string): Promise<TournamentCore> {
   const [tournament, rules, prizes] = await Promise.all([
-    ok(supabase.from('tournaments').select(TOURNAMENT_COLUMNS).eq('id', id).maybeSingle()),
+    fetchTournamentRow(id),
     fetchRules(id),
     ok(supabase.from('tournament_prizes').select(PRIZE_COLUMNS).eq('tournament_id', id).order('display_order')),
   ])

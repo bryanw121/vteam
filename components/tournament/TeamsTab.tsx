@@ -25,9 +25,12 @@ type Props = {
   actions: TeamCardActions
   /** Organizer: open the seeding sheet. */
   onSetSeeds: () => void
+  /** Players sign up solo and the organizer makes teams (#282). */
+  soloMode: boolean
+  onMakeTeams: () => void
 }
 
-export function TeamsTab({ teams, myTeam, viewerId, isCreator, registrationOpen, joinRequests, actions, refreshControl, onSetSeeds }: Props) {
+export function TeamsTab({ teams, myTeam, viewerId, isCreator, registrationOpen, joinRequests, actions, refreshControl, onSetSeeds, soloMode, onMakeTeams }: Props) {
   const approved = teams.filter(t => t.status === 'registered' && t.is_approved)
   const pending = teams.filter(t => t.status === 'registered' && !t.is_approved)
   const freeAgents = teams.filter(t => t.status === 'free_agent')
@@ -55,6 +58,12 @@ export function TeamsTab({ teams, myTeam, viewerId, isCreator, registrationOpen,
         </View>
       )}
 
+      {isCreator && soloMode && freeAgents.length >= 2 && (
+        <View style={{ marginBottom: 14 }}>
+          <Button label={`Make teams from ${freeAgents.length} sign-ups`} icon="shuffle-outline" onPress={onMakeTeams} testID="teams-make-teams" />
+        </View>
+      )}
+
       {isCreator && approved.length + pending.length >= 2 && (
         <View style={{ marginBottom: 14 }}>
           <Button label="Set seeds" icon="podium-outline" variant="secondary" onPress={onSetSeeds} testID="set-seeds" />
@@ -70,7 +79,7 @@ export function TeamsTab({ teams, myTeam, viewerId, isCreator, registrationOpen,
       {waitlisted.length > 0 && <TeamSectionLabel title="Waitlist" count={waitlisted.length} />}
       {waitlisted.map(card)}
 
-      {freeAgents.length > 0 && <TeamSectionLabel title="Free Agents" count={freeAgents.length} />}
+      {freeAgents.length > 0 && <TeamSectionLabel title={soloMode ? 'Signed up solo' : 'Free Agents'} count={freeAgents.length} />}
       {freeAgents.map(card)}
 
       {teams.length === 0 && (

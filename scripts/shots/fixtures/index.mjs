@@ -216,12 +216,13 @@ export function buildFixtures(now) {
     id: tid, club_id: C.eastside, created_by: ME, description: null, location: 'Butler Park Sand Courts', skill_levels: ['bb', 'a'], registration_deadline: null,
     status: 'published', format: 'pool_bracket', bracket_type: 'single', max_teams: 8, min_roster_size: 2, max_roster_size: 3, teams_advance_per_pool: 2, has_refs: false,
     price: 40, venmo_handle: 'maya-chen', schedule_published: false, match_duration_minutes: 45, break_duration_minutes: 5, num_courts: 2, cancelled_at: null,
-    published_at: t.iso(-14), schedule_generated_at: null, created_at: t.iso(-20), ...f,
+    published_at: t.iso(-14), schedule_generated_at: null, created_at: t.iso(-20), team_mode: 'captains', team_size: null, team_pins: [], ...f,
   })
   const tournaments = [
     tournament(TU.upcoming, { title: 'Halloween Sand Classic', start_date: t.iso(3, 9, 0), registration_deadline: t.iso(2, 23, 59), description: 'Reverse co-ed doubles. Pool play in the morning, single-elimination bracket after lunch. Costumes encouraged, trophies for the top three.', schedule_published: true, schedule_generated_at: t.iso(-1), status: 'published' }),
     tournament(TU.past, { title: 'Fall Doubles Cup', start_date: t.iso(-13, 9, 0), status: 'completed', schedule_published: true, schedule_generated_at: t.iso(-15), published_at: t.iso(-30), created_at: t.iso(-35), description: 'Our fall doubles championship.' }),
-    tournament(TU.open, { title: 'Indoor 6s Shootout', club_id: C.indoor, created_by: P.jordanr, location: 'Austin Sports Center', start_date: t.iso(17, 10, 0), format: 'round_robin', bracket_type: null, max_teams: 6, min_roster_size: 6, max_roster_size: 9, price: 120, venmo_handle: 'jordan-reyes', num_courts: 2, match_duration_minutes: 60, skill_levels: ['b', 'bb'] }),
+    // Open, solo sign-up (#282): players join alone, the organizer (the viewer) makes teams of 4.
+    tournament(TU.open, { title: 'Winter 4s Shuffle', location: 'Austin Sports Center', start_date: t.iso(10, 9, 0), format: 'round_robin', bracket_type: null, max_teams: null, min_roster_size: 3, max_roster_size: 5, price: 15, team_mode: 'solo', team_size: 4, team_pins: [[P.sofiag, P.liamo]], description: 'Sign up alone and get placed on a team of four. Teams are posted the night before.' }),
   ]
   const tournament_rules = [TU.upcoming, TU.past, TU.open].map(tid => ({ tournament_id: tid, sets_to_win: tid === TU.open ? 2 : 1, winning_score: tid === TU.open ? 25 : 21, deciding_set_score: 15, win_by_margin: 2, point_cap: null, starting_score: 0, tiebreakers: ['head_to_head', 'set_ratio', 'point_diff', 'points_for'], third_place_match: false }))
   const tournament_prizes = [
@@ -250,10 +251,12 @@ export function buildFixtures(now) {
     team(TU.past, 1, 'Sets on the Beach', [ME, P.priyap], 1), team(TU.past, 2, 'Block Party', [P.jordanr, P.emmat], 2),
     team(TU.past, 3, 'Dig Deep', [P.sofiag, P.zoeyl], 3), team(TU.past, 4, 'Sandy Cheeks', [P.marcusw, P.liamo], 4),
   ]
-  // Open: 3 teams registered so far, no schedule.
-  team(TU.open, 1, 'Spike Lee', [P.jordanr, P.danielk, P.noahb, P.hannahs, P.oliviad, P.samn])
-  team(TU.open, 2, 'Bump Set Psych', [P.aishak, P.carlosm, P.ethanp, P.zoeyl, P.priyap, P.emmat])
-  team(TU.open, 3, 'The Dig Lebowskis', [ME, P.marcusw, P.sofiag, P.liamo, P.emmat, P.zoeyl])
+  // Solo: 13 players signed up alone (one free-agent entry each).
+  ;[P.emmat, P.jordanr, P.priyap, P.sofiag, P.liamo, P.marcusw, P.zoeyl, P.aishak, P.noahb, P.carlosm, P.hannahs, P.ethanp, P.oliviad].forEach((u, i) => {
+    const teamId = id('d3300000', i + 1)
+    tournament_teams.push({ id: teamId, tournament_id: TU.open, name: 'Solo sign-up', captain_user_id: u, seed: null, status: 'free_agent', is_approved: false, is_locked: false, is_paid: false, created_at: t.iso(-6 + i / 10) })
+    tournament_team_members.push({ id: id('d4000000', ++memberN), team_id: teamId, user_id: u, is_captain: false, joined_at: t.iso(-6 + i / 10) })
+  })
 
   const tournament_pools = [
     { id: id('d5000000', 1), tournament_id: TU.upcoming, name: 'Pool A', display_order: 1 },

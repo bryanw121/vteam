@@ -2949,6 +2949,9 @@ export type Database = {
           skill_levels: string[]
           start_date: string
           status: string
+          team_mode: string
+          team_pins: Json
+          team_size: number | null
           teams_advance_per_pool: number
           title: string
           venmo_handle: string | null
@@ -2981,6 +2984,9 @@ export type Database = {
           skill_levels?: string[]
           start_date: string
           status?: string
+          team_mode?: string
+          team_pins?: Json
+          team_size?: number | null
           teams_advance_per_pool?: number
           title: string
           venmo_handle?: string | null
@@ -3013,6 +3019,9 @@ export type Database = {
           skill_levels?: string[]
           start_date?: string
           status?: string
+          team_mode?: string
+          team_pins?: Json
+          team_size?: number | null
           teams_advance_per_pool?: number
           title?: string
           venmo_handle?: string | null
@@ -3628,6 +3637,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: boolean
+      }
+      post_solo_teams: {
+        Args: { p_teams: Json; p_tournament_id: string }
+        Returns: number
       }
       program_free_agent_counts: {
         Args: { p_ids: string[] }

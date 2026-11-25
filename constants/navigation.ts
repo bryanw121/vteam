@@ -114,6 +114,7 @@ export const HEADERLESS_STACK_ROUTES = [
   'tournaments',
   'tournament/[id]',
   'tournament/create',
+  'tournament/make-teams/[id]',
   'scores/[id]/index',
   'scores/[id]/keep',
   'scorekeeper/index',
