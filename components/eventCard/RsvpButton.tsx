@@ -14,7 +14,7 @@ type Props = {
   onToggle: () => void
 }
 
-/** The card's RSVP / Going ✓ button, or the status pill that replaces it. */
+/** The card's Join / Going ✓ button (the same word as the event page's footer), or the status pill that replaces it. */
 export function RsvpButton({ variant, isAttending, awaiting, loading, onToggle }: Props) {
   const hero = variant === 'hero'
   const box = hero ? shared.ecRsvpHero : shared.ecRsvpRow
@@ -45,7 +45,7 @@ export function RsvpButton({ variant, isAttending, awaiting, loading, onToggle }
     >
       {loading
         ? <Spinner size="small" color={ink} />
-        : <Text style={[text, { color: ink }]}>{isAttending ? 'Going ✓' : 'RSVP'}</Text>}
+        : <Text style={[text, { color: ink }]}>{isAttending ? 'Going ✓' : 'Join'}</Text>}
     </TouchableOpacity>
   )
 }
