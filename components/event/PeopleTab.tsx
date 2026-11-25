@@ -20,6 +20,7 @@ import { profileDisplayName } from '../../utils'
 import { guestRowActions, hasRosterMenu, memberRowActions } from '../../utils/rosterActions'
 import { guestFullName } from '../../utils/guests'
 import { attendeesPaid, eventDateMs, noShowUserIds, noShowWindow } from '../../hooks/event/derive'
+import { eventScrollKey } from '../../utils/scrollMemory'
 import { savedTeams } from '../../utils/courtQueue'
 import { formatTime } from '../../utils/dateFormat'
 
@@ -107,6 +108,7 @@ export function PeopleTab({
     <>
       <DocScrollView
         docScroll={docScrollActive}
+        memoryKey={eventScrollKey(event.id, 'people')}
         style={shared.screen}
         contentContainerStyle={shared.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void onRefresh() }} tintColor={theme.colors.primary} />}
