@@ -18,6 +18,7 @@ import { EventFactChips, EventHostNote, EventWhenWhere, EventWhoIsIn } from './E
 import { BringListCard } from './BringListCard'
 import { useEventBringList } from '../../hooks/event/useEventBringList'
 import { eventDateMs } from '../../hooks/event/derive'
+import { eventScrollKey } from '../../utils/scrollMemory'
 import { useRequireSignIn } from '../../hooks/useRequireSignIn'
 import { shared, theme, LOCATIONS } from '../../constants'
 import type { EventWithDetails, Profile, AttendanceStatus } from '../../types'
@@ -132,6 +133,7 @@ export function DetailsTab({
   return (
     <DocScrollView
       docScroll={docScrollActive}
+      memoryKey={eventScrollKey(event.id, 'details')}
       style={shared.screen}
       contentContainerStyle={[shared.scrollContent, { paddingBottom: descFooterHeight + Math.max(bottomInset, theme.spacing.md) }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}

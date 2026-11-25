@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Modal, ScrollView, TouchableOpacity, View } from 'react-native'
 import { Text, TextInput } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { supabase } from '../../../../lib/supabase'
 import { getSessionUser } from '../../../../lib/sessionUser'
 import { emailFeedback } from '../../../../lib/feedback'
@@ -18,7 +17,6 @@ import { useUrlParam } from '../../../../hooks/useUrlParam'
 import { VIEW } from '../../../../utils/urlViews'
 
 export default function FeedbackScreen() {
-  useStackBackTitle('Submit feedback')
   // Feature / Bug is in the URL (`?type=bug`) so a "Report a problem" link opens it ready. What's typed never is.
   const [kind, setKind] = useUrlParam('type', VIEW.feedback.type)
   const [priority, setPriority] = useState<FeedbackPriority>('medium')

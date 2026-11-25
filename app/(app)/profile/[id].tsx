@@ -11,6 +11,7 @@ import { toast } from '../../../lib/toast'
 import { userProfileKey, useUserProfile } from '../../../hooks/useUserProfile'
 import { useFocusRefetch } from '../../../lib/query'
 import { ScreenState } from '../../../components/ui'
+import { BackButton } from '../../../components/ui'
 import { PROFILE_LOAD_ERROR } from '../../../constants/copy'
 import { routes } from '../../../utils/routes'
 import { useSilencedUsers } from '../../../hooks/useSilencedUsers'
@@ -107,10 +108,7 @@ export default function UserProfileDetail() {
         paddingHorizontal: theme.spacing.lg,
         backgroundColor: theme.colors.background,
       }}>
-        <TouchableOpacity onPress={goBack} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Ionicons name="chevron-back" size={20} color={theme.colors.primaryText} />
-          <Text style={{ color: theme.colors.primaryText, fontSize: theme.font.size.sm }}>Back</Text>
-        </TouchableOpacity>
+        <BackButton onPress={goBack} />
         <TouchableOpacity onPress={openDM} style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Ionicons name="chatbubble-outline" size={18} color={theme.colors.primaryText} />
           <Text style={{ color: theme.colors.primaryText, fontSize: theme.font.size.sm, fontFamily: theme.fonts.bodySemiBold }}>Message</Text>

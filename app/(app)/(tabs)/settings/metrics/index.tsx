@@ -8,7 +8,6 @@ import { OverviewPanel } from '../../../../../components/metrics/OverviewPanel'
 import { LivePanel } from '../../../../../components/metrics/LivePanel'
 import { PeoplePanel } from '../../../../../components/metrics/PeoplePanel'
 import { RetentionPanel } from '../../../../../components/metrics/RetentionPanel'
-import { useStackBackTitle } from '../../../../../hooks/useStackBackTitle'
 import { useIsAdmin } from '../../../../../hooks/useAdminMetrics'
 import { useTabsShell } from '../../../../../contexts/tabs'
 import { shared, theme } from '../../../../../constants'
@@ -24,7 +23,6 @@ import { VIEW } from '../../../../../utils/urlViews'
  * only decides what to draw.
  */
 export default function AdminMetricsScreen() {
-  useStackBackTitle('Admin metrics')
   const router = useRouter()
   const { tabBarHeight } = useTabsShell()
   const [tab, setTab] = useUrlParam('tab', VIEW.metrics.tab)

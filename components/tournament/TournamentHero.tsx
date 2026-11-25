@@ -1,6 +1,7 @@
 import React from 'react'
-import { TouchableOpacity, View } from 'react-native'
+import { View } from 'react-native'
 import { Text } from '../ui/Text'
+import { BackButton } from '../ui/BackButton'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { theme } from '../../constants'
@@ -57,14 +58,7 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack, action
 
       <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 16, position: 'relative' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <TouchableOpacity
-            onPress={onBack}
-            hitSlop={8}
-            accessibilityLabel="Back"
-            style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
-          </TouchableOpacity>
+          <BackButton variant="pill" onPress={onBack} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
             <TourneyStatusBadge status={tournament.status} />
             {actions}

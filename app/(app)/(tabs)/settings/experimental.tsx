@@ -4,7 +4,6 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../../../../components/ui/Text'
 import { ScreenContainer } from '../../../../components/ui'
 import { MatchRow } from '../../../../components/scoresheet/MatchRow'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useSavedMatches } from '../../../../hooks/useSavedMatches'
 import { useTabsShell } from '../../../../contexts/tabs'
 import { shared, theme } from '../../../../constants'
@@ -13,7 +12,6 @@ import { routes } from '../../../../utils/routes'
 
 /** Settings → Experimental features: things we're trying out, one card each. */
 export default function ExperimentalFeaturesScreen() {
-  useStackBackTitle('Experimental features')
   const router = useRouter()
   const { tabBarHeight } = useTabsShell()
   const { live } = useSavedMatches()

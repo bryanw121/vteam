@@ -1,9 +1,9 @@
 import React from 'react'
 import { View, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native'
 import { useRouter, Stack } from 'expo-router'
-import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text } from '../../../components/ui/Text'
+import { BackButton } from '../../../components/ui'
 import { useSession } from '../../../contexts/session'
 import { theme } from '../../../constants'
 import { routes } from '../../../utils/routes'
@@ -62,13 +62,11 @@ export default function TournamentCreateScreen() {
         backgroundColor: theme.colors.background,
       }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <TouchableOpacity onPress={goBack} hitSlop={8} style={{ padding: 4 }} accessibilityRole="button" accessibilityLabel="Back">
-            <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
+          <BackButton variant="pill" onPress={goBack} />
           <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.base, color: theme.colors.text }}>
             Create Tournament
           </Text>
-          <View style={{ width: 32 }} />
+          <View style={{ width: 44 }} />
         </View>
         <StepIndicator current={step} />
       </View>

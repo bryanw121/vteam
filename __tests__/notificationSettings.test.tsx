@@ -6,7 +6,6 @@ import NotificationSettingsScreen from '../app/(app)/(tabs)/settings/notificatio
 
 jest.mock('expo-router', () => ({ useFocusEffect: () => {} }))
 jest.mock('../lib/sentry', () => ({ Sentry: { captureException: jest.fn() } }))
-jest.mock('../hooks/useStackBackTitle', () => ({ useStackBackTitle: () => {} }))
 jest.mock('../contexts/session', () => ({
   useSession: () => ({ session: null, userId: 'u1', isGuest: false, loading: false }),
 }))

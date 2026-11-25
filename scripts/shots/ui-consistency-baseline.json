@@ -1,0 +1,487 @@
+{
+  "_notes": {
+    "about": "Accepted UI consistency findings (#377): screen → viewport → rule → count. Shrink-only: run `npm run ui:baseline` after a fix; never raise a count to get a PR through."
+  },
+  "chat-club": {
+    "desktop": {
+      "font-family": 3
+    },
+    "mobile": {
+      "tap-target-44": 2,
+      "font-family": 3
+    }
+  },
+  "chat-conversation": {
+    "desktop": {
+      "font-family": 4
+    },
+    "mobile": {
+      "tap-target-44": 1,
+      "font-family": 4
+    }
+  },
+  "chat-list": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
+  "club-create": {
+    "desktop": {
+      "font-family": 3
+    },
+    "mobile": {
+      "font-family": 3
+    }
+  },
+  "club-delete-dialog": {
+    "desktop": {
+      "font-family": 16
+    },
+    "mobile": {
+      "tap-target-44": 3,
+      "font-family": 16
+    }
+  },
+  "club-detail": {
+    "desktop": {
+      "font-family": 14
+    },
+    "mobile": {
+      "tap-target-44": 3,
+      "font-family": 14
+    }
+  },
+  "club-detail-guest": {
+    "desktop": {
+      "font-family": 9
+    },
+    "mobile": {
+      "font-family": 9
+    }
+  },
+  "club-edit": {
+    "desktop": {
+      "font-family": 10
+    },
+    "mobile": {
+      "tap-target-44": 1,
+      "font-family": 10
+    }
+  },
+  "club-poll-composer": {
+    "desktop": {
+      "font-family": 15
+    },
+    "mobile": {
+      "tap-target-44": 11,
+      "font-family": 15
+    }
+  },
+  "clubs-list": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
+  "event-bring-list": {
+    "desktop": {
+      "font-family": 15
+    },
+    "mobile": {
+      "tap-target-44": 2,
+      "font-family": 15
+    }
+  },
+  "event-bring-list-guest": {
+    "desktop": {
+      "font-family": 13
+    },
+    "mobile": {
+      "tap-target-44": 3,
+      "font-family": 13
+    }
+  },
+  "event-cheers": {
+    "desktop": {
+      "font-family": 10
+    },
+    "mobile": {
+      "font-family": 10
+    }
+  },
+  "event-details": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "event-details-noshow": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "font-family": 1
+    }
+  },
+  "event-discussion": {
+    "desktop": {
+      "font-family": 24
+    },
+    "mobile": {
+      "tap-target-44": 6,
+      "font-family": 12
+    }
+  },
+  "event-guest": {
+    "desktop": {
+      "font-family": 2
+    },
+    "mobile": {
+      "tap-target-44": 3,
+      "font-family": 2
+    }
+  },
+  "event-join-intent-sheet": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "event-leave-sheet": {
+    "desktop": {
+      "font-family": 3
+    },
+    "mobile": {
+      "tap-target-44": 7,
+      "font-family": 2
+    }
+  },
+  "event-paid-bottom": {
+    "desktop": {
+      "font-family": 4
+    },
+    "mobile": {
+      "tap-target-44": 3,
+      "font-family": 4
+    }
+  },
+  "event-past-guest": {
+    "mobile": {
+      "tap-target-44": 2
+    }
+  },
+  "event-past-recap": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "font-family": 1
+    }
+  },
+  "event-people": {
+    "desktop": {
+      "font-family": 19
+    },
+    "mobile": {
+      "tap-target-44": 2,
+      "font-family": 20
+    }
+  },
+  "event-people-balanced": {
+    "desktop": {
+      "font-family": 40
+    },
+    "mobile": {
+      "tap-target-44": 2,
+      "font-family": 37
+    }
+  },
+  "events-feed": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "tap-target-44": 11
+    }
+  },
+  "events-feed-guest": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "tap-target-44": 11
+    }
+  },
+  "events-feed-link": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "tap-target-44": 10
+    }
+  },
+  "events-feed-tournaments": {
+    "desktop": {
+      "font-family": 2
+    },
+    "mobile": {
+      "tap-target-44": 8
+    }
+  },
+  "events-session-sheet": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "tap-target-44": 12
+    }
+  },
+  "find-a-team": {
+    "mobile": {
+      "tap-target-44": 13
+    }
+  },
+  "find-a-team-sheet": {
+    "mobile": {
+      "tap-target-44": 13
+    }
+  },
+  "host-create": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "tap-target-44": 2,
+      "font-family": 1
+    }
+  },
+  "host-create-bring": {
+    "mobile": {
+      "tap-target-44": 11
+    }
+  },
+  "host-edit": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "tap-target-44": 2,
+      "font-family": 1
+    }
+  },
+  "login": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
+  "notifications": {
+    "desktop": {
+      "font-family": 15
+    },
+    "mobile": {
+      "font-family": 15
+    }
+  },
+  "profile-edit-link": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
+  "profile-own": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
+  "scorekeeper-new": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
+  "search": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "search-empty": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "search-guest": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
+  "settings-badge-link": {
+    "desktop": {
+      "font-family": 36
+    },
+    "mobile": {
+      "font-family": 27
+    }
+  },
+  "settings-badges": {
+    "desktop": {
+      "font-family": 24
+    },
+    "mobile": {
+      "font-family": 14
+    }
+  },
+  "settings-cheers": {
+    "desktop": {
+      "font-family": 8
+    },
+    "mobile": {
+      "font-family": 8
+    }
+  },
+  "settings-hidden": {
+    "desktop": {
+      "font-family": 5
+    },
+    "mobile": {
+      "tap-target-44": 3,
+      "font-family": 5
+    }
+  },
+  "settings-history": {
+    "desktop": {
+      "font-family": 2
+    },
+    "mobile": {
+      "tap-target-44": 2,
+      "font-family": 2
+    }
+  },
+  "settings-notifications": {
+    "mobile": {
+      "tap-target-44": 19
+    }
+  },
+  "settings-silenced": {
+    "desktop": {
+      "font-family": 4
+    },
+    "mobile": {
+      "font-family": 4
+    }
+  },
+  "tournament-discussion": {
+    "desktop": {
+      "font-family": 13
+    },
+    "mobile": {
+      "tap-target-44": 1,
+      "font-family": 13
+    }
+  },
+  "tournament-make-teams": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "tournament-make-teams-drawn": {
+    "mobile": {
+      "tap-target-44": 13
+    }
+  },
+  "tournament-overview": {
+    "desktop": {
+      "font-family": 4
+    },
+    "mobile": {
+      "font-family": 4
+    }
+  },
+  "tournament-public-guest": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "font-family": 1
+    }
+  },
+  "tournament-public-member-of-none": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "font-family": 1
+    }
+  },
+  "tournament-results": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "font-family": 1
+    }
+  },
+  "tournament-schedule": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "font-family": 1
+    }
+  },
+  "tournament-schedule-link": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "font-family": 1
+    }
+  },
+  "tournament-solo-overview": {
+    "desktop": {
+      "font-family": 5
+    },
+    "mobile": {
+      "font-family": 5
+    }
+  },
+  "tournament-teams": {
+    "desktop": {
+      "font-family": 1
+    },
+    "mobile": {
+      "font-family": 1
+    }
+  },
+  "tournaments-list": {
+    "mobile": {
+      "tap-target-44": 2
+    }
+  },
+  "tournaments-list-past": {
+    "mobile": {
+      "tap-target-44": 2
+    }
+  },
+  "welcome-city": {
+    "desktop": {
+      "font-family": 3
+    },
+    "mobile": {
+      "font-family": 3
+    }
+  },
+  "welcome-level": {
+    "desktop": {
+      "font-family": 14
+    },
+    "mobile": {
+      "font-family": 14
+    }
+  },
+  "welcome-position": {
+    "desktop": {
+      "font-family": 9
+    },
+    "mobile": {
+      "font-family": 9
+    }
+  }
+}

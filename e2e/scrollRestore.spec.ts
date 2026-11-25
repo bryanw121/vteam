@@ -46,7 +46,7 @@ test.describe('Scroll position after going back', () => {
   test("the header's back button returns to the same place on Profile", async ({ page }) => {
     const y = await openProfileScrolledDown(page)
     await openAccountSettings(page)
-    await page.locator('[aria-label="Go back"]:visible').first().click()
+    await page.getByTestId('screen-header-back').locator('visible=true').first().click()
     await expect(page.getByTestId('profile-menu-account')).toBeVisible({ timeout: 20_000 })
     await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5_000 }).toBeGreaterThan(y - 5)
   })
