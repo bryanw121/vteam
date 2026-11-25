@@ -21,8 +21,8 @@ type Props = {
 export function EventDetailSkeleton({ seed, topInset }: Props) {
   return (
     <View testID="event-detail-skeleton" accessibilityLabel="Loading event">
-      <View style={{ paddingTop: Platform.OS !== 'web' ? topInset + 52 : 0 }}>
-        {seed ? <EventHero event={seed} /> : <View style={shared.skeletonHero} />}
+      <View>
+        {seed ? <EventHero event={seed} topInset={Platform.OS !== 'web' ? topInset : 0} /> : <View style={[shared.skeletonHero, { paddingTop: Platform.OS !== 'web' ? topInset : 0 }]} />}
         {/* The real tab bar, inert: same height as the loaded page at every text size (#306). */}
         <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           <EventTabBar activeTab={0} peopleCount={0} onSelect={noop} />
@@ -30,10 +30,10 @@ export function EventDetailSkeleton({ seed, topInset }: Props) {
       </View>
       <View style={{ padding: theme.spacing.md, gap: theme.spacing.sm }}>
         <View style={{ flexDirection: 'row', gap: theme.spacing.sm }}>
-          {[0, 1, 2].map(i => <View key={i} style={[shared.skeletonBlock, { flex: 1, height: 64 }]} />)}
+          {[0, 1].map(i => <View key={i} style={[shared.skeletonBlock, { flex: 1, height: 120 }]} />)}
         </View>
-        <View style={[shared.skeletonBlock, { height: 78 }]} />
-        <View style={[shared.skeletonBlock, { height: 180 }]} />
+        <View style={[shared.skeletonBlock, { height: 110 }]} />
+        <View style={[shared.skeletonBlock, { height: 120 }]} />
       </View>
     </View>
   )

@@ -116,8 +116,8 @@ test.describe('Events', () => {
     await page.getByText(OPEN_PLAY_EVENT).first().click()
     await page.waitForURL(/\/event\//, { timeout: 20000 })
 
-    // Details is the default tab (quick-stats strip).
-    await expect(page.getByText('Duration').first()).toBeVisible({ timeout: 20000 })
+    // Details is the default tab (When / Where tiles).
+    await expect(page.getByTestId('event-when').first()).toBeVisible({ timeout: 20000 })
 
     // People tab — "Going" roster heading.
     await page.getByTestId('event-tab-people').first().click()
@@ -133,7 +133,7 @@ test.describe('Events', () => {
 
     // Back to Details.
     await page.getByTestId('event-tab-details').first().click()
-    await expect(page.getByText('Duration').first()).toBeVisible({ timeout: 15000 })
+    await expect(page.getByTestId('event-when').first()).toBeVisible({ timeout: 15000 })
   })
 
   test('open an event, then join and leave it through the leave sheet', async ({ page }) => {

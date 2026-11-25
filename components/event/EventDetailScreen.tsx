@@ -121,9 +121,6 @@ export default function EventDetail() {
     >
       <Stack.Screen options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
 
-      {/* Web: in-flow header row (back + actions; the banner shows the title) */}
-      {Platform.OS === 'web' && headerActions}
-
       {data.isLoading && !loadError ? (
         <EventDetailSkeleton seed={event ?? eventCardSeed(id)} topInset={insets.top} />
       ) : (
@@ -131,8 +128,8 @@ export default function EventDetail() {
         {event && (
           <>
             {/* Fixed header: banner + tabs */}
-            <View style={{ backgroundColor: theme.colors.background, paddingTop: Platform.OS !== 'web' ? insets.top + 52 : 0 }}>
-              <EventHero event={event} />
+            <View style={{ backgroundColor: theme.colors.background }}>
+              <EventHero event={event} topInset={Platform.OS !== 'web' ? insets.top : 0} />
               <EventTabBar activeTab={activeTab} peopleCount={eventStatus.count} onSelect={selectTab} />
             </View>
 
@@ -160,6 +157,7 @@ export default function EventDetail() {
                   noShow={isViewerNoShow(roster.rows, userId)}
                   isHostOrCohost={isHostOrCohost}
                   recap={eventOver ? <EventRecapCards event={event} userId={userId} recap={recap} /> : null}
+                  onOpenPeople={() => selectTab(EVENT_TAB.people)}
                 />
               ) : placeholder}
 
@@ -239,8 +237,8 @@ export default function EventDetail() {
         onConfirmDelete={() => { void deleteEvent.mutate(undefined) }}
       />
 
-      {/* Native: floating pills over the banner (rendered last so they sit on top) */}
-      {Platform.OS !== 'web' && headerActions}
+      {/* Back / Share / Edit float over the cover (rendered last so they sit on top) */}
+      {headerActions}
 
       <DragGhost drag={drag} attendees={roster.attendees} assignments={teams.assignments} />
     </View>

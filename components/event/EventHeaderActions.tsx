@@ -57,9 +57,8 @@ function ShareMenuItem({ icon, label, onPress, active }: { icon: IoniconName; la
  * words, not glyphs. Delete sits behind ⋯ (and still confirms), so it is no
  * longer a mis-tap away from Edit.
  *
- * One component, two placements: on web an in-flow header row with a share
- * dropdown (copy link / Web Share); on native floating over the banner, where
- * share opens the OS share sheet. Every surface shares the same https link.
+ * Floats over the event cover on every platform. On web Share opens a dropdown
+ * (copy link / Web Share); on native the OS share sheet. Every surface shares the same https link.
  */
 export function EventHeaderActions({ eventId, tab = 0, title, eventDate, canManage, deleting, onBack, onEdit, onDelete, onManageCohosts }: Props) {
   const insets = useSafeAreaInsets()
@@ -109,13 +108,13 @@ export function EventHeaderActions({ eventId, tab = 0, title, eventDate, canMana
     { key: 'delete', label: 'Delete event', destructive: true, onPress: onDelete },
   ]
 
-  // Over the banner photo a transparent outline pill would be unreadable.
-  const secondaryStyle = IS_WEB ? undefined : styles.floatSurface
+  // Over the coloured cover a transparent outline pill would be unreadable.
+  const secondaryStyle = styles.floatSurface
 
   return (
     <View
-      pointerEvents={IS_WEB ? 'auto' : 'box-none'}
-      style={IS_WEB ? styles.webBar : [styles.floatBar, { top: insets.top + 8 }]}
+      pointerEvents="box-none"
+      style={[styles.floatBar, { top: IS_WEB ? theme.spacing.md : insets.top + 8 }]}
     >
       <IconButton icon="chevron-back" label="Go back" size={44} onPress={onBack} testID="event-back-button" />
       <View style={styles.actions}>
@@ -153,8 +152,10 @@ export function EventHeaderActions({ eventId, tab = 0, title, eventDate, canMana
             <Button
               label="Edit"
               icon="create-outline"
+              variant="secondary"
               size="touch"
               fullWidth={false}
+              style={secondaryStyle}
               accessibilityLabel="Edit this event"
               testID="event-edit-button"
               onPress={onEdit}
@@ -183,15 +184,6 @@ export function EventHeaderActions({ eventId, tab = 0, title, eventDate, canMana
 }
 
 const styles = StyleSheet.create({
-  webBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    zIndex: 10,
-    backgroundColor: theme.colors.background,
-  },
   actions: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
   floatBar: {
     position: 'absolute',
@@ -202,7 +194,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 50,
   },
-  floatSurface: { backgroundColor: theme.colors.card },
+  floatSurface: { backgroundColor: theme.colors.card, borderRadius: theme.radius.full },
   // Web only: `fixed` covers the viewport so any outside click closes the menu.
   menuBackdrop: { position: 'fixed' as 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   shareMenu: {
