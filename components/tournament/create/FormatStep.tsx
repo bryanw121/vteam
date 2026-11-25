@@ -25,7 +25,7 @@ export function FormatStep({ draft, update }: TournamentStepProps) {
               activeOpacity={0.8}
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: 14,
-                padding: 16, borderRadius: 16,
+                padding: 16, borderRadius: 20,
                 backgroundColor: active ? theme.colors.primarySoft : theme.colors.card,
                 borderWidth: 2,
                 borderColor: active ? theme.colors.primary : theme.colors.border,
@@ -57,7 +57,7 @@ export function FormatStep({ draft, update }: TournamentStepProps) {
                   onPress={() => update({ bracketType: opt.id })}
                   activeOpacity={0.8}
                   style={{
-                    flex: 1, padding: 16, borderRadius: 16, alignItems: 'center', gap: 6,
+                    flex: 1, padding: 16, borderRadius: 20, alignItems: 'center', gap: 6,
                     backgroundColor: active ? theme.colors.primarySoft : theme.colors.card,
                     borderWidth: 2, borderColor: active ? theme.colors.primary : theme.colors.border,
                   }}

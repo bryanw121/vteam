@@ -227,13 +227,14 @@ export const theme = {
       relaxed: 30,
     },
   },
+  // Party invite shapes: soft, generous corners (cards 20, sheets 28), pills for buttons.
   radius: {
-    sm:   8,
-    md:   12,
-    lg:   16,
-    xl:   20,
+    sm:   10,
+    md:   16,
+    lg:   20,
+    xl:   24,
     /** Top corners of bottom sheets. */
-    sheet: 24,
+    sheet: 28,
     xxl:  28,
     full: 999,
   },
@@ -251,6 +252,14 @@ export const theme = {
       shadowOpacity: 0.08,
       shadowRadius: 12,
       elevation: 3,
+    },
+    /** Cards: they sit on the page without an outline, lifted by a soft plum shadow. */
+    card: {
+      shadowColor: '#1E1033',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 10,
+      elevation: 2,
     },
   },
 }

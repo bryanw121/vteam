@@ -118,7 +118,7 @@ export function Toggle({ value, onChange, label, sub }: WizardToggleProps) {
     <TouchableOpacity
       onPress={() => onChange(!value)}
       activeOpacity={0.8}
-      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: theme.colors.card, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 10 }}
+      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: theme.colors.card, borderRadius: 20, padding: 14, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 10 }}
     >
       <View style={{ flex: 1 }}>
         <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>{label}</Text>

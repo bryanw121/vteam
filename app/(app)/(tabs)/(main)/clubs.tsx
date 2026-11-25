@@ -102,10 +102,9 @@ function ClubCard({ club, userId, listKey, isOwner, isMember, onPress }: ClubCar
         gap: 14,
         marginBottom: 10,
         backgroundColor: theme.colors.card,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: theme.colors.border,
+        borderRadius: 22,
         padding: 14,
+        ...theme.shadow.card,
         overflow: 'hidden',
       }}
       onPress={onPress}
@@ -316,12 +315,11 @@ export default function ClubsScreen() {
           flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
-          borderRadius: theme.radius.md,
-          paddingHorizontal: 12,
-          paddingVertical: 10,
           backgroundColor: theme.colors.card,
+          borderRadius: theme.radius.full,
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          minHeight: 48,
         }}>
           <Ionicons name="search-outline" size={18} color={theme.colors.subtext} />
           <TextInput

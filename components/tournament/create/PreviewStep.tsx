@@ -88,7 +88,7 @@ export function PreviewStep({ draft, clubs, onSaveDraft, onPublish, saving }: To
         <TouchableOpacity
           onPress={onPublish}
           disabled={saving}
-          style={{ backgroundColor: theme.colors.primary, borderRadius: 14, padding: 16, alignItems: 'center' }}
+          style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radius.full, padding: 16, alignItems: 'center' }}
         >
           {saving
             ? <Spinner color={theme.colors.onPrimary} />
@@ -98,7 +98,7 @@ export function PreviewStep({ draft, clubs, onSaveDraft, onPublish, saving }: To
         <TouchableOpacity
           onPress={onSaveDraft}
           disabled={saving}
-          style={{ backgroundColor: theme.colors.card, borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}
+          style={{ backgroundColor: theme.colors.card, borderRadius: theme.radius.full, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}
         >
           <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.lgs, color: theme.colors.text }}>Save as Draft</Text>
         </TouchableOpacity>

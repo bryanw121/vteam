@@ -24,13 +24,14 @@ export const shared = StyleSheet.create({
   },
 
   // ─── Cards ────────────────────────────────────────────────
+  // No outline (the border is kept, transparent, so a state can still colour it).
   card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
-    ...shadow.sm,
+    borderColor: 'transparent',
+    ...shadow.card,
   },
 
   // ─── Typography ───────────────────────────────────────────
@@ -51,7 +52,8 @@ export const shared = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
-    padding: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md + 2,
     fontSize: font.size.md,
     color: colors.text,
   },
@@ -61,7 +63,7 @@ export const shared = StyleSheet.create({
   inputContainer:  { marginBottom: spacing.md },
 
   // ─── Buttons ──────────────────────────────────────────────
-  buttonBase:         { padding: spacing.md, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  buttonBase:         { paddingVertical: spacing.md, paddingHorizontal: spacing.lg, minHeight: 48, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
   buttonPrimary:      { backgroundColor: colors.primary },
   buttonSecondary:    { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.primary },
   buttonDanger:       { backgroundColor: colors.dangerFill },
@@ -70,7 +72,7 @@ export const shared = StyleSheet.create({
   buttonLabelSecondary: { fontFamily: theme.fonts.bodySemiBold, color: colors.primaryText, fontSize: font.size.md },
 
   // ─── Badges ───────────────────────────────────────────────
-  badge:     { backgroundColor: colors.primary, borderRadius: radius.sm, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
+  badge:     { backgroundColor: colors.primary, borderRadius: radius.full, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
   badgeFull: { backgroundColor: colors.error },
   badgeText: { color: colors.white, fontSize: font.size.sm, fontWeight: font.weight.semibold },
 
@@ -258,16 +260,18 @@ export const shared = StyleSheet.create({
   welcomeLead: { fontSize: font.size.md, color: colors.subtextStrong, marginBottom: spacing.md, lineHeight: font.lineHeight.normal },
   welcomeOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   welcomeOption: {
-    minHeight: 44, justifyContent: 'center', borderRadius: radius.full, borderWidth: 1, borderColor: colors.border,
+    minHeight: 44, justifyContent: 'center', borderRadius: radius.full, borderWidth: 1, borderColor: 'transparent',
     backgroundColor: colors.card, paddingHorizontal: spacing.md,
+    ...shadow.card,
   },
   welcomeOptionOn: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
   welcomeOptionLabel: { fontSize: font.size.md, color: colors.text },
   welcomeHint: { fontSize: font.size.sm, color: colors.subtextStrong },
   welcomeOptionLabelOn: { fontWeight: font.weight.semibold, color: colors.timeInk },
   welcomeLevelRow: {
-    minHeight: 56, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card,
+    minHeight: 56, borderRadius: radius.lg, borderWidth: 1, borderColor: 'transparent', backgroundColor: colors.card,
     paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: 2, justifyContent: 'center',
+    ...shadow.card,
   },
   welcomeLiveTag: {
     fontSize: font.size.xs, fontWeight: font.weight.semibold, color: colors.cool, borderWidth: 1, borderColor: colors.cool,
@@ -294,12 +298,13 @@ export const shared = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     backgroundColor: colors.card,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'transparent',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
     gap: spacing.xs,
+    ...shadow.card,
   },
   playerCardAvatar: {
     width: 40,
@@ -795,7 +800,7 @@ export const shared = StyleSheet.create({
   webPushNudgeAction: { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: theme.spacing.sm },
   emptyStateAction: { fontSize: font.size.sm, color: colors.primaryText, fontWeight: font.weight.medium },
   // EventDetailSkeleton: placeholders in the event page's final layout
-  skeletonBlock: { backgroundColor: theme.colors.card, borderRadius: 16 },
+  skeletonBlock: { backgroundColor: theme.colors.card, borderRadius: 20 },
   /** "Load earlier comments" at the top of a discussion: full-width, 44pt touch target. */
   loadEarlierButton: {
     minHeight: 44, alignItems: 'center', justifyContent: 'center', alignSelf: 'center',
@@ -908,8 +913,6 @@ export const shared = StyleSheet.create({
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,
     padding: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   sheetHandle: {
     width: 36,
@@ -1402,8 +1405,9 @@ export const shared = StyleSheet.create({
 
   // ── What to bring (#256): event card and host form section ─────────────
   bringCard: {
-    backgroundColor: colors.card, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.card, borderRadius: radius.lg, borderWidth: 1, borderColor: 'transparent',
     paddingHorizontal: spacing.md, paddingVertical: spacing.sm, marginBottom: spacing.md,
+    ...shadow.card,
   },
   bringHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm },
   bringTitle: { fontFamily: fonts.bodyBold, fontSize: font.size.xs, fontWeight: '700', color: colors.subtext, letterSpacing: 0.8, textTransform: 'uppercase' },
@@ -1429,12 +1433,13 @@ export const shared = StyleSheet.create({
   // ── Host form (app/(app)/host.tsx and components/host/*Section, #188) ──
   hostFieldCard: {
     backgroundColor: colors.card,
-    borderRadius: 16,
+    borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'transparent',
     marginBottom: 10,
+    ...shadow.card,
   },
   hostFieldLabel: {
     fontFamily: fonts.bodySemiBold,
@@ -1577,7 +1582,8 @@ export const shared = StyleSheet.create({
   scoreboardMinus: { minWidth: 88, minHeight: 44, borderRadius: radius.full, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.md },
   scoreboardNotice: {
     position: 'absolute', width: 340, gap: spacing.sm, padding: spacing.md, borderRadius: radius.lg,
-    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.card, borderWidth: 1, borderColor: 'transparent',
+    ...shadow.card,
   },
   numberCourt: { gap: spacing.xs, padding: spacing.sm, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
   numberCourtNet: { borderTopWidth: 3, borderTopColor: colors.subtext, alignItems: 'center', paddingTop: 2 },
@@ -1676,7 +1682,8 @@ export const shared = StyleSheet.create({
   ecHostedBadgeOnCoverText: { fontFamily: fonts.bodyBold, fontSize: font.size.xs, color: colors.primaryDark },
   ecRow: {
     backgroundColor: colors.card, borderRadius: 20, padding: 14, marginBottom: spacing.sm, flexDirection: 'row', gap: 14,
-    borderWidth: 1, borderColor: colors.border, overflow: 'hidden', position: 'relative',
+    borderWidth: 1, borderColor: 'transparent', overflow: 'hidden', position: 'relative',
+    ...shadow.card,
   },
   // Hosted on vteam (feed only): a purple outline and a solid badge first in the chip row
   ecHosted: { borderWidth: 1.5, borderColor: colors.primary },

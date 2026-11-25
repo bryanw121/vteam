@@ -461,7 +461,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `club_post_comments` | [`hooks/club/clubPostWrites.ts:16`](../hooks/club/clubPostWrites.ts#L16) |
 | `club_post_likes` | [`hooks/club/clubPostWrites.ts:10`](../hooks/club/clubPostWrites.ts#L10) |
 | `club_posts` | [`hooks/club/clubPostWrites.ts:21`](../hooks/club/clubPostWrites.ts#L21)<br>[`hooks/useClub.ts:72`](../hooks/useClub.ts#L72) |
-| `clubs` | [`app/(app)/(tabs)/(main)/clubs.tsx:201`](../app/%28app%29/%28tabs%29/%28main%29/clubs.tsx#L201)<br>[`app/(app)/club/create.tsx:66`](../app/%28app%29/club/create.tsx#L66)<br>[`hooks/club/useClubEdit.ts:45`](../hooks/club/useClubEdit.ts#L45)<br>[`hooks/club/useClubMedia.ts:18`](../hooks/club/useClubMedia.ts#L18)<br>[`hooks/club/useDeleteClub.ts:13`](../hooks/club/useDeleteClub.ts#L13)<br>[`hooks/useClub.ts:54`](../hooks/useClub.ts#L54) |
+| `clubs` | [`app/(app)/(tabs)/(main)/clubs.tsx:200`](../app/%28app%29/%28tabs%29/%28main%29/clubs.tsx#L200)<br>[`app/(app)/club/create.tsx:66`](../app/%28app%29/club/create.tsx#L66)<br>[`hooks/club/useClubEdit.ts:45`](../hooks/club/useClubEdit.ts#L45)<br>[`hooks/club/useClubMedia.ts:18`](../hooks/club/useClubMedia.ts#L18)<br>[`hooks/club/useDeleteClub.ts:13`](../hooks/club/useDeleteClub.ts#L13)<br>[`hooks/useClub.ts:54`](../hooks/useClub.ts#L54) |
 | `conversation_members` | [`supabase/functions/send-chat-push/handler.ts:127`](../supabase/functions/send-chat-push/handler.ts#L127) |
 | `conversations` | [`hooks/useConversations.ts:276`](../hooks/useConversations.ts#L276)<br>[`supabase/functions/send-chat-push/handler.ts:126`](../supabase/functions/send-chat-push/handler.ts#L126) |
 | `event_attendee_denials` | [`hooks/event/useMyDenialReason.ts:8`](../hooks/event/useMyDenialReason.ts#L8) |

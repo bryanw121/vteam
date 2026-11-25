@@ -454,6 +454,7 @@ npx expo start --web    # test web experience directly
 ```
 
 ## UI primitives
+Shapes follow the Party invite mocks: cards (`shared.card`, `ts.card`, host fields, club and post cards) have no outline and sit on the page with `theme.shadow.card` (the border stays, transparent, so a selected state can colour it); `theme.radius` runs sm 10 / md 16 / lg 20 / xl 24 / sheet 28; `Button` and search fields are pills. A new card uses those, not a `colors.border` outline.
 Use `components/ui` (import from `components/ui`) before hand-rolling UI:
 - `ScreenHeader` for page headers and back rows (no hand-built headers)
 - `BackButton` for every Back (#377): `row` (chevron + "Back", what ScreenHeader shows) or `pill` (the 44-pt square over a cover or beside a centred title); both are 44 × 44 pt, since `hitSlop` does nothing on the web. Settings pages get their ScreenHeader from `settings/_layout.tsx`, titled from `SETTINGS_SCREENS` (`constants/copy.ts`, the same words as the Profile menu row); the native stack header is off for them
