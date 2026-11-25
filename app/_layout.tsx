@@ -10,6 +10,8 @@ import {
   Outfit_800ExtraBold,
 } from '@expo-google-fonts/outfit'
 import { AppSplashContent } from '../components/splash/AppSplashContent'
+import { useReducedMotion } from '../hooks/useReducedMotion'
+import { SPLASH_FADE_MS, splashHoldMs } from '../utils/splash'
 import { StatusBar } from 'expo-status-bar'
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router'
 import Head from 'expo-router/head'
@@ -57,8 +59,9 @@ function AvatarPrefetch() {
   return null
 }
 
-/** Fade-out only — the splash stays up exactly as long as fonts + auth take to load. */
-const SPLASH_FADE_MS = 200
+/** When this launch's splash went up: navigation start on web (the splash is in the static HTML), module load on native. */
+const SPLASH_SHOWN_AT = Platform.OS === 'web' && typeof performance !== 'undefined' ? 0 : Date.now()
+const splashElapsed = () => (Platform.OS === 'web' && typeof performance !== 'undefined' ? performance.now() : Date.now() - SPLASH_SHOWN_AT)
 
 function AppSplash({ opacity }: { opacity: Animated.Value }) {
   return (
@@ -114,13 +117,18 @@ function RootNavigator() {
   const [splashVisible, setSplashVisible] = useState(true)
   const splashOpacity = useRef(new Animated.Value(1)).current
 
-  // Data fetching starts as soon as the tree mounts (below the splash), so the
-  // splash only covers font + session restore. No fixed minimum duration.
+  // Data fetching starts as soon as the tree mounts (below the splash). The splash
+  // waits for fonts + session restore, and at least one full bounce of the ball
+  // (splashHoldMs), so a fast start shows the animation instead of a flicker.
+  const reducedMotion = useReducedMotion()
   useEffect(() => {
     if (!ready || !splashVisible) return
-    Animated.timing(splashOpacity, { toValue: 0, duration: SPLASH_FADE_MS, useNativeDriver: true })
-      .start(() => setSplashVisible(false))
-  }, [ready, splashVisible, splashOpacity])
+    const timer = setTimeout(() => {
+      Animated.timing(splashOpacity, { toValue: 0, duration: SPLASH_FADE_MS, useNativeDriver: true })
+        .start(() => setSplashVisible(false))
+    }, splashHoldMs(splashElapsed(), reducedMotion))
+    return () => clearTimeout(timer)
+  }, [ready, splashVisible, splashOpacity, reducedMotion])
 
   // Per-user setup whenever someone signs in (cold start with a session included).
   useEffect(() => {
