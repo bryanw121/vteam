@@ -1,6 +1,6 @@
 import { APPEARANCE_STORAGE_KEY, parseAppearance, resolveColorScheme } from '../constants/colorScheme'
 
-// Runs before any other app module (index.js imports it first), so
+// Runs before any other app module (entry.js imports it first), so
 // constants/theme.ts sees the scheme when it builds its colours. Every
 // StyleSheet reads those colours once, so changing the scheme reloads the page.
 

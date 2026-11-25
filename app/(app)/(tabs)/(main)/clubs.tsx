@@ -18,7 +18,7 @@ import { useSession } from '../../../../contexts/session'
 import { useRequireSignIn } from '../../../../hooks/useRequireSignIn'
 import { useClubMembership } from '../../../../hooks/club/useClubMembership'
 import { SignInButton } from '../../../../components/SignInButton'
-import { ScreenState } from '../../../../components/ui'
+import { ScreenHeader, ScreenState } from '../../../../components/ui'
 import { CLUBS_TAB_INDEX, STALE, shared, theme } from '../../../../constants'
 import { DocScrollView } from '../../../../components/DocScrollView'
 import { useTabsActive, useTabsShell } from '../../../../contexts/tabs'
@@ -260,25 +260,15 @@ export default function ClubsScreen() {
 
   const listHeader = (
     <>
-      <View style={{
-        paddingHorizontal: theme.spacing.lg,
-        paddingTop: theme.spacing.md,
-        paddingBottom: 4,
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        gap: theme.spacing.md,
-      }}>
-        <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.xxl, letterSpacing: -1.2, color: theme.colors.text, lineHeight: 38, flex: 1 }}>
-          Clubs
-        </Text>
-        {isGuest ? <SignInButton /> : (
+      {/* The same ScreenHeader as Events and Chat, so the title doesn't jump between tabs */}
+      <ScreenHeader
+        title="Clubs"
+        right={isGuest ? <SignInButton /> : (
         <TouchableOpacity
           onPress={() => router.push(routes.clubCreate())}
           accessibilityRole="button"
           accessibilityLabel="Create a new club"
           style={{
-            marginTop: 6,
             flexDirection: 'row',
             alignItems: 'center',
             gap: 6,
@@ -292,7 +282,7 @@ export default function ClubsScreen() {
           <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.white }}>Create</Text>
         </TouchableOpacity>
         )}
-      </View>
+      />
 
       <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm }}>
         {([

@@ -29,7 +29,7 @@ export function ScreenHeader({ kicker, title, titleDot, right, onBack, backLabel
       <View style={shared.screenHeader}>
         <View style={shared.screenHeaderText}>
           {!!kicker && <Text style={shared.screenHeaderKicker}>{kicker}</Text>}
-          <Text style={shared.screenHeaderTitle} accessibilityRole="header" numberOfLines={1}>
+          <Text style={shared.screenHeaderTitle} accessibilityRole="header" numberOfLines={1} testID="screen-title">
             {title}
             {titleDot && <Text style={{ color: theme.colors.primaryText }}>.</Text>}
           </Text>

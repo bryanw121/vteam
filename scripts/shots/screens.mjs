@@ -122,6 +122,7 @@ export const SCREENS = {
   },
   'profile-edit-link': { route: '/profile?edit=1', ready: 'Maya', sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/EditProfileForm.tsx', 'hooks/useUrlParam.ts'] },
   'profile-own-guest': { route: '/profile', signedIn: false, sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/SignInPrompt.tsx'] },
+  'chat-guest': { route: '/chat', signedIn: false, ready: 'Chat with your club', sources: ['app/(app)/(tabs)/(main)/chat.tsx', 'components/SignInPrompt.tsx'] },
   'profile-other': {
     route: `/profile/${P.jordanr}`, ready: 'Jordan',
     sources: ['app/(app)/profile/**', 'app/(app)/(tabs)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],

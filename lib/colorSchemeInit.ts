@@ -2,7 +2,7 @@ import { Appearance } from 'react-native'
 import { resolveColorScheme } from '../constants/colorScheme'
 import { readAppearancePref } from './appearanceStore'
 
-// Runs before any other app module (index.js imports it first), so
+// Runs before any other app module (entry.js imports it first), so
 // constants/theme.ts sees the scheme when it builds its colours. Every
 // StyleSheet reads those colours once, so a change applies on the next launch.
 const pref = readAppearancePref()

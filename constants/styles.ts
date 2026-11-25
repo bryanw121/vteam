@@ -569,14 +569,18 @@ export const shared = StyleSheet.create({
     color: theme.colors.primaryText,
   },
   // ── Guest mode (SignInPrompt, SignInButton) ──────────────────────────────
+  // Anchored from the top, not centred: every account-only tab shows its
+  // prompt at the same height whatever its copy or extra link.
   signInPromptContainer: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: theme.spacing.xl,
+    justifyContent: 'flex-start',
+    paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.xl,
     gap: theme.spacing.md,
     backgroundColor: theme.colors.background,
   },
+
   signInPromptIcon: {
     width: 64,
     height: 64,
@@ -703,9 +707,13 @@ export const shared = StyleSheet.create({
   },
 
   // ── ScreenHeader ──────────────────────────────────────────
+  // A fixed minimum height with centred contents: a right slot up to 44 pt
+  // (icon buttons, Create, Sign in) never moves the title, so switching tabs
+  // doesn't make it jump (scripts/shots/alignment-flow.mjs checks).
   screenHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    minHeight: 44 + spacing.md + 4 + spacing.sm,
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md + 4,
@@ -728,7 +736,7 @@ export const shared = StyleSheet.create({
     color: colors.text,
     marginTop: 2,
   },
-  screenHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingBottom: spacing.xs },
+  screenHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   screenHeaderBack:  { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start', marginLeft: spacing.lg, marginTop: spacing.sm, minHeight: 24 }, // minHeight: the chevron's icon font loads late on web and grew the row 8 px, moving the whole screen (#288)
   screenHeaderBackLabel: { fontFamily: theme.fonts.body, fontSize: font.size.sm, color: colors.primaryText },
 
