@@ -96,97 +96,77 @@
     }
   },
   "event-bring-list": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 2
-    }
+    "mobile": {},
+    "desktop": {}
   },
   "event-bring-list-guest": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 2
-    }
+    "mobile": {},
+    "desktop": {}
   },
   "event-cheers": {
-    "mobile": {
-      "color-contrast": 2
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
+    "mobile": {},
+    "desktop": {}
   },
   "event-details": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 2
-    }
+    "mobile": {},
+    "desktop": {}
   },
   "event-details-noshow": {
     "mobile": {},
+    "desktop": {}
+  },
+  "event-discussion": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "event-guest": {
+    "mobile": {
+      "color-contrast": 1
+    },
     "desktop": {
       "color-contrast": 1
     }
   },
-  "event-discussion": {
-    "mobile": {
-      "color-contrast": 2
-    },
-    "desktop": {
-      "color-contrast": 3
-    }
-  },
-  "event-guest": {
-    "mobile": {
-      "color-contrast": 3
-    },
-    "desktop": {
-      "color-contrast": 4
-    }
-  },
   "event-join-intent-sheet": {
-    "mobile": {
-      "color-contrast": 4
-    },
-    "desktop": {
-      "color-contrast": 6
-    }
+    "mobile": {},
+    "desktop": {}
   },
   "event-leave-sheet": {
     "mobile": {
-      "color-contrast": 5
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 5
+      "color-contrast": 1
     }
   },
   "event-paid-bottom": {
     "mobile": {
-      "color-contrast": 4
+      "color-contrast": 1
     },
     "desktop": {
-      "color-contrast": 4
+      "color-contrast": 1
     }
+  },
+  "event-past-guest": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "event-past-recap": {
+    "mobile": {},
+    "desktop": {}
   },
   "event-people": {
     "mobile": {
       "color-contrast": 2
     },
-    "desktop": {
-      "color-contrast": 3
-    }
+    "desktop": {}
   },
   "event-people-balanced": {
     "mobile": {
       "color-contrast": 2
     },
     "desktop": {
-      "color-contrast": 3
+      "color-contrast": 2
     }
   },
   "events-feed": {
@@ -257,6 +237,10 @@
     "mobile": {},
     "desktop": {}
   },
+  "login-code": {
+    "mobile": {},
+    "desktop": {}
+  },
   "notifications": {
     "mobile": {
       "color-contrast": 1
@@ -296,6 +280,10 @@
     }
   },
   "register": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "register-join-context": {
     "mobile": {},
     "desktop": {}
   },
@@ -515,13 +503,5 @@
     "desktop": {
       "color-contrast": 1
     }
-  },
-  "register-join-context": {
-    "mobile": {},
-    "desktop": {}
-  },
-  "login-code": {
-    "mobile": {},
-    "desktop": {}
   }
 }

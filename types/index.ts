@@ -2833,3 +2833,30 @@ export type VteamMarkProps = {
   /** White tile and purple V, for a purple background. */
   inverted?: boolean
 }
+
+// ─── Event page (Party invite layout) ───────────────────────────────────────
+export type EventHeroProps = {
+  event: EventWithDetails
+  /** Native: the status bar's height, so the cover runs under it and its text clears the floating buttons. */
+  topInset?: number
+}
+export type EventWhenWhereProps = {
+  event: EventWithDetails
+  onAddToCalendar: () => void
+}
+export type EventWhoIsInProps = {
+  event: EventWithDetails
+  status: AttendanceStatus
+  friendsGoing: FriendsGoingLineProps['going']
+  /** Opens the People tab. */
+  onOpenPeople: () => void
+  /** "Get a reminder?" under the card while the viewer is going (WebPushNudge). */
+  footer?: ReactNode
+}
+export type EventHostNoteProps = {
+  hosts: { id: string; name: string; avatarUrl: string | null; border: Profile['selected_border']; isMe: boolean; label: 'Host' | 'Co-host' }[]
+  description: string | null
+  onOpenProfile: (userId: string) => void
+  onMessage: (userId: string) => void
+}
+export type EventFactChipsProps = { event: EventWithDetails }

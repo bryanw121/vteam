@@ -8,13 +8,15 @@ const URL_REGEX = /(https?:\/\/[^\s]+)/g
 type Props = {
   text: string
   style?: object
+  /** Clamp to this many lines (0 or absent: all). */
+  numberOfLines?: number
 }
 
-export function LinkedText({ text, style }: Props) {
+export function LinkedText({ text, style, numberOfLines }: Props) {
   const parts = text.split(URL_REGEX)
 
   return (
-    <Text style={style}>
+    <Text style={style} numberOfLines={numberOfLines || undefined}>
       {parts.map((part, i) => {
         if (URL_REGEX.test(part)) {
           // Reset lastIndex after test()

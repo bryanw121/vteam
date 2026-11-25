@@ -812,10 +812,59 @@ export const shared = StyleSheet.create({
   chatListEdge: { alignItems: 'center', justifyContent: 'center', minHeight: theme.spacing.md, paddingVertical: theme.spacing.xs },
   // EventHero's height with a one-line title (18 padding, pills, title, location), so the
   // page doesn't move 8 px when the event lands on a cold link (#306).
-  skeletonHero: {
-    marginHorizontal: theme.spacing.md, marginTop: theme.spacing.xs, marginBottom: theme.spacing.sm,
-    height: 136, borderRadius: 22, backgroundColor: theme.colors.card,
+  /** Same height as EventHero's cover, so the loaded page doesn't move. */
+  skeletonHero: { minHeight: 200, backgroundColor: theme.colors.card },
+  // ─── Event page (Party invite): cover, then When / Where, Who's in, host note, chips ───
+  eventHero: {
+    minHeight: 200, paddingHorizontal: 20, paddingBottom: 20, gap: 8,
+    justifyContent: 'flex-end', overflow: 'hidden', position: 'relative',
   },
+  eventHeroRing: {
+    position: 'absolute', right: -60, top: -40, width: 260, height: 260, borderRadius: radius.full,
+    borderWidth: 30, borderColor: colors.onPrimaryLine, opacity: 0.5,
+  },
+  eventHeroDot: {
+    position: 'absolute', left: -40, bottom: -70, width: 180, height: 180, borderRadius: radius.full,
+    backgroundColor: colors.onPrimaryLine, opacity: 0.35,
+  },
+  eventHeroChip: { alignSelf: 'flex-start', maxWidth: '100%', paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.full, backgroundColor: colors.white },
+  eventHeroChipText: { fontFamily: fonts.bodyBold, fontSize: font.size.sm },
+  eventHeroTitle: { fontFamily: fonts.display, fontSize: font.heading.xxl, lineHeight: 38, letterSpacing: -1, color: colors.white },
+  evPairRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  evTile: { flex: 1, minWidth: 0, backgroundColor: colors.card, borderRadius: 18, padding: 14, gap: 6, alignItems: 'flex-start' },
+  evIconTile: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  evTileMain: { fontFamily: fonts.bodyBold, fontSize: font.size.base, color: colors.text },
+  evTileSub: { fontFamily: fonts.body, fontSize: font.size.smd, color: colors.subtext, flexShrink: 1 },
+  evTileLink: { marginTop: 2, minHeight: 28, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  evTileLinkText: { fontFamily: fonts.bodySemiBold, fontSize: font.size.md, color: colors.primaryText },
+  evCard: { backgroundColor: colors.card, borderRadius: 18, padding: 14, gap: 10, marginBottom: 12 },
+  evCardHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  evCount: { flex: 1, fontFamily: fonts.display, fontSize: font.heading.sm, color: colors.text },
+  evCountOf: { fontFamily: fonts.bodyMedium, fontSize: font.size.md, color: colors.subtext },
+  evSpotsPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full },
+  evSpotsText: { fontFamily: fonts.bodyBold, fontSize: font.size.sm },
+  evBar: { height: 6, borderRadius: radius.full, backgroundColor: colors.borderSoft, overflow: 'hidden' },
+  evBarFill: { height: 6, borderRadius: radius.full },
+  evWhoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  evCardTitle: { fontFamily: fonts.bodyBold, fontSize: font.size.base, color: colors.text },
+  evCardBody: { fontFamily: fonts.body, fontSize: font.size.md, color: colors.text },
+  evCardMeta: { fontFamily: fonts.body, fontSize: font.size.md, color: colors.subtext },
+  evCardMetaFull: { color: colors.error },
+  evStatusPill: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full, backgroundColor: colors.success + '1A' },
+  evStatusPillWait: { backgroundColor: colors.warning + '1A' },
+  evStatusText: { fontFamily: fonts.bodySemiBold, fontSize: font.size.sm, color: colors.success },
+  evStatusTextWait: { color: colors.warning },
+  evHostRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  evHostWho: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  evMessage: { minHeight: 36, paddingHorizontal: 14, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  evMessageText: { fontFamily: fonts.bodySemiBold, fontSize: font.size.sm, color: colors.text },
+  evMore: { alignSelf: 'flex-start', minHeight: 28, justifyContent: 'center' },
+  evNote: { fontFamily: fonts.body, fontSize: font.size.md, lineHeight: 21, color: colors.subtextStrong },
+  evChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  evChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: radius.full },
+  evChipText: { fontFamily: fonts.bodySemiBold, fontSize: font.size.md, color: colors.primaryText },
+  /** The event footer's buttons: pills, as tall as the +1 guest button beside them. */
+  evFooterButton: { minHeight: 52, borderRadius: radius.full },
   // RefreshControl.web: pull-to-refresh wrapper and its spinner
   pullWrapper: { position: 'relative' },
   // DocPullToRefresh: zero-size in-flow anchor; its indicator is pinned to the viewport
