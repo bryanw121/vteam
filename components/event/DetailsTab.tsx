@@ -151,7 +151,8 @@ export function DetailsTab({
         </View>
       )}
 
-      {/* ── When / Where, who's in, the host's note, the facts (Party invite) ── */}
+      {/* ── The facts as coloured chips, then When / Where, who's in and the host's note (Party invite) ── */}
+      <EventFactChips event={event} />
       <EventWhenWhere
         event={event}
         onAddToCalendar={() => void addToCalendar(
@@ -184,7 +185,6 @@ export function DetailsTab({
           onMessage={onMessageHost}
         />
       )}
-      <EventFactChips event={event} />
       {/* Forecast, under the facts: sand / grass events with coordinates (#165) */}
       <ForecastRow event={event} />
 

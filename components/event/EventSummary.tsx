@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { TouchableOpacity, View } from 'react-native'
+import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../ui/Text'
 import { TimePill } from '../ui'
 import { ProfileAvatar } from '../ProfileAvatar'
@@ -9,12 +10,12 @@ import { AttendeeStack } from '../eventCard/AttendeeStack'
 import { openInMaps } from '../../lib/openInMaps'
 import { eventDateMs, attendeeRowsWithProfiles } from '../../hooks/event/derive'
 import { profilePrefetchProps } from '../../hooks/useUserProfile'
-import { shared, LOCATIONS } from '../../constants'
-import { SURFACE_LABELS } from '../../constants/events'
+import { shared, theme, LOCATIONS } from '../../constants'
+import { SURFACE_ACCENTS, SURFACE_LABELS } from '../../constants/events'
 import { formatDuration, formatPrice, isSurface, profileAvatarSmallUri } from '../../utils'
 import { formatDate, formatTime } from '../../utils/dateFormat'
 import { pointsForEvent } from '../../utils/recap'
-import type { EventFactChipsProps, EventHostNoteProps, EventWhenWhereProps, EventWhoIsInProps } from '../../types'
+import type { IoniconName, EventFactChipsProps, EventHostNoteProps, EventWhenWhereProps, EventWhoIsInProps } from '../../types'
 
 /**
  * The top of the event page's Details tab (Party invite): When and Where side by
@@ -23,6 +24,16 @@ import type { EventFactChipsProps, EventHostNoteProps, EventWhenWhereProps, Even
  */
 
 const AVATARS = 5
+const NOTE_CLAMP_CHARS = 140
+
+/** A small tinted square with an icon: each block's colour, so the eye finds it without reading. */
+function IconTile({ icon, color, label }: { icon: IoniconName; color: string; label: string }) {
+  return (
+    <View style={[shared.evIconTile, { backgroundColor: color + '1F' }]} accessibilityLabel={label}>
+      <Ionicons name={icon} size={18} color={color} />
+    </View>
+  )
+}
 
 export function EventWhenWhere({ event, onAddToCalendar }: EventWhenWhereProps) {
   const start = new Date(eventDateMs(event.event_date))
@@ -38,23 +49,23 @@ export function EventWhenWhere({ event, onAddToCalendar }: EventWhenWhereProps) 
   return (
     <View style={shared.evPairRow}>
       <View style={shared.evTile} testID="event-when">
-        <Text style={shared.evTileLabel}>When</Text>
+        <IconTile icon="calendar" color={theme.colors.primaryText} label="When" />
         <Text style={shared.evTileMain}>{day}</Text>
-        <View style={shared.evTileTimeRow}>
-          <TimePill label={time} testID="event-hero-time" />
-          <Text style={shared.evTileSub} numberOfLines={1}>to {endTime} · {formatDuration(minutes)}</Text>
-        </View>
-        <TouchableOpacity onPress={onAddToCalendar} accessibilityRole="button" hitSlop={8} style={shared.evTileLink}>
-          <Text style={shared.evTileLinkText}>Add to calendar</Text>
+        <TimePill label={time} testID="event-hero-time" />
+        <Text style={shared.evTileSub} numberOfLines={1}>until {endTime} · {formatDuration(minutes)}</Text>
+        <TouchableOpacity onPress={onAddToCalendar} accessibilityRole="button" accessibilityLabel="Add to calendar" hitSlop={8} style={shared.evTileLink}>
+          <Ionicons name="add-circle" size={16} color={theme.colors.primaryText} />
+          <Text style={shared.evTileLinkText}>Calendar</Text>
         </TouchableOpacity>
       </View>
       <View style={shared.evTile} testID="event-where">
-        <Text style={shared.evTileLabel}>Where</Text>
+        <IconTile icon="location" color={theme.colors.cool} label="Where" />
         <Text testID="event-location-name" style={shared.evTileMain} numberOfLines={2}>{place || 'To be announced'}</Text>
         {!!venue?.address && <Text selectable style={shared.evTileSub} numberOfLines={2}>{venue.address}</Text>}
         {!!place && (
-          <TouchableOpacity onPress={() => openInMaps(mapsQuery)} accessibilityRole="link" hitSlop={8} style={shared.evTileLink}>
-            <Text style={shared.evTileLinkText}>Directions</Text>
+          <TouchableOpacity onPress={() => openInMaps(mapsQuery)} accessibilityRole="link" accessibilityLabel="Directions" hitSlop={8} style={shared.evTileLink}>
+            <Ionicons name="navigate" size={15} color={theme.colors.cool} />
+            <Text style={[shared.evTileLinkText, { color: theme.colors.cool }]}>Directions</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -67,24 +78,39 @@ export function EventWhoIsIn({ event, status, friendsGoing, onOpenPeople, footer
   const previews = going.slice(0, AVATARS)
   const count = status.count
   const cap = event.max_attendees
-  const spots = status.isFull ? 'Full' : cap ? `${status.spotsLeft} spot${status.spotsLeft !== 1 ? 's' : ''} left` : null
+  const ratio = cap ? Math.min(1, count / cap) : 0
+  // Green with room, amber when nearly full, red when full: how urgent it is, at a glance.
+  const tone = status.isFull ? theme.colors.error : ratio >= 0.85 ? theme.colors.warning : theme.colors.success
+  const spots = status.isFull ? 'Full' : cap ? `${status.spotsLeft} left` : null
 
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onOpenPeople} accessibilityRole="button" accessibilityLabel={`Who's in: ${count}${cap ? ` of ${cap}` : ''}. Open People`} style={shared.evCard} testID="event-who">
       <View style={shared.evCardHead}>
-        <Text style={shared.evCardTitle}>Who's in · {count}{cap ? `/${cap}` : ''}</Text>
-        {spots && <Text style={[shared.evCardMeta, status.isFull && shared.evCardMetaFull]}>{spots}</Text>}
+        <IconTile icon="people" color={theme.colors.success} label="Who's in" />
+        <Text style={shared.evCount}>{count}{cap ? <Text style={shared.evCountOf}>/{cap}</Text> : null}<Text style={shared.evCountOf}> going</Text></Text>
+        {spots && (
+          <View style={[shared.evSpotsPill, { backgroundColor: tone + '1F' }]}>
+            <Text style={[shared.evSpotsText, { color: tone }]}>{spots}</Text>
+          </View>
+        )}
       </View>
-      {previews.length > 0
-        ? <AttendeeStack previews={previews} overflow={Math.max(0, count - previews.length)} variant="hero" />
-        : <Text style={shared.evCardMeta}>Nobody yet. Be the first.</Text>}
-      {(status.isAttending || status.isWaitlisted) && (
-        <View style={[shared.evStatusPill, status.isWaitlisted && shared.evStatusPillWait]}>
-          <Text style={[shared.evStatusText, status.isWaitlisted && shared.evStatusTextWait]}>
-            {status.isAttending ? "You're going" : `#${status.waitlistPosition} on waitlist`}
-          </Text>
+      {!!cap && (
+        <View style={shared.evBar}>
+          <View style={[shared.evBarFill, { width: `${Math.round(ratio * 100)}%`, backgroundColor: tone }]} />
         </View>
       )}
+      <View style={shared.evWhoRow}>
+        {previews.length > 0
+          ? <AttendeeStack previews={previews} overflow={Math.max(0, count - previews.length)} variant="hero" />
+          : <Text style={shared.evCardMeta}>Be the first in.</Text>}
+        {(status.isAttending || status.isWaitlisted) && (
+          <View style={[shared.evStatusPill, status.isWaitlisted && shared.evStatusPillWait]}>
+            <Text style={[shared.evStatusText, status.isWaitlisted && shared.evStatusTextWait]}>
+              {status.isAttending ? "You're going" : `#${status.waitlistPosition} on waitlist`}
+            </Text>
+          </View>
+        )}
+      </View>
       <FriendsGoingLine going={friendsGoing} testID="event-friends-going" />
       {footer}
     </TouchableOpacity>
@@ -115,22 +141,29 @@ function HostLine({ h, title, sub, size, onOpenProfile, onMessage }: { h: EventH
   )
 }
 
-/** The host (and co-hosts) with the description written as their note: "From Ana (host)". */
+/** The host (and co-hosts), with the description as their note under the name. */
 export function EventHostNote({ hosts, description, onOpenProfile, onMessage }: EventHostNoteProps) {
   const [host, ...cohosts] = hosts
+  // A long note shows three lines and "More", so it doesn't push everything else down.
+  const long = !!description && (description.length > NOTE_CLAMP_CHARS || description.includes('\n'))
+  const [open, setOpen] = useState(false)
   if (!host) return null
-  const first = host.name.split(' ')[0]
   return (
     <View style={shared.evCard} testID="event-host-note">
       <HostLine
         h={host}
-        title={description ? `From ${first} (host)` : host.name}
-        sub={description ? host.name : 'Host'}
+        title={host.name}
+        sub="Host"
         size={40}
         onOpenProfile={onOpenProfile}
         onMessage={onMessage}
       />
-      {description ? <LinkedText text={description} style={shared.evNote} /> : null}
+      {description ? <LinkedText text={description} style={shared.evNote} numberOfLines={long && !open ? 3 : 0} /> : null}
+      {long && (
+        <TouchableOpacity onPress={() => setOpen(o => !o)} accessibilityRole="button" hitSlop={8} style={shared.evMore}>
+          <Text style={shared.evTileLinkText}>{open ? 'Less' : 'More'}</Text>
+        </TouchableOpacity>
+      )}
       {cohosts.map(h => (
         <HostLine key={h.id} h={h} title={h.name} sub="Co-host" size={32} onOpenProfile={onOpenProfile} onMessage={onMessage} />
       ))}
@@ -138,21 +171,25 @@ export function EventHostNote({ hosts, description, onOpenProfile, onMessage }: 
   )
 }
 
-/** Points, price, surface, type and level, as chips: the facts a player scans for. */
+/** Points, price, surface and type as chips, each its own colour: the facts a player scans for. */
 export function EventFactChips({ event }: EventFactChipsProps) {
   const tags = [...(event.event_tags ?? [])].sort((a, b) => a.tags.display_order - b.tags.display_order)
   const points = pointsForEvent(tags.map(t => t.tags.name))
   const free = !(event.price != null && event.price > 0)
-  const surface = isSurface(event.surface) ? SURFACE_LABELS[event.surface] : null
+  const surface = isSurface(event.surface) ? event.surface : null
+  const chips: { key: string; icon: IoniconName; label: string; color: string; testID?: string }[] = [
+    { key: 'points', icon: 'star', label: `+${points} points`, color: theme.colors.warning },
+    { key: 'price', icon: 'cash', label: free ? 'Free' : formatPrice(event.price), color: theme.colors.success, testID: 'event-price-stat' },
+    ...(surface ? [{ key: 'surface', icon: (surface === 'indoor' ? 'business' : surface === 'sand' ? 'sunny' : 'leaf') as IoniconName, label: SURFACE_LABELS[surface], color: SURFACE_ACCENTS[surface] }] : []),
+    ...tags.map(t => ({ key: t.tag_id, icon: 'pricetag' as IoniconName, label: t.tags.name, color: theme.colors.primaryText })),
+  ]
   return (
     <View style={shared.evChips} testID="event-facts">
-      <View style={shared.evChip}><Text style={shared.evChipText}>+{points} points</Text></View>
-      <View style={[shared.evChip, free && shared.evChipFree]}>
-        <Text testID="event-price-stat" style={[shared.evChipText, free && shared.evChipFreeText]}>{free ? 'Free' : formatPrice(event.price)}</Text>
-      </View>
-      {surface && <View style={shared.evChip}><Text style={shared.evChipText}>{surface}</Text></View>}
-      {tags.map(t => (
-        <View key={t.tag_id} style={shared.evChip}><Text style={shared.evChipText}>{t.tags.name}</Text></View>
+      {chips.map(c => (
+        <View key={c.key} style={[shared.evChip, { backgroundColor: c.color + '1A' }]}>
+          <Ionicons name={c.icon} size={14} color={c.color} />
+          <Text testID={c.testID} style={[shared.evChipText, { color: c.color }]}>{c.label}</Text>
+        </View>
       ))}
     </View>
   )
