@@ -1353,7 +1353,20 @@ export type Tournament = Override<Tables<'tournaments'>, {
   status: TournamentStatus
   format: TournamentFormat
   bracket_type: TournamentBracketType | null
+  team_mode: TournamentTeamMode
 }>
+
+/** How a tournament's teams form (#282): captains register teams, or players sign up solo and the organizer makes teams. */
+export type TournamentTeamMode = 'captains' | 'solo'
+
+/** What Make teams reads (#282): the tournament's team settings and the solo sign-ups. */
+export type MakeTeamsData = {
+  tournament: Pick<Tournament, 'id' | 'created_by' | 'title' | 'team_mode' | 'team_size' | 'team_pins'> | null
+  signups: TournamentTeamWithRoster[]
+}
+
+/** One team the organizer drew from solo sign-ups (#282), before it is posted. `captain` is a member's user id. */
+export type SoloTeamDraft = { name: string; members: string[]; captain: string | null }
 
 /** `tiebreakers` holds only TiebreakerKey values (CHECK constraint). */
 export type TournamentRules = Override<Tables<'tournament_rules'>, { tiebreakers: TiebreakerKey[] }>
@@ -1388,6 +1401,10 @@ export type TournamentDraft = {
   teamsAdvancePerPool: number
 
   // Step 3 — Registration
+  /** Captains build teams, or players sign up solo and the organizer makes teams (#282). */
+  teamMode: TournamentTeamMode
+  /** Solo: players per team the organizer aims for. */
+  teamSize: number
   maxTeams: number | null
   minRosterSize: number
   maxRosterSize: number

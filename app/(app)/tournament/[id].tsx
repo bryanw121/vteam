@@ -166,7 +166,7 @@ export default function TournamentDetailScreen() {
 
   async function submitRegister(v: { name: string; freeAgent: boolean }): Promise<boolean> {
     if (!userId) return false
-    const name = v.freeAgent ? `Free Agent - ${userId.slice(0, 6)}` : v.name
+    const name = v.freeAgent ? (tournament?.team_mode === 'solo' ? 'Solo sign-up' : `Free Agent - ${userId.slice(0, 6)}`) : v.name
     const done = await actions.register.mutate({ name, freeAgent: v.freeAgent })
     if (done) setShowRegister(false)
     return !!done
@@ -273,6 +273,7 @@ export default function TournamentDetailScreen() {
 
   const confirmCopy = (() => {
     if (!confirm) return { title: '', body: '', label: '' }
+    if (confirm.kind === 'withdraw' && myTeam?.status === 'free_agent' && tournament?.team_mode === 'solo') return { title: 'Leave?', body: 'Take your name off the sign-up list?', label: 'Leave' }
     if (confirm.kind === 'withdraw') return { title: 'Withdraw?', body: `Remove "${myTeam?.name ?? 'your team'}" from the tournament?`, label: 'Withdraw' }
     if (confirm.kind === 'removeTeam') return { title: 'Remove team?', body: `Remove "${confirm.teamName}" from the tournament?`, label: 'Remove' }
     if (confirm.kind === 'seedBracket') {
@@ -372,6 +373,9 @@ export default function TournamentDetailScreen() {
                 onGoToTeams={() => setActiveTab('Teams')}
                 onWithdraw={() => setConfirm({ kind: 'withdraw' })}
                 onRegister={() => { if (canAct()) setShowRegister(true) }}
+                onSignUpSolo={() => { if (canAct()) void submitRegister({ name: 'Solo sign-up', freeAgent: true }) }}
+                signingUp={actions.register.isPending}
+                onMakeTeams={() => router.push(routes.tournamentMakeTeams(id))}
                 onAcceptInvite={inviteId => { void acceptInvite(inviteId) }}
                 onDeclineInvite={inviteId => { void actions.declineInvite.mutate(inviteId) }}
                 onAddAnnouncement={() => setShowAnnouncement(true)}
@@ -392,6 +396,8 @@ export default function TournamentDetailScreen() {
                 joinRequests={mine.data?.joinRequests ?? []}
                 actions={teamActions}
                 onSetSeeds={() => setShowSeeds(true)}
+                soloMode={tournament.team_mode === 'solo'}
+                onMakeTeams={() => router.push(routes.tournamentMakeTeams(id))}
               />
             )}
 
