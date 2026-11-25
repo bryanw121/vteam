@@ -453,6 +453,7 @@ npx expo start --web    # test web experience directly
 ## UI primitives
 Use `components/ui` (import from `components/ui`) before hand-rolling UI:
 - `ScreenHeader` for page headers and back rows (no hand-built headers)
+- `BackButton` for every Back (#377): `row` (chevron + "Back", what ScreenHeader shows) or `pill` (the 44-pt square over a cover or beside a centred title); both are 44 × 44 pt, since `hitSlop` does nothing on the web. Settings pages get their ScreenHeader from `settings/_layout.tsx`, titled from `SETTINGS_SCREENS` (`constants/copy.ts`, the same words as the Profile menu row); the native stack header is off for them
 - `Chip` for pill filters (`solid` or `tint` variant)
 - `TimePill` for an event's start time (lavender: `theme.colors.time` background, `timeInk` label); use it wherever a player decides whether to join
 - `IconButton` for square icon buttons (38pt default, 44 where touch targets matter)

@@ -2,81 +2,9 @@
   "_notes": {
     "about": "Accepted UI consistency findings (#377): screen → viewport → rule → count. Shrink-only: run `npm run ui:baseline` after a fix; never raise a count to get a PR through."
   },
-  "admin-metrics": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
-    }
-  },
-  "admin-metrics-events": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
-    }
-  },
-  "admin-metrics-live": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
-    }
-  },
-  "admin-metrics-people": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
-    }
-  },
-  "admin-metrics-person": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
-    }
-  },
-  "admin-metrics-retention": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
-    }
-  },
   "chat-club": {
     "desktop": {
-      "font-family": 10
+      "font-family": 3
     },
     "mobile": {
       "tap-target-44": 2,
@@ -85,102 +13,78 @@
   },
   "chat-conversation": {
     "desktop": {
-      "font-family": 10
+      "font-family": 4
     },
     "mobile": {
       "tap-target-44": 1,
       "font-family": 4
     }
   },
-  "chat-guest": {
-    "desktop": {
-      "font-family": 6
-    }
-  },
   "chat-list": {
-    "desktop": {
-      "font-family": 7
-    },
     "mobile": {
       "tap-target-44": 1
     }
   },
   "club-create": {
     "desktop": {
-      "font-family": 11,
-      "screen-title": 1
+      "font-family": 3
     },
     "mobile": {
-      "font-family": 4,
-      "screen-title": 1
+      "font-family": 3
     }
   },
   "club-delete-dialog": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 22
+      "font-family": 16
     },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 6,
+      "tap-target-44": 3,
       "font-family": 16
     }
   },
   "club-detail": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 20
+      "font-family": 14
     },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 6,
+      "tap-target-44": 3,
       "font-family": 14
     }
   },
   "club-detail-guest": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 15
+      "font-family": 9
     },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 1,
       "font-family": 9
     }
   },
   "club-edit": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 16
+      "font-family": 10
     },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 3,
+      "tap-target-44": 1,
       "font-family": 10
     }
   },
   "club-poll-composer": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 21
+      "font-family": 15
     },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 14,
+      "tap-target-44": 11,
       "font-family": 15
     }
   },
   "clubs-list": {
-    "desktop": {
-      "font-family": 7
-    },
     "mobile": {
       "tap-target-44": 1
     }
   },
   "event-bring-list": {
     "desktop": {
-      "font-family": 22
+      "font-family": 15
     },
     "mobile": {
       "tap-target-44": 2,
@@ -189,7 +93,7 @@
   },
   "event-bring-list-guest": {
     "desktop": {
-      "font-family": 19
+      "font-family": 13
     },
     "mobile": {
       "tap-target-44": 3,
@@ -198,23 +102,20 @@
   },
   "event-cheers": {
     "desktop": {
-      "font-family": 17
+      "font-family": 10
     },
     "mobile": {
       "font-family": 10
     }
   },
   "event-details": {
-    "desktop": {
-      "font-family": 7
-    },
     "mobile": {
       "tap-target-44": 3
     }
   },
   "event-details-noshow": {
     "desktop": {
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
       "font-family": 1
@@ -222,7 +123,7 @@
   },
   "event-discussion": {
     "desktop": {
-      "font-family": 30
+      "font-family": 24
     },
     "mobile": {
       "tap-target-44": 6,
@@ -231,7 +132,7 @@
   },
   "event-guest": {
     "desktop": {
-      "font-family": 8
+      "font-family": 2
     },
     "mobile": {
       "tap-target-44": 3,
@@ -240,7 +141,7 @@
   },
   "event-join-intent-sheet": {
     "desktop": {
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
       "tap-target-44": 3
@@ -248,7 +149,7 @@
   },
   "event-leave-sheet": {
     "desktop": {
-      "font-family": 10
+      "font-family": 3
     },
     "mobile": {
       "tap-target-44": 7,
@@ -257,7 +158,7 @@
   },
   "event-paid-bottom": {
     "desktop": {
-      "font-family": 11
+      "font-family": 4
     },
     "mobile": {
       "tap-target-44": 3,
@@ -265,16 +166,13 @@
     }
   },
   "event-past-guest": {
-    "desktop": {
-      "font-family": 6
-    },
     "mobile": {
       "tap-target-44": 2
     }
   },
   "event-past-recap": {
     "desktop": {
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
       "font-family": 1
@@ -282,7 +180,7 @@
   },
   "event-people": {
     "desktop": {
-      "font-family": 25
+      "font-family": 19
     },
     "mobile": {
       "tap-target-44": 2,
@@ -291,7 +189,7 @@
   },
   "event-people-balanced": {
     "desktop": {
-      "font-family": 46
+      "font-family": 40
     },
     "mobile": {
       "tap-target-44": 2,
@@ -300,7 +198,7 @@
   },
   "events-feed": {
     "desktop": {
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
       "tap-target-44": 11
@@ -308,7 +206,7 @@
   },
   "events-feed-guest": {
     "desktop": {
-      "font-family": 7
+      "font-family": 1
     },
     "mobile": {
       "tap-target-44": 11
@@ -316,7 +214,7 @@
   },
   "events-feed-link": {
     "desktop": {
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
       "tap-target-44": 10
@@ -324,7 +222,7 @@
   },
   "events-feed-tournaments": {
     "desktop": {
-      "font-family": 9
+      "font-family": 2
     },
     "mobile": {
       "tap-target-44": 8
@@ -332,82 +230,43 @@
   },
   "events-session-sheet": {
     "desktop": {
-      "font-family": 7
+      "font-family": 1
     },
     "mobile": {
       "tap-target-44": 12
     }
   },
   "find-a-team": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 14
-    }
-  },
-  "find-a-team-guest": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 6
-    },
-    "mobile": {
-      "back-control": 1,
-      "tap-target-44": 1
+      "tap-target-44": 13
     }
   },
   "find-a-team-sheet": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 14
+      "tap-target-44": 13
     }
   },
   "host-create": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 3,
+      "tap-target-44": 2,
       "font-family": 1
     }
   },
   "host-create-bring": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 12
+      "tap-target-44": 11
     }
   },
   "host-edit": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "tap-target-44": 3,
       "font-family": 1
-    }
-  },
-  "leagues": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
     },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 1
+      "tap-target-44": 2,
+      "font-family": 1
     }
   },
   "login": {
@@ -417,300 +276,100 @@
   },
   "notifications": {
     "desktop": {
-      "font-family": 26,
-      "screen-title": 1
+      "font-family": 15
     },
     "mobile": {
-      "font-family": 19,
-      "screen-title": 1
-    }
-  },
-  "privacy": {
-    "desktop": {
-      "back-control": 1
-    },
-    "mobile": {
-      "back-control": 1,
-      "tap-target-44": 1
+      "font-family": 15
     }
   },
   "profile-edit-link": {
-    "desktop": {
-      "font-family": 7
-    },
     "mobile": {
       "tap-target-44": 1
-    }
-  },
-  "profile-other": {
-    "desktop": {
-      "font-family": 8
-    },
-    "mobile": {
-      "font-family": 1
     }
   },
   "profile-own": {
-    "desktop": {
-      "font-family": 7
-    },
     "mobile": {
-      "tap-target-44": 1
-    }
-  },
-  "profile-own-guest": {
-    "desktop": {
-      "font-family": 6
-    }
-  },
-  "scorekeeper": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
-    "mobile": {
-      "back-control": 1,
       "tap-target-44": 1
     }
   },
   "scorekeeper-new": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 2
-    }
-  },
-  "scorekeeper-simple": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
-    "mobile": {
-      "back-control": 1,
-      "tap-target-44": 1
-    }
-  },
-  "scorekeeper-simple-play": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
-    "mobile": {
-      "back-control": 1,
       "tap-target-44": 1
     }
   },
   "search": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 4
+      "tap-target-44": 3
     }
   },
   "search-empty": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 4
+      "tap-target-44": 3
     }
   },
   "search-guest": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 6
-    },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 2
-    }
-  },
-  "settings-account": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
+      "tap-target-44": 1
     }
   },
   "settings-badge-link": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 44
+      "font-family": 36
     },
     "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 28
+      "font-family": 27
     }
   },
   "settings-badges": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 32
+      "font-family": 24
     },
     "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 15
+      "font-family": 14
     }
   },
   "settings-cheers": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 16
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 9
-    }
-  },
-  "settings-display": {
-    "desktop": {
-      "back-control": 1,
       "font-family": 8
     },
     "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
-    }
-  },
-  "settings-experimental": {
-    "desktop": {
-      "back-control": 1,
       "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
-    }
-  },
-  "settings-feedback": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
-    }
-  },
-  "settings-feedback-errors": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 10
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
     }
   },
   "settings-hidden": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 13
+      "font-family": 5
     },
     "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 4,
-      "font-family": 6
+      "tap-target-44": 3,
+      "font-family": 5
     }
   },
   "settings-history": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 10
+      "font-family": 2
     },
     "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 3,
-      "font-family": 3
-    }
-  },
-  "settings-hosted": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
-    "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 1
+      "tap-target-44": 2,
+      "font-family": 2
     }
   },
   "settings-notifications": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 8
-    },
     "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 20,
-      "font-family": 1
+      "tap-target-44": 19
     }
   },
   "settings-silenced": {
     "desktop": {
-      "back-control": 1,
-      "font-family": 12
+      "font-family": 4
     },
     "mobile": {
-      "back-control": 1,
-      "screen-title": 1,
-      "tap-target-44": 1,
-      "font-family": 5
-    }
-  },
-  "terms": {
-    "desktop": {
-      "back-control": 1
-    },
-    "mobile": {
-      "back-control": 1,
-      "tap-target-44": 1
-    }
-  },
-  "tournament-create": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
-    "mobile": {
-      "back-control": 1,
-      "tap-target-44": 1
+      "font-family": 4
     }
   },
   "tournament-discussion": {
     "desktop": {
-      "font-family": 20
+      "font-family": 13
     },
     "mobile": {
       "tap-target-44": 1,
@@ -718,26 +377,18 @@
     }
   },
   "tournament-make-teams": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 4
+      "tap-target-44": 3
     }
   },
   "tournament-make-teams-drawn": {
-    "desktop": {
-      "font-family": 7
-    },
     "mobile": {
-      "tap-target-44": 14
+      "tap-target-44": 13
     }
   },
   "tournament-overview": {
     "desktop": {
-      "font-family": 11
+      "font-family": 4
     },
     "mobile": {
       "font-family": 4
@@ -745,7 +396,7 @@
   },
   "tournament-public-guest": {
     "desktop": {
-      "font-family": 7
+      "font-family": 1
     },
     "mobile": {
       "font-family": 1
@@ -753,7 +404,7 @@
   },
   "tournament-public-member-of-none": {
     "desktop": {
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
       "font-family": 1
@@ -761,7 +412,7 @@
   },
   "tournament-results": {
     "desktop": {
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
       "font-family": 1
@@ -769,7 +420,7 @@
   },
   "tournament-schedule": {
     "desktop": {
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
       "font-family": 1
@@ -777,7 +428,7 @@
   },
   "tournament-schedule-link": {
     "desktop": {
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
       "font-family": 1
@@ -785,7 +436,7 @@
   },
   "tournament-solo-overview": {
     "desktop": {
-      "font-family": 12
+      "font-family": 5
     },
     "mobile": {
       "font-family": 5
@@ -793,35 +444,25 @@
   },
   "tournament-teams": {
     "desktop": {
-      "font-family": 8
+      "font-family": 1
     },
     "mobile": {
       "font-family": 1
     }
   },
   "tournaments-list": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 3
+      "tap-target-44": 2
     }
   },
   "tournaments-list-past": {
-    "desktop": {
-      "back-control": 1,
-      "font-family": 7
-    },
     "mobile": {
-      "back-control": 1,
-      "tap-target-44": 3
+      "tap-target-44": 2
     }
   },
   "welcome-city": {
     "desktop": {
-      "font-family": 10
+      "font-family": 3
     },
     "mobile": {
       "font-family": 3
@@ -829,7 +470,7 @@
   },
   "welcome-level": {
     "desktop": {
-      "font-family": 21
+      "font-family": 14
     },
     "mobile": {
       "font-family": 14
@@ -837,7 +478,7 @@
   },
   "welcome-position": {
     "desktop": {
-      "font-family": 16
+      "font-family": 9
     },
     "mobile": {
       "font-family": 9

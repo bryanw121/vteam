@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { ScrollView, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useFocusRefetch } from '../../../../lib/query'
 import { useSession } from '../../../../contexts/session'
 import { eventHistoryKey, useEventHistory } from '../../../../hooks/useEventHistory'
@@ -12,7 +11,6 @@ import { shared, theme } from '../../../../constants'
 import { HISTORY_LOAD_ERROR } from '../../../../constants/copy'
 
 export default function ProfileHostedEventsScreen() {
-  useStackBackTitle('Hosted events')
   const { userId } = useSession()
   const hosted = useEventHistory('hosted-upcoming')
   useFocusRefetch(eventHistoryKey('hosted-upcoming', userId))

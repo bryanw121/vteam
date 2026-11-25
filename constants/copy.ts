@@ -273,3 +273,28 @@ export const SPLASH_TIPS = [
   'Games hosted on vteam earn points: 2 for open play, 5 for tournaments.',
   'Give up to 5 cheers to teammates after every game.',
 ] as const
+
+/**
+ * Settings pages' headers (#377): `ScreenHeader` drawn once by `settings/_layout.tsx`, keyed by
+ * the route under `settings/`. Titles match the Profile menu rows that open them (components/profile/ProfileMenu.tsx).
+ * Every settings route needs an entry (`__tests__/settingsHeaders.test.ts`).
+ */
+export const SETTINGS_SCREENS: Record<string, { title: string; kicker?: string }> = {
+  account: { title: 'Account settings' },
+  'ad-free': { title: 'Go ad-free' },
+  badges: { title: 'Badges' },
+  cheers: { title: 'Cheers' },
+  'delete-account': { title: 'Delete account' },
+  display: { title: 'Display' },
+  experimental: { title: 'Experimental features' },
+  feedback: { title: 'Submit feedback' },
+  friends: { title: 'Friends' },
+  hidden: { title: 'Hidden in feed' },
+  history: { title: 'History' },
+  hosted: { title: 'Hosted events' },
+  'metrics/index': { title: 'Admin metrics', kicker: 'Admin' },
+  'metrics/[id]': { title: 'Person', kicker: 'Admin metrics' },
+  notifications: { title: 'Notifications' },
+  silenced: { title: 'Silenced people' },
+}
+export const SETTINGS_KICKER = 'Settings'

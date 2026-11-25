@@ -7,7 +7,6 @@ import { Button } from '../../../../components/Button'
 import { IconButton, ScreenState } from '../../../../components/ui'
 import { FriendRow } from '../../../../components/profile/FriendRow'
 import { toast } from '../../../../lib/toast'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useFriendActions, useFriends, type FriendAction } from '../../../../hooks/useFriends'
 import { useSilencedUsers } from '../../../../hooks/useSilencedUsers'
 import { useFocusRefetch } from '../../../../lib/query'
@@ -17,7 +16,6 @@ import { routes } from '../../../../utils/routes'
 
 /** Settings → Friends (#15): incoming requests, requests I sent, and my friends (best friends first). */
 export default function FriendsScreen() {
-  useStackBackTitle('Friends')
   const router = useRouter()
   const { data, hasData, isLoading, error, refetch, key } = useFriends()
   useFocusRefetch(key)

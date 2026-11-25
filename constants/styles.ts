@@ -775,8 +775,14 @@ export const shared = StyleSheet.create({
     marginTop: 2,
   },
   screenHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  screenHeaderBack:  { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start', marginLeft: spacing.lg, marginTop: spacing.sm, minHeight: 24 }, // minHeight: the chevron's icon font loads late on web and grew the row 8 px, moving the whole screen (#288)
-  screenHeaderBackLabel: { fontFamily: theme.fonts.body, fontSize: font.size.sm, color: colors.primaryText },
+  // BackButton (#377): a 44-pt target on every surface (hitSlop does nothing on the web). Fixed
+  // height: the chevron's icon font loads late on web and used to grow the row, moving the screen (#288).
+  backRow:           { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start', height: 44, minWidth: 44, paddingRight: spacing.sm },
+  // A text action in a ScreenHeader's right slot ("Read all"): 44 pt tall like the Back row.
+  headerTextAction:      { height: 44, justifyContent: 'center', paddingHorizontal: spacing.xs },
+  headerTextActionLabel: { fontFamily: theme.fonts.bodySemiBold, fontSize: font.size.sm, color: colors.primaryText },
+  screenHeaderBack:  { marginLeft: spacing.lg - spacing.xs, marginTop: spacing.xs },
+  screenHeaderBackLabel: { fontFamily: theme.fonts.bodyMedium, fontSize: font.size.md, color: colors.primaryText },
 
   // ── EmptyState / ScreenState ──────────────────────────────
   emptyState:       { alignItems: 'center', paddingTop: spacing.xxl, paddingHorizontal: spacing.lg, gap: spacing.sm },
@@ -1463,7 +1469,7 @@ export const shared = StyleSheet.create({
   // ── Club page (#305): sections in components/club/ ──
   clubFloatingBtn: {
     backgroundColor: 'rgba(0,0,0,0.35)', borderRadius: theme.radius.full,
-    width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
+    width: 44, height: 44, alignItems: 'center', justifyContent: 'center', // 44-pt targets (#377)
   },
   clubFloatingBtnDanger: { backgroundColor: 'rgba(220,50,50,0.65)' },
   clubFloatingBar: {

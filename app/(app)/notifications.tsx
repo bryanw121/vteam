@@ -3,7 +3,7 @@ import { useFocusEffect } from 'expo-router'
 import { FlatList, TouchableOpacity, View } from 'react-native'
 import { Text } from '../../components/ui/Text'
 import { RefreshControl } from '../../components/RefreshControl'
-import { Stack, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useNotifications } from '../../hooks/useNotifications'
 import { shared, theme } from '../../constants'
@@ -13,6 +13,7 @@ import type { NotificationItem } from '../../types'
 import { NotificationCheerChips } from '../../components/NotificationCheerChips'
 import { inboxBody } from '../../utils/notificationGroups'
 import { Spinner } from '../../components/ui/Spinner'
+import { ScreenHeader } from '../../components/ui'
 import { track } from '../../lib/analytics'
 import { ANALYTICS_EVENTS } from '../../constants/analytics'
 
@@ -59,22 +60,21 @@ export default function NotificationsScreen() {
 
   return (
     <View style={shared.screen}>
-      <Stack.Screen
-        options={{
-          title: 'Notifications',
-          headerBackTitle: 'Back',
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => void handleMarkAll()}
-              style={{ paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.xs }}
-              hitSlop={8}
-            >
-              <Text style={{ fontSize: theme.font.size.sm, color: theme.colors.primaryText, fontWeight: theme.font.weight.semibold }}>
-                Read all
-              </Text>
-            </TouchableOpacity>
-          ),
-        }}
+      <ScreenHeader
+        kicker="Inbox"
+        title="Notifications"
+        safeTop
+        onBack={() => (router.canGoBack() ? router.back() : router.replace(routes.app()))}
+        right={(
+          <TouchableOpacity
+            onPress={() => void handleMarkAll()}
+            style={shared.headerTextAction}
+            accessibilityRole="button"
+            testID="notifications-read-all"
+          >
+            <Text style={shared.headerTextActionLabel}>Read all</Text>
+          </TouchableOpacity>
+        )}
       />
 
       {error ? (

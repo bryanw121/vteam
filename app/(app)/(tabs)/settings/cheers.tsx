@@ -8,12 +8,10 @@ import { useSession } from '../../../../contexts/session'
 import { cheersSummaryKey, useCheersSummary } from '../../../../hooks/useCheersSummary'
 import { ScreenState } from '../../../../components/ui'
 import { CHEERS_LOAD_ERROR } from '../../../../constants/copy'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { shared, theme, CHEER_TYPES } from '../../../../constants'
 import { CheerRadarChart } from '../../../../components/CheerRadarChart'
 
 export default function ProfileCheersScreen() {
-  useStackBackTitle('Cheers')
 
   const { userId } = useSession()
   const summary = useCheersSummary()

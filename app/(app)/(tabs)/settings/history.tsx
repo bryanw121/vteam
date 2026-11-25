@@ -3,7 +3,6 @@ import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useFocusRefetch } from '../../../../lib/query'
 import { useSession } from '../../../../contexts/session'
 import { eventHistoryKey, useEventHistory } from '../../../../hooks/useEventHistory'
@@ -16,7 +15,6 @@ import { theme } from '../../../../constants/theme'
 type HistoryFilter = 'attended' | 'hosted'
 
 export default function ProfileHistoryScreen() {
-  useStackBackTitle('History')
   const router = useRouter()
   const { userId } = useSession()
   const { filter } = useLocalSearchParams<{ filter?: HistoryFilter }>()
