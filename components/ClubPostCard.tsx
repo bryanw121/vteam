@@ -353,8 +353,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.colors.card,
     borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    ...theme.shadow.card,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
     ...theme.shadow.sm,

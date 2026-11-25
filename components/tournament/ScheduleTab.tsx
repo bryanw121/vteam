@@ -97,7 +97,7 @@ export function ScheduleTab(p: Props) {
         )}
         <View style={{
           backgroundColor: isMyMatch ? theme.colors.primarySoft : theme.colors.card,
-          borderRadius: 16, padding: 12, marginBottom: 8,
+          borderRadius: 20, padding: 12, marginBottom: 8,
           borderWidth: 1.5,
           borderColor: isMyMatch ? theme.colors.primary : theme.colors.border,
           overflow: 'hidden', position: 'relative',

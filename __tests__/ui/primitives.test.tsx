@@ -241,11 +241,13 @@ describe('ScreenContainer', () => {
 })
 
 describe('Button', () => {
-  it('keeps the original look by default (md, full width, primary)', () => {
+  it('is a full-width primary pill by default (md)', () => {
     render(<Button label="Save" onPress={() => {}} testID="btn" />)
     const style = flat(screen.getByTestId('btn'))
     expect(style.backgroundColor).toBe(theme.colors.primary)
-    expect(style.padding).toBe(theme.spacing.md)
+    expect(style.paddingVertical).toBe(theme.spacing.md)
+    expect(style.borderRadius).toBe(theme.radius.full)
+    expect(style.minHeight).toBeGreaterThanOrEqual(44)
     expect(style.alignSelf).toBeUndefined()
   })
 

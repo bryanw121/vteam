@@ -6,11 +6,12 @@ export const ts = StyleSheet.create({
   scrollContent: { padding: 16, paddingBottom: 40 },
   card: {
     backgroundColor: theme.colors.card,
-    borderRadius: 18,
+    borderRadius: 20,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: 'transparent',
+    ...theme.shadow.card,
   },
   sectionTitle: {
     fontFamily: theme.fonts.bodySemiBold,

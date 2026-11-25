@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   miniCalendar: {
-    backgroundColor: theme.colors.background, borderRadius: 16, borderWidth: 1,
+    backgroundColor: theme.colors.background, borderRadius: 20, borderWidth: 1,
     borderColor: theme.colors.border, marginBottom: 20, overflow: 'hidden',
   },
   /** Right-rail section labels ("This week", "Next up"). */

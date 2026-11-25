@@ -14,7 +14,7 @@ export function HostSubmitButton({ disabled, busy, label, onPress }: HostSubmitB
       activeOpacity={0.85}
       style={{
         marginTop: 8,
-        padding: 15, borderRadius: 14,
+        padding: 15, borderRadius: theme.radius.full,
         backgroundColor: disabled ? theme.colors.border : theme.colors.text,
         alignItems: 'center',
       }}

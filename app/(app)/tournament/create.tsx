@@ -105,13 +105,13 @@ export default function TournamentCreateScreen() {
         }}>
           <TouchableOpacity
             onPress={goBack}
-            style={{ flex: 1, padding: 14, borderRadius: 14, backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center' }}
+            style={{ flex: 1, padding: 14, borderRadius: theme.radius.full, backgroundColor: theme.colors.card, borderWidth: 1, borderColor: theme.colors.border, alignItems: 'center' }}
           >
             <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.lgs, color: theme.colors.text }}>Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={goNext}
-            style={{ flex: 2, padding: 14, borderRadius: 14, backgroundColor: theme.colors.primary, alignItems: 'center' }}
+            style={{ flex: 2, padding: 14, borderRadius: theme.radius.full, backgroundColor: theme.colors.primary, alignItems: 'center' }}
           >
             <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.onPrimary }}>Continue</Text>
           </TouchableOpacity>
