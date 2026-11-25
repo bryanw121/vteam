@@ -299,14 +299,6 @@
     "mobile": {},
     "desktop": {}
   },
-  "register-join-context": {
-    "mobile": {
-      "color-contrast": 2
-    },
-    "desktop": {
-      "color-contrast": 2
-    }
-  },
   "reset-password": {
     "mobile": {},
     "desktop": {}
@@ -523,5 +515,13 @@
     "desktop": {
       "color-contrast": 1
     }
+  },
+  "register-join-context": {
+    "mobile": {},
+    "desktop": {}
+  },
+  "login-code": {
+    "mobile": {},
+    "desktop": {}
   }
 }

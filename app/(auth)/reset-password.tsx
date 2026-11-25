@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { View, TouchableOpacity } from 'react-native'
+import { View } from 'react-native'
 import { Text, TextInput } from '../../components/ui/Text'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { recoveryLinkAtStart, supabase } from '../../lib/supabase'
 import { sendPasswordReset } from '../../lib/passwordReset'
 import { Sentry } from '../../lib/sentry'
-import { Button } from '../../components/Button'
 import { Input } from '../../components/Input'
 import { Spinner } from '../../components/ui'
-import { shared, theme } from '../../constants'
+import { shared } from '../../constants'
+import { AuthScreen } from '../../components/auth/AuthScreen'
+import { AuthCta, AuthLink } from '../../components/auth/AuthBits'
 import { routes } from '../../utils/routes'
 
 /** How long to wait for a reset link to sign in before calling it expired (#223). */
@@ -88,105 +88,79 @@ export default function ResetPassword() {
     }
   }
 
-  const backToSignIn = (
-    <TouchableOpacity style={shared.authLink} onPress={() => router.replace(routes.login())} accessibilityRole="link">
-      <Text style={[shared.authLinkText, { color: theme.colors.primaryText }]}>Back to sign in</Text>
-    </TouchableOpacity>
-  )
+  const backToSignIn = <AuthLink label="Back to sign in" onPress={() => router.replace(routes.login())} />
+  const copy = {
+    done: { heading: 'Password updated', sub: "You're signed out on your other devices. Taking you back to the app…" },
+    verifying: { heading: 'Checking your link', sub: 'One moment.' },
+    expired: { heading: 'This link has expired', sub: "Reset links work once and expire. Enter your email and we'll send a new one." },
+    form: { heading: 'Set a new password', sub: 'At least 6 characters. Your other devices get signed out.' },
+  }[stage]
 
   return (
-    <LinearGradient
-      colors={theme.gradients.brand}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={shared.authBackground}
-    >
-      <View style={shared.authCard}>
-        <Text style={shared.authTitle}>vteam</Text>
-
-        {stage === 'done' ? (
-          <>
-            <Text style={shared.authSubtitle}>password updated!</Text>
-            <Text style={[shared.captionStrong, { textAlign: 'center' }]}>
-              You're signed out on your other devices. Taking you back to the app…
+    <AuthScreen heading={copy.heading} sub={copy.sub}>
+      {stage === 'done' ? null : stage === 'verifying' ? (
+        <>
+          <Spinner label="Checking your reset link" />
+          {backToSignIn}
+        </>
+      ) : stage === 'expired' ? (
+        <View testID="reset-expired" style={shared.authStack}>
+          {resendSent ? (
+            <Text style={shared.authNote} testID="reset-resent">
+              If that email has an account, a new link is on its way.
             </Text>
-          </>
-        ) : stage === 'verifying' ? (
-          <>
-            <Text style={shared.authSubtitle}>checking your link…</Text>
-            <Spinner label="Checking your reset link" />
-            {backToSignIn}
-          </>
-        ) : stage === 'expired' ? (
-          <View testID="reset-expired" style={{ gap: theme.spacing.sm }}>
-            <Text style={shared.authSubtitle}>this link has expired</Text>
-            <Text style={[shared.captionStrong, { textAlign: 'center' }]}>
-              Reset links work once and expire. Enter your email and we'll send a new one.
-            </Text>
-            {resendSent ? (
-              <Text style={[shared.captionStrong, { textAlign: 'center' }]} testID="reset-resent">
-                If that email has an account, a new link is on its way.
-              </Text>
-            ) : (
-              <>
-                <Input
-                  label="Email"
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="you@example.com"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                  returnKeyType="send"
-                  onSubmitEditing={() => void handleResend()}
-                  error={resendError ?? undefined}
-                  testID="reset-resend-email"
-                />
-                <Button label="Email a new link" onPress={() => void handleResend()} loading={resending} disabled={!email.trim()} />
-              </>
-            )}
-            {backToSignIn}
-          </View>
-        ) : (
-          <>
-            <Text style={shared.authSubtitle}>set a new password</Text>
-
-            <Input
-              label="New password"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              secureTextEntry
-              autoCapitalize="none"
-              returnKeyType="next"
-              blurOnSubmit={false}
-              onSubmitEditing={() => confirmRef.current?.focus()}
-            />
-            <Input
-              ref={confirmRef}
-              label="Confirm password"
-              value={confirm}
-              onChangeText={setConfirm}
-              placeholder="••••••••"
-              secureTextEntry
-              autoCapitalize="none"
-              returnKeyType="go"
-              onSubmitEditing={handleReset}
-            />
-
-            {error && <Text style={shared.errorText}>{error}</Text>}
-
-            <Button
-              label="Update password"
-              onPress={handleReset}
-              loading={loading}
-              disabled={!password || !confirm}
-            />
-
-            {backToSignIn}
-          </>
-        )}
-      </View>
-    </LinearGradient>
+          ) : (
+            <>
+              <Input
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="you@example.com"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+                returnKeyType="send"
+                onSubmitEditing={() => void handleResend()}
+                error={resendError ?? undefined}
+                testID="reset-resend-email"
+                containerStyle={shared.authField}
+              />
+              <AuthCta label="Email a new link" onPress={() => void handleResend()} loading={resending} disabled={!email.trim()} />
+            </>
+          )}
+          {backToSignIn}
+        </View>
+      ) : (
+        <>
+          <Input
+            label="New password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="••••••••"
+            secureTextEntry
+            autoCapitalize="none"
+            returnKeyType="next"
+            blurOnSubmit={false}
+            onSubmitEditing={() => confirmRef.current?.focus()}
+            containerStyle={shared.authField}
+          />
+          <Input
+            ref={confirmRef}
+            label="Confirm password"
+            value={confirm}
+            onChangeText={setConfirm}
+            placeholder="••••••••"
+            secureTextEntry
+            autoCapitalize="none"
+            returnKeyType="go"
+            onSubmitEditing={handleReset}
+            containerStyle={shared.authField}
+          />
+          {error && <Text style={shared.authError}>{error}</Text>}
+          <AuthCta label="Update password" onPress={handleReset} loading={loading} disabled={!password || !confirm} />
+          {backToSignIn}
+        </>
+      )}
+    </AuthScreen>
   )
 }

@@ -176,9 +176,10 @@ export const SCREENS = {
   'tournament-make-teams-drawn': { route: `/tournament/make-teams/${T.open}`, ready: 'Emma', actions: [{ tap: 'shuffle-teams', text: 'Shuffle teams' }, { wait: 400 }], sources: ['app/(app)/tournament/make-teams/[id].tsx', 'utils/soloTeams.ts'] },
 
   // ── Auth and legal (signed out) ─────────────────────────────────────────
-  login: { route: '/login', signedIn: false, sources: ['app/(auth)/login.tsx', 'app/(auth)/_layout.tsx', 'components/legal/**', 'components/GoogleLogo.tsx', 'components/Input.tsx', 'components/Button.tsx'] },
-  register: { route: '/register', signedIn: false, sources: ['app/(auth)/register.tsx', 'app/(auth)/_layout.tsx', 'components/legal/**', 'components/Input.tsx'] },
-  // A guest who tapped Join (#229): the game they're joining, and the New here / I have an account switch.
+  login: { route: '/login', signedIn: false, sources: ['app/(auth)/login.tsx', 'app/(auth)/_layout.tsx', 'components/auth/**', 'components/brand/**', 'components/legal/**', 'components/GoogleLogo.tsx', 'components/Input.tsx'] },
+  'login-code': { route: '/login?mode=code', signedIn: false, ready: 'Sign in with a code', sources: ['app/(auth)/login.tsx', 'components/auth/**'] },
+  register: { route: '/register', signedIn: false, sources: ['app/(auth)/register.tsx', 'app/(auth)/_layout.tsx', 'components/auth/**', 'components/brand/**', 'components/legal/**', 'components/Input.tsx'] },
+  // A guest who tapped Join (#229): the game they're joining, above the Sign in | Sign up switch.
   'register-join-context': {
     route: '/register', signedIn: false, ready: "YOU'RE JOINING",
     sessionStorage: opts => ({ 'vteam.pendingAction': joinIntent(opts) }),

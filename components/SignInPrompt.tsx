@@ -1,9 +1,11 @@
+import { useEffect } from 'react'
 import { View, useWindowDimensions } from 'react-native'
 import { Text, useScaledFontSize } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Button } from './Button'
 import { shared, theme } from '../constants'
 import { useGoToSignIn } from '../hooks/useRequireSignIn'
+import { preloadAuthScreens } from '../lib/authPrefetch'
 
 type Props = {
   icon: keyof typeof Ionicons.glyphMap
@@ -19,6 +21,7 @@ const TOP_SHARE = 0.16
 /** Shown in place of account-only tabs (Chat, Profile) while browsing as a guest. */
 export function SignInPrompt({ icon, title, body, extra }: Props) {
   const goToSignIn = useGoToSignIn()
+  useEffect(preloadAuthScreens, [])
   // The body keeps room for three lines, so the buttons sit at the same height
   // on every tab whether its copy wraps to two lines or three.
   const bodyLines = useScaledFontSize(theme.font.lineHeight.tight) * BODY_LINES

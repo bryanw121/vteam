@@ -2808,3 +2808,28 @@ export type ColorScheme = 'light' | 'dark'
 export type AppearancePref = 'system' | 'light' | 'dark'
 /** What changing the appearance did: nothing to show, a page reload (web), or it waits for the next launch (native). */
 export type AppearanceApplied = 'unchanged' | 'reloading' | 'next-launch'
+
+// ─── Sign in / sign up (Nov 2026 redesign) ──────────────────────────────────
+/** Which auth form a screen shows: its tab in the Sign in | Sign up switch. */
+export type AuthTab = 'login' | 'register'
+export type AuthScreenProps = {
+  /** "Welcome back", "Join the game", "Reset your password"… */
+  heading: string
+  sub: string
+  /** The Sign in | Sign up switch, with this tab selected. Omitted on the reset and code forms. */
+  tab?: AuthTab
+  children: ReactNode
+}
+export type AuthCtaProps = {
+  label: string
+  onPress: () => void
+  loading?: boolean
+  disabled?: boolean
+  testID?: string
+}
+export type GoogleButtonProps = { loading: boolean; onPress: () => void; disabled?: boolean }
+export type VteamMarkProps = {
+  size: number
+  /** White tile and purple V, for a purple background. */
+  inverted?: boolean
+}
