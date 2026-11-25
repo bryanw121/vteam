@@ -132,7 +132,7 @@ export function PlayerRosterCell({ profile, ctx }: { profile: Profile; ctx: Rost
   )
   if (ctx.isOwner) return <View style={cellStyle(ctx)}>{card}</View>
   return (
-    <TouchableOpacity style={cellStyle(ctx)} onPress={() => ctx.onOpenProfile(profile.id)} {...profilePrefetchProps(profile.id)}>
+    <TouchableOpacity style={cellStyle(ctx)} onPress={() => ctx.onOpenProfile(profile.id)} testID={`roster-player-${profile.id}`} {...profilePrefetchProps(profile.id)}>
       {card}
     </TouchableOpacity>
   )

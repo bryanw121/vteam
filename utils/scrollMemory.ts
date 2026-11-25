@@ -62,3 +62,11 @@ export function restoreWhenReady({ y, ready, apply, current, frames = 30, nextFr
   // Try now first: a frame painted at the wrong offset before the jump is the flicker this avoids.
   attempt()
 }
+
+/**
+ * Memory key for one event tab: the browser's Back remounts the event screen, and
+ * without a key it came back at the top (#376). Each tab keeps its own offset.
+ */
+export function eventScrollKey(eventId: string, tab: 'details' | 'people'): string {
+  return `event:${eventId}:${tab}`
+}
