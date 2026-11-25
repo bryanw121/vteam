@@ -4,27 +4,96 @@
   },
   "events-feed": {
     "mobile": {
+<<<<<<< HEAD
       "tap-target-44": 1
+=======
+      "tap-target-44": 11
+    }
+  },
+  "events-feed-tournaments": {
+    "mobile": {
+      "tap-target-44": 8
+>>>>>>> origin/main
     }
   },
   "events-feed-link": {
     "mobile": {
+<<<<<<< HEAD
       "tap-target-44": 1
+=======
+      "tap-target-44": 10
+>>>>>>> origin/main
     }
   },
   "events-session-sheet": {
     "mobile": {
+<<<<<<< HEAD
       "tap-target-44": 2
+=======
+      "tap-target-44": 12
+>>>>>>> origin/main
     }
   },
   "events-feed-guest": {
     "mobile": {
+<<<<<<< HEAD
       "tap-target-44": 1
+=======
+      "tap-target-44": 11
+    }
+  },
+  "event-details": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "event-past-guest": {
+    "mobile": {
+      "tap-target-44": 2
+    }
+  },
+  "event-people": {
+    "mobile": {
+      "tap-target-44": 2
+    }
+  },
+  "event-people-balanced": {
+    "mobile": {
+      "tap-target-44": 2
+>>>>>>> origin/main
     }
   },
   "event-discussion": {
     "mobile": {
       "tap-target-44": 6
+<<<<<<< HEAD
+=======
+    }
+  },
+  "event-paid-bottom": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "event-leave-sheet": {
+    "mobile": {
+      "tap-target-44": 7
+    }
+  },
+  "event-guest": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "event-bring-list": {
+    "mobile": {
+      "tap-target-44": 2
+    }
+  },
+  "event-bring-list-guest": {
+    "mobile": {
+      "tap-target-44": 3
+>>>>>>> origin/main
     }
   },
   "host-create-bring": {
@@ -47,9 +116,55 @@
       "tap-target-44": 1
     }
   },
+<<<<<<< HEAD
   "club-poll-composer": {
     "mobile": {
       "tap-target-44": 2
+=======
+  "club-detail": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "club-poll-composer": {
+    "mobile": {
+      "tap-target-44": 11
+    }
+  },
+  "club-edit": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
+  "club-delete-dialog": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "find-a-team": {
+    "mobile": {
+      "tap-target-44": 13
+    }
+  },
+  "find-a-team-sheet": {
+    "mobile": {
+      "tap-target-44": 13
+    }
+  },
+  "search": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "search-empty": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+  },
+  "search-guest": {
+    "mobile": {
+      "tap-target-44": 1
+>>>>>>> origin/main
     }
   },
   "chat-list": {
@@ -57,9 +172,20 @@
       "tap-target-44": 1
     }
   },
+<<<<<<< HEAD
   "chat-club": {
     "mobile": {
       "tap-target-44": 1
+=======
+  "chat-conversation": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
+  "chat-club": {
+    "mobile": {
+      "tap-target-44": 2
+>>>>>>> origin/main
     }
   },
   "profile-own": {
@@ -87,6 +213,19 @@
       "tap-target-44": 3
     }
   },
+<<<<<<< HEAD
+=======
+  "tournaments-list": {
+    "mobile": {
+      "tap-target-44": 2
+    }
+  },
+  "tournaments-list-past": {
+    "mobile": {
+      "tap-target-44": 2
+    }
+  },
+>>>>>>> origin/main
   "tournament-discussion": {
     "mobile": {
       "tap-target-44": 1
@@ -101,5 +240,18 @@
     "mobile": {
       "tap-target-44": 13
     }
+<<<<<<< HEAD
+=======
+  },
+  "login": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
+  "event-join-intent-sheet": {
+    "mobile": {
+      "tap-target-44": 3
+    }
+>>>>>>> origin/main
   }
 }
