@@ -310,12 +310,8 @@
     }
   },
   "settings-badges": {
-    "mobile": {
-      "color-contrast": 11
-    },
-    "desktop": {
-      "color-contrast": 11
-    }
+    "mobile": {},
+    "desktop": {}
   },
   "settings-cheers": {
     "mobile": {

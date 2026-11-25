@@ -68,6 +68,9 @@ export const lightColors = {
     medalGold:    '#E0A800',
     medalSilver:  '#90A4AE',
     medalBronze:  '#B7793A',
+    /** The round plate behind badge artwork: the art is drawn for a light ground, so it stays light in dark mode. */
+    badgePlate:   '#FFFFFF',
+    badgePlateBorder: '#E4DAF5',
     // Event start time (TimePill, join bar): lavender pill
     time:         '#EDE6FA',
     timeBorder:   '#D9CCF5',
@@ -130,6 +133,8 @@ export const darkColors: ColorTokens = {
   medalGold:    '#E0A800',
   medalSilver:  '#90A4AE',
   medalBronze:  '#B7793A',
+  badgePlate:   '#E9E0FF',
+  badgePlateBorder: '#E9E0FF',
   time:         '#2C1F4D',
   timeBorder:   '#45336F',
   timeInk:      '#E2D8FF',

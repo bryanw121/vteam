@@ -58,10 +58,11 @@ const styles = StyleSheet.create({
   wrap: { marginTop: theme.spacing.lg },
   title: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lg, color: theme.colors.text, marginBottom: theme.spacing.sm },
   track: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: theme.radius.full, backgroundColor: theme.colors.card },
-  seg: { flex: 1, minHeight: 44, borderRadius: theme.radius.full, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-  segOn: { backgroundColor: theme.colors.primary },
+  seg: { flex: 1, minHeight: 44, borderRadius: theme.radius.full, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, borderWidth: 1.5, borderColor: 'transparent' },
+  // Outlined, not filled: a solid purple pill was the loudest thing on the page.
+  segOn: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primaryText },
   segHover: { backgroundColor: theme.colors.primarySoft },
   segText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.subtext },
-  segTextOn: { color: theme.colors.onPrimary },
+  segTextOn: { color: theme.colors.primaryText },
   note: { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: theme.spacing.sm },
 })
