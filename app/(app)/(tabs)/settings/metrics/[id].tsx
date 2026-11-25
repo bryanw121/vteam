@@ -4,7 +4,6 @@ import { Text } from '../../../../../components/ui/Text'
 import { EmptyState, ScreenContainer, ScreenState } from '../../../../../components/ui'
 import { MetricCard } from '../../../../../components/metrics/MetricBits'
 import { metricsStyles as s } from '../../../../../components/metrics/metricsStyles'
-import { useStackBackTitle } from '../../../../../hooks/useStackBackTitle'
 import { useAdminUserActivity, useIsAdmin } from '../../../../../hooks/useAdminMetrics'
 import { useTabsShell } from '../../../../../contexts/tabs'
 import { COMPACT_TEXT_SCALE, shared, theme } from '../../../../../constants'
@@ -21,7 +20,6 @@ const DAY_BG = [theme.colors.borderSoft, theme.colors.primarySoft, theme.colors.
 
 /** Admin metrics → one person: how they came, platforms, activity and recent sessions (screen types only). */
 export default function AdminPersonScreen() {
-  useStackBackTitle('Person')
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const { tabBarHeight } = useTabsShell()

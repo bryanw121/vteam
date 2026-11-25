@@ -239,7 +239,8 @@ export default function TabsLayout() {
           screenOptions={({ route }) => {
             const isMain = route.name === "(main)";
             return {
-              headerShown: !isMain,
+              // Settings draw their own ScreenHeader (settings/_layout, #377).
+              headerShown: !isMain && route.name !== "settings",
               headerShadowVisible: false,
               headerTintColor: theme.colors.primaryText,
               headerStyle: { backgroundColor: theme.colors.background },

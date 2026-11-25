@@ -2,7 +2,6 @@ import React, { useMemo, useRef, useState } from 'react'
 import { Platform, ScrollView, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useMyProfile } from '../../../../hooks/useMyProfile'
 import { useUserSettings } from '../../../../hooks/useUserSettings'
 import { Chip, ScreenState } from '../../../../components/ui'
@@ -20,7 +19,6 @@ import { GameAlertsCard } from '../../../../components/profile/GameAlertsCard'
 import { WebPushCard } from '../../../../components/settings/WebPushCard'
 
 export default function NotificationSettingsScreen() {
-  useStackBackTitle('Notification settings')
   const me = useMyProfile()
   const { settings, setReminderLead } = useUserSettings()
   const [saveFailed, setSaveFailed] = useState(false)

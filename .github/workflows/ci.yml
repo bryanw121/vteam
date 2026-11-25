@@ -282,6 +282,12 @@ jobs:
       - name: Alignment check (sibling screens put the same thing at the same height)
         if: success() || failure()
         run: node scripts/shots/alignment-flow.mjs --dist dist-mock --out a11y-report/alignment
+      # The same kind of thing looks the same on every screen (#377): Back size, page titles,
+      # Outfit everywhere, font tokens, 44-pt targets on phones; counts above
+      # ui-consistency-baseline.json fail, and the baseline only shrinks (npm run ui:baseline).
+      - name: UI consistency check
+        if: success() || failure()
+        run: node scripts/shots/ui-consistency-flow.mjs --dist dist-mock --out a11y-report/ui-consistency
       - name: Crash recovery browser check
         if: success() || failure()
         run: node scripts/shots/crash-recovery-flow.mjs --dist dist-mock --out a11y-report/crash-recovery

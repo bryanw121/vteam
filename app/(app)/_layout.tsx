@@ -142,14 +142,14 @@ function AppLayoutInner() {
               {!collapsed && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={{
+                    fontFamily: theme.fonts.display,
                     fontSize: theme.font.size.xl,
-                    fontWeight: theme.font.weight.bold,
                     color: theme.colors.primaryText,
                   }}>
                     vteam
                   </Text>
                   <View style={{ backgroundColor: theme.colors.primary + '22', borderWidth: 1, borderColor: theme.colors.primary + '66', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
-                    <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, letterSpacing: 1 }}>BETA</Text>
+                    <Text style={{ fontFamily: theme.fonts.bodyBold, fontSize: theme.font.size.xs, color: theme.colors.primaryText, letterSpacing: 1 }}>BETA</Text>
                   </View>
                 </View>
               )}
@@ -197,7 +197,7 @@ function AppLayoutInner() {
                         alignItems: 'center', justifyContent: 'center',
                         paddingHorizontal: 3,
                       }}>
-                        <Text maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={{ fontSize: theme.font.size.xs, fontWeight: '800', color: theme.colors.white, lineHeight: 13 }}>
+                        <Text maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.xs, color: theme.colors.white, lineHeight: 13 }}>
                           {badge > 99 ? '99+' : badge}
                         </Text>
                       </View>
@@ -205,8 +205,8 @@ function AppLayoutInner() {
                   </View>
                   {!collapsed && (
                     <Text style={{
+                      fontFamily: active ? theme.fonts.bodySemiBold : theme.fonts.body,
                       fontSize: theme.font.size.md,
-                      fontWeight: active ? theme.font.weight.semibold : theme.font.weight.regular,
                       color: active ? theme.colors.primaryText : theme.colors.subtext,
                     }}>
                       {tab.name}
@@ -231,8 +231,6 @@ function AppLayoutInner() {
             >
               <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: 'Back' }} />
               <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back, presentation: 'modal', ...(Platform.OS === 'web' ? { animationEnabled: false } : {}) }} />
-              <Stack.Screen name="club/create" options={{ title: 'Create club', headerBackTitle: 'Clubs', gestureEnabled: SWIPE_NAVIGATION.back }} />
-              <Stack.Screen name="notifications" options={{ title: 'Notifications', headerBackTitle: 'Back' }} />
               {HEADERLESS_STACK_ROUTES.map(name => (
                 <Stack.Screen key={name} name={name} options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
               ))}
@@ -313,8 +311,6 @@ function AppLayoutInner() {
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false, headerBackTitle: 'Back' }} />
       <Stack.Screen name="host" options={{ title: 'Host Event', headerBackTitle: 'Events', gestureEnabled: SWIPE_NAVIGATION.back, presentation: 'modal' }} />
-      <Stack.Screen name="club/create" options={{ title: 'Create club', headerBackTitle: 'Clubs', gestureEnabled: SWIPE_NAVIGATION.back }} />
-      <Stack.Screen name="notifications" options={{ title: 'Notifications', headerBackTitle: 'Back' }} />
       {HEADERLESS_STACK_ROUTES.map(name => (
         <Stack.Screen key={name} name={name} options={{ headerShown: false, gestureEnabled: SWIPE_NAVIGATION.back }} />
       ))}

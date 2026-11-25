@@ -1,6 +1,7 @@
 import React from 'react'
 import { View, ScrollView, TouchableOpacity } from 'react-native'
 import { Text } from '../ui/Text'
+import { BackButton } from '../ui/BackButton'
 import { RefreshControl } from '../RefreshControl'
 import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -236,9 +237,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
             borderBottomWidth: 1,
             borderBottomColor: theme.colors.border,
           }}>
-            <TouchableOpacity onPress={() => setSelectedCheerType(null)} hitSlop={12}>
-              <Ionicons name="arrow-back" size={22} color={theme.colors.text} />
-            </TouchableOpacity>
+            <BackButton variant="pill" label="All cheers" onPress={() => setSelectedCheerType(null)} />
             <Ionicons
               name={(CHEER_TYPES.find(k => k.type === selectedCheerType)?.icon ?? 'star-outline') as IoniconName}
               size={18}
