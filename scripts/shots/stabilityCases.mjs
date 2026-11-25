@@ -23,7 +23,9 @@ export const SCROLL_SCREENS = [
   { screen: 'tournaments', path: '/tournaments', child: { testIdPrefix: 'tournament-row-', last: true }, guest: true, pr: true },
   // First visit: the club tournaments load while a placeholder holds their space (#288).
   { screen: 'tournaments-first', path: '/tournaments', child: null, fresh: true, pr: true },
-  { screen: 'event', path: `/event/${IDS.event.sundaySand}`, child: { text: 'Host' }, guest: true, pr: true },
+  // A game the fixture viewer doesn't host, so the host and roster cells open profiles signed in too (#376).
+  { screen: 'event', path: `/event/${IDS.event.fridayNight}`, child: { text: 'Host' }, guest: true, pr: true },
+  { screen: 'event-people', path: `/event/${IDS.event.fridayNight}?tab=people`, child: { testIdPrefix: 'roster-player-', last: true }, guest: true, pr: true },
   { screen: 'club', path: `/club/${IDS.club.eastside}`, child: { testIdPrefix: 'event-card', last: true }, guest: true, pr: true },
 ]
 
