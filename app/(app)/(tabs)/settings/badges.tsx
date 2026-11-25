@@ -17,7 +17,6 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useFocusRefetch } from '../../../../lib/query'
 import { useSession } from '../../../../contexts/session'
 import { BadgeIcon } from '../../../../components/BadgeIcon'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { BorderSwatch } from '../../../../components/profile/BorderSwatch'
 import { badgesKey, useBadges } from '../../../../hooks/useBadges'
 import { myProfileKey, useMyProfile } from '../../../../hooks/useMyProfile'
@@ -38,7 +37,6 @@ import { useUrlParam } from '../../../../hooks/useUrlParam'
 import { VIEW } from '../../../../utils/urlViews'
 
 export default function BadgesScreen() {
-  useStackBackTitle('Badges')
 
   const { width } = useWindowDimensions()
   const insets = useSafeAreaInsets()

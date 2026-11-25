@@ -3,7 +3,6 @@ import { ScrollView, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { useRouter } from 'expo-router'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { DELETE_CONFIRMATION, useAccountDeletion } from '../../../../hooks/useAccountDeletion'
 import { Button } from '../../../../components/Button'
 import { Input } from '../../../../components/Input'
@@ -21,7 +20,6 @@ import { useTabsShell } from '../../../../contexts/tabs'
  * the person to type DELETE before the delete-account function runs.
  */
 export default function DeleteAccountScreen() {
-  useStackBackTitle('Delete account')
   const router = useRouter()
   const { tabBarHeight } = useTabsShell()
   const {

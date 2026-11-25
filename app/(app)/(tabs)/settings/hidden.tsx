@@ -2,7 +2,6 @@ import React, { useMemo } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { EmptyState, ScreenState } from '../../../../components/ui'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useUserSettings } from '../../../../hooks/useUserSettings'
 import { useHiddenFeed } from '../../../../hooks/useHiddenFeed'
 import { shared, theme } from '../../../../constants'
@@ -15,7 +14,6 @@ import { formatEventDate } from '../../../../utils'
  * card's ⋯ menu.
  */
 export default function HiddenFeedScreen() {
-  useStackBackTitle('Hidden in feed')
   const { isLoading, error } = useUserSettings()
   const { entries, unhide, restore } = useHiddenFeed()
   const visible = useMemo(() => pruneHidden(entries), [entries])

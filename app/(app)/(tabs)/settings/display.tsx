@@ -3,7 +3,6 @@ import { Platform, Pressable, ScrollView, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../../../../components/ui/Text'
 import { TimePill } from '../../../../components/ui'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useTextScale } from '../../../../contexts/textScale'
 import { useTabsShell } from '../../../../contexts/tabs'
 import { TEXT_SIZE_OPTIONS, shared, theme } from '../../../../constants'
@@ -33,7 +32,6 @@ const SYSTEM_NOTE = Platform.select({
 
 /** Settings → Display: light or dark, and the text size setting (#43), with a live preview. */
 export default function DisplaySettingsScreen() {
-  useStackBackTitle('Display')
   const { size, setSize } = useTextScale()
   // The mobile tab bar floats over the bottom of the screen; keep the preview clear of it.
   const { tabBarHeight } = useTabsShell()

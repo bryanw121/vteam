@@ -6,7 +6,6 @@ import { RefreshControl } from '../../../../components/RefreshControl'
 import { Button } from '../../../../components/Button'
 import { ConfirmDialog, ScreenContainer, ScreenState } from '../../../../components/ui'
 import { toast } from '../../../../lib/toast'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useAdFreeStatus, useRedeemAdFree } from '../../../../hooks/useAdFree'
 import { GENERIC_ERROR_MESSAGE, shared, theme } from '../../../../constants'
 import { adFreeView, formatAdFreeDate } from '../../../../utils/adFree'
@@ -17,7 +16,6 @@ import { adFreeView, formatAdFreeDate } from '../../../../utils/adFree'
  * is running extends it from its current end.
  */
 export default function AdFreeScreen() {
-  useStackBackTitle('Go ad-free')
   const status = useAdFreeStatus()
   const redeem = useRedeemAdFree()
   const [confirming, setConfirming] = useState(false)

@@ -2,7 +2,6 @@ import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import { useCallback, useState } from 'react'
-import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { supabase } from '../../../../lib/supabase'
 import { forgetWebPushToken } from '../../../../utils/pushNotifications'
 import { Button } from '../../../../components/Button'
@@ -16,7 +15,6 @@ import { routes } from '../../../../utils/routes'
 import { toast } from '../../../../lib/toast'
 
 export default function AccountSettingsScreen() {
-  useStackBackTitle('Account settings')
   const router = useRouter()
   const [refreshing, setRefreshing] = useState(false)
   const { session } = useSession()

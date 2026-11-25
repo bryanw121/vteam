@@ -1,6 +1,6 @@
-import { TouchableOpacity, View } from 'react-native'
+import { View } from 'react-native'
 import { Text } from './Text'
-import Ionicons from '@expo/vector-icons/Ionicons'
+import { BackButton } from './BackButton'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { shared, theme } from '../../constants'
 import type { ScreenHeaderProps } from '../../types'
@@ -14,17 +14,9 @@ export function ScreenHeader({ kicker, title, titleDot, right, onBack, backLabel
   return (
     <View style={{ paddingTop: safeTop ? insets.top : 0 }}>
       {onBack && (
-        <TouchableOpacity
-          onPress={onBack}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel={backLabel}
-          testID="screen-header-back"
-          style={shared.screenHeaderBack}
-        >
-          <Ionicons name="chevron-back" size={20} color={theme.colors.primaryText} />
-          <Text style={shared.screenHeaderBackLabel}>{backLabel}</Text>
-        </TouchableOpacity>
+        <View style={shared.screenHeaderBack}>
+          <BackButton onPress={onBack} label={backLabel} testID="screen-header-back" />
+        </View>
       )}
       <View style={shared.screenHeader}>
         <View style={shared.screenHeaderText}>

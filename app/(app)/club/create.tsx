@@ -9,6 +9,7 @@ import { invalidate } from '../../../lib/query'
 import { routes } from '../../../utils/routes'
 import { Input } from '../../../components/Input'
 import { Button } from '../../../components/Button'
+import { ScreenHeader } from '../../../components/ui'
 import { MajorCityAutocomplete } from '../../../components/MajorCityAutocomplete'
 import { ClubLocationField } from '../../../components/ClubLocationField'
 import { useMajorCities } from '../../../hooks/useMajorCities'
@@ -90,6 +91,12 @@ export default function CreateClubScreen() {
 
   return (
     <View style={[shared.screen, { backgroundColor: theme.colors.background }]}>
+      <ScreenHeader
+        kicker="Clubs"
+        title="Create club"
+        safeTop
+        onBack={() => (router.canGoBack() ? router.back() : router.replace(routes.clubs()))}
+      />
       <ScrollView
         style={shared.screen}
         contentContainerStyle={{ padding: theme.spacing.lg, paddingBottom: theme.spacing.xl * 2 }}

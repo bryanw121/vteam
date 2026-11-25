@@ -1638,6 +1638,19 @@ export type ScreenHeaderProps = {
   safeTop?: boolean
 }
 
+/**
+ * The one Back control (#377). `row`: chevron + label on the page (ScreenHeader, stack headers);
+ * `pill`: a 44-pt square on a cover or beside a centred title (the event page's look).
+ * Both are at least 44 × 44 pt.
+ */
+export type BackButtonProps = {
+  onPress: () => void
+  /** Visible on `row`, the accessible name on both. Default "Back". */
+  label?: string
+  variant?: 'row' | 'pill'
+  testID?: string
+}
+
 export type ConfirmDialogProps = {
   visible: boolean
   title: string
