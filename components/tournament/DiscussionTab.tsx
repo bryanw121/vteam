@@ -78,7 +78,7 @@ export function DiscussionTab({ comments, hasEarlier, loadingEarlier, onLoadEarl
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={insets.top + 88}>
       {loading && comments.length === 0 ? (
-        <View style={shared.centered}><Spinner color={theme.colors.primary} /></View>
+        <View style={shared.centered}><Spinner color={theme.colors.primaryText} /></View>
       ) : error && comments.length === 0 ? (
         <View style={shared.screenStateCenter}>
           <Text style={[shared.caption, shared.emptyStateBody]}>Couldn't load the discussion.</Text>
@@ -112,7 +112,7 @@ export function DiscussionTab({ comments, hasEarlier, loadingEarlier, onLoadEarl
               style={shared.loadEarlierButton}
             >
               {loadingEarlier
-                ? <Spinner size="small" color={theme.colors.primary} />
+                ? <Spinner size="small" color={theme.colors.primaryText} />
                 : <Text style={shared.loadEarlierLabel}>Load earlier comments</Text>}
             </TouchableOpacity>
           ) : null}

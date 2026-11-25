@@ -86,7 +86,7 @@ export const EventsFeedMobile = memo(function EventsFeedMobile(p: EventsFeedMobi
   const lastScrollY = useRef(0)
   const emptyOrLoading = sections.length === 0 ? p.feedEmpty : null
   const footerSpinner = p.loading && sections.length > 0
-    ? <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+    ? <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primaryText} />
     : null
 
   const renderSectionHeader = (section: FeedDaySection) => (

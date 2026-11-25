@@ -83,7 +83,7 @@ export function FeedCitySheet({ visible, onDismiss, city }: FeedCitySheetProps) 
             >
               <Text style={styles.optionText}>{r.name}</Text>
               {city.nearest === r.id ? <Text style={styles.optionNote}>{FEED_CITY_COPY.nearest}</Text> : null}
-              {on ? <Ionicons name="checkmark" size={20} color={theme.colors.primary} /> : null}
+              {on ? <Ionicons name="checkmark" size={20} color={theme.colors.primaryText} /> : null}
             </TouchableOpacity>
           )
         })}

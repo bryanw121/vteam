@@ -123,7 +123,7 @@ const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate
                 fontFamily: theme.fonts.display,
                 fontSize: theme.font.heading.sm,
                 lineHeight: 22,
-                color: isSelected ? theme.colors.white : isToday ? theme.colors.primary : theme.colors.text,
+                color: isSelected ? theme.colors.white : isToday ? theme.colors.primaryText : theme.colors.text,
               }}>
                 {day.getDate()}
               </Text>
@@ -212,7 +212,7 @@ export const MonthGridContent = memo(function MonthGridContent({ month, selected
                   <Text style={{
                     fontFamily: theme.fonts.display,
                     fontSize: theme.font.size.md,
-                    color: isSelected ? theme.colors.white : isToday ? theme.colors.primary : theme.colors.text,
+                    color: isSelected ? theme.colors.white : isToday ? theme.colors.primaryText : theme.colors.text,
                   }}>
                     {day}
                   </Text>
@@ -328,6 +328,18 @@ export function WeekPager({ curWeekPage, selectedDate, markedDates, onSelectDate
                 </View>
               ))}
             </Animated.View>
+          )}
+          {/* Before the width is known, the current week alone at full width: the strip has its
+              real height from the first frame, so nothing below it moves when the days appear. */}
+          {width === 0 && (
+            <WeekStripContent
+              weekDays={getWeekDays(weekForIdx(curWeekPage))}
+              selectedDate={selectedDate}
+              markedDates={markedDates}
+              onSelectDate={onSelectDate}
+              onPrevWeek={snapToPrev}
+              onNextWeek={snapToNext}
+            />
           )}
         </View>
         <TouchableOpacity

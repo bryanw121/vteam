@@ -42,7 +42,7 @@ export function TeamCard({ team, isOrganizer, viewerId, myTeam, registrationOpen
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 5 }}>
             <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.lgs, color: theme.colors.text, letterSpacing: -0.2 }}>{team.name}</Text>
             {team.seed !== null && !isFreeAgent && <StatusPill label={`Seed ${team.seed}`} color={theme.colors.cool} />}
-            {isMyTeam && <StatusPill label="You" color={theme.colors.primary} />}
+            {isMyTeam && <StatusPill label="You" color={theme.colors.primaryText} />}
             {isFreeAgent && <StatusPill label="Free Agent" color={theme.colors.subtext} />}
             {team.is_paid && <StatusPill label="Paid" color={theme.colors.cool} />}
             {!team.is_approved && !isFreeAgent && <StatusPill label="Pending" color={theme.colors.warm} />}
@@ -93,7 +93,7 @@ export function TeamCard({ team, isOrganizer, viewerId, myTeam, registrationOpen
       {/* Organizer actions */}
       {isOrganizer && !isFreeAgent && (
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-          {!team.is_approved && <OrgButton label="Approve" color={theme.colors.primary} onPress={() => actions.onApprove(team.id)} />}
+          {!team.is_approved && <OrgButton label="Approve" color={theme.colors.primaryText} onPress={() => actions.onApprove(team.id)} />}
           {!team.is_paid && <OrgButton label="Mark Paid" color={theme.colors.cool} onPress={() => actions.onMarkPaid(team.id)} />}
           <OrgButton label="Remove" color={theme.colors.error} onPress={() => actions.onRemove(team.id, team.name)} />
         </View>

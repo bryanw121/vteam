@@ -79,7 +79,7 @@ export default function AdFreeScreen() {
 
               <View style={[shared.card, { gap: theme.spacing.sm, marginTop: theme.spacing.md }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm }}>
-                  <Ionicons name={view.active ? 'checkmark-circle' : 'sparkles-outline'} size={20} color={view.active ? theme.colors.success : theme.colors.primary} />
+                  <Ionicons name={view.active ? 'checkmark-circle' : 'sparkles-outline'} size={20} color={view.active ? theme.colors.success : theme.colors.primaryText} />
                   <Text style={{ flex: 1, fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lg, color: theme.colors.text }}>
                     {view.active ? 'You are ad-free' : 'Hide ads'}
                   </Text>

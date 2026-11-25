@@ -3,7 +3,7 @@
  * Capture named screens of a web export with every Supabase call mocked.
  *
  *   node scripts/shots/capture.mjs --dist dist --out shots [--screens a,b] [--desktop]
- *                                  [--src .] [--now 2026-10-29T15:00:00Z] [--suffix ""]
+ *                                  [--src .] [--now 2026-10-29T15:00:00Z] [--suffix ""] [--scheme dark]
  *
  * Writes <out>/<screen><suffix>.png (390x844 @2x), <screen>-desktop<suffix>.png
  * with --desktop (1280x800), and <out>/capture<suffix>.json describing each shot
@@ -115,7 +115,7 @@ async function runAction(page, action) {
  */
 export async function visitScreen(browser, baseUrl, name, screen, size, opts, onReady) {
   const result = { screen: name, size, file: null, ready: null, misses: [], errors: [] }
-  const context = await browser.newContext({ ...VIEWPORTS[size], locale: 'en-US', timezoneId: TIME_ZONE, reducedMotion: 'reduce', colorScheme: 'light', serviceWorkers: 'block' })
+  const context = await browser.newContext({ ...VIEWPORTS[size], locale: 'en-US', timezoneId: TIME_ZONE, reducedMotion: 'reduce', colorScheme: opts?.scheme === 'dark' ? 'dark' : 'light', serviceWorkers: 'block' })
   try {
     // Start the page clock at the fixture "now" and let it run (a frozen clock would stall Animated timings).
     await context.clock.install({ time: opts.now })
@@ -168,7 +168,7 @@ function screenshotTo(opts) {
 /**
  * Serve `dist`, open every (screen, size) job in Chromium and call `onReady` on each
  * once it has settled. Results come back in job order (screens as given, mobile before desktop).
- * @param {{ dist: string, screens?: string[], sizes: string[], src?: string, now?: Date, concurrency?: number, label?: string }} o
+ * @param {{ dist: string, screens?: string[], sizes: string[], src?: string, now?: Date, concurrency?: number, label?: string, scheme?: 'light' | 'dark' }} o
  * @param {(page: import('playwright').Page, result: object) => Promise<any>} onReady
  */
 export async function visitScreens(o, onReady) {
@@ -178,7 +178,7 @@ export async function visitScreens(o, onReady) {
   const unknown = names.filter(n => !SCREENS[n])
   if (unknown.length) throw new Error(`Unknown screen(s): ${unknown.join(', ')}. Known: ${Object.keys(SCREENS).join(', ')}`)
   const src = resolve(o.src ?? process.cwd())
-  const opts = { now: o.now ?? defaultNow(), relationships: loadRelationships(src), seenIds: loadSeenIds(src) }
+  const opts = { now: o.now ?? defaultNow(), relationships: loadRelationships(src), seenIds: loadSeenIds(src), scheme: o.scheme }
   const server = await serveDist(dist)
   const browser = await launchChromium()
   const jobs = names.flatMap(n => o.sizes.map(size => [n, size]))
@@ -214,7 +214,7 @@ export async function capture(o) {
   if (!existsSync(join(resolve(o.dist), 'index.html'))) throw new Error(`No web export at ${resolve(o.dist)} (index.html missing)`)
   await mkdir(o.out, { recursive: true })
   const { results } = await visitScreens(
-    { dist: o.dist, screens: o.screens, sizes: o.desktop ? ['mobile', 'desktop'] : ['mobile'], src: o.src, now, concurrency: o.concurrency },
+    { dist: o.dist, screens: o.screens, sizes: o.desktop ? ['mobile', 'desktop'] : ['mobile'], src: o.src, now, concurrency: o.concurrency, scheme: o.scheme },
     screenshotTo({ out: o.out, suffix }),
   )
   for (const r of results) delete r.output
@@ -225,7 +225,7 @@ export async function capture(o) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = parseArgs(process.argv.slice(2))
   if (args.help) {
-    console.log('node scripts/shots/capture.mjs --dist dist --out shots [--screens a,b] [--desktop] [--src .] [--now ISO] [--suffix s]')
+    console.log('node scripts/shots/capture.mjs --dist dist --out shots [--screens a,b] [--desktop] [--src .] [--now ISO] [--suffix s] [--scheme dark]')
     console.log('Screens:', Object.keys(SCREENS).join(', '))
     process.exit(0)
   }
@@ -237,6 +237,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     src: typeof args.src === 'string' ? args.src : undefined,
     now: typeof args.now === 'string' ? new Date(args.now) : undefined,
     suffix: typeof args.suffix === 'string' ? args.suffix : '',
+    // The browser's light/dark setting: the app follows it under Match device (the default).
+    scheme: args.scheme === 'dark' ? 'dark' : 'light',
   })
   console.log(JSON.stringify(results.map(r => ({ screen: r.screen, size: r.size, file: r.file, ready: r.ready, misses: r.misses, errors: r.errors })), null, 2))
 }

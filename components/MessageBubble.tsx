@@ -255,7 +255,7 @@ export function MessageBubble({
       <Text style={{
         fontFamily: failed ? theme.fonts.bodySemiBold : theme.fonts.body,
         fontSize: theme.font.size.xs,
-        color: failed ? theme.colors.error : message._sending ? theme.colors.primary : theme.colors.subtext,
+        color: failed ? theme.colors.error : message._sending ? theme.colors.primaryText : theme.colors.subtext,
         marginTop: 2,
         marginHorizontal: 4,
         fontStyle: message._sending ? 'italic' : 'normal',

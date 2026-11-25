@@ -195,9 +195,9 @@ export default function ProgramScoresScreen() {
               <Text
                 accessibilityRole="link"
                 onPress={() => { void openExternalUrl((program.source_url || program.signup_url) as string) }}
-                style={[shared.caption, { color: theme.colors.primary, marginTop: theme.spacing.sm, paddingVertical: 10 }]}
+                style={[shared.caption, { color: theme.colors.primaryText, marginTop: theme.spacing.sm, paddingVertical: 10 }]}
               >
-                {program.org} website <Ionicons name="open-outline" size={12} color={theme.colors.primary} />
+                {program.org} website <Ionicons name="open-outline" size={12} color={theme.colors.primaryText} />
               </Text>
             ) : null}
             {sheetExecUrl(id as string) ? <View style={{ marginTop: theme.spacing.lg }}>

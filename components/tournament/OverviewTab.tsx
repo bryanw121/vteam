@@ -94,7 +94,7 @@ export function OverviewTab(p: Props) {
         }}>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-              <Ionicons name="checkmark-circle" size={14} color={theme.colors.primary} />
+              <Ionicons name="checkmark-circle" size={14} color={theme.colors.primaryText} />
               <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.primaryText }}>
                 {myTeam.status === 'free_agent' ? 'Registered as Free Agent' : myTeam.status === 'waitlisted' ? 'On the waitlist' : 'Registered'}
               </Text>
@@ -164,7 +164,7 @@ export function OverviewTab(p: Props) {
             <Text style={ts.sectionTitle}>📢 Announcements</Text>
             {isCreator && (
               <TouchableOpacity hitSlop={8} accessibilityLabel="Post announcement" onPress={p.onAddAnnouncement}>
-                <Ionicons name="add-circle-outline" size={20} color={theme.colors.primary} />
+                <Ionicons name="add-circle-outline" size={20} color={theme.colors.primaryText} />
               </TouchableOpacity>
             )}
           </View>
@@ -188,7 +188,7 @@ export function OverviewTab(p: Props) {
             <Text style={ts.sectionTitle}>Prize Pool</Text>
             {isCreator && (
               <TouchableOpacity hitSlop={8} accessibilityLabel="Add prize" onPress={p.onAddPrize}>
-                <Ionicons name="add-circle-outline" size={20} color={theme.colors.primary} />
+                <Ionicons name="add-circle-outline" size={20} color={theme.colors.primaryText} />
               </TouchableOpacity>
             )}
           </View>
@@ -316,7 +316,7 @@ function SoloSignupCard({ signups, size, deadline, joined, busy, onJoin, onLeave
     <View style={[ts.card, { borderColor: theme.colors.primary, borderWidth: 1.5 }]} testID="solo-signup">
       {joined ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <Ionicons name="checkmark-circle" size={18} color={theme.colors.primary} />
+          <Ionicons name="checkmark-circle" size={18} color={theme.colors.primaryText} />
           <Text style={ts.sectionTitle}>You're in</Text>
         </View>
       ) : (

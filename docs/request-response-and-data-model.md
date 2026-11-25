@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `4109bf039a36`
+> Inventory fingerprint: `1f64cdb8302d`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -453,7 +453,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `ad_banners` | [`lib/startupConfig.ts:28`](../lib/startupConfig.ts#L28) |
 | `app_admins` | [`supabase/functions/generate-badge-art/index.ts:82`](../supabase/functions/generate-badge-art/index.ts#L82) |
 | `app_config` | [`lib/startupConfig.ts:24`](../lib/startupConfig.ts#L24) |
-| `app_events` | [`lib/analytics.ts:230`](../lib/analytics.ts#L230) |
+| `app_events` | [`lib/analytics.ts:231`](../lib/analytics.ts#L231) |
 | `badge_art` | [`hooks/useBadgeArt.ts:26`](../hooks/useBadgeArt.ts#L26)<br>[`supabase/functions/generate-badge-art/index.ts:130`](../supabase/functions/generate-badge-art/index.ts#L130) |
 | `chat_silences` | [`hooks/useSilencedUsers.ts:27`](../hooks/useSilencedUsers.ts#L27)<br>[`supabase/functions/send-chat-push/handler.ts:143`](../supabase/functions/send-chat-push/handler.ts#L143) |
 | `cheers` | [`hooks/event/useEventCheers.ts:16`](../hooks/event/useEventCheers.ts#L16)<br>[`hooks/useCheersSummary.ts:12`](../hooks/useCheersSummary.ts#L12)<br>[`hooks/useMyGameRecap.ts:18`](../hooks/useMyGameRecap.ts#L18)<br>[`hooks/useMyProfile.ts:72`](../hooks/useMyProfile.ts#L72)<br>[`hooks/useUserProfile.ts:21`](../hooks/useUserProfile.ts#L21)<br>[`utils/badges.ts:41`](../utils/badges.ts#L41) |
@@ -523,7 +523,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `admin_traffic_series` | [`hooks/useAdminMetrics.ts:94`](../hooks/useAdminMetrics.ts#L94) | [`supabase/migrations/20261120030000_admin_traffic_series.sql:10`](../supabase/migrations/20261120030000_admin_traffic_series.sql#L10) |
 | `admin_user_activity` | [`hooks/useAdminMetrics.ts:134`](../hooks/useAdminMetrics.ts#L134) | [`supabase/migrations/20261111120000_admin_metrics.sql:427`](../supabase/migrations/20261111120000_admin_metrics.sql#L427) |
 | `admin_users` | [`hooks/useAdminMetrics.ts:125`](../hooks/useAdminMetrics.ts#L125) | [`supabase/migrations/20261111120000_admin_metrics.sql:339`](../supabase/migrations/20261111120000_admin_metrics.sql#L339) |
-| `app_heartbeat` | [`lib/analytics.ts:304`](../lib/analytics.ts#L304) | [`supabase/migrations/20261110230000_usage_sessions.sql:74`](../supabase/migrations/20261110230000_usage_sessions.sql#L74) |
+| `app_heartbeat` | [`lib/analytics.ts:306`](../lib/analytics.ts#L306) | [`supabase/migrations/20261110230000_usage_sessions.sql:74`](../supabase/migrations/20261110230000_usage_sessions.sql#L74) |
 | `cancel_friend_request` | [`hooks/useFriends.ts:71`](../hooks/useFriends.ts#L71) | [`supabase/migrations/20261028203837_friends.sql:256`](../supabase/migrations/20261028203837_friends.sql#L256) |
 | `check_rate_limit` | [`supabase/functions/login-with-username/handler.ts:140`](../supabase/functions/login-with-username/handler.ts#L140) | [`supabase/migrations/20261028120200_rate_limit_core.sql:19`](../supabase/migrations/20261028120200_rate_limit_core.sql#L19) |
 | `claim_bring_item` | [`hooks/event/useEventBringList.ts:49`](../hooks/event/useEventBringList.ts#L49) | [`supabase/migrations/20261112190000_event_bring_items.sql:214`](../supabase/migrations/20261112190000_event_bring_items.sql#L214) |
@@ -645,7 +645,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2506), [`FeedbackFieldErrors`](../types/index.ts#L2512), [`ReportReason`](../types/index.ts#L2515), [`ReportContextKind`](../types/index.ts#L2516), [`ReportStatus`](../types/index.ts#L2517), [`ReportAction`](../types/index.ts#L2518), [`ReportUserInput`](../types/index.ts#L2520), [`AdminReport`](../types/index.ts#L2529), [`ReportSheetTarget`](../types/index.ts#L2548), [`ReportSheetProps`](../types/index.ts#L2551), [`EventSeed`](../types/index.ts#L2567), [`MemberSearchResult`](../types/index.ts#L2579) |
 | What to bring (#256) | [`BringClaimer`](../types/index.ts#L2585), [`BringItem`](../types/index.ts#L2595), [`BringItemDraft`](../types/index.ts#L2606), [`BringItemAction`](../types/index.ts#L2616), [`BringViewer`](../types/index.ts#L2625), [`SaveBringItemsArgs`](../types/index.ts#L2633), [`ClaimBringItemArgs`](../types/index.ts#L2637), [`ReleaseBringItemArgs`](../types/index.ts#L2638), [`StartupConfig`](../types/index.ts#L2641), [`MyGameRecap`](../types/index.ts#L2648), [`YourGameCardProps`](../types/index.ts#L2650), [`RecapFooterProps`](../types/index.ts#L2659), [`RecapShareTarget`](../types/index.ts#L2670) |
 | Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2674), [`WeekStripContentProps`](../types/index.ts#L2676), [`MonthGridContentProps`](../types/index.ts#L2685), [`WeekPagerProps`](../types/index.ts#L2698), [`CrashMarker`](../types/index.ts#L2710), [`CrashReport`](../types/index.ts#L2713), [`ActiveMention`](../types/index.ts#L2715), [`ChatRoomHeaderProps`](../types/index.ts#L2718), [`ChatComposerBandProps`](../types/index.ts#L2727), [`ChatComposerProps`](../types/index.ts#L2736), [`ImageViewerProps`](../types/index.ts#L2744), [`FeedPrefetchTiming`](../types/index.ts#L2747) |
-| Court queue for open play (#333) | [`CourtQueueRule`](../types/index.ts#L2758), [`CourtQueueGame`](../types/index.ts#L2760), [`CourtQueueState`](../types/index.ts#L2762), [`CourtQueueSnapshot`](../types/index.ts#L2771), [`CourtQueuePlace`](../types/index.ts#L2773), [`CourtQueue`](../types/index.ts#L2775), [`CourtQueueTally`](../types/index.ts#L2784), [`DesktopFeedDay`](../types/index.ts#L2787), [`DesktopFeedMonth`](../types/index.ts#L2794) |
+| Court queue for open play (#333) | [`CourtQueueRule`](../types/index.ts#L2758), [`CourtQueueGame`](../types/index.ts#L2760), [`CourtQueueState`](../types/index.ts#L2762), [`CourtQueueSnapshot`](../types/index.ts#L2771), [`CourtQueuePlace`](../types/index.ts#L2773), [`CourtQueue`](../types/index.ts#L2775), [`CourtQueueTally`](../types/index.ts#L2784), [`DesktopFeedDay`](../types/index.ts#L2787), [`DesktopFeedMonth`](../types/index.ts#L2794), [`ColorScheme`](../types/index.ts#L2798), [`AppearancePref`](../types/index.ts#L2800), [`AppearanceApplied`](../types/index.ts#L2802) |
 
 ### Constrained string values
 
@@ -655,6 +655,8 @@ TypeScript `enum` keyword.
 | Type or field | Values | Source |
 |---|---|---|
 | `AccountDeletionBlock` | `reauth_required`, `plan_changed` | [`types/index.ts:2396`](../types/index.ts#L2396) |
+| `AppearanceApplied` | `unchanged`, `reloading`, `next-launch` | [`types/index.ts:2802`](../types/index.ts#L2802) |
+| `AppearancePref` | `system`, `light`, `dark` | [`types/index.ts:2800`](../types/index.ts#L2800) |
 | `BadgeStat` | `events_attended_past`, `events_hosted_past`, `cheers_received_total`, `cheers_given_events`, `spike_cheers`, `serve_cheers`, `block_cheers`, `set_cheers`, `dig_pass_cheers`, `communication_cheers`, `beta_active`, `tournament_hosted`, `profile_complete`, `vex_member` | [`constants/badges.ts:43`](../constants/badges.ts#L43) |
 | `BadgeType` | `event_attendee`, `event_host`, `cheers_received`, `cheers_given`, `spike_cheer`, `serve_cheer`, `block_cheer`, `set_cheer`, `dig_pass_cheer`, `communication_cheer`, `beta_tester`, `tournament_director`, `profile_complete`, `vex_spirit` | [`types/index.ts:1310`](../types/index.ts#L1310) |
 | `CardBgType` | `ember`, `frost`, `aurora` | [`types/index.ts:1308`](../types/index.ts#L1308) |
@@ -664,6 +666,7 @@ TypeScript `enum` keyword.
 | `ChipProps.size` | `default`, `touch` | [`types/index.ts:1601`](../types/index.ts#L1601) |
 | `ChipVariant` | `solid`, `tint` | [`types/index.ts:1590`](../types/index.ts#L1590) |
 | `ClubPollKind` | `text`, `time` | [`types/index.ts:897`](../types/index.ts#L897) |
+| `ColorScheme` | `light`, `dark` | [`types/index.ts:2798`](../types/index.ts#L2798) |
 | `ConversationType` | `dm`, `club` | [`types/index.ts:1143`](../types/index.ts#L1143) |
 | `CreateMenuSectionKey` | `vteam`, `venue` | [`types/index.ts:2319`](../types/index.ts#L2319) |
 | `EventCardRsvpHandler` | `join`, `leave` | [`types/index.ts:2091`](../types/index.ts#L2091) |

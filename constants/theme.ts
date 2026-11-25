@@ -1,7 +1,10 @@
-export const theme = {
-  // Party invite (Nov 2026): light lavender page, white cards, vteam purple.
-  // Every text colour here is at least 4.5:1 on `background`, `card` and `primarySoft`.
-  colors: {
+import type { ColorScheme } from './colorScheme'
+
+/** The colour scheme this run of the app uses: picked once at startup (see lib/colorSchemeInit). */
+export const colorScheme: ColorScheme =
+  (globalThis as { __vteamColorScheme?: unknown }).__vteamColorScheme === 'dark' ? 'dark' : 'light'
+
+export const lightColors = {
     // Brand
     primary:      '#7445F7',   // vteam purple: fills, white on it (5.3:1), and as text on background (4.9:1)
     primaryDark:  '#5B21B6',
@@ -30,7 +33,7 @@ export const theme = {
     navPill:      '#E9E0FF',
     navInk:       '#5B4B78',
     // Signal palette (also used as text: each >= 4.5:1 on white)
-    warm:         '#C2410C',
+    warm:         '#AD3A0B',
     hot:          '#BE185D',
     cool:         '#0F766E',
     // Status
@@ -75,7 +78,69 @@ export const theme = {
     /** Feed card cover blocks (Party invite): open play and tournaments. White text on both. */
     coverOpen:       '#7C3AED',
     coverTournament: '#DB2777',
-  },
+}
+
+export type ColorTokens = { [K in keyof typeof lightColors]: string }
+
+export const darkColors: ColorTokens = {
+  // Party invite, after dark (Nov 2026). Text colours are at least 4.5:1 on
+  // `background`, `card` and `primarySoft` (__tests__/themeContrast.test.ts).
+  // Fills keep the light values where white text sits on them.
+  primary:      '#7445F7',
+  primaryDark:  '#5B21B6',
+  primarySoft:  '#2C1F4D',
+  primaryText:  '#C4B0FF',
+  accent:       '#3DC9F5',
+  accentInk:    '#002A36',
+  background:   '#140C24',
+  card:         '#21173A',
+  fabMenuChip:       '#21173A',
+  fabMenuChipBorder: '#3A2C5C',
+  fabMenuBackdropDim: 'rgba(0, 0, 0, 0.45)',
+  text:         '#F4EEFF',
+  subtext:      '#B8ACD0',
+  subtextStrong: '#D6CCEA',
+  border:       '#3A2C5C',
+  borderSoft:   '#2C2147',
+  navPill:      '#2C2050',
+  navInk:       '#CFC3EA',
+  warm:         '#FDBA74',
+  hot:          '#F9A8D4',
+  cool:         '#5EEAD4',
+  error:        '#FCA5A5',
+  dangerFill:   '#C62828',
+  warning:      '#FCD34D',
+  success:      '#86EFAC',
+  toastErrorBg:   '#3B1820',
+  toastWarningBg: '#3A2A12',
+  toastSuccessBg: '#13301F',
+  toastInfoBg:    '#2C1F4D',
+  white:        '#FFFFFF',
+  sheetInk:     '#0D2480',
+  black:        '#000000',
+  onPrimary:    '#FFFFFF',
+  onPrimaryStrong: 'rgba(255,255,255,0.9)',
+  onPrimarySoft:   'rgba(255,255,255,0.92)',
+  onPrimaryMuted:  'rgba(255,255,255,0.92)',
+  onPrimaryLine:   'rgba(255,255,255,0.35)',
+  onPrimaryFill:   'rgba(30,16,51,0.18)',
+  overlay:      'rgba(0,0,0,0.6)',
+  overlayLight: 'rgba(0,0,0,0.5)',
+  tourScrim:    'rgba(0,0,0,0.72)',
+  medalGold:    '#E0A800',
+  medalSilver:  '#90A4AE',
+  medalBronze:  '#B7793A',
+  time:         '#2C1F4D',
+  timeBorder:   '#45336F',
+  timeInk:      '#E2D8FF',
+  timeText:     '#C4B0FF',
+  announcementHighlight: '#2C1F4D',
+  coverOpen:       '#6D28D9',
+  coverTournament: '#BE185D',
+}
+
+export const theme = {
+  colors: (colorScheme === 'dark' ? darkColors : lightColors) as typeof lightColors,
   /** Gradient stops for `LinearGradient colors={...}`. */
   gradients: {
     brand: ['#4FC3F7', '#7C4DFF', '#E040FB'] as const,

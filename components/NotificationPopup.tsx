@@ -101,7 +101,7 @@ export function NotificationPopup({
           ListEmptyComponent={
             loading ? (
               <View style={{ padding: theme.spacing.lg, alignItems: 'center' }}>
-                <Spinner color={theme.colors.primary} />
+                <Spinner color={theme.colors.primaryText} />
               </View>
             ) : (
               <View style={{ paddingHorizontal: theme.spacing.md, paddingVertical: theme.spacing.lg, alignItems: 'center', gap: theme.spacing.sm }}>

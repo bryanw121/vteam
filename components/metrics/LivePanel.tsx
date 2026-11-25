@@ -86,7 +86,7 @@ export function LivePanel({ active, onOpenPerson }: Props) {
                 <MetricBarChart
                   values={series.points.map(pt => pt.visits)}
                   height={96}
-                  color={theme.colors.primary}
+                  color={theme.colors.primaryText}
                   xLabels={ticks}
                   label={`Visits over ${span.phrase}: ${series.totals.visits} in all, ${series.totals.guest_visits} by guests`}
                 />

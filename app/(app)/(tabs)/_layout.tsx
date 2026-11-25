@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabsActiveContext, TabsContext, TabsShellContext } from "../../../contexts/tabs";
 import { useWebNav } from "../../../contexts/webNav";
 import { theme, BREAKPOINTS, TABS, TIGHT_TEXT_SCALE, tabIndexFromPath, SWIPE_NAVIGATION } from "../../../constants";
+import { colorScheme } from "../../../constants/theme";
 import type { CreateMenuOption } from "../../../constants";
 import { CreateMenuList } from "../../../components/CreateMenuList";
 import { useChatUnread } from "../../../hooks/useChatUnread";
@@ -240,7 +241,7 @@ export default function TabsLayout() {
             return {
               headerShown: !isMain,
               headerShadowVisible: false,
-              headerTintColor: theme.colors.primary,
+              headerTintColor: theme.colors.primaryText,
               headerStyle: { backgroundColor: theme.colors.background },
               gestureEnabled: SWIPE_NAVIGATION.back,
               animation: "slide_from_right",
@@ -265,7 +266,7 @@ export default function TabsLayout() {
             <BlurView
               pointerEvents="none"
               intensity={36}
-              tint="light"
+              tint={colorScheme}
               style={StyleSheet.absoluteFill}
             />
             <View

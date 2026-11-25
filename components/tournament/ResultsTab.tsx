@@ -69,7 +69,7 @@ function PodiumCard({ podium, teamName }: { podium: Podium; teamName: Props['tea
 /** Results: podium, bracket, and standings, plus the organizer's "seed the bracket from pools" step. */
 export function ResultsTab(p: Props) {
   if (p.loading && p.matches.length === 0) {
-    return <View style={{ paddingVertical: 32 }}><Spinner color={theme.colors.primary} /></View>
+    return <View style={{ paddingVertical: 32 }}><Spinner color={theme.colors.primaryText} /></View>
   }
   if (p.error && p.matches.length === 0) {
     return (

@@ -46,7 +46,7 @@ const MENU_GROUPS: readonly MenuGroup[] = [
     title: 'Preferences',
     rows: [
       { title: 'Notifications', icon: 'notifications-outline', section: 'notifications' },
-      { title: 'Display', icon: 'text-outline', section: 'display' },
+      { title: 'Display', icon: 'contrast-outline', section: 'display' },
       { title: 'Hidden in feed', icon: 'funnel-outline', section: 'hidden' },
       { title: 'Silenced people', icon: 'eye-off-outline', section: 'silenced' },
     ],
@@ -109,7 +109,7 @@ export function ProfileMenu({ onOpen, onTakeTour, onOpenTerms, onOpenPrivacy, fr
                   ]}
                 >
                   <View style={styles.rowIcon}>
-                    <Ionicons name={row.icon} size={18} color={theme.colors.primary} />
+                    <Ionicons name={row.icon} size={18} color={theme.colors.primaryText} />
                   </View>
                   <Text style={styles.rowTitle}>{row.title}</Text>
                   {key === 'friends' && friendRequestCount > 0 && (

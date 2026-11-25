@@ -113,7 +113,7 @@ function Indicator({ indicatorRef, refreshing, tintColor, fixed }: {
       accessibilityElementsHidden={!refreshing}
       style={[shared.pullIndicator, fixed && shared.pullIndicatorFixed, { opacity: 0, transform: [{ translateY: HIDDEN_Y }] }]}
     >
-      <Spinner size="small" color={tintColor ?? theme.colors.primary} animating />
+      <Spinner size="small" color={tintColor ?? theme.colors.primaryText} animating />
     </View>
   )
 }

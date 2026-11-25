@@ -279,6 +279,9 @@ jobs:
       - name: Chat badge browser check
         if: success() || failure()
         run: node scripts/shots/chat-unread-flow.mjs --dist dist-mock --out a11y-report/chat-unread
+      - name: Alignment check (sibling screens put the same thing at the same height)
+        if: success() || failure()
+        run: node scripts/shots/alignment-flow.mjs --dist dist-mock --out a11y-report/alignment
       - name: Crash recovery browser check
         if: success() || failure()
         run: node scripts/shots/crash-recovery-flow.mjs --dist dist-mock --out a11y-report/crash-recovery

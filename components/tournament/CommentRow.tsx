@@ -61,7 +61,7 @@ export function CommentRow({ comment, indent = 0, replies = [], viewerId, isOrga
         <View style={[comment.is_announcement ? { backgroundColor: theme.colors.primary + '0D', borderRadius: 10, padding: 8, marginBottom: 4 } : { paddingVertical: 4 }]}>
           {comment.is_announcement && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <Ionicons name="megaphone-outline" size={12} color={theme.colors.primary} />
+              <Ionicons name="megaphone-outline" size={12} color={theme.colors.primaryText} />
               <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.primaryText, textTransform: 'uppercase', letterSpacing: 0.6 }}>Announcement</Text>
             </View>
           )}

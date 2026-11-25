@@ -122,11 +122,11 @@ export default function UserProfileDetail() {
         backgroundColor: theme.colors.background,
       }}>
         <TouchableOpacity onPress={goBack} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
+          <Ionicons name="chevron-back" size={20} color={theme.colors.primaryText} />
           <Text style={{ color: theme.colors.primaryText, fontSize: theme.font.size.sm }}>Back</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={openDM} style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Ionicons name="chatbubble-outline" size={18} color={theme.colors.primary} />
+          <Ionicons name="chatbubble-outline" size={18} color={theme.colors.primaryText} />
           <Text style={{ color: theme.colors.primaryText, fontSize: theme.font.size.sm, fontFamily: theme.fonts.bodySemiBold }}>Message</Text>
         </TouchableOpacity>
       </View>

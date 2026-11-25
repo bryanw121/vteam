@@ -173,7 +173,7 @@ export default function BookCourtScreen() {
                     style={shared.bookFollowUp}
                   >
                     <Text style={shared.bookFollowUpText}>Open its calendar</Text>
-                    <Ionicons name="open-outline" size={14} color={theme.colors.primary} />
+                    <Ionicons name="open-outline" size={14} color={theme.colors.primaryText} />
                   </TouchableOpacity>
                 ) : null}
               </View>

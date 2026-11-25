@@ -63,7 +63,7 @@ export function RegistrationStep({ draft, update }: TournamentStepProps) {
               onPress={() => update({ maxTeams: null })}
               style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: draft.maxTeams === null ? theme.colors.primarySoft : theme.colors.background, borderWidth: 1, borderColor: draft.maxTeams === null ? theme.colors.primary : theme.colors.border }}
             >
-              <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.xs, color: draft.maxTeams === null ? theme.colors.primary : theme.colors.subtext }}>∞</Text>
+              <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.xs, color: draft.maxTeams === null ? theme.colors.primaryText : theme.colors.subtext }}>∞</Text>
             </TouchableOpacity>
             <NumericStepper
               value={draft.maxTeams ?? 8}

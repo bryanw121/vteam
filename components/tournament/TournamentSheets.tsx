@@ -35,7 +35,7 @@ export function RegisterSheet({ visible, onDismiss, tournament, full, busy, onSu
       accessibilityState={{ selected: active }}
       style={{ flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 2, borderColor: active ? theme.colors.primary : theme.colors.border, alignItems: 'center' }}
     >
-      <Text style={{ fontSize: theme.font.size.md, color: active ? theme.colors.primary : theme.colors.subtext, fontWeight: '600' }}>{label}</Text>
+      <Text style={{ fontSize: theme.font.size.md, color: active ? theme.colors.primaryText : theme.colors.subtext, fontWeight: '600' }}>{label}</Text>
     </TouchableOpacity>
   )
 

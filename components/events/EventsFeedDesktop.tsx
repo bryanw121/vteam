@@ -232,7 +232,7 @@ export const EventsFeedDesktop = memo(function EventsFeedDesktop(p: EventsFeedDe
             ))}
 
             {p.loading && (
-              <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primary} />
+              <Spinner style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primaryText} />
             )}
           </>
         )}

@@ -122,6 +122,7 @@ export const SCREENS = {
   },
   'profile-edit-link': { route: '/profile?edit=1', ready: 'Maya', sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/EditProfileForm.tsx', 'hooks/useUrlParam.ts'] },
   'profile-own-guest': { route: '/profile', signedIn: false, sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/SignInPrompt.tsx'] },
+  'chat-guest': { route: '/chat', signedIn: false, ready: 'Chat with your club', sources: ['app/(app)/(tabs)/(main)/chat.tsx', 'components/SignInPrompt.tsx'] },
   'profile-other': {
     route: `/profile/${P.jordanr}`, ready: 'Jordan',
     sources: ['app/(app)/profile/**', 'app/(app)/(tabs)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
@@ -134,7 +135,7 @@ export const SCREENS = {
   'scorekeeper-simple': { route: '/scorekeeper/simple', ready: 'serves first', sources: ['app/(app)/scorekeeper/simple.tsx', 'hooks/useSimpleScore.ts', 'lib/simpleScore.ts'] },
   'scorekeeper-simple-play': { route: '/scorekeeper/simple', ready: 'serves first', actions: [{ tap: 'simple-point-A' }, { tap: 'simple-point-A' }, { tap: 'simple-point-B' }, { wait: 300 }], sources: ['app/(app)/scorekeeper/simple.tsx', 'hooks/useSimpleScore.ts', 'lib/simpleScore.ts'] },
   'scorekeeper-new': { route: '/scorekeeper/new', ready: 'NET', sources: ['app/(app)/scorekeeper/new.tsx', 'components/scoresheet/CourtLayout.tsx', 'components/scoresheet/CourtSpot.tsx', 'components/scoresheet/PlayerSheet.tsx', 'lib/scoresheet/rules.ts'] },
-  'settings-display': { route: '/settings/display', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/display.tsx', 'contexts/textScale.tsx'] },
+  'settings-display': { route: '/settings/display', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/display.tsx', 'contexts/textScale.tsx', 'lib/appearance.ts', 'lib/appearance.web.ts', 'constants/colorScheme.ts'] },
   'settings-notifications': {
     route: '/settings/notifications', ready: 'Reminders',
     sources: [...SETTINGS, 'app/(app)/(tabs)/settings/notifications.tsx', 'constants/notifications.ts', 'utils/notificationPrefs.ts', 'utils/reminders.ts', 'hooks/useUserSettings.ts'],

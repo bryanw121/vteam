@@ -47,7 +47,7 @@ export default function SilencedPeopleScreen() {
 
         {loading && entries.length === 0 ? (
           <View style={{ paddingVertical: theme.spacing.xl, alignItems: 'center' }}>
-            <Spinner color={theme.colors.primary} />
+            <Spinner color={theme.colors.primaryText} />
           </View>
         ) : entries.length === 0 ? (
           <View style={[shared.card, { alignItems: 'center', paddingVertical: theme.spacing.xl, gap: theme.spacing.sm }]}>

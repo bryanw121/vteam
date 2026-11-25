@@ -19,7 +19,7 @@ import { routes } from '../../../../utils/routes'
 import type { ConversationRow, Profile } from '../../../../types'
 import { useSession } from '../../../../contexts/session'
 import { SignInPrompt } from '../../../../components/SignInPrompt'
-import { ScreenState } from '../../../../components/ui'
+import { ScreenHeader, ScreenState } from '../../../../components/ui'
 import { DELETED_USER_LABEL } from '../../../../constants/copy'
 import { Spinner } from '../../../../components/ui/Spinner'
 
@@ -98,7 +98,7 @@ function NewDMModal({ visible, onDismiss, onSelect, silencedUserIds, myId }: {
 
         {searching ? (
           <View style={{ padding: theme.spacing.xl, alignItems: 'center' }}>
-            <Spinner color={theme.colors.primary} />
+            <Spinner color={theme.colors.primaryText} />
           </View>
         ) : (
           <FlatList
@@ -261,7 +261,7 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
             >
               {title}
             </Text>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: hasUnread ? theme.colors.primary : theme.colors.subtext, flexShrink: 0 }}>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: hasUnread ? theme.colors.primaryText : theme.colors.subtext, flexShrink: 0 }}>
               {time}
             </Text>
           </View>
@@ -293,17 +293,10 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
   return (
     <View style={[shared.screen, { paddingTop: insets.top }]}>
       <Stack.Screen options={{ headerShown: false }} />
-      {/* Header */}
-      <View style={{ paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.md, paddingBottom: 4 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-          <View>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.subtext, letterSpacing: 1, textTransform: 'uppercase' }}>
-              Direct messages
-            </Text>
-            <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.heading.xxl, letterSpacing: -1.2, color: theme.colors.text, lineHeight: 38, marginTop: 1 }}>
-              Chat
-            </Text>
-          </View>
+      {/* Header: the same ScreenHeader as Events and Clubs, so the title doesn't jump between tabs */}
+      <ScreenHeader
+        title="Chat"
+        right={
           <TouchableOpacity
             onPress={() => setNewDMVisible(true)}
             hitSlop={8}
@@ -313,13 +306,13 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
               width: 38, height: 38, borderRadius: 12,
               backgroundColor: theme.colors.primary,
               alignItems: 'center', justifyContent: 'center',
-              marginBottom: 4,
             }}
           >
             <Ionicons name="add" size={22} color={theme.colors.white} />
           </TouchableOpacity>
-        </View>
-
+        }
+      />
+      <View style={{ paddingHorizontal: theme.spacing.lg, paddingBottom: 4 }}>
         {/* Search bar */}
         <TouchableOpacity
           onPress={() => setNewDMVisible(true)}
@@ -329,7 +322,7 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
             borderWidth: 1, borderColor: theme.colors.border,
             borderRadius: 12,
             paddingHorizontal: 12, paddingVertical: 10,
-            marginTop: theme.spacing.sm,
+            marginTop: theme.spacing.xs,
           }}
         >
           <Ionicons name="search-outline" size={16} color={theme.colors.subtext} />

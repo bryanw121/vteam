@@ -46,7 +46,7 @@ export function CohostsDialog({ cohosts: c }: Props) {
             {c.cohosts.length < MAX_COHOSTS && (
               <>
                 <Input placeholder="Search by name or username" value={c.query} onChangeText={q => { void c.search(q) }} />
-                {c.searching && <Spinner size="small" color={theme.colors.primary} />}
+                {c.searching && <Spinner size="small" color={theme.colors.primaryText} />}
                 {c.results.length > 0 && (
                   <View style={{ gap: theme.spacing.xs, maxHeight: 200 }}>
                     <ScrollView nestedScrollEnabled>
@@ -55,8 +55,8 @@ export function CohostsDialog({ cohosts: c }: Props) {
                           <Text style={styles.name} numberOfLines={1}>{profileDisplayName(p)}</Text>
                           <Text style={styles.body}>@{p.username}</Text>
                           {c.adding
-                            ? <Spinner size="small" color={theme.colors.primary} />
-                            : <Ionicons name="add-circle-outline" size={20} color={theme.colors.primary} />}
+                            ? <Spinner size="small" color={theme.colors.primaryText} />
+                            : <Ionicons name="add-circle-outline" size={20} color={theme.colors.primaryText} />}
                         </TouchableOpacity>
                       ))}
                     </ScrollView>

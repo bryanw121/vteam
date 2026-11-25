@@ -22,14 +22,14 @@ export function ScreenHeader({ kicker, title, titleDot, right, onBack, backLabel
           testID="screen-header-back"
           style={shared.screenHeaderBack}
         >
-          <Ionicons name="chevron-back" size={20} color={theme.colors.primary} />
+          <Ionicons name="chevron-back" size={20} color={theme.colors.primaryText} />
           <Text style={shared.screenHeaderBackLabel}>{backLabel}</Text>
         </TouchableOpacity>
       )}
       <View style={shared.screenHeader}>
         <View style={shared.screenHeaderText}>
           {!!kicker && <Text style={shared.screenHeaderKicker}>{kicker}</Text>}
-          <Text style={shared.screenHeaderTitle} accessibilityRole="header" numberOfLines={1}>
+          <Text style={shared.screenHeaderTitle} accessibilityRole="header" numberOfLines={1} testID="screen-title">
             {title}
             {titleDot && <Text style={{ color: theme.colors.primaryText }}>.</Text>}
           </Text>

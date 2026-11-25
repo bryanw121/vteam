@@ -13,7 +13,7 @@ export function ClubMembershipBar({ club, owner, member, alertsOn, membershipBus
         <Text style={[shared.caption, { flex: 1 }]}>{alertsOn ? 'New game alerts are on for this club' : 'New game alerts are off for this club'}</Text>
       ) : member ? (
         <TouchableOpacity onPress={onLeave} disabled={membershipBusy} style={[{ flex: 1 }, shared.buttonBase, shared.buttonSecondary, membershipBusy && shared.buttonDisabled]} accessibilityRole="button" testID="club-leave">
-          {membershipBusy ? <Spinner color={theme.colors.primary} /> : <Text style={shared.buttonLabelSecondary}>Leave club</Text>}
+          {membershipBusy ? <Spinner color={theme.colors.primaryText} /> : <Text style={shared.buttonLabelSecondary}>Leave club</Text>}
         </TouchableOpacity>
       ) : club.membership_type === 'open' ? (
         <TouchableOpacity onPress={onJoin} disabled={membershipBusy} style={[{ flex: 1 }, shared.buttonBase, shared.buttonPrimary, membershipBusy && shared.buttonDisabled]} accessibilityRole="button" testID="club-join">

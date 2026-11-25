@@ -133,7 +133,7 @@ function ResultRow({
         backgroundColor: theme.colors.primarySoft,
         alignItems: 'center', justifyContent: 'center', flexShrink: 0,
       }}>
-        <Ionicons name={icon} size={18} color={theme.colors.primary} />
+        <Ionicons name={icon} size={18} color={theme.colors.primaryText} />
       </View>
       <View style={{ flex: 1 }}>
         <Text
@@ -312,7 +312,7 @@ export function LocationPickerField({ value, onChange, recentVenues = [], placeh
                 }}
               />
               {loading || selecting
-                ? <Spinner size="small" color={theme.colors.primary} />
+                ? <Spinner size="small" color={theme.colors.primaryText} />
                 : query.length > 0
                   ? <TouchableOpacity hitSlop={8} onPress={() => setQuery('')}>
                       <Ionicons name="close-circle" size={16} color={theme.colors.subtext} />

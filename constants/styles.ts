@@ -299,13 +299,11 @@ export const shared = StyleSheet.create({
     paddingHorizontal: 9, paddingVertical: 4, borderRadius: theme.radius.full,
     borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.card,
   },
-  forecastChipRain: { backgroundColor: theme.colors.accent + '1A', borderColor: theme.colors.accent + '66' },
+  forecastChipRain: { backgroundColor: theme.colors.cool + '14', borderColor: theme.colors.cool + '55' },
   forecastChipHeat: { backgroundColor: theme.colors.warm + '1F', borderColor: theme.colors.warm + '73' },
   forecastChipLabel: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.subtextStrong },
-  forecastChipLabelRain: { color: theme.colors.accent },
+  forecastChipLabelRain: { color: theme.colors.cool },
   forecastChipLabelHeat: { color: theme.colors.warm },
-  forecastChipOnCover: { backgroundColor: theme.colors.card, borderColor: theme.colors.card },
-  forecastChipLabelOnCover: { color: theme.colors.text },
   forecastCells: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: theme.spacing.sm },
   forecastCell: {
     minWidth: 56, flexGrow: 0, alignItems: 'center', paddingVertical: 6, paddingHorizontal: 8,
@@ -569,14 +567,18 @@ export const shared = StyleSheet.create({
     color: theme.colors.primaryText,
   },
   // ── Guest mode (SignInPrompt, SignInButton) ──────────────────────────────
+  // Anchored from the top, not centred: every account-only tab shows its
+  // prompt at the same height whatever its copy or extra link.
   signInPromptContainer: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: theme.spacing.xl,
+    justifyContent: 'flex-start',
+    paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.xl,
     gap: theme.spacing.md,
     backgroundColor: theme.colors.background,
   },
+
   signInPromptIcon: {
     width: 64,
     height: 64,
@@ -703,9 +705,13 @@ export const shared = StyleSheet.create({
   },
 
   // ── ScreenHeader ──────────────────────────────────────────
+  // A fixed minimum height with centred contents: a right slot up to 44 pt
+  // (icon buttons, Create, Sign in) never moves the title, so switching tabs
+  // doesn't make it jump (scripts/shots/alignment-flow.mjs checks).
   screenHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    minHeight: 44 + spacing.md + 4 + spacing.sm,
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md + 4,
@@ -728,7 +734,7 @@ export const shared = StyleSheet.create({
     color: colors.text,
     marginTop: 2,
   },
-  screenHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingBottom: spacing.xs },
+  screenHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   screenHeaderBack:  { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start', marginLeft: spacing.lg, marginTop: spacing.sm, minHeight: 24 }, // minHeight: the chevron's icon font loads late on web and grew the row 8 px, moving the whole screen (#288)
   screenHeaderBackLabel: { fontFamily: theme.fonts.body, fontSize: font.size.sm, color: colors.primaryText },
 
@@ -1572,7 +1578,7 @@ export const shared = StyleSheet.create({
   ecCoverDot: { position: 'absolute', right: 44, bottom: -44, width: 92, height: 92, borderRadius: 46, backgroundColor: colors.onPrimaryFill },
   ecBody: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 14 },
   ecHostedBadgeOnCover: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.full, backgroundColor: colors.white },
-  ecHostedBadgeOnCoverText: { fontFamily: fonts.bodyBold, fontSize: font.size.xs, color: colors.primaryText },
+  ecHostedBadgeOnCoverText: { fontFamily: fonts.bodyBold, fontSize: font.size.xs, color: colors.primaryDark },
   ecRow: {
     backgroundColor: colors.card, borderRadius: 20, padding: 14, marginBottom: spacing.sm, flexDirection: 'row', gap: 14,
     borderWidth: 1, borderColor: colors.border, overflow: 'hidden', position: 'relative',
@@ -1593,7 +1599,8 @@ export const shared = StyleSheet.create({
   ecHeroQuietChip: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.full, borderWidth: 1, borderColor: colors.onPrimaryLine },
   ecHeroQuietText: { fontFamily: fonts.body, fontSize: font.size.xs, color: colors.onPrimaryStrong },
   ecHeroTitle: { fontFamily: fonts.display, fontWeight: '700', fontSize: font.heading.lg, letterSpacing: -0.6, color: colors.white, lineHeight: 30, maxWidth: '88%', marginTop: 10 },
-  ecHeroLocation: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  ecHeroLocation: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 28 },
+  ecHeroForecast: { marginLeft: 'auto', paddingLeft: spacing.xs },
   ecHeroLocationText: { fontFamily: fonts.bodyMedium, fontSize: font.size.md, color: colors.subtext },
   ecHeroPeople: {
     marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

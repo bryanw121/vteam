@@ -26,7 +26,7 @@ type StatusStyle = { stripe: string; label: string; tint: string }
 function statusStyle(status: MyEventStatus, waitlistPosition: number | null): StatusStyle {
   switch (status) {
     case 'hosting':
-      return { stripe: theme.colors.primary, label: 'HOSTING', tint: theme.colors.primary }
+      return { stripe: theme.colors.primary, label: 'HOSTING', tint: theme.colors.primaryText }
     case 'attending':
       return { stripe: theme.colors.cool, label: 'GOING', tint: theme.colors.cool }
     case 'waitlisted':

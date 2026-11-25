@@ -23,7 +23,7 @@ export function IconButton({ icon, onPress, label, size = 38, active, badge, bus
             <Ionicons
               name={icon}
               size={size === 44 ? 20 : 18}
-              color={active ? theme.colors.primary : theme.colors.text}
+              color={active ? theme.colors.primaryText : theme.colors.text}
             />
           )}
         {!!badge && <View style={shared.iconButtonDot} testID={testID ? `${testID}-badge` : undefined} />}

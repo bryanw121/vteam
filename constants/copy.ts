@@ -265,3 +265,11 @@ export const OUTSIDE_SESSION_COPY = {
   gone: "That session isn't listed anymore",
   loading: 'Loading the session',
 } as const
+
+/** The loading screen (components/splash): a line under the logo, and tips that rotate while it waits. */
+export const SPLASH_CAPTION = 'Finding games near you…'
+export const SPLASH_TIPS = [
+  'Tap ⋯ on a card to hide games you don\'t want.',
+  'Games hosted on vteam earn points: 2 for open play, 5 for tournaments.',
+  'Give up to 5 cheers to teammates after every game.',
+] as const

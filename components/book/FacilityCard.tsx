@@ -96,7 +96,7 @@ export function FacilityCard({ day, span, nowMin, dayIso, onBook, onCreateEvent 
           style={shared.bookFollowUp}
           testID="book-facility-create-event"
         >
-          <Ionicons name="add-circle-outline" size={16} color={theme.colors.primary} />
+          <Ionicons name="add-circle-outline" size={16} color={theme.colors.primaryText} />
           <Text style={shared.bookFollowUpText}>Already booked? Create a vteam event for it</Text>
         </TouchableOpacity>
       </View>

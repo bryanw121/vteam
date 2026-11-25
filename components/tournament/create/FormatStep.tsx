@@ -36,7 +36,7 @@ export function FormatStep({ draft, update }: TournamentStepProps) {
                 <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.text }}>{opt.label}</Text>
                 <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: 2 }}>{opt.description}</Text>
               </View>
-              {active && <Ionicons name="checkmark-circle" size={22} color={theme.colors.primary} />}
+              {active && <Ionicons name="checkmark-circle" size={22} color={theme.colors.primaryText} />}
             </TouchableOpacity>
           )
         })}

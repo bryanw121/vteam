@@ -5,7 +5,7 @@ import { shared, theme } from '../../constants'
 import type { HostTypeSectionProps } from '../../types'
 
 const TYPE_META: Record<string, { color: string; subtitle: string }> = {
-  'Open Play': { color: theme.colors.primary, subtitle: 'casual' },
+  'Open Play': { color: theme.colors.primaryText, subtitle: 'casual' },
 }
 
 /** The event type cards at the top of the host form (one type at a time). */
@@ -23,7 +23,7 @@ export function TypeSection({ loading, tags, selectedTagIds, onChangeTags }: Hos
   return (
     <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
       {typeTags.map(tag => {
-        const meta = TYPE_META[tag.name] ?? { color: theme.colors.primary, subtitle: '' }
+        const meta = TYPE_META[tag.name] ?? { color: theme.colors.primaryText, subtitle: '' }
         const selected = selectedTagIds.includes(tag.id)
         return (
           <TouchableOpacity

@@ -22,7 +22,7 @@ type CheerPersonCardProps = {
 function CheerPersonCard({ profile, hasGiven, disabled, teamColor, onPress }: CheerPersonCardProps) {
   const avatarUri = profileAvatarSmallUri(profile.avatar_url)
 
-  const activeColor = teamColor ?? theme.colors.primary
+  const activeColor = teamColor ?? theme.colors.primaryText
   const initials = profileInitial(profile)
   const displayName = profileDisplayName(profile)
 
@@ -115,7 +115,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
           contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: theme.spacing.xl }}
           refreshControl={refresh}
         >
-          <Spinner color={theme.colors.primary} />
+          <Spinner color={theme.colors.primaryText} />
         </ScrollView>
       ) : selectedCheerType === null ? (
         /* Step 1: Pick a cheer type */
@@ -161,12 +161,12 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
                   <Ionicons
                     name={kt.icon as IoniconName}
                     size={28}
-                    color={totalCount > 0 ? theme.colors.primary : theme.colors.subtext}
+                    color={totalCount > 0 ? theme.colors.primaryText : theme.colors.subtext}
                   />
                   <Text style={{
                     fontSize: theme.font.size.sm,
                     fontWeight: theme.font.weight.semibold,
-                    color: totalCount > 0 ? theme.colors.primary : theme.colors.text,
+                    color: totalCount > 0 ? theme.colors.primaryText : theme.colors.text,
                     textAlign: 'center',
                   }}>
                     {kt.label}
@@ -193,7 +193,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
               borderWidth: 1.5,
               borderColor: theme.colors.primary + '40',
             }}>
-              <Ionicons name="checkmark-circle" size={20} color={theme.colors.primary} />
+              <Ionicons name="checkmark-circle" size={20} color={theme.colors.primaryText} />
               <Text style={{ fontSize: theme.font.size.md, fontWeight: theme.font.weight.semibold, color: theme.colors.primaryText }}>
                 Cheers sent!
               </Text>
@@ -242,7 +242,7 @@ export function CheersTab({ cheers, isEventOver, isAttending, isOwner, data, tea
             <Ionicons
               name={(CHEER_TYPES.find(k => k.type === selectedCheerType)?.icon ?? 'star-outline') as IoniconName}
               size={18}
-              color={theme.colors.primary}
+              color={theme.colors.primaryText}
             />
             <Text style={[shared.subheading, { flex: 1 }]}>
               {CHEER_TYPES.find(k => k.type === selectedCheerType)?.label}

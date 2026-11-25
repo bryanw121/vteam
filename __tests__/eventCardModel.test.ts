@@ -51,7 +51,7 @@ describe('eventCardModel (#360)', () => {
     expect(m.accent).toBe(theme.colors.warm)
     const plain = eventCardModel(event({ event_tags: [tag('o', 'Open Play', 'event_type', 1)] } as Partial<EventWithDetails>), null)
     expect(plain.isTournament).toBe(false)
-    expect(plain.accent).toBe(theme.colors.primary)
+    expect(plain.accent).toBe(theme.colors.primaryText)
   })
 
   it('handles an event with no tags at all', () => {

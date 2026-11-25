@@ -50,7 +50,7 @@ export function BasicsStep({ draft, update, clubs, clubsLoading, clubsError, onR
                     }}
                   >
                     <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>{c.name}</Text>
-                    {draft.clubId === c.id && <Ionicons name="checkmark-circle" size={18} color={theme.colors.primary} />}
+                    {draft.clubId === c.id && <Ionicons name="checkmark-circle" size={18} color={theme.colors.primaryText} />}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -78,7 +78,7 @@ export function BasicsStep({ draft, update, clubs, clubsLoading, clubsError, onR
                 borderColor: active ? theme.colors.primary : theme.colors.border,
               }}
             >
-              <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.base, color: active ? theme.colors.primary : theme.colors.text }}>{opt.label}</Text>
+              <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.base, color: active ? theme.colors.primaryText : theme.colors.text }}>{opt.label}</Text>
             </TouchableOpacity>
           )
         })}

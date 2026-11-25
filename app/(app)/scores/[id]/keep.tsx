@@ -187,7 +187,7 @@ export default function SheetScorekeeperScreen() {
                 <View style={[ts.rowBetween, { marginBottom: theme.spacing.sm }]}>
                   <Text style={ts.muted13}>Scoring as {keeper.by}</Text>
                   <TouchableOpacity onPress={signOut} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
-                    <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.primary }}>Sign out</Text>
+                    <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.primaryText }}>Sign out</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm, marginBottom: theme.spacing.md }} accessibilityRole="radiogroup">
@@ -224,7 +224,7 @@ export default function SheetScorekeeperScreen() {
                       <Text numberOfLines={1} style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.text }}>{g.teamA} vs {g.teamB}</Text>
                       <Text numberOfLines={1} style={[ts.muted13, { marginTop: 2 }]}>{[g.label, g.court ? `Court ${g.court}` : null].filter(Boolean).join(' · ')}</Text>
                     </View>
-                    <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: g.status === 'live' ? theme.colors.hot : g.status === 'final' ? theme.colors.subtext : theme.colors.primary }}>
+                    <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: g.status === 'live' ? theme.colors.hot : g.status === 'final' ? theme.colors.subtext : theme.colors.primaryText }}>
                       {starting === g.key ? 'Starting…' : g.status === 'live' ? 'Continue' : g.status === 'final' ? 'Correct' : 'Start'}
                     </Text>
                     <Ionicons name="chevron-forward" size={16} color={theme.colors.subtext} />

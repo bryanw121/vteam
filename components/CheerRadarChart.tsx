@@ -119,7 +119,7 @@ export function CheerRadarChart({ counts }: Props) {
               borderWidth: 1,
               borderColor: theme.colors.primary + '40',
             }}>
-              <Ionicons name={kt.icon as IoniconName} size={12} color={theme.colors.primary} />
+              <Ionicons name={kt.icon as IoniconName} size={12} color={theme.colors.primaryText} />
               <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.subtext }}>
                 {kt.label}
               </Text>

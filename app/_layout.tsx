@@ -9,7 +9,8 @@ import {
   Outfit_700Bold,
   Outfit_800ExtraBold,
 } from '@expo-google-fonts/outfit'
-import { LinearGradient } from 'expo-linear-gradient'
+import { AppSplashContent } from '../components/splash/AppSplashContent'
+import { StatusBar } from 'expo-status-bar'
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router'
 import Head from 'expo-router/head'
 import { GestureRoot } from '../components/GestureRoot'
@@ -20,6 +21,7 @@ import { isAppPath, routes, toRoute } from '../utils/routes'
 import { isProtectedPath, returnPath, setPostSignInRedirect, takePostSignInRedirect } from '../utils/authGate'
 import { recoveryLinkAtStart } from '../lib/supabase'
 import { APP_NAME, theme, SWIPE_NAVIGATION } from '../constants'
+import { colorScheme } from '../constants/theme'
 import { initSentry, Sentry } from '../lib/sentry'
 import { SentryErrorBoundary } from '../components/SentryErrorBoundary'
 import { registerPushToken, subscribeToPushTaps } from '../utils/pushNotifications'
@@ -61,17 +63,7 @@ const SPLASH_FADE_MS = 200
 function AppSplash({ opacity }: { opacity: Animated.Value }) {
   return (
     <Animated.View style={{ flex: 1, opacity }}>
-      <LinearGradient
-        colors={theme.gradients.brand}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 }}
-      >
-        <Text style={{ fontSize: theme.font.heading.splash, fontWeight: '800', color: theme.colors.white, letterSpacing: -1 }}>vteam</Text>
-        <View style={{ backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-          <Text style={{ fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.white, letterSpacing: 1.5 }}>BETA</Text>
-        </View>
-      </LinearGradient>
+      <AppSplashContent />
     </Animated.View>
   )
 }
@@ -220,11 +212,13 @@ function RootNavigator() {
           <title>{APP_NAME}</title>
         </Head>
       )}
+      {/* Status bar text: dark on the light theme, light on the dark one (native; no-op on web) */}
+      {Platform.OS !== 'web' && <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />}
       {hydrated && (
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: theme.colors.background },
-            headerTintColor: theme.colors.primary,
+            headerTintColor: theme.colors.primaryText,
             headerShadowVisible: false,
             gestureEnabled: SWIPE_NAVIGATION.back,
           }}

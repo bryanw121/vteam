@@ -69,10 +69,10 @@ export function BasicsSection({ form, setField, userId, recentVenues, onChangeDa
                     onPress={() => { setField('durationMinutes', opt.minutes); setDurationModalOpen(false) }}
                     style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: theme.colors.border }}
                   >
-                    <Text style={{ fontSize: theme.font.size.md, color: active ? theme.colors.primary : theme.colors.text, fontWeight: active ? theme.font.weight.semibold : theme.font.weight.regular }}>
+                    <Text style={{ fontSize: theme.font.size.md, color: active ? theme.colors.primaryText : theme.colors.text, fontWeight: active ? theme.font.weight.semibold : theme.font.weight.regular }}>
                       {opt.label}
                     </Text>
-                    {active && <Ionicons name="checkmark" size={16} color={theme.colors.primary} />}
+                    {active && <Ionicons name="checkmark" size={16} color={theme.colors.primaryText} />}
                   </TouchableOpacity>
                 )
               })}

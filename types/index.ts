@@ -2793,3 +2793,10 @@ export type DesktopFeedDay = FeedDaySection & {
 /** One month of days on the desktop Events feed. */
 export type DesktopFeedMonth = { month: string; label: string; days: DesktopFeedDay[] }
 export * from './eventCard'
+
+/** Light or dark (Settings → Display → Appearance; constants/colorScheme.ts). */
+export type ColorScheme = 'light' | 'dark'
+/** What the player picked. `system` follows the phone or browser. */
+export type AppearancePref = 'system' | 'light' | 'dark'
+/** What changing the appearance did: nothing to show, a page reload (web), or it waits for the next launch (native). */
+export type AppearanceApplied = 'unchanged' | 'reloading' | 'next-launch'

@@ -144,7 +144,7 @@ export function ScheduleTab(p: Props) {
                 </Text>
               )}
               {!!match.ref_team_id && (
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: isMyRef ? theme.colors.primary : theme.colors.subtext, marginTop: 6 }}>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: isMyRef ? theme.colors.primaryText : theme.colors.subtext, marginTop: 6 }}>
                   {isMyRef ? 'Your team refs this match' : `Ref: ${teamName(match.ref_team_id)}`}
                 </Text>
               )}
@@ -184,7 +184,7 @@ export function ScheduleTab(p: Props) {
 
   function renderMatches() {
     if (p.matchesLoading && matches.length === 0) {
-      return <View style={{ paddingVertical: 32 }}><Spinner color={theme.colors.primary} /></View>
+      return <View style={{ paddingVertical: 32 }}><Spinner color={theme.colors.primaryText} /></View>
     }
     if (p.matchesError && matches.length === 0) {
       return (

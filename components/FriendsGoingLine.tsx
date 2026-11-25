@@ -10,7 +10,7 @@ export function FriendsGoingLine({ going, tone = 'onCard', testID = 'friends-goi
   const label = friendsGoingLabel(going)
   if (!label) return null
   const hasBest = going?.some(g => g.is_best_friend) ?? false
-  const color = tone === 'onDark' ? theme.colors.accent : theme.colors.primary
+  const color = tone === 'onDark' ? theme.colors.accent : theme.colors.primaryText
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 }} testID={testID} accessibilityLabel={label}>
       <Ionicons name={hasBest ? 'star' : 'people'} size={12} color={color} />

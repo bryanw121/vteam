@@ -28,7 +28,8 @@ export function RsvpButton({ variant, isAttending, awaiting, loading, onToggle }
   }
   // Party invite: the phone card's button is a plum ink pill ("I'm in" look).
   const onFill = hero ? theme.colors.text : theme.colors.primary
-  const onInk = theme.colors.white
+  // The ink pill inverts with the theme: plum on light, near-white on dark, page colour for its label.
+  const onInk = hero ? theme.colors.background : theme.colors.white
   const ink = isAttending ? theme.colors.subtext : onInk
   return (
     <TouchableOpacity

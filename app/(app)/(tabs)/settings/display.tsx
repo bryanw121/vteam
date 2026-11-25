@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Platform, Pressable, ScrollView, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../../../../components/ui/Text'
@@ -6,6 +7,12 @@ import { useStackBackTitle } from '../../../../hooks/useStackBackTitle'
 import { useTextScale } from '../../../../contexts/textScale'
 import { useTabsShell } from '../../../../contexts/tabs'
 import { TEXT_SIZE_OPTIONS, shared, theme } from '../../../../constants'
+import { APPEARANCE_OPTIONS } from '../../../../constants/colorScheme'
+import { ANALYTICS_EVENTS } from '../../../../constants/analytics'
+import { applyAppearance } from '../../../../lib/appearance'
+import { readAppearancePref } from '../../../../lib/appearanceStore'
+import { track } from '../../../../lib/analytics'
+import type { AppearancePref } from '../../../../types'
 
 const OS_NOTE = Platform.select({
   ios: 'This adds to the text size in your iPhone settings.',
@@ -13,17 +20,76 @@ const OS_NOTE = Platform.select({
   default: "This adds to your browser's font size setting.",
 })
 
-/** Settings → Display: the text size setting (#43), with a live preview. */
+const APPEARANCE_ICONS: Record<AppearancePref, 'phone-portrait-outline' | 'sunny-outline' | 'moon-outline'> = {
+  system: 'phone-portrait-outline',
+  light: 'sunny-outline',
+  dark: 'moon-outline',
+}
+
+const SYSTEM_NOTE = Platform.select({
+  web: 'Match device follows your browser and computer settings.',
+  default: 'Match device follows your phone\'s light or dark setting.',
+})
+
+/** Settings → Display: light or dark, and the text size setting (#43), with a live preview. */
 export default function DisplaySettingsScreen() {
   useStackBackTitle('Display')
   const { size, setSize } = useTextScale()
   // The mobile tab bar floats over the bottom of the screen; keep the preview clear of it.
   const { tabBarHeight } = useTabsShell()
+  const [appearance, setAppearance] = useState<AppearancePref>(() => readAppearancePref())
+  // Native reads the choice at startup, so a new scheme waits for the next launch.
+  const [waitsForLaunch, setWaitsForLaunch] = useState(false)
+
+  const pickAppearance = (pref: AppearancePref) => {
+    if (pref === appearance) return
+    setAppearance(pref)
+    const applied = applyAppearance(pref)
+    track(ANALYTICS_EVENTS.appearanceChanged, { to: pref, applied })
+    setWaitsForLaunch(applied === 'next-launch')
+  }
 
   return (
     <View style={shared.screen}>
       <ScrollView contentContainerStyle={[shared.scrollContentSubpage, { paddingBottom: tabBarHeight + theme.spacing.xl }]}>
-        <Text style={[shared.label, { marginBottom: theme.spacing.sm }]}>Text size</Text>
+        <Text style={[shared.label, { marginBottom: theme.spacing.sm }]}>Appearance</Text>
+        <View role="radiogroup" aria-label="Appearance" style={[shared.card, { padding: 0, gap: 0, overflow: 'hidden' }]}>
+          {APPEARANCE_OPTIONS.map((opt, idx) => {
+            const selected = opt.id === appearance
+            return (
+              <Pressable
+                key={opt.id}
+                onPress={() => pickAppearance(opt.id)}
+                role="radio"
+                aria-checked={selected}
+                aria-label={opt.label}
+                testID={`appearance-${opt.id}`}
+                style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+                  shared.settingsOptionRow,
+                  idx < APPEARANCE_OPTIONS.length - 1 && shared.settingsOptionRowBorder,
+                  (pressed || hovered) && { backgroundColor: theme.colors.background },
+                ]}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flex: 1 }}>
+                  <Ionicons name={APPEARANCE_ICONS[opt.id]} size={20} color={selected ? theme.colors.primaryText : theme.colors.subtext} />
+                  <Text style={[shared.settingsOptionLabel, selected && { color: theme.colors.text, fontFamily: theme.fonts.bodySemiBold }]}>
+                    {opt.label}
+                  </Text>
+                </View>
+                <Ionicons
+                  name={selected ? 'radio-button-on' : 'radio-button-off'}
+                  size={22}
+                  color={selected ? theme.colors.primaryText : theme.colors.subtext}
+                />
+              </Pressable>
+            )
+          })}
+        </View>
+        <Text style={[shared.caption, { marginTop: theme.spacing.sm }]} testID="appearance-note">
+          {waitsForLaunch ? 'Your choice starts the next time you open vteam.' : SYSTEM_NOTE}
+        </Text>
+
+        <Text style={[shared.label, { marginTop: theme.spacing.lg, marginBottom: theme.spacing.sm }]}>Text size</Text>
         <View role="radiogroup" style={[shared.card, { padding: 0, gap: 0, overflow: 'hidden' }]}>
           {TEXT_SIZE_OPTIONS.map((opt, idx) => {
             const selected = opt.id === size
@@ -47,7 +113,7 @@ export default function DisplaySettingsScreen() {
                 <Ionicons
                   name={selected ? 'radio-button-on' : 'radio-button-off'}
                   size={22}
-                  color={selected ? theme.colors.primary : theme.colors.subtext}
+                  color={selected ? theme.colors.primaryText : theme.colors.subtext}
                 />
               </Pressable>
             )
