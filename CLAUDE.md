@@ -507,6 +507,7 @@ Add to `constants/styles.ts` inside the existing `StyleSheet.create({})` call, t
 ## UI Best Practices
 When implementing any UI feature, follow best practices for all three target surfaces:
 - **Mobile app (iOS/Android)**: touch targets ≥44pt, gesture-friendly interactions, safe area insets via `useSafeAreaInsets`, no hover-only affordances
+- **Tap targets without changing the look** (#386): `hitSlop` does nothing on the web, so a control drawn smaller than 44 pt gets a touchable that is 44 pt with the drawn control as its child: `hitV(drawn)` / `hitSquare(drawn)` (`utils/hitArea.ts`) add the padding and give it back as negative margin, so layout and look stay the same. `Chip` and `IconButton` do this themselves; the UI consistency check's `tap-target-44` rule counts what is left
 - **Mobile web**: same touch target sizes, no iOS input-zoom (font-size ≥16px on inputs), `touch-action: manipulation` on interactive elements, `viewport-fit=cover` for safe areas, no double-tap zoom, but pinch zoom stays allowed (never `maximum-scale` / `user-scalable=no`)
 - **Desktop web**: pointer/hover states where appropriate, keyboard navigation, sidebar layout at ≥768px breakpoint, reasonable max-width constraints so content doesn't stretch across a 27" monitor
 

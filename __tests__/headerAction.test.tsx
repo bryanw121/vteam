@@ -11,10 +11,19 @@ jest.mock('react-native-safe-area-context', () => ({
 
 const flat = (el: { props: { style?: unknown } }) => StyleSheet.flatten(el.props.style as never) ?? {}
 
-/** Height/width a control actually reserves: explicit size or min size. */
+type Box = { width?: number; height?: number; minHeight?: number; padding?: number }
+
+/**
+ * The tap target a control offers: its own size, or, for a touchable that wraps the drawn
+ * control (#386: IconButton, Chip), the drawn child's size plus the touchable's padding.
+ */
 function target(testID: string) {
-  const s = flat(screen.getByTestId(testID)) as { width?: number; height?: number; minHeight?: number }
-  return { height: s.height ?? s.minHeight ?? 0, width: s.width }
+  const el = screen.getByTestId(testID)
+  const s = flat(el) as Box
+  if (s.height !== undefined || s.minHeight !== undefined) return { height: s.height ?? s.minHeight ?? 0, width: s.width }
+  const c = flat(el.children[0] as never) as Box
+  const pad = 2 * (s.padding ?? 0)
+  return { height: (c.height ?? c.minHeight ?? 0) + pad, width: c.width === undefined ? undefined : c.width + pad }
 }
 
 function renderHeader(over: Partial<React.ComponentProps<typeof EventHeaderActions>> = {}) {

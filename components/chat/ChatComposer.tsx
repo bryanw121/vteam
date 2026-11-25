@@ -3,6 +3,7 @@ import { Image, Platform, ScrollView, TouchableOpacity, View } from 'react-nativ
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text, TextInput } from '../ui/Text'
+import { hitSquare } from '../../utils/hitArea'
 import { Spinner } from '../ui/Spinner'
 import { shared, theme } from '../../constants'
 import type { ChatComposerBandProps, ChatComposerProps } from '../../types'
@@ -110,16 +111,18 @@ export const ChatComposer = forwardRef<TextInputInstance, ChatComposerProps>(fun
           <TouchableOpacity
             onPress={() => void c.send()}
             disabled={!c.canSend}
-            style={[shared.chatSend, c.canSend && shared.chatSendOn]}
+            style={[hitSquare(32), { alignSelf: 'flex-end' }]}
             accessibilityRole="button"
             accessibilityLabel={c.editingMessage ? 'Save edit' : 'Send'}
             accessibilityState={{ disabled: !c.canSend, busy }}
           >
+            <View style={[shared.chatSend, c.canSend && shared.chatSendOn]}>
             {busy ? (
               <Spinner size="small" color={c.canSend ? theme.colors.white : theme.colors.subtext} label="Sending" />
             ) : (
               <Ionicons name="send" size={16} color={c.canSend ? theme.colors.white : theme.colors.subtext} />
             )}
+            </View>
           </TouchableOpacity>
         </View>
       </View>

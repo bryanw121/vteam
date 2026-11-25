@@ -367,7 +367,9 @@ export const weekNavStyles = StyleSheet.create({
     paddingHorizontal: theme.spacing.sm,
   },
   arrow: {
-    width: 32,
+    // 44-pt tap target laid out as 32 wide (#386).
+    width: 44,
+    marginHorizontal: -6,
     height: 44,
     borderRadius: theme.radius.md,
     alignItems: 'center',
