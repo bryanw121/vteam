@@ -9,7 +9,7 @@ import type { SurfaceFilterProps } from '../../types'
  * use the host's `events.surface`, outside sessions the venue's surface from
  * Schelagg; items with no surface only show when no surface is picked.
  */
-export function SurfaceFilter({ active, onSelect, wide }: SurfaceFilterProps) {
+export function SurfaceFilter({ active, onSelect, wide, bare }: SurfaceFilterProps) {
   const items = SURFACE_OPTIONS.map(opt => (
     <Chip
       key={opt.id}
@@ -21,6 +21,7 @@ export function SurfaceFilter({ active, onSelect, wide }: SurfaceFilterProps) {
     />
   ))
 
+  if (bare) return <>{items}</>
   if (wide) return <View style={styles.wrap}>{items}</View>
   return (
     <ScrollView

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
 import { useRouter } from 'expo-router'
-import { Platform, View, TouchableOpacity } from 'react-native'
+import { Platform, ScrollView, View, TouchableOpacity } from 'react-native'
 import type { ViewInstance } from 'react-native'
 import { Text } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
@@ -29,7 +29,7 @@ import { TourTarget } from '../../../../components/tour/TourTarget'
 import { useTourWants } from '../../../../contexts/tour'
 import { IconButton, OneTimeBanner } from '../../../../components/ui'
 import { useFeedRegion } from '../../../../hooks/useFeedCity'
-import { FeedCityLine } from '../../../../components/events/FeedCity'
+import { FeedCityLine, FeedCityPill } from '../../../../components/events/FeedCity'
 import type { EventCardRsvpHandler, FeedCardContext, FeedFilter, FeedFilterChip, StoredFeedFilters, SurfaceFilter as SurfaceFilterValue } from '../../../../types'
 import { buildFeedSections } from '../../../../utils/feedSections'
 import { DEFAULT_FEED_FILTERS, feedFiltersNow, loadFeedFilters, saveFeedFilters } from '../../../../utils/feedFilters'
@@ -311,15 +311,22 @@ export default function EventsScreen() {
   const filterChips = (
     <>
       <OneTimeBanner banner={BANNERS.austinPilot} style={isMobile ? shared.feedStaleNoticeMobile : undefined} />
-      <FeedCityLine style={isMobile ? shared.feedStaleNoticeMobile : undefined} />
+      {/* Phones: the city is the pill next to the month (cityPill below) */}
+      {!isMobile && <FeedCityLine />}
       <TourTarget id={TOUR_TARGETS.feedFilters}>
-        <FilterChips
-          chips={FILTER_CHIPS}
-          active={activeFilter}
-          onSelect={selectFilter}
-          wide={!isMobile}
-        />
-        <SurfaceFilter active={surfaceFilter} onSelect={selectSurface} wide={!isMobile} />
+        {isMobile ? (
+          // Phones: type and surface in one row that scrolls sideways
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={shared.feedFilterScroll} contentContainerStyle={shared.feedFilterScrollContent}>
+            <FilterChips chips={FILTER_CHIPS} active={activeFilter} onSelect={selectFilter} wide={false} bare />
+            <View style={shared.feedFilterDivider} />
+            <SurfaceFilter active={surfaceFilter} onSelect={selectSurface} wide={false} bare />
+          </ScrollView>
+        ) : (
+          <>
+            <FilterChips chips={FILTER_CHIPS} active={activeFilter} onSelect={selectFilter} wide />
+            <SurfaceFilter active={surfaceFilter} onSelect={selectSurface} wide />
+          </>
+        )}
       </TourTarget>
       {activeFilter === 'tournament' && <AllTournamentsLink onPress={() => router.push(routes.tournaments())} />}
       {(activeFilter === 'all' || activeFilter === 'tournament') && !!programs.data?.leagues.length && (
@@ -370,7 +377,7 @@ export default function EventsScreen() {
 
   const layoutProps = {
     sections, today, loading, cards, onToggleReveal: toggleReveal, refreshControl, onNearBottom: handleScrollNearBottom,
-    filterChips, rail: railNode, feedEmpty, overlays, showCalendar, selectedDate, markedDates, onSelectDate: selectDate,
+    filterChips, cityPill: <FeedCityPill />, rail: railNode, feedEmpty, overlays, showCalendar, selectedDate, markedDates, onSelectDate: selectDate,
   }
 
   if (!isMobile) {

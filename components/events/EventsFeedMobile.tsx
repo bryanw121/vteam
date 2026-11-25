@@ -221,8 +221,11 @@ export const EventsFeedMobile = memo(function EventsFeedMobile(p: EventsFeedMobi
             onSelectDate={p.onSelectDate}
             onPrevWeek={p.onPrevWeek}
             onNextWeek={p.onNextWeek}
+            right={p.cityPill}
           />
         </TourTarget>}
+        {/* Under the Tournament filter the strip is hidden; the city pill keeps a row of its own */}
+        {!p.showCalendar && <View style={shared.feedCityRow}>{p.cityPill}</View>}
 
         {p.filterChips}
       </View>

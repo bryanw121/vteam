@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Events feed: "Games around <city> · Change" (#339). On the mocked export (`--dist dist-mock`),
+// Events feed: the city control ("Austin ▾" next to the month on phones, "Games around <city> · Change" on desktop; #339). On the mocked export (`--dist dist-mock`),
 // as a guest and signed in, phone and desktop: the line names the city /api/where answers, the
 // sheet lists the covered cities and marks the nearest, picking one updates the line and survives
 // a reload, and "Use my location" (web) picks the nearest city to the device. `--out <dir>` keeps
@@ -39,7 +39,7 @@ try {
         const line = page.getByTestId('feed-city').locator('visible=true')
         // A guest opens on the city near their network; the fixture member's home city (Austin) wins.
         const first = signedIn ? 'Austin' : 'Dallas', other = signedIn ? 'dallas' : 'austin', otherName = signedIn ? 'Dallas' : 'Austin'
-        await expect(line).toContainText(`Games around ${first}`, { timeout: 20000 })
+        await expect(line).toContainText(first, { timeout: 20000 })
         if (out) await page.screenshot({ path: `${out}/${surface}-${signedIn ? 'signed-in' : 'guest'}-line.png` })
         await line.click()
         const sheet = page.getByTestId('bottom-sheet')
@@ -48,13 +48,13 @@ try {
         await expect(page.getByTestId(`feed-city-${first.toLowerCase()}`)).toHaveAttribute('aria-checked', 'true')
         if (out) await page.screenshot({ path: `${out}/${surface}-${signedIn ? 'signed-in' : 'guest'}-sheet.png` })
         await page.getByTestId(`feed-city-${other}`).click()
-        await expect(line).toContainText(`Games around ${otherName}`)
+        await expect(line).toContainText(otherName)
         await page.reload({ waitUntil: 'load' })
-        await expect(page.getByTestId('feed-city').locator('visible=true')).toContainText(`Games around ${otherName}`, { timeout: 20000 })
+        await expect(page.getByTestId('feed-city').locator('visible=true')).toContainText(otherName, { timeout: 20000 })
         // "Use my location": the device is in Katy, so Houston.
         await page.getByTestId('feed-city').locator('visible=true').click()
         await page.getByTestId('feed-city-locate').click()
-        await expect(page.getByTestId('feed-city').locator('visible=true')).toContainText('Games around Houston', { timeout: 10000 })
+        await expect(page.getByTestId('feed-city').locator('visible=true')).toContainText('Houston', { timeout: 10000 })
         assert.deepEqual(errors, [], `${who}: page errors`)
         console.log(`ok ${who}`)
       } catch (e) {
