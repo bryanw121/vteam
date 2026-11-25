@@ -43,7 +43,7 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack, action
             top: 0,
             bottom: 0,
             width: 1,
-            backgroundColor: 'rgba(255,255,255,0.04)',
+            backgroundColor: theme.colors.borderSoft,
             transform: [{ rotate: '-20deg' }, { scaleY: 3 }],
           }} />
         ))}
@@ -61,7 +61,7 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack, action
             onPress={onBack}
             hitSlop={8}
             accessibilityLabel="Back"
-            style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: theme.colors.primarySoft, alignItems: 'center', justifyContent: 'center' }}
           >
             <Ionicons name="chevron-back" size={20} color={theme.colors.text} />
           </TouchableOpacity>
@@ -72,8 +72,8 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack, action
         </View>
 
         <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
-          <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.1)' }}>
-            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: 'rgba(255,255,255,0.75)', letterSpacing: 0.3 }}>
+          <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: theme.colors.primarySoft }}>
+            <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.primaryText, letterSpacing: 0.3 }}>
               {FORMAT_LABELS[tournament.format] ?? tournament.format}
             </Text>
           </View>
@@ -86,13 +86,13 @@ export function TournamentHero({ tournament, registeredTeamCount, onBack, action
         <View style={{ flexDirection: 'row', gap: 14, marginBottom: 14 }}>
           {!!tournament.location && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.5)" />
-              <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: 'rgba(255,255,255,0.6)' }}>{tournament.location}</Text>
+              <Ionicons name="location-outline" size={13} color={theme.colors.subtext} />
+              <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext }}>{tournament.location}</Text>
             </View>
           )}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.5)" />
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: 'rgba(255,255,255,0.6)' }}>
+            <Ionicons name="calendar-outline" size={13} color={theme.colors.subtext} />
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext }}>
               {formatDate(new Date(tournament.start_date), { weekday: 'short', month: 'short', day: 'numeric' })}
             </Text>
           </View>

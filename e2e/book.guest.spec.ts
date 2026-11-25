@@ -223,8 +223,8 @@ test.describe('outside session last-mile check (guest)', () => {
 
     const finding = sheetFinding(page)
     await expect(finding).toHaveText('Cancelled at the venue')
-    // Red: theme.colors.error (#FF5555), not the amber used for a changed time.
-    await expect(finding).toHaveCSS('color', 'rgb(255, 85, 85)')
+    // Red: theme.colors.error (#C62828), not the amber used for a changed time.
+    await expect(finding).toHaveCSS('color', 'rgb(198, 40, 40)')
     expect(popups).toBe(0)
   })
 

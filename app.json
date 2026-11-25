@@ -7,11 +7,11 @@
     "orientation": "portrait",
     "scheme": "vteam",
     "icon": "./assets/branding/vteam-app-icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#13111F"
+      "backgroundColor": "#F7F3FF"
     },
     "ios": {
       "supportsTablet": true,
@@ -21,7 +21,7 @@
       "package": "com.vteamvolleyball.app",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#7C4DFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -35,7 +35,7 @@
       "name": "vteam",
       "shortName": "vteam",
       "themeColor": "#7C4DFF",
-      "backgroundColor": "#13111F",
+      "backgroundColor": "#F7F3FF",
       "display": "standalone",
       "orientation": "portrait"
     },

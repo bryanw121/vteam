@@ -23,7 +23,7 @@ type Props = {
   onEdit: () => void
 }
 
-const STAT_LABEL = { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 } as const
+const STAT_LABEL = { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 } as const
 
 /** The profile card at the top of the Profile tab: avatar, name, stats and pinned badges. */
 export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints, trophyCount = 0, displayedBadges, onEdit }: Props) {
@@ -33,7 +33,7 @@ export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints,
     <View style={styles.card}>
       {/* Radial gradient decoration */}
       <LinearGradient
-        colors={[theme.colors.primary, 'transparent']}
+        colors={[theme.colors.onPrimaryFill, 'transparent']}
         start={{ x: 1, y: 0 }}
         end={{ x: 0.3, y: 0.7 }}
         style={{ position: 'absolute', top: 0, right: 0, width: 200, height: 200, borderRadius: 100, opacity: 0.55 }}
@@ -48,7 +48,7 @@ export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints,
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, width: '100%' }}>
           <AvatarUploader profile={profile} uploader={uploader} editMode={false} />
           <View style={{ flex: 1, gap: 4 }}>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 1, textTransform: 'uppercase' }}>
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 1, textTransform: 'uppercase' }}>
               Member since {new Date(profile.created_at).getFullYear().toString().slice(2)}
             </Text>
             <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.md, letterSpacing: -0.5, color: theme.colors.white, lineHeight: 24 }}>
@@ -66,15 +66,15 @@ export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints,
       )}
 
       {profile.bio ? (
-        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: 'rgba(255,255,255,0.75)', lineHeight: 18, marginTop: 4, width: '100%' }}>
+        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.onPrimaryMuted, lineHeight: 18, marginTop: 4, width: '100%' }}>
           {profile.bio}
         </Text>
       ) : null}
 
       {!editing && (
-        <View style={{ flexDirection: 'row', gap: 1, marginTop: 14, borderRadius: 14, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.08)', width: '100%' }}>
+        <View style={{ flexDirection: 'row', gap: 1, marginTop: 14, borderRadius: 14, overflow: 'hidden', width: '100%' }}>
           <View style={styles.stat}>
-            <Text style={[styles.statValue, { color: theme.colors.accent }]}>
+            <Text style={styles.statValue}>
               {profile.skill_level ? volleyballSkillLevelLabel(profile.skill_level) : '—'}
             </Text>
             <Text style={STAT_LABEL}>Skill</Text>
@@ -109,7 +109,7 @@ export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints,
           <TouchableOpacity
             onPress={onEdit}
             accessibilityRole="button"
-            style={{ paddingVertical: 11, borderRadius: theme.radius.md, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center' }}
+            style={{ paddingVertical: 11, borderRadius: theme.radius.md, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}
           >
             <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.white }}>Edit profile</Text>
           </TouchableOpacity>
@@ -121,7 +121,7 @@ export function ProfileHero({ profile, uploader, mode, totalCheers, totalPoints,
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.primary,
     borderRadius: 24,
     padding: 18,
     alignItems: 'center',
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     paddingHorizontal: 10,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: theme.colors.onPrimaryFill,
     alignItems: 'center',
   },
   statValue: {
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm,
     paddingTop: theme.spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.15)',
+    borderTopColor: theme.colors.onPrimaryLine,
     alignSelf: 'stretch',
     justifyContent: 'center',
   },

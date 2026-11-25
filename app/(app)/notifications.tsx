@@ -113,13 +113,13 @@ export default function NotificationsScreen() {
               <TouchableOpacity
                 onPress={() => void openItem(item)}
                 style={{
-                  backgroundColor: isBadge ? theme.colors.accent + '22' : theme.colors.card,
+                  // Read rows sit on the page colour instead of fading, so their text keeps its contrast
+                  backgroundColor: isBadge ? theme.colors.accent + '22' : item.read_at ? theme.colors.background : theme.colors.card,
                   borderRadius: theme.radius.md,
                   borderWidth: 1,
                   borderColor: isBadge ? '#FFD700' : theme.colors.border,
                   padding: theme.spacing.md,
                   marginBottom: theme.spacing.sm,
-                  opacity: item.read_at ? 0.72 : 1,
                   overflow: 'hidden',
                   flexDirection: 'row',
                   alignItems: 'flex-start',

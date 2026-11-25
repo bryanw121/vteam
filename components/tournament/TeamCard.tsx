@@ -41,7 +41,7 @@ export function TeamCard({ team, isOrganizer, viewerId, myTeam, registrationOpen
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 5 }}>
             <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.lgs, color: theme.colors.text, letterSpacing: -0.2 }}>{team.name}</Text>
-            {team.seed !== null && !isFreeAgent && <StatusPill label={`Seed ${team.seed}`} color={theme.colors.accent} />}
+            {team.seed !== null && !isFreeAgent && <StatusPill label={`Seed ${team.seed}`} color={theme.colors.cool} />}
             {isMyTeam && <StatusPill label="You" color={theme.colors.primary} />}
             {isFreeAgent && <StatusPill label="Free Agent" color={theme.colors.subtext} />}
             {team.is_paid && <StatusPill label="Paid" color={theme.colors.cool} />}

@@ -137,7 +137,6 @@ export function MessageBubble({
             borderLeftColor: theme.colors.primary,
             paddingLeft: 8,
             marginBottom: 4,
-            opacity: 0.8,
           }}
         >
           <Text style={{ fontSize: theme.font.size.xs, color: theme.colors.primaryText, fontWeight: theme.font.weight.semibold }}>

@@ -101,6 +101,8 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: theme.radius.full,
+    // a light disc so the button reads on a purple card cover as well as a white card
+    backgroundColor: theme.colors.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
