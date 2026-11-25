@@ -32,9 +32,9 @@ export function TourneyStatusBadge({ status }: { status: string }) {
 
 export function HeroPill({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <View style={{ flex: 1, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10, backgroundColor: accent ? theme.colors.accent : 'rgba(255,255,255,0.1)', alignItems: 'center' }}>
+    <View style={{ flex: 1, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10, backgroundColor: accent ? theme.colors.accent : theme.colors.primarySoft, alignItems: 'center' }}>
       <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.lgs, color: accent ? theme.colors.accentInk : theme.colors.text, letterSpacing: -0.3 }}>{value}</Text>
-      <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: accent ? theme.colors.accentInk : 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 1 }}>{label}</Text>
+      <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: accent ? theme.colors.accentInk : theme.colors.subtext, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 1 }}>{label}</Text>
     </View>
   )
 }

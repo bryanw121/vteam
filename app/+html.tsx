@@ -8,7 +8,7 @@ const SUPABASE_ORIGIN = (process.env.EXPO_PUBLIC_SUPABASE_URL ?? '').replace(/\/
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''
 
 /** Family names match theme.font.* (the names expo-font registers on native). */
-const WEB_FONT_FACES = `@font-face { font-family: 'Inter_400Regular'; src: url('/fonts/inter-latin-400-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_500Medium'; src: url('/fonts/inter-latin-500-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_600SemiBold'; src: url('/fonts/inter-latin-600-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Inter_700Bold'; src: url('/fonts/inter-latin-700-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_400Regular'; src: url('/fonts/space-grotesk-latin-400-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_500Medium'; src: url('/fonts/space-grotesk-latin-500-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_600SemiBold'; src: url('/fonts/space-grotesk-latin-600-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'SpaceGrotesk_700Bold'; src: url('/fonts/space-grotesk-latin-700-normal.woff2') format('woff2'); font-display: swap; }`
+const WEB_FONT_FACES = `@font-face { font-family: 'Outfit_400Regular'; src: url('/fonts/outfit-latin-400-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Outfit_500Medium'; src: url('/fonts/outfit-latin-500-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Outfit_600SemiBold'; src: url('/fonts/outfit-latin-600-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Outfit_700Bold'; src: url('/fonts/outfit-latin-700-normal.woff2') format('woff2'); font-display: swap; }\n@font-face { font-family: 'Outfit_800ExtraBold'; src: url('/fonts/outfit-latin-800-normal.woff2') format('woff2'); font-display: swap; }`
 
 export default function Root({ children }: { children: React.ReactNode }) {
   // Expo Router 58 streams the document: the app's scripts, styles and favicon
@@ -69,8 +69,8 @@ export default function Root({ children }: { children: React.ReactNode }) {
           expo-font (theme.font.*). font-display: swap, so text paints at once in
           a fallback face and the root layout doesn't wait on fonts on web.
         */}
-        <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/space-grotesk-latin-700-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/outfit-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/outfit-latin-800-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* @ts-ignore */}
         <style dangerouslySetInnerHTML={{ __html: WEB_FONT_FACES }} />
         {/* @ts-ignore */}

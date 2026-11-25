@@ -158,7 +158,7 @@ export default function UserProfileDetail() {
         >
           {/* ── Hero card ── */}
           <View style={{
-            backgroundColor: theme.colors.card,
+            backgroundColor: theme.colors.primary,
             borderRadius: 24,
             padding: 18,
             alignItems: 'center',
@@ -168,7 +168,7 @@ export default function UserProfileDetail() {
           }}>
             {/* Radial gradient decoration */}
             <LinearGradient
-              colors={[theme.colors.primary, 'transparent']}
+              colors={[theme.colors.onPrimaryFill, 'transparent']}
               start={{ x: 1, y: 0 }}
               end={{ x: 0.3, y: 0.7 }}
               style={{
@@ -190,7 +190,7 @@ export default function UserProfileDetail() {
                 <Text style={{
                   fontFamily: theme.fonts.body,
                   fontSize: theme.font.size.xs, fontWeight: '700',
-                  color: 'rgba(255,255,255,0.55)',
+                  color: theme.colors.onPrimaryMuted,
                   letterSpacing: 1, textTransform: 'uppercase',
                 }}>
                   Member since '{new Date(profile.created_at).getFullYear().toString().slice(2)}
@@ -227,7 +227,7 @@ export default function UserProfileDetail() {
               <Text style={{
                 fontFamily: theme.fonts.body,
                 fontSize: theme.font.size.sm,
-                color: 'rgba(255,255,255,0.75)',
+                color: theme.colors.onPrimaryMuted,
                 lineHeight: 18, marginTop: 4, width: '100%',
               }}>
                 {profile.bio}
@@ -243,25 +243,25 @@ export default function UserProfileDetail() {
             <View style={{
               flexDirection: 'row', gap: 1, marginTop: 14,
               borderRadius: 14, overflow: 'hidden',
-              backgroundColor: 'rgba(255,255,255,0.08)', width: '100%',
+              backgroundColor: theme.colors.onPrimaryLine, width: '100%',
             }}>
-              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
+              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}>
                 <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.accent }}>
                   {profile.skill_level ? volleyballSkillLevelLabel(profile.skill_level) : '—'}
                 </Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Skill</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Skill</Text>
               </View>
-              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
+              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}>
                 <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{totalCheers}</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Cheers</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Cheers</Text>
               </View>
-              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
+              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}>
                 <Text testID="user-profile-points-count" style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{points.data ?? 0}</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Points</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Points</Text>
               </View>
-              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.04)', alignItems: 'center' }}>
+              <View style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 10, backgroundColor: theme.colors.onPrimaryFill, alignItems: 'center' }}>
                 <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.heading.lg, letterSpacing: -1, color: theme.colors.white }}>{trophies.data?.length ?? 0}</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: 'rgba(255,255,255,0.55)', letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Trophies</Text>
+                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, fontWeight: '700', color: theme.colors.onPrimaryMuted, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: 1 }}>Trophies</Text>
               </View>
             </View>
 
@@ -270,7 +270,7 @@ export default function UserProfileDetail() {
               <View style={{
                 flexDirection: 'row', gap: theme.spacing.md,
                 marginTop: theme.spacing.sm, justifyContent: 'center',
-                borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.15)',
+                borderTopWidth: 1, borderTopColor: theme.colors.onPrimaryLine,
                 paddingTop: theme.spacing.sm, width: '100%',
               }}>
                 {displayBadges.map(badge => {

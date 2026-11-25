@@ -1,72 +1,79 @@
 export const theme = {
+  // Party invite (Nov 2026): light lavender page, white cards, vteam purple.
+  // Every text colour here is at least 4.5:1 on `background`, `card` and `primarySoft`.
   colors: {
     // Brand
-    primary:      '#7C4DFF',   // slightly brighter violet — pops on dark bg
-    primaryDark:  '#5A2BFF',
-    primarySoft:  '#2A1F6B',   // dark violet tint for soft chip bgs
-    primaryText:  '#A68BFF',   // violet for text and small icons on background/card (>= 4.5:1; primary itself is 3.9:1)
-    // Accent — electric sky blue
+    primary:      '#7C4DFF',   // vteam purple: fills, and white on it (4.8:1)
+    primaryDark:  '#5B21B6',
+    primarySoft:  '#EDE6FA',   // lavender tint for soft chip bgs
+    primaryText:  '#6D28D9',   // purple for text and small icons on background/card (6.5:1)
+    // Accent: sky blue (day chip)
     accent:       '#3DC9F5',
     accentInk:    '#002A36',
     // Surfaces
-    background:   '#13111F',   // dark violet-black (~Instagram/Spotify level)
-    card:         '#1E1B2E',   // elevated dark surface
-    /** Create-menu pills: hair lighter than `card` so they read over a blurred feed */
-    fabMenuChip:       '#26243A',
-    fabMenuChipBorder: '#3A365C',
-    /** Washes over `BlurView` so content recedes without going flat black */
-    fabMenuBackdropDim: 'rgba(19, 17, 31, 0.42)',
+    background:   '#F7F3FF',   // light lavender page
+    card:         '#FFFFFF',
+    /** Create-menu pills over a blurred feed */
+    fabMenuChip:       '#FFFFFF',
+    fabMenuChipBorder: '#E4DAF5',
+    /** Washes over `BlurView` so content recedes */
+    fabMenuBackdropDim: 'rgba(30, 16, 51, 0.28)',
     // Text
-    text:         '#EDEAFF',   // near-white with violet tint
-    subtext:      '#8885A4',   // muted lavender-grey (>= 4.5:1 on card and background)
-    /** Secondary text that must stay readable: at least 4.5:1 on `card` and `background`, even inside a row dimmed to 72% (a read notification). */
-    subtextStrong: '#B5B1D4',
+    text:         '#1E1033',   // plum ink
+    subtext:      '#6B5B85',   // muted plum (>= 4.5:1 on card, background and primarySoft)
+    /** Secondary text that must stay readable, even inside a row dimmed to 72% (a read notification). */
+    subtextStrong: '#4E3F66',
     // Borders
-    border:       '#2C2848',   // dark purple border
-    borderSoft:   '#211D3A',   // very subtle
-    // Signal palette
-    warm:         '#FF6B3D',
-    hot:          '#FF2D6F',
-    cool:         '#00D6B4',
+    border:       '#E4DAF5',
+    borderSoft:   '#EFE9FA',
+    /** Lavender pill behind the phone tab bar (Party invite nav). */
+    navPill:      '#E9E0FF',
+    navInk:       '#5B4B78',
+    // Signal palette (also used as text: each >= 4.5:1 on white)
+    warm:         '#C2410C',
+    hot:          '#BE185D',
+    cool:         '#0F766E',
     // Status
-    error:        '#FF5555',
-    /** Filled destructive buttons (Button variant danger): white label at 5:1 (`error` itself is 3.1:1). */
-    dangerFill:   '#D12F2F',
-    warning:      '#FFA040',
-    success:      '#00D26A',
-    // Toast surfaces (#228): dark tints of each status colour, so light text reads on them (>= 4.5:1).
-    toastErrorBg:   '#3A1620',
-    toastWarningBg: '#3A2710',
-    toastSuccessBg: '#0F2E22',
-    toastInfoBg:    '#251C4E',
+    error:        '#C62828',
+    /** Filled destructive buttons (Button variant danger): white label at 5.6:1. */
+    dangerFill:   '#C62828',
+    warning:      '#B45309',
+    success:      '#15803D',
+    // Toast surfaces (#228): light tints of each status colour, dark text on them.
+    toastErrorBg:   '#FDE8EA',
+    toastWarningBg: '#FDF0DE',
+    toastSuccessBg: '#E3F6EA',
+    toastInfoBg:    '#EDE6FA',
     white:        '#FFFFFF',
     sheetInk:     '#0D2480',   // pen ink on the official scoresheet (officialPdf.ts INK)
     black:        '#000000',
     /** Label/icon colour on `primary`, `error` and other saturated fills. */
     onPrimary:    '#FFFFFF',
-    /** White text and lines on a `primary` fill at lower emphasis (tournament preview hero). */
-    onPrimaryStrong: 'rgba(255,255,255,0.85)',
-    onPrimarySoft:   'rgba(255,255,255,0.75)',
-    onPrimaryMuted:  'rgba(255,255,255,0.6)',
-    onPrimaryLine:   'rgba(255,255,255,0.3)',
-    onPrimaryFill:   'rgba(255,255,255,0.12)',
+    /** White text and lines on a `primary` fill at lower emphasis (heroes). */
+    onPrimaryStrong: 'rgba(255,255,255,0.9)',
+    onPrimarySoft:   'rgba(255,255,255,0.85)',
+    onPrimaryMuted:  'rgba(255,255,255,0.78)',
+    onPrimaryLine:   'rgba(255,255,255,0.35)',
+    onPrimaryFill:   'rgba(255,255,255,0.16)',
     /** Scrim behind dialogs and bottom sheets. */
-    overlay:      'rgba(0,0,0,0.5)',    // shared.modalOverlay (host, feedback)
-    overlayLight: 'rgba(0,0,0,0.45)',   // event detail's confirm dialogs / ConfirmDialog
+    overlay:      'rgba(30,16,51,0.45)',
+    overlayLight: 'rgba(30,16,51,0.4)',
     /** Dims everything but the highlighted target during a guided tour. */
-    tourScrim:    'rgba(8,6,18,0.74)',
+    tourScrim:    'rgba(30,16,51,0.66)',
     // Podium / trophy medals
-    medalGold:    '#FFD54F',
-    medalSilver:  '#B0BEC5',
-    medalBronze:  '#D7A86E',
-    // Event start time (TimePill, join bar): a soft lavender pill, distinct from the
-    // cyan day chip and on-brand without shouting.
-    time:         '#2A1F6B',   // pill background
-    timeBorder:   '#3E2F94',   // pill outline
-    timeInk:      '#D6C9FF',   // pill icon + label
-    timeText:     '#C4B2FF',   // time stated as text on a card ("You're signing up for …")
+    medalGold:    '#E0A800',
+    medalSilver:  '#90A4AE',
+    medalBronze:  '#B7793A',
+    // Event start time (TimePill, join bar): lavender pill
+    time:         '#EDE6FA',
+    timeBorder:   '#D9CCF5',
+    timeInk:      '#5B21B6',
+    timeText:     '#6D28D9',
     // Misc
-    announcementHighlight: '#2A1F6B',
+    announcementHighlight: '#EDE6FA',
+    /** Feed card cover blocks (Party invite): open play and tournaments. White text on both. */
+    coverOpen:       '#7C3AED',
+    coverTournament: '#DB2777',
   },
   /** Gradient stops for `LinearGradient colors={...}`. */
   gradients: {
@@ -74,13 +81,14 @@ export const theme = {
   },
   /** Font family names registered via @expo-google-fonts (native + web). */
   fonts: {
-    display:         'SpaceGrotesk_700Bold',
-    displaySemiBold: 'SpaceGrotesk_600SemiBold',
-    displayMedium:   'SpaceGrotesk_500Medium',
-    body:            'Inter_400Regular',
-    bodyMedium:      'Inter_500Medium',
-    bodySemiBold:    'Inter_600SemiBold',
-    bodyBold:        'Inter_700Bold',
+    // Party invite (Nov 2026): Outfit everywhere; display is its ExtraBold.
+    display:         'Outfit_800ExtraBold',
+    displaySemiBold: 'Outfit_700Bold',
+    displayMedium:   'Outfit_600SemiBold',
+    body:            'Outfit_400Regular',
+    bodyMedium:      'Outfit_500Medium',
+    bodySemiBold:    'Outfit_600SemiBold',
+    bodyBold:        'Outfit_700Bold',
   },
   spacing: {
     xxs: 2,

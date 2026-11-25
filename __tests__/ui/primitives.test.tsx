@@ -16,10 +16,11 @@ const flat = (el: { props: { style?: unknown } }) => StyleSheet.flatten(el.props
 
 describe('theme tokens', () => {
   it('exposes the new colour, gradient and size tokens', () => {
-    expect(theme.colors.overlay).toBe('rgba(0,0,0,0.5)')
-    expect(theme.colors.overlayLight).toBe('rgba(0,0,0,0.45)')
+    // Party invite palette (Nov 2026): plum-tinted scrims on a light app.
+    expect(theme.colors.overlay).toBe('rgba(30,16,51,0.45)')
+    expect(theme.colors.overlayLight).toBe('rgba(30,16,51,0.4)')
     expect(theme.colors.onPrimary).toBe('#FFFFFF')
-    expect(theme.colors.medalGold).toBe('#FFD54F')
+    expect(theme.colors.medalGold).toBe('#E0A800')
     expect(theme.gradients.brand).toHaveLength(3)
     expect(theme.font.size.smd).toBe(13)
     expect(theme.font.size.lgs).toBe(15)

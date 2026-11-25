@@ -40,17 +40,14 @@ function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, frien
       testID="event-card"
       {...(event._isTournament ? null : eventPrefetchProps(event.id))}
       onPress={open}
-      style={[shared.ecHero, hosted && shared.ecHosted]}
+      style={shared.ecHero}
     >
-      {m.typeTags.length > 0 && (
-        <View pointerEvents="none" style={shared.ecHeroWatermark}>
-          <Text style={shared.ecHeroWatermarkText}>{m.isTournament ? '🏆' : '🏐'}</Text>
-        </View>
-      )}
-      <View>
-        {/* Time, day, type, skill, club */}
-        <View style={[shared.ecHeroChips, { paddingRight: menuInset ? MENU_INSET : 0 }]}>
-          {hosted && <HostedBadge />}
+      {/* Cover: a colour block per kind of game, with the time, day, type and title on it */}
+      <View style={[shared.ecCover, { backgroundColor: m.isTournament ? theme.colors.coverTournament : theme.colors.coverOpen }]}>
+        <View pointerEvents="none" style={shared.ecCoverRing} />
+        <View pointerEvents="none" style={shared.ecCoverDot} />
+        <View style={[shared.ecHeroChips, { paddingRight: menuInset ? MENU_INSET : 0, marginBottom: 0 }]}>
+          {hosted && <HostedBadge onCover />}
           <TimePill label={m.time} testID="event-card-time" />
           {forecast && <ForecastChip summary={forecast} />}
           <View style={shared.ecHeroDay}>
@@ -58,7 +55,7 @@ function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, frien
           </View>
           {m.typeTags.map(tag => (
             <View key={tag.id} style={shared.ecHeroTypeChip}>
-              <Text style={shared.ecHeroTypeText}>{isTournamentTag([tag]) ? '🏆 ' : ''}{tag.name}</Text>
+              <Text style={shared.ecHeroTypeText}>{tag.name}</Text>
             </View>
           ))}
           {m.skillTags.slice(0, 1).map(tag => (
@@ -66,25 +63,21 @@ function EventCardInner({ event, from, currentUserId, onRsvp, rsvpPending, frien
               <Text style={shared.ecHeroQuietText}>{tag.name}</Text>
             </View>
           ))}
-          {event.clubs && (
-            <View style={shared.ecHeroQuietChip}>
-              <Text style={shared.ecHeroQuietText}>{event.clubs.name}</Text>
-            </View>
-          )}
         </View>
-
         <Text style={shared.ecHeroTitle} numberOfLines={2}>{event.title}</Text>
+      </View>
 
-        {event.location && (
+      <View style={shared.ecBody}>
+        {(event.location || event.clubs) && (
           <View style={shared.ecHeroLocation}>
-            <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.6)" />
+            <Ionicons name="location-outline" size={14} color={theme.colors.subtext} />
             <Text style={shared.ecHeroLocationText} numberOfLines={1}>
-              {event.location}{m.surfaceLabel ? ` · ${m.surfaceLabel}` : ''}
+              {[event.location, m.surfaceLabel, event.clubs?.name].filter(Boolean).join(', ')}
             </Text>
           </View>
         )}
 
-        <FriendsGoingLine going={friendsGoing} tone="onDark" />
+        <FriendsGoingLine going={friendsGoing} />
 
         {/* Who's going, how many spots, RSVP */}
         <View style={shared.ecHeroPeople}>

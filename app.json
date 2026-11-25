@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "scheme": "vteam",
     "icon": "./assets/branding/vteam-app-icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",

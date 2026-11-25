@@ -26,8 +26,9 @@ export function RsvpButton({ variant, isAttending, awaiting, loading, onToggle }
       </View>
     )
   }
-  const onFill = hero ? theme.colors.accent : theme.colors.primary
-  const onInk = hero ? theme.colors.accentInk : theme.colors.white
+  // Party invite: the phone card's button is a plum ink pill ("I'm in" look).
+  const onFill = hero ? theme.colors.text : theme.colors.primary
+  const onInk = theme.colors.white
   const ink = isAttending ? theme.colors.subtext : onInk
   return (
     <TouchableOpacity

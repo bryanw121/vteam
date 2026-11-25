@@ -265,7 +265,7 @@ export default function TabsLayout() {
             <BlurView
               pointerEvents="none"
               intensity={36}
-              tint="dark"
+              tint="light"
               style={StyleSheet.absoluteFill}
             />
             <View
@@ -310,16 +310,17 @@ export default function TabsLayout() {
             <View style={{
               flexDirection: "row",
               marginHorizontal: 14,
-              backgroundColor: theme.colors.card,
-              borderRadius: 26,
-              paddingVertical: 10,
+              // Party invite: a light lavender pill, not a dark bar
+              backgroundColor: theme.colors.navPill,
+              borderRadius: theme.radius.full,
+              paddingVertical: 8,
               paddingHorizontal: 10,
               alignItems: 'center',
-              shadowColor: theme.colors.black,
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.25,
-              shadowRadius: 20,
-              elevation: 12,
+              shadowColor: theme.colors.text,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.08,
+              shadowRadius: 14,
+              elevation: 4,
             }}>
               {TABS.map(tab => {
                 const active = activeTabIndex === tab.pageIndex;
@@ -335,18 +336,13 @@ export default function TabsLayout() {
                     accessibilityState={{ expanded: fabOpen }}
                     testID="create-menu-button"
                     style={{
-                      width: 46, height: 46, borderRadius: 15,
-                      backgroundColor: fabOpen ? theme.colors.accent + 'CC' : theme.colors.accent,
+                      width: 48, height: 48, borderRadius: 24,
+                      backgroundColor: fabOpen ? theme.colors.primaryDark : theme.colors.primary,
                       alignItems: 'center', justifyContent: 'center',
-                      shadowColor: theme.colors.accent,
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.5,
-                      shadowRadius: 8,
-                      elevation: 6,
                     }}
                   >
                     <Animated.View style={{ transform: [{ rotate: fabAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "45deg"] }) }] }}>
-                      <Ionicons name="add" size={24} color={theme.colors.accentInk} />
+                      <Ionicons name="add" size={26} color={theme.colors.onPrimary} />
                     </Animated.View>
                   </TouchableOpacity>
                   </TourTarget>
@@ -363,14 +359,14 @@ export default function TabsLayout() {
                       style={{
                         alignItems: "center", gap: 3,
                         paddingVertical: 6, borderRadius: 14,
-                        backgroundColor: active ? 'rgba(255,255,255,0.12)' : 'transparent',
+                        backgroundColor: 'transparent',
                       }}
                     >
                       <View style={{ position: "relative" }}>
                         <Ionicons
                           name={tab.icon}
                           size={20}
-                          color={active ? theme.colors.white : 'rgba(255,255,255,0.5)'}
+                          color={active ? theme.colors.primaryText : theme.colors.navInk}
                         />
                         {badge > 0 && (
                           <View testID="chat-unread-badge" style={{
@@ -389,7 +385,7 @@ export default function TabsLayout() {
                       <Text numberOfLines={1} maxFontSizeMultiplier={TIGHT_TEXT_SCALE} style={{
                         fontSize: theme.font.size.xs,
                         fontFamily: active ? theme.fonts.bodySemiBold : theme.fonts.body,
-                        color: active ? theme.colors.white : 'rgba(255,255,255,0.5)',
+                        color: active ? theme.colors.primaryText : theme.colors.navInk,
                         letterSpacing: 0.3,
                       }}>
                         {tab.mobileLabel}
