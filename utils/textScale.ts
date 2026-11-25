@@ -1,5 +1,6 @@
 import { StyleSheet } from 'react-native'
 import type { StyleProp, TextStyle } from 'react-native'
+import { theme } from '../constants/theme'
 import { DEFAULT_TEXT_SIZE, MAX_TEXT_SCALE, TEXT_SIZE_OPTIONS } from '../constants/textSize'
 import type { TextSizeId } from '../types'
 
@@ -72,4 +73,26 @@ export function scaleTextStyle(
     patch.lineHeight = round(flat.lineHeight * ratio)
   }
   return Object.keys(patch).length ? [style, patch] : style
+}
+
+/** Outfit file per weight (theme.fonts): what a style without a fontFamily is drawn in (#385). */
+const F = theme.fonts
+export const FAMILY_BY_WEIGHT: Record<string, string> = {
+  '100': F.body, '200': F.body, '300': F.body, '400': F.body, normal: F.body,
+  '500': F.bodyMedium,
+  '600': F.bodySemiBold,
+  '700': F.bodyBold, bold: F.bodyBold,
+  '800': F.display, '900': F.display,
+}
+
+/**
+ * The style with an Outfit `fontFamily` when it names none (#385): the app's text is
+ * Outfit everywhere, and a style that only sets a size or weight used to fall back to
+ * the system font. The weight picks the file; a style that names a family is left alone.
+ */
+export function withDefaultFamily(style: StyleProp<TextStyle>): StyleProp<TextStyle> {
+  const flat = StyleSheet.flatten(style) as TextStyle | undefined
+  if (flat?.fontFamily) return style
+  const family = FAMILY_BY_WEIGHT[String(flat?.fontWeight ?? '400')] ?? FAMILY_BY_WEIGHT['400']
+  return style ? [style, { fontFamily: family }] : { fontFamily: family }
 }
