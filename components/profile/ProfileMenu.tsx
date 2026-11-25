@@ -23,62 +23,63 @@ type Props = {
 
 type IconName = ComponentProps<typeof Ionicons>['name']
 
+/** Icon colour per row, so the groups read at a glance (hue tokens that hold up in dark). */
+type Tone = 'primary' | 'cool' | 'hot' | 'warning' | 'sub'
+
 /** A row opens a settings screen (`section`) or runs one of the callbacks (`action`). */
-type MenuRow = { title: string; icon: IconName } & (
+type MenuRow = { title: string; icon: IconName; tone: Tone } & (
   | { section: SettingsSection }
   | { action: 'tour' | 'terms' | 'privacy' }
 )
 
 type MenuGroup = { title: string; rows: readonly MenuRow[] }
 
-/** The Profile tab's settings, grouped by what people come to do. */
+/** The Profile tab's shortcuts: what you did first, then settings, then help. */
 const MENU_GROUPS: readonly MenuGroup[] = [
   {
-    title: 'Your activity',
+    title: 'Your games',
     rows: [
-      { title: 'Friends', icon: 'people-outline', section: 'friends' },
-      { title: 'History', icon: 'time-outline', section: 'history' },
-      { title: 'Cheers', icon: 'star-outline', section: 'cheers' },
-      { title: 'Badges', icon: 'ribbon-outline', section: 'badges' },
+      { title: 'Games I played', icon: 'time-outline', tone: 'primary', section: 'history' },
+      { title: 'Friends', icon: 'people-outline', tone: 'cool', section: 'friends' },
+      { title: 'Cheers', icon: 'star-outline', tone: 'hot', section: 'cheers' },
+      { title: 'Badges', icon: 'ribbon-outline', tone: 'warning', section: 'badges' },
     ],
   },
   {
-    title: 'Preferences',
+    title: 'Settings',
     rows: [
-      { title: 'Notifications', icon: 'notifications-outline', section: 'notifications' },
-      { title: 'Display', icon: 'contrast-outline', section: 'display' },
-      { title: 'Hidden in feed', icon: 'funnel-outline', section: 'hidden' },
-      { title: 'Silenced people', icon: 'eye-off-outline', section: 'silenced' },
+      { title: 'Notifications', icon: 'notifications-outline', tone: 'primary', section: 'notifications' },
+      { title: 'Display', icon: 'contrast-outline', tone: 'primary', section: 'display' },
+      { title: 'Hidden in feed', icon: 'funnel-outline', tone: 'primary', section: 'hidden' },
+      { title: 'Silenced people', icon: 'eye-off-outline', tone: 'primary', section: 'silenced' },
+      { title: 'Account settings', icon: 'settings-outline', tone: 'primary', section: 'account' },
+      { title: 'Go ad-free', icon: 'sparkles-outline', tone: 'warning', section: 'ad-free' },
+      { title: 'Experimental features', icon: 'flask-outline', tone: 'cool', section: 'experimental' },
     ],
   },
   {
-    title: 'Account',
+    title: 'Help',
     rows: [
-      { title: 'Account settings', icon: 'settings-outline', section: 'account' },
-      { title: 'Go ad-free', icon: 'sparkles-outline', section: 'ad-free' },
-    ],
-  },
-  {
-    title: 'Try new things',
-    rows: [
-      { title: 'Experimental features', icon: 'flask-outline', section: 'experimental' },
-    ],
-  },
-  {
-    title: 'Help and legal',
-    rows: [
-      { title: 'Take the tour', icon: 'compass-outline', action: 'tour' },
-      { title: 'Submit feedback', icon: 'chatbubble-ellipses-outline', section: 'feedback' },
-      { title: 'Terms and Conditions', icon: 'document-text-outline', action: 'terms' },
-      { title: 'Privacy Policy', icon: 'shield-checkmark-outline', action: 'privacy' },
+      { title: 'Take the tour', icon: 'compass-outline', tone: 'sub', action: 'tour' },
+      { title: 'Help & feedback', icon: 'chatbubble-ellipses-outline', tone: 'sub', section: 'feedback' },
+      { title: 'Terms and Conditions', icon: 'document-text-outline', tone: 'sub', action: 'terms' },
+      { title: 'Privacy Policy', icon: 'shield-checkmark-outline', tone: 'sub', action: 'privacy' },
     ],
   },
 ]
 
+const TONE_COLOR: Record<Tone, string> = {
+  primary: theme.colors.primaryText,
+  cool: theme.colors.cool,
+  hot: theme.colors.hot,
+  warning: theme.colors.warning,
+  sub: theme.colors.subtext,
+}
+
 /** Only for accounts in app_admins. */
 const ADMIN_GROUP: MenuGroup = {
   title: 'Admin',
-  rows: [{ title: 'Admin metrics', icon: 'stats-chart-outline', section: 'metrics' }],
+  rows: [{ title: 'Admin metrics', icon: 'stats-chart-outline', tone: 'sub', section: 'metrics' }],
 }
 
 const rowKey = (row: MenuRow) => ('section' in row ? row.section : row.action)
@@ -108,8 +109,8 @@ export function ProfileMenu({ onOpen, onTakeTour, onOpenTerms, onOpenPrivacy, fr
                     pressed && { backgroundColor: theme.colors.background },
                   ]}
                 >
-                  <View style={styles.rowIcon}>
-                    <Ionicons name={row.icon} size={18} color={theme.colors.primaryText} />
+                  <View style={[styles.rowIcon, { backgroundColor: TONE_COLOR[row.tone] + '1F' }]}>
+                    <Ionicons name={row.icon} size={18} color={TONE_COLOR[row.tone]} />
                   </View>
                   <Text style={styles.rowTitle}>{row.title}</Text>
                   {key === 'friends' && friendRequestCount > 0 && (
@@ -134,19 +135,17 @@ const styles = StyleSheet.create({
     gap: theme.spacing.lg,
   },
   groupTitle: {
-    fontFamily: theme.fonts.body,
-    fontSize: theme.font.size.xs,
-    fontWeight: '700',
-    color: theme.colors.subtext,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: theme.spacing.xs,
-    marginLeft: theme.spacing.xs,
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.size.lg,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
   },
   card: {
     gap: 0,
     padding: 0,
     overflow: 'hidden',
+    borderRadius: 18,
+    borderWidth: 0,
   },
   row: {
     flexDirection: 'row',
@@ -163,8 +162,7 @@ const styles = StyleSheet.create({
   rowIcon: {
     width: 34,
     height: 34,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.primary + '14',
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },

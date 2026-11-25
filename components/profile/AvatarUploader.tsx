@@ -13,27 +13,29 @@ type Props = {
   uploader: AvatarUploaderState
   /** Edit mode makes the picture tappable and adds the remove button and hint text. */
   editMode: boolean
+  /** Picture size; defaults to AVATAR_SIZE (the editor's). */
+  size?: number
 }
 
 /**
  * The profile picture with its owner controls. In edit mode: tap to pick a
  * photo, x to remove it, and a preview/confirm dialog before anything uploads.
  */
-export function AvatarUploader({ profile, uploader, editMode }: Props) {
+export function AvatarUploader({ profile, uploader, editMode, size = AVATAR_SIZE }: Props) {
   return (
     <>
       <ProfileAvatar
         uri={uploader.uri}
         loading={uploader.busy}
         border={profile.selected_border}
-        size={AVATAR_SIZE}
+        size={size}
         onPress={editMode ? () => void uploader.pick() : undefined}
         onDelete={editMode && profile.avatar_url ? () => void uploader.remove() : undefined}
       />
 
       {editMode && (
         <>
-          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>
+          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, textAlign: 'center' }}>
             Tap to {profile.avatar_url ? 'change' : 'add'} a photo.
           </Text>
           {uploader.uriError && profile.avatar_url ? (

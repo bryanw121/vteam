@@ -7,11 +7,13 @@ import { DocScrollView } from '../../../../../components/DocScrollView'
 import { toast } from '../../../../../lib/toast'
 import { SignInPrompt } from '../../../../../components/SignInPrompt'
 import { ScreenState } from '../../../../../components/ui'
-import { ProfileHero } from '../../../../../components/profile/ProfileHero'
+import { EditProfilePill, PROFILE_HERO_AVATAR, ProfileHero } from '../../../../../components/profile/ProfileHero'
+import { AvatarUploader } from '../../../../../components/profile/AvatarUploader'
 import { ProfileMenu } from '../../../../../components/profile/ProfileMenu'
 import { useTour } from '../../../../../contexts/tour'
 import { EditProfileForm } from '../../../../../components/profile/EditProfileForm'
-import { RecentCheersPlaceholder, TrophyCase } from '../../../../../components/profile/TrophyCase'
+import { TrophyCase } from '../../../../../components/profile/TrophyCase'
+import { AppearanceSwitch } from '../../../../../components/profile/AppearanceSwitch'
 import { useUserTrophies } from '../../../../../hooks/useUserTrophies'
 import { useAvatarUploader } from '../../../../../components/profile/useAvatarUploader'
 import { PROFILE_TAB_INDEX, shared, theme } from '../../../../../constants'
@@ -119,33 +121,35 @@ function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, upda
           </View>
         )}
 
-        {section === 'menu' && (
-          <View style={{ alignItems: 'flex-end', marginBottom: theme.spacing.xs }}>
-            {/* /profile opens the viewer's own profile, so share the public one. */}
-            <ShareLinkButton
-              path={routes.profileOf(profile.id)}
-              title={`${[profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'My profile'} on vteam`}
-              screen="profile"
-              testID="profile-share-button"
-            />
+        {section === 'edit' ? (
+          <View style={{ alignItems: 'center', gap: theme.spacing.xs }}>
+            <AvatarUploader profile={profile} uploader={uploader} editMode />
           </View>
+        ) : (
+          <ProfileHero
+            profile={profile}
+            avatar={<AvatarUploader profile={profile} uploader={uploader} editMode={false} size={PROFILE_HERO_AVATAR} />}
+            actions={<EditProfilePill onPress={() => setSection('edit')} />}
+            trailing={
+              // /profile opens the viewer's own profile, so share the public one.
+              <ShareLinkButton
+                path={routes.profileOf(profile.id)}
+                title={`${[profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'My profile'} on vteam`}
+                screen="profile"
+                testID="profile-share-button"
+              />
+            }
+            totalCheers={totalCheers}
+            totalPoints={totalPoints}
+            trophyCount={trophies.data?.length ?? 0}
+            displayedBadges={displayedBadges}
+          />
         )}
-
-        <ProfileHero
-          profile={profile}
-          uploader={uploader}
-          mode={section}
-          totalCheers={totalCheers}
-          totalPoints={totalPoints}
-          trophyCount={trophies.data?.length ?? 0}
-          displayedBadges={displayedBadges}
-          onEdit={() => setSection('edit')}
-        />
 
         {section === 'menu' ? (
           <>
             <TrophyCase trophies={trophies.data ?? []} own />
-            <RecentCheersPlaceholder />
+            <AppearanceSwitch />
             <ProfileMenu
               onOpen={s => router.push(routes.settings(s))}
               onTakeTour={() => tour.start('intro', 'profile_menu')}
