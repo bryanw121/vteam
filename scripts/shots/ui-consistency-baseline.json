@@ -4,47 +4,22 @@
   },
   "events-feed": {
     "mobile": {
-      "tap-target-44": 11
-    }
-  },
-  "events-feed-tournaments": {
-    "mobile": {
-      "tap-target-44": 8
+      "tap-target-44": 1
     }
   },
   "events-feed-link": {
     "mobile": {
-      "tap-target-44": 10
+      "tap-target-44": 1
     }
   },
   "events-session-sheet": {
     "mobile": {
-      "tap-target-44": 12
+      "tap-target-44": 2
     }
   },
   "events-feed-guest": {
     "mobile": {
-      "tap-target-44": 11
-    }
-  },
-  "event-details": {
-    "mobile": {
-      "tap-target-44": 3
-    }
-  },
-  "event-past-guest": {
-    "mobile": {
-      "tap-target-44": 2
-    }
-  },
-  "event-people": {
-    "mobile": {
-      "tap-target-44": 2
-    }
-  },
-  "event-people-balanced": {
-    "mobile": {
-      "tap-target-44": 2
+      "tap-target-44": 1
     }
   },
   "event-discussion": {
@@ -52,34 +27,9 @@
       "tap-target-44": 6
     }
   },
-  "event-paid-bottom": {
-    "mobile": {
-      "tap-target-44": 3
-    }
-  },
-  "event-leave-sheet": {
-    "mobile": {
-      "tap-target-44": 7
-    }
-  },
-  "event-guest": {
-    "mobile": {
-      "tap-target-44": 3
-    }
-  },
-  "event-bring-list": {
-    "mobile": {
-      "tap-target-44": 2
-    }
-  },
-  "event-bring-list-guest": {
-    "mobile": {
-      "tap-target-44": 3
-    }
-  },
   "host-create-bring": {
     "mobile": {
-      "tap-target-44": 11
+      "tap-target-44": 3
     }
   },
   "host-create": {
@@ -97,49 +47,9 @@
       "tap-target-44": 1
     }
   },
-  "club-detail": {
-    "mobile": {
-      "tap-target-44": 3
-    }
-  },
   "club-poll-composer": {
     "mobile": {
-      "tap-target-44": 11
-    }
-  },
-  "club-edit": {
-    "mobile": {
-      "tap-target-44": 1
-    }
-  },
-  "club-delete-dialog": {
-    "mobile": {
-      "tap-target-44": 3
-    }
-  },
-  "find-a-team": {
-    "mobile": {
-      "tap-target-44": 13
-    }
-  },
-  "find-a-team-sheet": {
-    "mobile": {
-      "tap-target-44": 13
-    }
-  },
-  "search": {
-    "mobile": {
-      "tap-target-44": 3
-    }
-  },
-  "search-empty": {
-    "mobile": {
-      "tap-target-44": 3
-    }
-  },
-  "search-guest": {
-    "mobile": {
-      "tap-target-44": 1
+      "tap-target-44": 2
     }
   },
   "chat-list": {
@@ -147,14 +57,9 @@
       "tap-target-44": 1
     }
   },
-  "chat-conversation": {
-    "mobile": {
-      "tap-target-44": 1
-    }
-  },
   "chat-club": {
     "mobile": {
-      "tap-target-44": 2
+      "tap-target-44": 1
     }
   },
   "profile-own": {
@@ -167,14 +72,9 @@
       "tap-target-44": 1
     }
   },
-  "scorekeeper-new": {
-    "mobile": {
-      "tap-target-44": 1
-    }
-  },
   "settings-notifications": {
     "mobile": {
-      "tap-target-44": 19
+      "tap-target-44": 7
     }
   },
   "settings-history": {
@@ -187,16 +87,6 @@
       "tap-target-44": 3
     }
   },
-  "tournaments-list": {
-    "mobile": {
-      "tap-target-44": 2
-    }
-  },
-  "tournaments-list-past": {
-    "mobile": {
-      "tap-target-44": 2
-    }
-  },
   "tournament-discussion": {
     "mobile": {
       "tap-target-44": 1
@@ -204,22 +94,12 @@
   },
   "tournament-make-teams": {
     "mobile": {
-      "tap-target-44": 3
+      "tap-target-44": 1
     }
   },
   "tournament-make-teams-drawn": {
     "mobile": {
       "tap-target-44": 13
-    }
-  },
-  "login": {
-    "mobile": {
-      "tap-target-44": 1
-    }
-  },
-  "event-join-intent-sheet": {
-    "mobile": {
-      "tap-target-44": 3
     }
   }
 }
