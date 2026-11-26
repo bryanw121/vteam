@@ -136,9 +136,9 @@ export const SCREENS = {
   // ── Settings ────────────────────────────────────────────────────────────
   'settings-account': { route: '/settings/account', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/account.tsx'] },
   'settings-experimental': { route: '/settings/experimental', ready: 'Scorekeeper', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/experimental.tsx', 'constants/experiments.ts', 'components/scoresheet/MatchRow.tsx'] },
-  scorekeeper: { route: '/scorekeeper', ready: 'New match', sources: ['app/(app)/scorekeeper/index.tsx', 'components/scoresheet/MatchRow.tsx', 'hooks/useSavedMatches.ts'] },
-  'scorekeeper-simple': { route: '/scorekeeper/simple', ready: 'serves first', sources: ['app/(app)/scorekeeper/simple.tsx', 'hooks/useSimpleScore.ts', 'lib/simpleScore.ts'] },
-  'scorekeeper-simple-play': { route: '/scorekeeper/simple', ready: 'serves first', actions: [{ tap: 'simple-point-A' }, { tap: 'simple-point-A' }, { tap: 'simple-point-B' }, { wait: 300 }], sources: ['app/(app)/scorekeeper/simple.tsx', 'hooks/useSimpleScore.ts', 'lib/simpleScore.ts'] },
+  scorekeeper: { route: '/scorekeeper?mode=official', ready: 'New match', sources: ['app/(app)/scorekeeper/index.tsx', 'components/scoresheet/MatchRow.tsx', 'hooks/useSavedMatches.ts'] },
+  'scorekeeper-simple': { route: '/scorekeeper', ready: 'serves first', sources: ['app/(app)/scorekeeper/index.tsx', 'components/scoresheet/SimpleScorePanel.tsx', 'hooks/useSimpleScore.ts', 'lib/simpleScore.ts'] },
+  'scorekeeper-simple-play': { route: '/scorekeeper', ready: 'serves first', actions: [{ tap: 'simple-point-A' }, { tap: 'simple-point-A' }, { tap: 'simple-point-B' }, { wait: 300 }], sources: ['app/(app)/scorekeeper/index.tsx', 'components/scoresheet/SimpleScorePanel.tsx', 'hooks/useSimpleScore.ts', 'lib/simpleScore.ts'] },
   'scorekeeper-new': { route: '/scorekeeper/new', ready: 'NET', sources: ['app/(app)/scorekeeper/new.tsx', 'components/scoresheet/CourtLayout.tsx', 'components/scoresheet/CourtSpot.tsx', 'components/scoresheet/PlayerSheet.tsx', 'lib/scoresheet/rules.ts'] },
   'settings-display': { route: '/settings/display', sources: [...SETTINGS, 'app/(app)/(tabs)/settings/display.tsx', 'contexts/textScale.tsx', 'lib/appearance.ts', 'lib/appearance.web.ts', 'constants/colorScheme.ts'] },
   'settings-notifications': {

@@ -136,11 +136,9 @@ export const routes = {
   /** Player setup after sign-up (#156); `next` is where to go after Done or Skip (an in-app path). */
   welcome: (next?: string) => href(next ? `/welcome?next=${encodeURIComponent(next)}` : '/welcome'),
 
-  /** Experimental scorekeeper (Settings → Experimental features). Matches live on the device. */
-  scorekeeper: () => href('/scorekeeper'),
+  /** Experimental scorekeeper (Settings → Experimental features): Simple | Official (`?mode=`). Matches live on the device. */
+  scorekeeper: (view: ViewOf<'scorekeeper'> = {}) => href(withView('/scorekeeper', VIEW.scorekeeper, view)),
   scorekeeperNew: () => href('/scorekeeper/new'),
-  /** Simple score: a plain point counter, no lineups or scoresheet. Device-only. */
-  scorekeeperSimple: () => href('/scorekeeper/simple'),
   scorekeeperMatch: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}`),
   scorekeeperSheet: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/sheet`),
   scorekeeperCopy: (id: string) => href(`/scorekeeper/${encodeURIComponent(id)}/copy`),

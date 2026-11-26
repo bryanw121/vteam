@@ -8,6 +8,13 @@ export const CLUB_COVER_HEIGHT = 200
 export const CLUB_AVATAR_SIZE = 80
 
 export const shared = StyleSheet.create({
+  /** A two- or three-way switch (Tournaments Upcoming | Past, Scorekeeper Simple | Official): the chosen one outlined. */
+  segments: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: theme.radius.full, backgroundColor: theme.colors.card },
+  segment: { flex: 1, minHeight: 44, borderRadius: theme.radius.full, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center', paddingHorizontal: theme.spacing.sm },
+  segmentOn: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primaryText },
+  segmentText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.base, color: theme.colors.subtext },
+  segmentTextOn: { color: theme.colors.primaryText },
+
 
   // ─── Layout ───────────────────────────────────────────────
   screen:        { flex: 1, backgroundColor: colors.background },

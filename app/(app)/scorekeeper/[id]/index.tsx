@@ -118,7 +118,7 @@ export default function ScoreMatchScreen() {
 
   const header = (
     <View style={styles.topBar}>
-      <IconButton icon="chevron-back" size={44} label="Back to Scorekeeper" onPress={() => (router.canGoBack() ? router.back() : router.replace(routes.scorekeeper()))} />
+      <IconButton icon="chevron-back" size={44} label="Back to Scorekeeper" onPress={() => (router.canGoBack() ? router.back() : router.replace(routes.scorekeeper({ mode: 'official' })))} />
       <View style={{ flex: 1, alignItems: 'center' }}>
         <Text style={styles.topTitle} numberOfLines={1}>
           {!m.state ? 'Match' : set ? `Set ${set.index + 1} · Sets ${m.state.setsWon.A}–${m.state.setsWon.B}` : m.state.over ? 'Final' : `Set ${m.state.sets.length + 1} next`}
@@ -388,7 +388,7 @@ export default function ScoreMatchScreen() {
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => {
           setConfirmDelete(false)
-          if (id) void deleteMatch(id).then(() => router.replace(routes.scorekeeper()))
+          if (id) void deleteMatch(id).then(() => router.replace(routes.scorekeeper({ mode: 'official' })))
         }}
       />
     </View>
