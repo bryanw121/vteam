@@ -3,16 +3,17 @@ import { View, ScrollView, TouchableOpacity } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../../ui/Text'
 import { theme, shared } from '../../../constants'
-import { TIEBREAKER_LABELS } from '../../../constants/tournamentCopy'
+import { TIEBREAKER_LABELS, TOURNAMENT_EDIT_NOTE, tournamentSaveLabel } from '../../../constants/tournamentCopy'
+import { Chip } from '../../ui'
 import { Spinner } from '../../ui/Spinner'
 import { TOURNAMENT_FORMAT_LABELS } from '../../../utils/tournamentDraft'
 import { PreviewRow } from './CreateBits'
 import type { TournamentPreviewStepProps } from '../../../types'
 import { formatDate } from '../../../utils/dateFormat'
 
-/** Wizard step 5: how the tournament will look, then Publish or Save as Draft. */
-export function PreviewStep({ draft, clubs, onSaveDraft, onPublish, saving }: TournamentPreviewStepProps) {
-  const club = clubs.find(c => c.id === draft.clubId)
+/** Wizard step 5: how the tournament will look, then Publish or Save as Draft; when editing (#402), the host and one Save that tells the players. */
+export function PreviewStep({ draft, clubs, onSaveDraft, onPublish, saving, edit }: TournamentPreviewStepProps) {
+  const clubNames = draft.clubIds.map(id => clubs.find(c => c.id === id)?.name).filter(Boolean).join(', ')
   const fmtDate = (d: Date | null) => d ? formatDate(d, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'
 
   return (
@@ -62,7 +63,7 @@ export function PreviewStep({ draft, clubs, onSaveDraft, onPublish, saving }: To
 
       {/* Details */}
       <View style={[shared.card, { marginBottom: 16 }]}>
-        <PreviewRow icon="people-outline"      label="Club"               value={club?.name ?? '—'} />
+        <PreviewRow icon="people-outline"      label="Clubs"              value={draft.clubIds.length ? (clubNames || `${draft.clubIds.length} linked`) : 'Open to everyone'} />
         <PreviewRow icon="calendar-outline"    label="Registration closes" value={fmtDate(draft.registrationDeadline)} />
         <PreviewRow icon="git-network-outline" label="Bracket"            value={draft.bracketType === 'double' ? 'Double elimination' : 'Single elimination'} />
         {draft.teamMode === 'solo'
@@ -83,7 +84,40 @@ export function PreviewStep({ draft, clubs, onSaveDraft, onPublish, saving }: To
         )}
       </View>
 
-      {/* Action buttons */}
+      {edit ? (
+        <View style={{ gap: 10 }}>
+          {edit.players.length > 0 && (
+            <View style={[shared.card, { gap: 10 }]}>
+              <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.md, color: theme.colors.text }}>Host</Text>
+              <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext }}>
+                Hand the tournament to a player who's signed up. They can edit it after you save.
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                <Chip label="You" role="radio" active={edit.newHostId === null} onPress={() => edit.setNewHostId(null)} testID="tournament-host-me" />
+                {edit.players.map(p => (
+                  <Chip key={p.id} label={p.name} role="radio" active={edit.newHostId === p.id} onPress={() => edit.setNewHostId(p.id)} testID="tournament-host-option" />
+                ))}
+              </View>
+            </View>
+          )}
+          <TouchableOpacity
+            testID="tournament-edit-save"
+            onPress={edit.onSave}
+            disabled={saving}
+            style={{ backgroundColor: theme.colors.primary, borderRadius: theme.radius.full, padding: 16, alignItems: 'center' }}
+          >
+            {saving
+              ? <Spinner color={theme.colors.onPrimary} />
+              : <Text style={{ fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.onPrimary }}>{tournamentSaveLabel(edit.players.length)}</Text>
+            }
+          </TouchableOpacity>
+          {edit.players.length > 0 && (
+            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, textAlign: 'center', paddingHorizontal: 20 }}>
+              {TOURNAMENT_EDIT_NOTE}
+            </Text>
+          )}
+        </View>
+      ) : (
       <View style={{ gap: 10 }}>
         <TouchableOpacity
           onPress={onPublish}
@@ -106,6 +140,7 @@ export function PreviewStep({ draft, clubs, onSaveDraft, onPublish, saving }: To
           Drafts are only visible to you. You can publish any time from the tournament page.
         </Text>
       </View>
+      )}
     </ScrollView>
   )
 }

@@ -101,6 +101,7 @@ export const NOTIFICATION_PREF_TYPES = [
   'bring_item_uncovered',
   'new_game',
   'club_poll',
+  'tournament_updated',
 ] as const
 
 /** Must match the `notifications_notification_type_check` constraint in Supabase exactly. */
@@ -1394,7 +1395,8 @@ export type TournamentSet = Tables<'tournament_sets'>
 export type TournamentDraft = {
   // Step 1 — Basic Info
   title: string
-  clubId: string
+  /** Clubs it is linked to (#401): none means anyone on vteam can find it; the first is `club_id`. */
+  clubIds: string[]
   location: string
   skillLevels: (VolleyballSkillLevel | 'open')[]
   startDate: Date | null
@@ -1456,13 +1458,33 @@ export type TournamentPhaseRules = Partial<Record<TournamentPhase, Partial<{
 export type TournamentSaveStatus = 'draft' | 'published'
 
 /** What the wizard saves: the draft, as a draft or published. */
+/** Saving the host's edit (#402). `newHostId` hands the tournament to that player. */
+/** The tournament wizard: new, or editing `editId` (#402). */
+export type TournamentWizardProps = { editId?: string | null }
+
+export type UpdateTournamentInput = { id: string; draft: TournamentDraft; newHostId: string | null }
+
 export type SaveTournamentInput = { draft: TournamentDraft; status: TournamentSaveStatus }
 
 /** One choice on the wizard's Format step. */
 export type TournamentFormatOption = { id: TournamentFormat; icon: string; label: string; description: string }
 
 /** A club the creator can attach a tournament to. */
-export type TournamentClubOption = Pick<Club, 'id' | 'name'>
+export type TournamentClubOption = Pick<Club, 'id' | 'name'> & {
+  /** The viewer's role there: clubs they run are listed first. */
+  role?: string | null
+}
+
+/** A player signed up for a tournament, for the host picker and the "tell N players" count (#402). */
+export type TournamentPlayerOption = { id: string; name: string }
+
+/** Editing a tournament (#402): who is in it, and who will host after saving. */
+export type TournamentEditState = {
+  players: readonly TournamentPlayerOption[]
+  newHostId: string | null
+  setNewHostId: (id: string | null) => void
+  onSave: () => void
+}
 
 /** The wizard's small form pieces (`components/tournament/create/CreateBits.tsx`). */
 export type WizardStepIndicatorProps = { current: number }
@@ -1496,6 +1518,8 @@ export type TournamentBasicsStepProps = TournamentStepProps & {
 export type TournamentPreviewStepProps = {
   draft: TournamentDraft
   clubs: readonly TournamentClubOption[]
+  /** Set when editing: one Save that tells the players, and the host picker. */
+  edit?: TournamentEditState
   onSaveDraft: () => void
   onPublish: () => void
   saving: boolean

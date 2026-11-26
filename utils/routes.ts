@@ -94,6 +94,8 @@ export const routes = {
   conversation: (id: string) => href(`/chat/${id}`),
   tournament: (id: string, view: ViewOf<'tournament'> = {}) => href(withView(`/tournament/${id}`, VIEW.tournament, view)),
   tournamentCreate: () => href('/tournament/create'),
+  /** The host edits a tournament (#402). Account-only. */
+  tournamentEdit: (id: string) => href(`/tournament/edit/${id}`),
   /** Organizer of a solo sign-up tournament (#282): pin, shuffle and post teams. */
   tournamentMakeTeams: (id: string) => href(`/tournament/make-teams/${id}`),
   tournaments: (view: ViewOf<'tournaments'> = {}) => href(withView('/tournaments', VIEW.tournaments, view)),

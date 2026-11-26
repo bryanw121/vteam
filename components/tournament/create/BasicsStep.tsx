@@ -3,14 +3,15 @@ import { View, ScrollView, TouchableOpacity } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../../ui/Text'
 import { theme, shared, SKILL_LEVEL_LABELS } from '../../../constants'
-import { TOURNAMENT_CLUBS_ERROR } from '../../../constants/tournamentCopy'
+import { TOURNAMENT_CLUBS_ERROR, TOURNAMENT_CLUBS_LINKED_HINT, TOURNAMENT_CLUBS_OPEN_HINT } from '../../../constants/tournamentCopy'
+import { isClubRunner } from '../../../utils/tournamentDraft'
 import { DatePickerField } from '../../DatePickerField'
 import { Button } from '../../Button'
 import { Spinner } from '../../ui/Spinner'
 import { Field, SectionLabel, TextBox } from './CreateBits'
 import type { TournamentBasicsStepProps } from '../../../types'
 
-/** Wizard step 1: name, description, club, skill levels, when and where. */
+/** Wizard step 1: name, description, linked clubs (optional, #401), skill levels, when and where. */
 export function BasicsStep({ draft, update, clubs, clubsLoading, clubsError, onRetryClubs }: TournamentBasicsStepProps) {
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, gap: 0 }} showsVerticalScrollIndicator={false}>
@@ -24,38 +25,50 @@ export function BasicsStep({ draft, update, clubs, clubsLoading, clubsError, onR
         </Field>
       </View>
 
-      <SectionLabel icon="people-outline" label="Club" />
+      <SectionLabel icon="people-outline" label="Clubs (optional)" />
       <View style={[shared.card, { marginBottom: 16 }]}>
-        <Field label="Associate with club">
-          {clubsLoading && clubs.length === 0
-            ? <Spinner label="Loading your clubs" />
-            : clubsError
-            ? <View style={{ gap: 8, alignItems: 'flex-start' }}>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext }}>{TOURNAMENT_CLUBS_ERROR}</Text>
-                <Button label="Try again" variant="secondary" onPress={onRetryClubs} />
-              </View>
-            : clubs.length === 0
-            ? <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext }}>You must be a club member to host a tournament.</Text>
-            : <View style={{ gap: 8 }}>
-                {clubs.map(c => (
+        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext, marginBottom: 10 }}>
+          {draft.clubIds.length ? TOURNAMENT_CLUBS_LINKED_HINT : TOURNAMENT_CLUBS_OPEN_HINT}
+        </Text>
+        {clubsLoading && clubs.length === 0
+          ? <Spinner label="Loading your clubs" />
+          : clubsError
+          ? <View style={{ gap: 8, alignItems: 'flex-start' }}>
+              <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext }}>{TOURNAMENT_CLUBS_ERROR}</Text>
+              <Button label="Try again" variant="secondary" onPress={onRetryClubs} />
+            </View>
+          : clubs.length > 0 && (
+            <View style={{ gap: 8 }}>
+              {clubs.map(c => {
+                const on = draft.clubIds.includes(c.id)
+                return (
                   <TouchableOpacity
                     key={c.id}
-                    onPress={() => update({ clubId: c.id })}
+                    testID="tournament-club-option"
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: on }}
+                    onPress={() => update({ clubIds: on ? draft.clubIds.filter(id => id !== c.id) : [...draft.clubIds, c.id] })}
                     style={{
-                      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-                      padding: 12, borderRadius: 12,
-                      backgroundColor: draft.clubId === c.id ? theme.colors.primarySoft : theme.colors.background,
+                      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44,
+                      paddingHorizontal: 12, paddingVertical: 10, borderRadius: theme.radius.md,
+                      backgroundColor: on ? theme.colors.primarySoft : theme.colors.background,
                       borderWidth: 1.5,
-                      borderColor: draft.clubId === c.id ? theme.colors.primary : theme.colors.border,
+                      borderColor: on ? theme.colors.primary : theme.colors.border,
                     }}
                   >
-                    <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>{c.name}</Text>
-                    {draft.clubId === c.id && <Ionicons name="checkmark-circle" size={18} color={theme.colors.primaryText} />}
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>{c.name}</Text>
+                      {isClubRunner(c.role) && (
+                        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext }}>You run it</Text>
+                      )}
+                    </View>
+                    <Ionicons name={on ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={on ? theme.colors.primaryText : theme.colors.subtext} />
                   </TouchableOpacity>
-                ))}
-              </View>
-          }
-        </Field>
+                )
+              })}
+            </View>
+          )
+        }
       </View>
 
       <SectionLabel icon="stats-chart-outline" label="Skill Level" />
