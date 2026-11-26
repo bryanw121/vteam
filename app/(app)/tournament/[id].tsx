@@ -17,7 +17,7 @@ import { avoidPoolRematches, computeStandings, DEFAULT_TIEBREAKERS, seedsFromPoo
 import { poolTables as buildPoolTables, resultWrites, tournamentPodium } from '../../../lib/tournamentResults'
 import { profileDisplayName } from '../../../utils'
 import { routes } from '../../../utils/routes'
-import { ConfirmDialog, EmptyState, ScreenHeader, ScreenState } from '../../../components/ui'
+import { ConfirmDialog, EmptyState, IconButton, ScreenHeader, ScreenState } from '../../../components/ui'
 import { ShareLinkButton } from '../../../components/ShareLinkButton'
 import { useUrlParam } from '../../../hooks/useUrlParam'
 import { VIEW } from '../../../utils/urlViews'
@@ -312,13 +312,23 @@ export default function TournamentDetailScreen() {
               registeredTeamCount={registeredTeams.length}
               onBack={goBack}
               actions={(
-                <ShareLinkButton
-                  path={routes.tournament(tournament.id, { tab: tabIndex })}
-                  title={`${tournament.title} on vteam`}
-                  screen="tournament"
-                  filtered={tabIndex > 0}
-                  testID="tournament-share-button"
-                />
+                <>
+                  {isCreator && (
+                    <IconButton
+                      icon="create-outline"
+                      label="Edit tournament"
+                      onPress={() => router.push(routes.tournamentEdit(tournament.id))}
+                      testID="tournament-edit-button"
+                    />
+                  )}
+                  <ShareLinkButton
+                    path={routes.tournament(tournament.id, { tab: tabIndex })}
+                    title={`${tournament.title} on vteam`}
+                    screen="tournament"
+                    filtered={tabIndex > 0}
+                    testID="tournament-share-button"
+                  />
+                </>
               )}
             />
 

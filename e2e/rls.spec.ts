@@ -11,7 +11,7 @@
 import { test, expect } from '@playwright/test'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './env'
-import { EVENT_PREVIEW_COLUMNS } from '../constants/selects'
+import { EVENT_PREVIEW_COLUMNS, TOURNAMENT_FEED_SELECT, TOURNAMENT_LIST_SELECT } from '../constants/selects'
 import { signInE2eClient } from './eventsFixtures'
 import { withNetworkRetry } from './retry'
 
@@ -399,6 +399,36 @@ test.describe('privacy tightening (#99)', () => {
     test.skip(!applied, 'TODO(#102): migration 20261028120300_conversation_members_insert not on beta yet')
     const join = await q(() => me.from('conversation_members').insert({ conversation_id: crypto.randomUUID(), user_id: myId }), 'self-join conversation')
     expect(join.error?.code).toBe(RLS_DENIED)
+  })
+})
+
+/**
+ * #401 / #402: tournaments without a club, linked clubs, and the host's edit. Read-only:
+ * every write here is one the server must refuse.
+ */
+test.describe('tournament hosting (#401, #402)', () => {
+  test("the screens' tournament queries run as written (one club link named, no PGRST201)", async () => {
+    // Tournaments reach clubs two ways since tournament_clubs; a bare clubs(...) embed is refused.
+    const list = await q(() => me.from('tournaments').select(TOURNAMENT_LIST_SELECT).eq('tournament_teams.status', 'registered').limit(5), 'tournament list')
+    expect(list.error, 'Tournaments screen list').toBeNull()
+    const feed = await q(() => me.from('tournaments').select(TOURNAMENT_FEED_SELECT).neq('status', 'draft').limit(5), 'feed tournaments')
+    expect(feed.error, 'Events feed fallback').toBeNull()
+  })
+
+  test('guests read no linked clubs and cannot edit or link', async () => {
+    const read = await q(() => anon.from('tournament_clubs').select('tournament_id').limit(1), 'anon tournament_clubs')
+    expect(read.data ?? []).toEqual([])
+    const edit = await q(() => anon.rpc('update_tournament', { p_id: crypto.randomUUID(), p_tournament: { title: 'x' } } as never), 'anon update_tournament')
+    expect(edit.error).not.toBeNull()
+    const link = await q(() => anon.from('tournament_clubs').insert({ tournament_id: crypto.randomUUID(), club_id: crypto.randomUUID() }), 'anon link club')
+    expect(link.error).not.toBeNull()
+  })
+
+  test("update_tournament: an unknown tournament is not found, and nobody links a club to a tournament they don't host", async () => {
+    const missing = await q(() => me.rpc('update_tournament', { p_id: crypto.randomUUID(), p_tournament: { title: '[e2e rls] must fail' } } as never), 'edit unknown tournament')
+    expect(missing.error?.code).toBe('P0002')
+    const link = await q(() => me.from('tournament_clubs').insert({ tournament_id: crypto.randomUUID(), club_id: crypto.randomUUID() }), 'link a club to a tournament not hosted')
+    expect(link.error?.code).toBe(RLS_DENIED)
   })
 })
 
