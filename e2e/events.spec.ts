@@ -257,7 +257,6 @@ test.describe('Events', () => {
       await expect(priceInput).toHaveValue(price)
       await page.getByText('Save changes', { exact: true }).click()
       await expect(page.getByText('Event updated!')).toBeVisible({ timeout: 20000 })
-      await page.getByText('Done', { exact: true }).click()
       await page.waitForURL(eventUrl, { timeout: 20000 })
     }
 
@@ -293,10 +292,10 @@ test.describe('Events', () => {
       await expect(titleField).toBeVisible({ timeout: 20000 })
       await titleField.fill(next)
       await page.getByText('Save changes', { exact: true }).click()
-      // Success modal → Done runs router.back(), restoring the detail screen
+      // A saved edit goes back on its own (router.back()), restoring the detail screen,
+      // with the result as a toast (#389).
       // with its pre-edit React state intact. That restore is what used to be stale.
       await expect(page.getByText('Event updated!')).toBeVisible({ timeout: 20000 })
-      await page.getByText('Done', { exact: true }).click()
       await page.waitForURL(eventUrl, { timeout: 20000 })
     }
 
@@ -342,7 +341,6 @@ test.describe('Events', () => {
       // non-tag edit must not rewrite the tag rows.
       await page.getByText('Save changes', { exact: true }).click()
       await expect(page.getByText('Event updated!')).toBeVisible({ timeout: 20_000 })
-      await page.getByText('Done', { exact: true }).click()
       await page.waitForURL(eventUrl, { timeout: 20_000 })
     }
 
@@ -386,12 +384,12 @@ test.describe('Events', () => {
     await page.getByText('BB', { exact: true }).click()
     await page.getByText('Save changes', { exact: true }).click()
 
+    // A toast (#389) on the form, which stays as typed, with Try again.
     await expect(page.getByText('Nothing was saved. Check your connection and try again.', { exact: true })).toBeVisible({ timeout: 20_000 })
-    await expect(page.getByText('Close', { exact: true })).toBeVisible()
-
-    await page.getByText('Close', { exact: true }).click()
+    await expect(page.getByTestId('toast-action')).toHaveText('Try again')
     await expect(page).toHaveURL(/\/host\?edit=/)
     await expect(titleField).toBeVisible()
+    await page.getByTestId('toast-dismiss').click()
     await expect(page.getByText('Nothing was saved. Check your connection and try again.', { exact: true })).toHaveCount(0)
     await page.unroute('**/rest/v1/rpc/save_event*')
   })
@@ -451,7 +449,6 @@ test.describe('Events', () => {
 
     await page.getByText('Save changes', { exact: true }).click()
     await expect(page.getByText('Event updated!')).toBeVisible({ timeout: 20_000 })
-    await page.getByText('Done', { exact: true }).click()
     await page.waitForURL(eventUrl, { timeout: 20_000 })
 
     await expect(page.getByTestId('event-location-name')).toHaveText(MOCK_VENUE_NAME, { timeout: 20_000 })
@@ -508,7 +505,6 @@ test.describe('Events', () => {
 
     await page.getByText('Save changes', { exact: true }).click()
     await expect(page.getByText('Event updated!')).toBeVisible({ timeout: 20_000 })
-    await page.getByText('Done', { exact: true }).click()
     await page.waitForURL(eventUrl, { timeout: 20_000 })
 
     // City attached, state and country left off — a bare "1100 Congress Ave"

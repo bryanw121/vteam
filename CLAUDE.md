@@ -466,7 +466,7 @@ Use `components/ui` (import from `components/ui`) before hand-rolling UI:
 - `IconButton` for square icon buttons (38pt default, 44 where touch targets matter)
 - `Spinner` for every loading indicator (never `ActivityIndicator` directly: it needs an accessible name; pass `label` when "Loading" isn't enough)
 - `ScreenState` decides loading / error / empty / content for a data screen; `EmptyState` is the empty block
-- `ConfirmDialog` for confirm/cancel prompts; `BottomSheet` for slide-up sheets (no inline `Modal`s)
+- `ConfirmDialog` for confirm/cancel prompts (extra fields as children); `BottomSheet` for slide-up sheets and pickers; a toast for "it worked" (no inline `Modal`s: `__tests__/noInlineModals.test.ts` lists the few full-screen or anchored ones left, with why, #389)
 - `ScreenContainer` centers content on wide desktop web
 
 ## Routes

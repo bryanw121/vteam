@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Modal, Pressable, StyleSheet, View } from 'react-native'
-import { Text } from '../ui/Text'
-import { Button } from '../Button'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { Input } from '../Input'
-import { shared, theme } from '../../constants'
 
 type Props = {
   /** The request being denied; null = hidden. */
@@ -20,35 +17,25 @@ export function DenyRequestDialog({ target, processing, onCancel, onConfirm }: P
   useEffect(() => { setReason('') }, [target?.userId])
 
   return (
-    <Modal visible={target !== null} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={shared.modalOverlayPlain}>
-        <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.overlayLight }]} onPress={onCancel} />
-        <View style={[shared.card, styles.card]}>
-          <Text style={shared.subheading}>Deny request</Text>
-          {target && (
-            <Text style={shared.caption}>Denying {target.displayName}'s request to join. They can re-request after seeing this.</Text>
-          )}
-          <Input
-            placeholder="Reason (optional)"
-            value={reason}
-            onChangeText={setReason}
-            multiline
-            inputStyle={{ minHeight: 72 }}
-          />
-          <View style={[shared.row, { gap: theme.spacing.sm }]}>
-            <View style={{ flex: 1 }}>
-              <Button label="Cancel" onPress={onCancel} variant="secondary" disabled={processing} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Button label="Deny" onPress={() => onConfirm(reason)} loading={processing} variant="danger" />
-            </View>
-          </View>
-        </View>
-      </View>
-    </Modal>
+    <ConfirmDialog
+      visible={target !== null}
+      title="Deny request"
+      body={target ? `Denying ${target.displayName}'s request to join. They can re-request after seeing this.` : undefined}
+      confirmLabel="Deny"
+      destructive
+      loading={processing}
+      onConfirm={() => onConfirm(reason)}
+      onCancel={onCancel}
+      width={360}
+      testIDPrefix="deny-request-dialog"
+    >
+      <Input
+        placeholder="Reason (optional)"
+        value={reason}
+        onChangeText={setReason}
+        multiline
+        inputStyle={{ minHeight: 72 }}
+      />
+    </ConfirmDialog>
   )
 }
-
-const styles = StyleSheet.create({
-  card: { width: '85%', maxWidth: 360, gap: theme.spacing.md, zIndex: 1 },
-})
