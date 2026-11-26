@@ -359,12 +359,11 @@ export const shared = StyleSheet.create({
   forecastCellTemp: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lgs, color: theme.colors.text },
   forecastCellPop: { fontSize: theme.font.size.xs, color: theme.colors.subtextStrong },
   /** Heading over a group of outside leagues / tournaments (ProgramSection). */
+  // Party invite: a plain section title (Tournaments, Leagues), not an all-caps label.
   programSectionTitle: {
-    fontFamily: theme.fonts.bodySemiBold,
-    fontSize: theme.font.size.xs,
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: theme.colors.subtext,
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.size.lg,
+    color: theme.colors.text,
     marginTop: theme.spacing.md,
     marginBottom: theme.spacing.sm,
   },

@@ -1,16 +1,14 @@
 import React, { useMemo, useState } from 'react'
-import { FlatList, ScrollView, TouchableOpacity, View } from 'react-native'
+import { FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { Text } from '../../components/ui/Text'
 import { Stack, useRouter } from 'expo-router'
-import Ionicons from '@expo/vector-icons/Ionicons'
 import { shared, theme } from '../../constants'
 import { FORMAT_LABELS } from '../../constants/tournamentCopy'
 import { useSession } from '../../contexts/session'
 import { useRequireSignIn } from '../../hooks/useRequireSignIn'
 import { useTournamentList } from '../../hooks/useTournamentList'
 import { RefreshControl } from '../../components/RefreshControl'
-import { TourneyStatusBadge } from '../../components/tournament/TournamentBits'
-import { Chip, EmptyState, IconButton, ScreenContainer, ScreenHeader, Spinner } from '../../components/ui'
+import { EmptyState, IconButton, ScreenContainer, ScreenHeader, Spinner } from '../../components/ui'
 import { routes } from '../../utils/routes'
 import { splitTournaments } from '../../utils/tournamentList'
 import { useFreeAgentCounts } from '../../hooks/useFreeAgents'
@@ -26,81 +24,78 @@ import { useUrlParam } from '../../hooks/useUrlParam'
 import { VIEW } from '../../utils/urlViews'
 import type { TournamentListItem } from '../../types'
 import { formatDate } from '../../utils/dateFormat'
+import { CLUB_TILE_COLORS } from '../../constants/theme'
 
 type Tab = 'upcoming' | 'past'
 
-// One row's layout, shared by the row and its loading placeholder so they are the same height (#288).
-const ROW_STYLE = [shared.card, { flexDirection: 'row' as const, alignItems: 'center' as const, gap: theme.spacing.md, marginBottom: theme.spacing.sm, minHeight: 72 }]
-const DATE_BLOCK_STYLE = { width: 52, alignItems: 'center' as const, paddingVertical: 6, borderRadius: theme.radius.md, backgroundColor: theme.colors.time, borderWidth: 1, borderColor: theme.colors.timeBorder }
-const MONTH_STYLE = { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.timeInk, textTransform: 'uppercase' as const }
-const DAY_STYLE = { fontFamily: theme.fonts.display, fontSize: theme.font.size.lg, color: theme.colors.timeInk }
-const TITLE_STYLE = { fontFamily: theme.fonts.displaySemiBold, fontSize: theme.font.size.lgs, color: theme.colors.text }
-const META_STYLE = { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext }
-const SMALL_STYLE = { fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: theme.colors.subtext }
+/** The same cover colour for a tournament everywhere, from its name (the palette club tiles use). */
+function coverColor(name: string): string {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff
+  return CLUB_TILE_COLORS[Math.abs(h) % CLUB_TILE_COLORS.length]
+}
+
+/** What a club tournament's cover says about it (the tournament page keeps its own badge). */
+const STATUS_LABEL: Record<string, string> = {
+  published: 'Registration open', in_progress: 'In progress', completed: 'Completed', draft: 'Draft', cancelled: 'Cancelled',
+}
 /** A blank line of text in a placeholder: the same font metrics as the real line, with a bar instead of words. */
 const BLANK = '\u00a0'
-/** About as long as a real format + teams line ("Pool Play + Bracket · 8/8 teams"). */
-const TYPICAL_META = 'Pool Play + Bracket · 8/8 teams'
 
 /**
  * The club tournaments while they load on a first visit (returning viewers have them from the
- * device): the section header and two rows in the final layout, so the outside tournaments below
+ * device): the section header and two cards in the final layout, so the outside tournaments below
  * don't get pushed down when they arrive.
  */
 function ClubTournamentsSkeleton({ showHeader }: { showHeader: boolean }) {
   return (
     <View testID="tournaments-club-loading" accessibilityLabel="Loading club tournaments">
-      {showHeader && <Text accessibilityRole="header" style={shared.programSectionTitle}>On vteam</Text>}
+      {showHeader && <Text accessibilityRole="header" style={shared.programSectionTitle}>Your clubs</Text>}
       {[0, 1].map(i => (
-        <View key={i} style={ROW_STYLE} aria-hidden importantForAccessibility="no-hide-descendants">
-          <View style={[DATE_BLOCK_STYLE, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
-            <Text style={MONTH_STYLE}>{BLANK}</Text>
-            <Text style={DAY_STYLE}>{BLANK}</Text>
+        <View key={i} style={styles.card} aria-hidden importantForAccessibility="no-hide-descendants">
+          <View style={[styles.cover, { backgroundColor: theme.colors.border }]}>
+            <View style={[styles.coverPill, { backgroundColor: theme.colors.borderSoft }]}><Text style={[styles.coverPillText, { opacity: 0 }]}>{STATUS_LABEL.published}</Text></View>
+            <Text style={[styles.coverTitle, { opacity: 0 }]}>{BLANK}</Text>
           </View>
-          <View style={{ flex: 1, gap: 4 }}>
-            <View style={{ alignSelf: 'flex-start', width: '70%', borderRadius: theme.radius.sm, backgroundColor: theme.colors.border }}><Text style={TITLE_STYLE}>{BLANK}</Text></View>
-            <View style={{ alignSelf: 'flex-start', width: '50%', borderRadius: theme.radius.sm, backgroundColor: theme.colors.borderSoft }}><Text style={META_STYLE}>{BLANK}</Text></View>
-            {/* The real badge line wraps on narrow phones; the same badge and a typical line, hidden, wrap the same way. */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
-              <View style={{ borderRadius: theme.radius.sm, backgroundColor: theme.colors.borderSoft }}><View style={{ opacity: 0 }}><TourneyStatusBadge status="published" /></View></View>
-              <View style={{ borderRadius: theme.radius.sm, backgroundColor: theme.colors.borderSoft }}><Text style={[SMALL_STYLE, { opacity: 0 }]}>{TYPICAL_META}</Text></View>
-            </View>
+          <View style={styles.body}>
+            <View style={{ alignSelf: 'flex-start', width: '60%', borderRadius: theme.radius.sm, backgroundColor: theme.colors.borderSoft }}><Text style={styles.meta}>{BLANK}</Text></View>
+            <View style={styles.bar} />
+            <View style={{ alignSelf: 'flex-start', width: '40%', borderRadius: theme.radius.sm, backgroundColor: theme.colors.borderSoft }}><Text style={styles.teams}>{BLANK}</Text></View>
           </View>
-          <View style={{ width: 18 }} />
         </View>
       ))}
     </View>
   )
 }
 
+/** A club tournament as a cover card (Party invite layout): status and name on its colour, then when and where, and how full it is. */
 function TournamentRow({ item, onPress }: { item: TournamentListItem; onPress: () => void }) {
   const d = new Date(item.start_date)
-  const meta = [item.club_name, item.location].filter(Boolean).join(' · ')
+  const when = formatDate(d, { weekday: 'short', month: 'short', day: 'numeric' })
+  const meta = [when, item.location || item.club_name].filter(Boolean).join(' · ')
+  const fill = item.max_teams ? Math.min(1, item.team_count / item.max_teams) : null
+  const teams = item.max_teams
+    ? `${item.team_count} of ${item.max_teams} teams${item.team_count >= item.max_teams ? ' · full' : ''}`
+    : `${item.team_count} ${item.team_count === 1 ? 'team' : 'teams'}`
+  const cover = coverColor(item.title)
   return (
     <TouchableOpacity
       onPress={onPress}
+      activeOpacity={0.85}
       accessibilityRole="button"
-      accessibilityLabel={`${item.title}, ${formatDate(d, { weekday: 'long', month: 'long', day: 'numeric' })}`}
-      style={ROW_STYLE}
+      accessibilityLabel={`${item.title}, ${formatDate(d, { weekday: 'long', month: 'long', day: 'numeric' })}. ${teams}`}
+      style={styles.card}
       testID={`tournament-row-${item.id}`}
     >
-      <View style={DATE_BLOCK_STYLE}>
-        <Text style={MONTH_STYLE}>
-          {formatDate(d, { month: 'short' })}
-        </Text>
-        <Text style={DAY_STYLE}>{d.getDate()}</Text>
+      <View style={[styles.cover, { backgroundColor: cover }]}>
+        <View style={styles.coverPill}><Text style={styles.coverPillText}>{STATUS_LABEL[item.status] ?? item.status}</Text></View>
+        <Text style={styles.coverTitle} numberOfLines={1}>{item.title}</Text>
       </View>
-      <View style={{ flex: 1, gap: 4 }}>
-        <Text numberOfLines={1} style={TITLE_STYLE}>{item.title}</Text>
-        {!!meta && <Text numberOfLines={1} style={META_STYLE}>{meta}</Text>}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, flexWrap: 'wrap' }}>
-          <TourneyStatusBadge status={item.status} />
-          <Text style={SMALL_STYLE}>
-            {FORMAT_LABELS[item.format] ?? item.format} · {item.team_count}{item.max_teams ? `/${item.max_teams}` : ''} teams
-          </Text>
-        </View>
+      <View style={styles.body}>
+        <Text style={styles.meta} numberOfLines={1}>{meta}</Text>
+        <View style={styles.bar}>{fill !== null && <View style={[styles.barFill, { width: `${Math.round(fill * 100)}%`, backgroundColor: cover }]} />}</View>
+        <Text style={styles.teams} numberOfLines={1}>{`${FORMAT_LABELS[item.format] ?? item.format} · ${teams}`}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={theme.colors.subtext} />
     </TouchableOpacity>
   )
 }
@@ -154,7 +149,7 @@ export default function TournamentsScreen() {
     </TouchableOpacity>
   ) : tab === 'upcoming' && items.length ? (
     // Shown whenever there are club tournaments on Upcoming, like its loading placeholder, so the list never gains a header after it painted.
-    <Text accessibilityRole="header" style={shared.programSectionTitle}>On vteam · {items.length}</Text>
+    <Text accessibilityRole="header" style={shared.programSectionTitle}>Your clubs</Text>
   ) : null
   // Empty only once both lists have answered and neither has anything.
   const clubEmpty = !clubLoading && !list.error && !outsideNode && !outsideLoading ? (
@@ -211,9 +206,21 @@ export default function TournamentsScreen() {
           </ScrollView>
         ) : (
           <>
-            <View style={{ flexDirection: 'row', gap: theme.spacing.sm, paddingHorizontal: theme.spacing.md, paddingTop: theme.spacing.sm, paddingBottom: theme.spacing.md }}>
-              <Chip label="Upcoming" badge={split.upcoming.length || undefined} active={tab === 'upcoming'} onPress={() => setTab('upcoming')} testID="tournaments-upcoming" />
-              <Chip label="Past" badge={split.past.length || undefined} active={tab === 'past'} onPress={() => setTab('past')} testID="tournaments-past" />
+            <View style={styles.segments} role="tablist">
+              {(['upcoming', 'past'] as const).map(t => (
+                <TouchableOpacity
+                  key={t}
+                  role="tab"
+                  aria-selected={tab === t}
+                  onPress={() => setTab(t)}
+                  style={[styles.segment, tab === t && styles.segmentOn]}
+                  testID={`tournaments-${t}`}
+                >
+                  <Text style={[styles.segmentText, tab === t && styles.segmentTextOn]}>
+                    {t === 'upcoming' ? 'Upcoming' : 'Past'}{(t === 'upcoming' ? split.upcoming.length : split.past.length) ? ` ${t === 'upcoming' ? split.upcoming.length : split.past.length}` : ''}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
             {/* Club tournaments and outside ones load separately: outside tournaments never wait on the club list. */}
             <FlatList
@@ -234,3 +241,44 @@ export default function TournamentsScreen() {
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  segments: {
+    flexDirection: 'row',
+    gap: 4,
+    padding: 4,
+    marginHorizontal: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.card,
+  },
+  segment: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: theme.radius.full,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentOn: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primaryText },
+  segmentText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.base, color: theme.colors.subtext },
+  segmentTextOn: { color: theme.colors.primaryText },
+  card: {
+    borderRadius: theme.radius.xl,
+    overflow: 'hidden',
+    backgroundColor: theme.colors.card,
+    marginBottom: theme.spacing.md,
+    ...theme.shadow.card,
+  },
+  cover: { height: 92, paddingHorizontal: 14, paddingVertical: 12, justifyContent: 'space-between' },
+  coverPill: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: theme.radius.full, backgroundColor: theme.colors.black + '33' },
+  coverPillText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.white },
+  coverTitle: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lg, letterSpacing: -0.3, color: theme.colors.white },
+  body: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12, gap: 6 },
+  meta: { fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext },
+  bar: { height: 6, borderRadius: theme.radius.full, backgroundColor: theme.colors.primarySoft, overflow: 'hidden' },
+  barFill: { height: '100%', borderRadius: theme.radius.full },
+  teams: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.text },
+})
