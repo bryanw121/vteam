@@ -29,7 +29,9 @@ export async function fetchTournamentClubs(userId: string): Promise<TournamentCl
 export async function fetchTournamentClubIds(id: string, fallback: string | null): Promise<string[]> {
   const { data, error } = await supabase.from('tournament_clubs').select('club_id').eq('tournament_id', id).order('created_at')
   if (error) return fallback ? [fallback] : []
-  return ((data ?? []) as { club_id: string }[]).map(r => r.club_id)
+  const ids = ((data ?? []) as { club_id: string }[]).map(r => r.club_id)
+  // club_id is always the first linked club, so a tournament with one has at least that.
+  return ids.length || !fallback ? ids : [fallback]
 }
 
 /** `seed`: a saved tournament's draft when editing; it replaces the blank draft once. */
