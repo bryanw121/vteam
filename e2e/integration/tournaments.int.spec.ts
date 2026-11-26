@@ -82,7 +82,7 @@ test('schedule: one pool with both teams and their game', async () => {
   const count = await ok('replace_tournament_schedule', () => me.db.rpc('replace_tournament_schedule', {
     p_tournament_id: tid,
     p_pools: [{ key: 'A', name: 'Pool A', display_order: 0, team_ids: [teamA, teamB] }],
-    p_matches: [{ pool_key: 'A', stage: 'pool', round: 1, match_number: 1, team_a_id: teamA, team_b_id: teamB, court: '1', scheduled_at: daysFromNow(10, 15) }],
+    p_matches: [{ pool_key: 'A', stage: 'pool_play', round: 1, match_number: 1, team_a_id: teamA, team_b_id: teamB, court: '1', scheduled_at: daysFromNow(10, 15) }],
   }))
   expect(count).toBe(1)
   const m = await ok('the match', () => me.db.from('tournament_matches').select('id, pool_id, status').eq('tournament_id', tid).single()) as { id: string; pool_id: string | null; status: string }
@@ -93,7 +93,7 @@ test('schedule: one pool with both teams and their game', async () => {
   await ok('again', () => me.db.rpc('replace_tournament_schedule', {
     p_tournament_id: tid,
     p_pools: [{ key: 'A', name: 'Pool A', display_order: 0, team_ids: [teamA, teamB] }],
-    p_matches: [{ pool_key: 'A', stage: 'pool', round: 1, match_number: 1, team_a_id: teamA, team_b_id: teamB, court: '1', scheduled_at: daysFromNow(10, 15) }],
+    p_matches: [{ pool_key: 'A', stage: 'pool_play', round: 1, match_number: 1, team_a_id: teamA, team_b_id: teamB, court: '1', scheduled_at: daysFromNow(10, 15) }],
   }))
   const after = await ok('matches', () => me.db.from('tournament_matches').select('id').eq('tournament_id', tid)) as { id: string }[]
   expect(after).toHaveLength(1)
