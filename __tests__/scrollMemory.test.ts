@@ -66,6 +66,32 @@ describe('restoreWhenReady', () => {
     expect(f.run()).toBe(0) // stopped once it took
   })
 
+  it('keeps trying past half a second: the event page can still be growing (#399)', () => {
+    const f = frames()
+    let height = 67
+    let y = 0
+    restoreWhenReady({ y: 128, ready: () => true, apply: to => { y = Math.min(to, height) }, current: () => y, nextFrame: f.nextFrame })
+    f.run(45) // ~0.75 s at 60 fps, still short
+    expect(y).toBe(67)
+    height = 2000
+    f.run(1)
+    expect(y).toBe(128)
+  })
+
+  it('stops as soon as the player scrolls, rather than pulling them back', () => {
+    const f = frames()
+    let height = 300
+    let y = 0
+    const apply = jest.fn((to: number) => { y = Math.min(to, height) })
+    restoreWhenReady({ y: 838, ready: () => true, apply, current: () => y, nextFrame: f.nextFrame })
+    expect(y).toBe(300)
+    y = 120 // the player scrolled up
+    height = 2000
+    f.run()
+    expect(y).toBe(120)
+    expect(apply).toHaveBeenCalledTimes(1)
+  })
+
   it('calls onDone once, when the offset took or the frames ran out', () => {
     const f = frames()
     let y = 0

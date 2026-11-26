@@ -36,7 +36,10 @@ type Restore = {
   apply: (y: number) => void
   /** The target's current offset, to tell whether `apply` took. */
   current: () => number
-  /** Frames to keep trying while content is still laying out (default 30, about half a second). */
+  /**
+   * Frames to keep trying while content is still laying out (default 90, about 1.5 s: the
+   * event page's lower cards can arrive after half a second and clamp the offset short).
+   */
   frames?: number
   nextFrame?: (cb: () => void) => void
   /** Called once when the offset took or the frames ran out. */
@@ -48,13 +51,17 @@ type Restore = {
  * because a just-shown screen (or the document, when doc-scroll turns back on)
  * may not be tall enough yet and the browser clamps the offset.
  */
-export function restoreWhenReady({ y, ready, apply, current, frames = 30, nextFrame, onDone }: Restore): void {
+export function restoreWhenReady({ y, ready, apply, current, frames = 90, nextFrame, onDone }: Restore): void {
   const raf = nextFrame ?? ((cb: () => void) => { requestAnimationFrame(() => cb()) })
   let left = frames
+  /** Where our last apply left the offset: if it moves without us, the player scrolled. */
+  let landed: number | null = null
   const attempt = () => {
+    if (landed !== null && Math.abs(current() - landed) > 1) { onDone?.(); return }
     if (ready()) {
       apply(y)
-      if (current() >= y - 1) { onDone?.(); return }
+      landed = current()
+      if (landed >= y - 1) { onDone?.(); return }
     }
     if (--left > 0) raf(attempt)
     else onDone?.()
