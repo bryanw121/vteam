@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `31ee325bbf2c`
+> Inventory fingerprint: `c120e9818c33`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -697,7 +697,7 @@ TypeScript `enum` keyword.
 | `Message` | `messages`, `mentions` | [`types/index.ts:1162`](../types/index.ts#L1162) |
 | `MyEventStatus` | `hosting`, `attending`, `waitlisted`, `requested` | [`types/index.ts:981`](../types/index.ts#L981) |
 | `NOTIFICATION_TYPES / NotificationType` | `tournament_team_invite`, `tournament_join_request`, `tournament_join_accepted`, `tournament_join_declined`, `tournament_free_agent_assigned`, `tournament_mention`, `chat_mention`, `report_resolved`, `moderation_warning` | [`types/index.ts:107`](../types/index.ts#L107) |
-| `ProfileBorder` | `bronze`, `gold`, `gradient`, `storm`, `aether` | [`types/index.ts:67`](../types/index.ts#L67) |
+| `ProfileBorder` | `bronze`, `gold`, `gradient` | [`types/index.ts:67`](../types/index.ts#L67) |
 | `RecapShareTarget` | `native`, `web-share`, `download` | [`types/index.ts:2724`](../types/index.ts#L2724) |
 | `RecoveryLink` | `recovery`, `expired` | [`types/index.ts:2536`](../types/index.ts#L2536) |
 | `RecurrenceCadence` | `weekly`, `biweekly`, `monthly` | [`constants/events.ts:90`](../constants/events.ts#L90) |
