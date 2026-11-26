@@ -76,13 +76,22 @@ export function FormatStep({ draft, update }: TournamentStepProps) {
         <>
           <SectionLabel icon="podium-outline" label="Pool Advancement" />
           <View style={[shared.card, { marginBottom: 20 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View>
-                <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>Teams that advance per pool</Text>
-                <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: 2 }}>Top N teams move to the next stage</Text>
+            {/* #403: pools can just set the seeds, with every team playing the bracket. */}
+            <Toggle
+              value={draft.teamsAdvancePerPool === 0}
+              onChange={all => update({ teamsAdvancePerPool: all ? 0 : 2 })}
+              label="Every team plays the bracket"
+              sub="Pool results set the seeds; nobody is out after pools"
+            />
+            {draft.teamsAdvancePerPool > 0 && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: theme.fonts.bodyMedium, fontSize: theme.font.size.md, color: theme.colors.text }}>Teams that advance per pool</Text>
+                  <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext, marginTop: 2 }}>The top teams of each pool go on</Text>
+                </View>
+                <NumericStepper value={draft.teamsAdvancePerPool} onChange={v => update({ teamsAdvancePerPool: v })} min={1} max={8} />
               </View>
-              <NumericStepper value={draft.teamsAdvancePerPool} onChange={v => update({ teamsAdvancePerPool: v })} min={1} max={8} />
-            </View>
+            )}
           </View>
         </>
       )}

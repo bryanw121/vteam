@@ -1385,7 +1385,7 @@ export type MakeTeamsData = {
 export type SoloTeamDraft = { name: string; members: string[]; captain: string | null }
 
 /** `tiebreakers` holds only TiebreakerKey values (CHECK constraint). */
-export type TournamentRules = Override<Tables<'tournament_rules'>, { tiebreakers: TiebreakerKey[] }>
+export type TournamentRules = Override<Tables<'tournament_rules'>, { tiebreakers: TiebreakerKey[]; phase_rules?: TournamentPhaseRules }>
 
 export type TournamentTeam = Override<Tables<'tournament_teams'>, { status: TournamentTeamStatus }>
 
@@ -1439,7 +1439,28 @@ export type TournamentDraft = {
   tiebreakers: TiebreakerKey[]
   /** Single elimination: play off third place (otherwise both semifinal losers share it). */
   thirdPlaceMatch: boolean
+  /** Rules for later phases that differ from the base (#404); a phase not here plays by the base. */
+  phaseRules: Partial<Record<TournamentPhase, PhaseScoring>>
 }
+
+/** A phase after the first with its own scoring rules (#404). */
+export type TournamentPhase = 'bracket' | 'losers' | 'final'
+
+/** One phase's scoring, as the wizard holds it. */
+export type PhaseScoring = {
+  startingScore: number
+  winningScore: number
+  decidingSetScore: number
+  winByMargin: number
+  pointCap: number | null
+  setsToWin: number
+}
+
+/** `tournament_rules.phase_rules`: per later phase, only the fields that differ from the base. */
+export type TournamentPhaseRules = Partial<Record<TournamentPhase, Partial<{
+  starting_score: number; winning_score: number; deciding_set_score: number; win_by_margin: number
+  point_cap: number | null; sets_to_win: number
+}>>>
 
 /** How a new tournament is saved from the wizard's last step. */
 export type TournamentSaveStatus = 'draft' | 'published'

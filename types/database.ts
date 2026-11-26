@@ -2590,6 +2590,7 @@ export type Database = {
       tournament_rules: {
         Row: {
           deciding_set_score: number
+          phase_rules: Json
           point_cap: number | null
           pool_sets_played: number | null
           sets_to_win: number
@@ -2602,6 +2603,7 @@ export type Database = {
         }
         Insert: {
           deciding_set_score?: number
+          phase_rules?: Json
           point_cap?: number | null
           pool_sets_played?: number | null
           sets_to_win?: number
@@ -2614,6 +2616,7 @@ export type Database = {
         }
         Update: {
           deciding_set_score?: number
+          phase_rules?: Json
           point_cap?: number | null
           pool_sets_played?: number | null
           sets_to_win?: number
@@ -3754,6 +3757,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      valid_phase_rules: { Args: { p: Json }; Returns: Json }
       vote_club_poll: {
         Args: { p_option_ids: string[]; p_post_id: string }
         Returns: undefined
