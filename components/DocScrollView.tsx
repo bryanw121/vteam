@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import { Platform, ScrollView, ScrollViewProps, StyleProp, View, ViewStyle } from 'react-native'
 import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControlProps } from 'react-native'
 import { DocPullToRefresh } from './RefreshControl'
@@ -45,6 +45,19 @@ export function DocScrollView({ docScroll, memoryKey, children, style, contentCo
   useDocScrollRefocus(memoryKey ?? '', remember && docScroll, docRef, docRef)
 
   const scrollNode = () => (scrollRef.current as unknown as WebScrollableRef)?.getScrollableNode?.() ?? null
+
+  // Record every scroll position straight from the element. onScroll alone is throttled
+  // (scrollEventThrottle 16): when the last bit of a scroll lands inside the window it is
+  // dropped, and Back restored the offset before it (#399: 67 px instead of 128).
+  useEffect(() => {
+    if (!remember || !memoryKey || docScroll) return
+    const node = scrollNode() as (HTMLElement & { addEventListener?: unknown }) | null
+    if (!node || typeof node.addEventListener !== 'function') return
+    const onNativeScroll = () => { if (isShown(node)) rememberScroll(memoryKey, node.scrollTop) }
+    node.addEventListener('scroll', onNativeScroll, { passive: true })
+    return () => node.removeEventListener('scroll', onNativeScroll)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
+  }, [remember, memoryKey, docScroll])
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (remember && memoryKey && isShown(scrollNode())) rememberScroll(memoryKey, e.nativeEvent.contentOffset.y)
