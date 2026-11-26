@@ -1375,7 +1375,7 @@ export type MakeTeamsData = {
 export type SoloTeamDraft = { name: string; members: string[]; captain: string | null }
 
 /** `tiebreakers` holds only TiebreakerKey values (CHECK constraint). */
-export type TournamentRules = Override<Tables<'tournament_rules'>, { tiebreakers: TiebreakerKey[] }>
+export type TournamentRules = Override<Tables<'tournament_rules'>, { tiebreakers: TiebreakerKey[]; phase_rules?: TournamentPhaseRules }>
 
 export type TournamentTeam = Override<Tables<'tournament_teams'>, { status: TournamentTeamStatus }>
 
