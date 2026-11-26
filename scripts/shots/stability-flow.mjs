@@ -53,6 +53,9 @@ let browser
 
 async function newPage(viewport, { signedIn = true, delay = 0, init, seen = seenIds } = {}) {
   const context = await browser.newContext({ ...VIEWPORTS[viewport], timezoneId: TIME_ZONE, locale: 'en-US' })
+  // The fixtures are relative to 10:00 today: run the page's clock from there too, or after 7 PM
+  // the fixture's evening game has started for real and its page changes layout as it loads.
+  await context.clock.install({ time: now })
   const page = await context.newPage()
   if (init) await page.addInitScript(init)
   await installSupabaseMock(page, { now, signedIn, seenIds: seen, relationships })

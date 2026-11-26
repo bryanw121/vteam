@@ -3,7 +3,7 @@ import { queryKey, useFocusRefetch, useQuery } from '../lib/query'
 import { supabase } from '../lib/supabase'
 import type { Tournament, TournamentListItem } from '../types'
 
-const LIST_SELECT = 'id, title, location, start_date, status, format, club_id, max_teams, clubs(name), tournament_teams(count)'
+const LIST_SELECT = 'id, title, location, start_date, status, format, club_id, max_teams, clubs!tournaments_club_id_fkey(name), tournament_teams(count)'
 
 /** How many tournaments the list reads (newest start dates first, then split client-side). */
 const LIST_LIMIT = 200
