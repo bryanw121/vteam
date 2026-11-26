@@ -13,6 +13,9 @@ import { sessionConfirmation } from '../utils/externalFreshness'
 import { ConfirmDialog } from './ui'
 import { Spinner } from './ui/Spinner'
 import { OUTSIDE_SESSION_COPY } from '../constants/copy'
+import { OutsideShareButton } from './OutsideShareButton'
+import { routes } from '../utils/routes'
+import { sessionShareText } from '../utils/outsideShare'
 
 type Props = {
   session: ExternalSession
@@ -104,7 +107,7 @@ function ExternalSessionCardInner({ session, menuInset = false, hideDate = false
   const confirmation = sessionConfirmation(session, useToday())
 
   return (
-    <>
+    <View>
     <TouchableOpacity
       activeOpacity={0.85}
       onPress={() => (onOpen ? onOpen(session) : void link.open())}
@@ -156,6 +159,14 @@ function ExternalSessionCardInner({ session, menuInset = false, hideDate = false
         )}
       </View>
     </TouchableOpacity>
+    {/* Share without opening it first (#395): a sibling of the card's button, over its corner. */}
+    <OutsideShareButton
+      path={routes.events({ session: session.id })}
+      title={`${session.title} at ${session.venue}`}
+      text={sessionShareText(session)}
+      screen="outside_session_card"
+      testID="external-session-share"
+    />
     {copy ? (
       <ConfirmDialog
         visible
@@ -167,7 +178,7 @@ function ExternalSessionCardInner({ session, menuInset = false, hideDate = false
         onCancel={link.dismiss}
       />
     ) : null}
-    </>
+    </View>
   )
 }
 

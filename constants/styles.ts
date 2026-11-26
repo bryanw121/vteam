@@ -460,6 +460,18 @@ export const shared = StyleSheet.create({
     fontSize: theme.font.size.sm,
     color: theme.colors.subtext,
   },
+  /** Share on an outside card (#395): over its bottom-right corner, a sibling of the card's button. */
+  outsideShare: {
+    position: 'absolute',
+    right: theme.spacing.sm,
+    bottom: theme.spacing.sm,
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   externalSignup: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
