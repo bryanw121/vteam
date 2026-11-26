@@ -15,14 +15,16 @@ import { mkdir, readFile, writeFile, appendFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { parseArgs, visitScreens } from './capture.mjs'
-import { MEASURE_IN_PAGE, baselineFrom, diffBaseline, fontTokensFrom, judge, renderMarkdown } from './lib/uiConsistency.mjs'
+import { MEASURE_IN_PAGE, actionFillsFrom, baselineFrom, diffBaseline, fontTokensFrom, judge, renderMarkdown } from './lib/uiConsistency.mjs'
 
 const args = parseArgs(process.argv.slice(2))
 const out = resolve(args.out || 'ui-report')
 const BASELINE = resolve('scripts/shots/ui-consistency-baseline.json')
 await mkdir(out, { recursive: true })
 
-const tokens = fontTokensFrom(await readFile(resolve('constants/theme.ts'), 'utf8'))
+const themeSource = await readFile(resolve('constants/theme.ts'), 'utf8')
+const tokens = fontTokensFrom(themeSource)
+const actionFills = actionFillsFrom(themeSource)
 const screens = args.screens ? String(args.screens).split(',') : undefined
 const { results: visits } = await visitScreens(
   { dist: args.dist || 'dist-mock', screens, sizes: ['mobile', 'desktop'], concurrency: Number(args.concurrency ?? 4), label: 'ui' },
@@ -38,7 +40,7 @@ const skipped = []
 const results = []
 for (const v of visits) {
   if (!v.output) { skipped.push(`${v.screen} (${v.size})`); continue }
-  const { counts, examples } = judge(v.output, { viewport: v.size, tokens })
+  const { counts, examples } = judge(v.output, { viewport: v.size, tokens, actionFills })
   results.push({ screen: v.screen, viewport: v.size, counts, examples, png: v.png })
 }
 
@@ -72,7 +74,7 @@ if (diff.failures.length) {
     const r = results.find(x => x.screen === v.screen && x.viewport === v.size)
     const p = plain.find(x => x.screen === v.screen && x.viewport === v.size)
     if (!r || !p) continue
-    const { counts, examples } = judge(v.output, { viewport: v.size, tokens })
+    const { counts, examples } = judge(v.output, { viewport: v.size, tokens, actionFills })
     for (const rule of new Set([...Object.keys(p.counts), ...Object.keys(counts)])) {
       const lower = Math.min(p.counts[rule] ?? 0, counts[rule] ?? 0)
       if (lower < (p.counts[rule] ?? 0)) { p.counts[rule] = lower; r.counts[rule] = lower; p.examples[rule] = examples[rule] ?? []; r.png = v.png }
