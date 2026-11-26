@@ -121,6 +121,15 @@ describe('seedsFromPools', () => {
     const p2 = computeStandings(['y', 'z'], [m('y', 'z', [[25, 1]])])
     expect(seedsFromPools([{ poolKey: '1', rows: p1 }, { poolKey: '2', rows: p2 }], 2)).toEqual(['y', 'x', 'z'])
   })
+
+  it('0 sends every team on, seeded by pool place (#403)', () => {
+    const p1 = computeStandings(['a1', 'a2', 'a3'], [m('a1', 'a2', [[25, 1]]), m('a1', 'a3', [[25, 1]]), m('a2', 'a3', [[25, 1]])])
+    const p2 = computeStandings(['b1', 'b2'], [m('b1', 'b2', [[25, 20]])])
+    const seeds = seedsFromPools([{ poolKey: 'A', rows: p1 }, { poolKey: 'B', rows: p2 }], 0)
+    expect(seeds).toHaveLength(5)
+    expect(seeds.slice(0, 2).sort()).toEqual(['a1', 'b1'])
+    expect(seeds[4]).toBe('a3')
+  })
 })
 
 describe('avoidPoolRematches', () => {
