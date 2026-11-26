@@ -31,8 +31,8 @@ export function useSaveTournament() {
 
 /** The host's edit (#402): one `update_tournament` call; it returns how many players were told. */
 export async function updateTournament({ id, draft, newHostId }: UpdateTournamentInput): Promise<number> {
-  // Cast until types/database.ts is regenerated from live with update_tournament.
-  const { data, error } = await supabase.rpc('update_tournament' as never, updateTournamentArgs(id, draft, newHostId) as never)
+  // p_tournament is a partial row the function merges over the saved one (jsonb).
+  const { data, error } = await supabase.rpc('update_tournament', updateTournamentArgs(id, draft, newHostId) as never)
   if (error) throw error
   return typeof data === 'number' ? data : 0
 }

@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `e5be4af06a19`
+> Inventory fingerprint: `0ba0413cd04e`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -446,7 +446,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 ### Direct table and view calls
 
 <details>
-<summary>56 tables/views referenced by code</summary>
+<summary>57 tables/views referenced by code</summary>
 
 | Table or view | Frontend/server call sites |
 |---|---|
@@ -491,6 +491,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `rate_limits` | [`supabase/functions/login-with-username/handler.ts:67`](../supabase/functions/login-with-username/handler.ts#L67) |
 | `sponsored_events` | [`lib/startupConfig.ts:31`](../lib/startupConfig.ts#L31) |
 | `tags` | [`hooks/useTags.ts:14`](../hooks/useTags.ts#L14) |
+| `tournament_clubs` | [`hooks/tournament/useTournamentDraft.ts:30`](../hooks/tournament/useTournamentDraft.ts#L30) |
 | `tournament_comments` | [`hooks/tournament/api.ts:163`](../hooks/tournament/api.ts#L163) |
 | `tournament_matches` | [`hooks/tournament/api.ts:192`](../hooks/tournament/api.ts#L192) |
 | `tournament_pools` | [`hooks/tournament/api.ts:201`](../hooks/tournament/api.ts#L201) |

@@ -27,7 +27,7 @@ export async function fetchTournamentClubs(userId: string): Promise<TournamentCl
 
 /** The clubs a tournament is linked to (#401); before that migration, its one club. */
 export async function fetchTournamentClubIds(id: string, fallback: string | null): Promise<string[]> {
-  const { data, error } = await supabase.from('tournament_clubs' as never).select('club_id').eq('tournament_id', id).order('created_at')
+  const { data, error } = await supabase.from('tournament_clubs').select('club_id').eq('tournament_id', id).order('created_at')
   if (error) return fallback ? [fallback] : []
   return ((data ?? []) as { club_id: string }[]).map(r => r.club_id)
 }
