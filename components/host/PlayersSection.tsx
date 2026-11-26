@@ -4,6 +4,13 @@ import { Text, TextInput } from '../ui/Text'
 import { shared, theme } from '../../constants'
 import type { HostPlayersSectionProps, Tag } from '../../types'
 
+/** Skill tags best first, like every level list (#401); the table's own order is D first. Unknown names go last. */
+const SKILL_TAG_ORDER = ['Open', 'AA+', 'A', 'BB', 'B', 'C', 'Newbie/D', 'None']
+const skillRank = (name: string) => {
+  const i = SKILL_TAG_ORDER.indexOf(name)
+  return i === -1 ? SKILL_TAG_ORDER.length : i
+}
+
 /** Max players, then a card per non-type tag category (skill level). */
 export function PlayersSection({ form, setField, tags, selectedTagIds, onToggleTag }: HostPlayersSectionProps) {
   const byCategory = tags.reduce<Record<string, Tag[]>>((acc, tag) => {
@@ -52,7 +59,7 @@ export function PlayersSection({ form, setField, tags, selectedTagIds, onToggleT
             {category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-            {categoryTags.map(tag => {
+            {(category === 'skill_level' ? [...categoryTags].sort((x, y) => skillRank(x.name) - skillRank(y.name)) : categoryTags).map(tag => {
               const active = selectedTagIds.includes(tag.id)
               return (
                 <TouchableOpacity

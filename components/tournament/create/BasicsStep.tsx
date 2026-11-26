@@ -6,6 +6,8 @@ import { theme, shared, SKILL_LEVEL_LABELS } from '../../../constants'
 import { TOURNAMENT_CLUBS_ERROR, TOURNAMENT_CLUBS_LINKED_HINT, TOURNAMENT_CLUBS_OPEN_HINT } from '../../../constants/tournamentCopy'
 import { isClubRunner } from '../../../utils/tournamentDraft'
 import { DatePickerField } from '../../DatePickerField'
+import { LocationPickerField } from '../../LocationPickerField'
+import { useSession } from '../../../contexts/session'
 import { Button } from '../../Button'
 import { Spinner } from '../../ui/Spinner'
 import { Field, SectionLabel, TextBox } from './CreateBits'
@@ -13,6 +15,7 @@ import type { TournamentBasicsStepProps } from '../../../types'
 
 /** Wizard step 1: name, description, linked clubs (optional, #401), skill levels, when and where. */
 export function BasicsStep({ draft, update, clubs, clubsLoading, clubsError, onRetryClubs }: TournamentBasicsStepProps) {
+  const { userId } = useSession()
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, gap: 0 }} showsVerticalScrollIndicator={false}>
       <SectionLabel icon="trophy-outline" label="Tournament Info" />
@@ -100,7 +103,13 @@ export function BasicsStep({ draft, update, clubs, clubsLoading, clubsError, onR
       <SectionLabel icon="location-outline" label="When & Where" />
       <View style={[shared.card, { marginBottom: 16 }]}>
         <Field label="Location">
-          <TextBox value={draft.location} onChangeText={v => update({ location: v })} placeholder="Gym name, address…" />
+          {/* Google place search with matches as you type, like the event host form (#401). Tournaments keep the name only. */}
+          <LocationPickerField
+            value={draft.location ? { display: draft.location, latitude: null, longitude: null } : null}
+            onChange={loc => update({ location: loc.display })}
+            userId={userId}
+            placeholder="Gym name, address…"
+          />
         </Field>
         <Field label="Start date & time">
           <DatePickerField
