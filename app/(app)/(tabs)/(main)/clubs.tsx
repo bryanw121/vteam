@@ -4,158 +4,32 @@
 */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { FlatList, TouchableOpacity, View } from 'react-native'
+import { FlatList, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { Text, TextInput } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
-import { Image } from 'expo-image'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import { LinearGradient } from 'expo-linear-gradient'
 import { Stack, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../../../lib/supabase'
 import { queryKey, useFocusRefetch, useQuery } from '../../../../lib/query'
 import { useSession } from '../../../../contexts/session'
-import { useRequireSignIn } from '../../../../hooks/useRequireSignIn'
-import { useClubMembership } from '../../../../hooks/club/useClubMembership'
 import { SignInButton } from '../../../../components/SignInButton'
 import { ScreenHeader, ScreenState } from '../../../../components/ui'
 import { CLUBS_TAB_INDEX, STALE, shared, theme } from '../../../../constants'
 import { DocScrollView } from '../../../../components/DocScrollView'
 import { useTabsActive, useTabsShell } from '../../../../contexts/tabs'
-import { resolveClubAvatarUri } from '../../../../utils'
 import { routes } from '../../../../utils/routes'
-import type { ClubListItem, MajorCity } from '../../../../types'
-import { Spinner } from '../../../../components/ui/Spinner'
 import { useUrlParam } from '../../../../hooks/useUrlParam'
 import { VIEW } from '../../../../utils/urlViews'
+import type { ClubListItem } from '../../../../types'
+import { ClubRow, ClubTile, memberCount, resolvedMajorCity } from '../../../../components/club/ClubListParts'
+import { useFeedCity } from '../../../../hooks/useFeedCity'
 
 /** List payload: member count; membership embed is added when signed in. */
 const CLUB_LIST_SELECT_BASE =
   'id, name, description, membership_type, created_by, avatar_url, cover_url, created_at, major_city_id, major_cities (id, display_name, city_name, admin_region, country_code), club_members(count)'
 
 const CLUB_LIST_MY_MEMBERSHIP = 'my_membership:club_members(club_id, user_id, role, joined_at)'
-
-/** PostgREST usually returns one embedded row as an object; normalize if it ever comes back as a single-element array. */
-function resolvedMajorCity(c: ClubListItem): MajorCity | null {
-  const raw = c.major_cities as unknown
-  if (raw == null) return null
-  if (Array.isArray(raw)) return (raw[0] as MajorCity | undefined) ?? null
-  return raw as MajorCity
-}
-
-function memberCount(club: ClubListItem): number {
-  return Number(club.club_members?.[0]?.count ?? 0)
-}
-
-/** Deterministic color for a club based on its name */
-function clubColor(name: string): string {
-  const PALETTE = [
-    theme.colors.primary, theme.colors.warm, theme.colors.cool,
-    theme.colors.hot, theme.colors.accent, '#8B5CF6', '#0EA5E9', '#10B981',
-  ]
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff
-  return PALETTE[Math.abs(h) % PALETTE.length]
-}
-
-type ClubCardProps = {
-  club: ClubListItem
-  /** The signed-in viewer, or null for a guest. */
-  userId: string | null
-  /** Cache key of the list this card is in (the join updates it optimistically). */
-  listKey: string
-  isOwner: boolean
-  isMember: boolean
-  onPress: () => void
-}
-
-function ClubCard({ club, userId, listKey, isOwner, isMember, onPress }: ClubCardProps) {
-  const [avatarUri, setAvatarUri] = useState<string | null>(null)
-  const requireSignIn = useRequireSignIn()
-  const count = memberCount(club)
-  const initial = club.name.charAt(0).toUpperCase()
-  const color = clubColor(club.name)
-
-  // One mutation per card, so joining two clubs in a row never drops the second tap.
-  // The same join as the club page (#305), updating this list's row at once.
-  const join = useClubMembership(club.id, { listKey, listClub: club })
-
-  useEffect(() => {
-    let cancelled = false
-    resolveClubAvatarUri(club.avatar_url).then(uri => {
-      if (!cancelled) setAvatarUri(uri)
-    })
-    return () => { cancelled = true }
-  }, [club.avatar_url])
-
-  function handleJoinPress(e: { stopPropagation?: () => void }) {
-    e.stopPropagation?.()
-    if (!userId) { requireSignIn(); return }
-    void join.mutate('join')
-  }
-
-  return (
-    <TouchableOpacity
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 14,
-        marginBottom: 10,
-        backgroundColor: theme.colors.card,
-        borderRadius: 22,
-        padding: 14,
-        ...theme.shadow.card,
-        overflow: 'hidden',
-      }}
-      onPress={onPress}
-      activeOpacity={0.72}
-    >
-      <View style={{ width: 54, height: 54, borderRadius: 14, overflow: 'hidden', flexShrink: 0 }}>
-        {avatarUri ? (
-          <Image source={{ uri: avatarUri }} style={{ width: 54, height: 54 }} contentFit="cover" transition={150} />
-        ) : (
-          <LinearGradient
-            colors={[color, color + 'BB', color + '77'] as [string, string, string]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ width: 54, height: 54, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Text style={{ fontFamily: theme.fonts.display, fontWeight: '700', fontSize: theme.font.size.xl, color: theme.colors.white, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }}>
-              {initial}
-            </Text>
-          </LinearGradient>
-        )}
-      </View>
-
-      <View style={{ flex: 1, gap: 3, minWidth: 0 }}>
-        <Text style={{ fontFamily: theme.fonts.display, fontSize: theme.font.size.base, letterSpacing: -0.3, color: theme.colors.text }} numberOfLines={1}>
-          {club.name}
-        </Text>
-        <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.sm, color: theme.colors.subtext }} numberOfLines={1}>
-          {resolvedMajorCity(club)?.display_name ?? 'Unknown'} · {count} members{isOwner ? ' · Owner' : ''}
-        </Text>
-      </View>
-
-      {isMember ? (
-        <View style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, backgroundColor: theme.colors.cool + '20' }}>
-          <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.cool }}>✓ Joined</Text>
-        </View>
-      ) : (
-        <TouchableOpacity
-          onPress={handleJoinPress}
-          disabled={join.isPending}
-          style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, backgroundColor: theme.colors.primary, opacity: join.isPending ? 0.6 : 1 }}
-        >
-          {join.isPending
-            ? <Spinner size="small" color={theme.colors.white} />
-            : <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: theme.colors.white }}>Join</Text>
-          }
-        </TouchableOpacity>
-      )}
-    </TouchableOpacity>
-  )
-}
-
 
 const EMPTY_CLUBS: ClubListItem[] = []
 
@@ -167,13 +41,7 @@ export default function ClubsScreen() {
   const isActive = activeTabIndex === CLUBS_TAB_INDEX
   const { isGuest, userId, loading: sessionLoading } = useSession()
   const [refreshing, setRefreshing] = useState(false)
-  // The filter and search are in the URL (`/clubs?filter=popular&q=sand`) so a copied link opens them.
-  const [filter, setFilter] = useUrlParam('filter', VIEW.clubs.filter, { tab: 'clubs' })
-  // Guests have no joined clubs, so show them Popular. An effect, not the initial
-  // state: on a direct load the screen can mount before the session has loaded.
-  useEffect(() => {
-    if (isGuest && filter === 'joined') setFilter('popular')
-  }, [isGuest]) // eslint-disable-line react-hooks/exhaustive-deps
+  // The search is in the URL (`/clubs?q=sand`) so a copied link opens it. (`filter` from older links is ignored.)
   const [linkQuery, setLinkQuery] = useUrlParam('q', VIEW.clubs.q, { tab: 'clubs' })
   const [searchQuery, setSearchQuery] = useState(linkQuery)
   // The list filters on every keystroke; the address catches up once typing pauses.
@@ -219,19 +87,18 @@ export default function ClubsScreen() {
     }
   }
 
+  const city = useFeedCity()
   const myClubs = useMemo(() =>
     clubs.filter(c => (c.my_membership ?? []).some(m => m.user_id === userId)),
   [clubs, userId])
 
-  const discoverClubs = useMemo(() =>
-    clubs.filter(c => !(c.my_membership ?? []).some(m => m.user_id === userId)),
-  [clubs, userId])
-
-  const discoverOrdered = useMemo(() =>
-    filter === 'popular'
-      ? [...discoverClubs].sort((a, b) => memberCount(b) - memberCount(a))
-      : discoverClubs,
-  [discoverClubs, filter])
+  // Clubs to join: the viewer's city first, then the biggest.
+  const inCity = (c: ClubListItem) => resolvedMajorCity(c)?.city_name?.toLowerCase() === city.name.toLowerCase()
+  const discover = useMemo(() =>
+    clubs
+      .filter(c => !(c.my_membership ?? []).some(m => m.user_id === userId))
+      .sort((a, b) => Number(inCity(b)) - Number(inCity(a)) || memberCount(b) - memberCount(a)),
+  [clubs, userId, city.name]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const q = searchQuery.trim().toLowerCase()
   function matchesSearch(c: ClubListItem): boolean {
@@ -254,8 +121,7 @@ export default function ClubsScreen() {
     return (club.my_membership ?? []).some(m => m.user_id === userId)
   }
 
-  const baseList = filter === 'joined' ? myClubs : discoverOrdered
-  const visibleClubs = (q ? clubs : baseList).filter(matchesSearch)
+  const visibleClubs = q ? clubs.filter(matchesSearch) : discover
 
   const listHeader = (
     <>
@@ -283,33 +149,6 @@ export default function ClubsScreen() {
         )}
       />
 
-      <View style={{ flexDirection: 'row', gap: 6, paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.sm }}>
-        {([
-          { id: 'joined',  label: 'Joined' },
-          { id: 'nearby',  label: 'Near me' },
-          { id: 'popular', label: 'Popular' },
-        ] as const).map(f => {
-          const active = filter === f.id
-          return (
-            <TouchableOpacity
-              key={f.id}
-              onPress={() => setFilter(f.id)}
-              style={{
-                paddingHorizontal: 14, paddingVertical: 7,
-                borderRadius: theme.radius.full,
-                backgroundColor: active ? theme.colors.primary : theme.colors.card,
-                borderWidth: active ? 0 : 1,
-                borderColor: theme.colors.border,
-              }}
-            >
-              <Text style={{ fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.sm, color: active ? theme.colors.white : theme.colors.text }}>
-                {f.label}
-              </Text>
-            </TouchableOpacity>
-          )
-        })}
-      </View>
-
       <View style={{ paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.sm }}>
         <View style={{
           flexDirection: 'row',
@@ -325,7 +164,7 @@ export default function ClubsScreen() {
           <TextInput
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholder="Search all clubs by name or city…"
+            placeholder="Find a club by name or city"
             placeholderTextColor={theme.colors.subtext}
             style={{
               flex: 1,
@@ -343,6 +182,21 @@ export default function ClubsScreen() {
           />
         </View>
       </View>
+      {!q && myClubs.length > 0 && (
+        <>
+          <Text style={styles.section} accessibilityRole="header">Your clubs</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tiles} testID="your-clubs">
+            {myClubs.map(club => (
+              <ClubTile key={club.id} club={club} owner={isOwner(club)} onPress={() => router.push(routes.club(club.id))} />
+            ))}
+          </ScrollView>
+        </>
+      )}
+      {(q || discover.length > 0) && (
+        <Text style={styles.section} accessibilityRole="header">
+          {q ? 'Results' : myClubs.length > 0 ? `More clubs near ${city.name}` : `Popular near ${city.name}`}
+        </Text>
+      )}
     </>
   )
 
@@ -352,11 +206,7 @@ export default function ClubsScreen() {
       <Text style={[shared.caption, { textAlign: 'center', maxWidth: 260 }]}>
         {searchQuery.trim()
           ? 'No clubs match your search.'
-          : filter === 'joined'
-          ? "You haven't joined any clubs yet."
-          : filter === 'nearby'
-          ? discoverClubs.length > 0 ? "No clubs match this view — try another filter or search." : "No clubs yet. Check back soon!"
-          : clubs.length > 0 ? "You're in all available clubs!" : "No clubs yet. Check back soon!"}
+          : clubs.length > 0 ? "You're in every club so far. Start your own with Create." : 'No clubs yet. Start one with Create.'}
       </Text>
     </View>
   )
@@ -387,7 +237,7 @@ export default function ClubsScreen() {
             ? emptyBody
             : visibleClubs.map(club => (
               <View key={club.id} style={{ paddingHorizontal: theme.spacing.lg }}>
-                <ClubCard
+                <ClubRow
                   club={club}
                   userId={userId}
                   listKey={listKey}
@@ -418,7 +268,7 @@ export default function ClubsScreen() {
           ListEmptyComponent={emptyBody}
           renderItem={({ item: club }) => (
             <View style={{ paddingHorizontal: theme.spacing.lg }}>
-              <ClubCard
+              <ClubRow
                 club={club}
                 userId={userId}
                 listKey={listKey}
@@ -433,3 +283,15 @@ export default function ClubsScreen() {
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  section: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.size.lg,
+    color: theme.colors.text,
+    paddingHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+  },
+  tiles: { gap: 12, paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xs },
+})
