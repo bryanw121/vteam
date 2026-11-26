@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { TouchableOpacity, View } from 'react-native'
+import { hitV } from '../../utils/hitArea'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../ui/Text'
 import { TimePill } from '../ui'
@@ -117,6 +118,9 @@ export function EventWhoIsIn({ event, status, friendsGoing, onOpenPeople, footer
   )
 }
 
+/** 44-pt tap target around the 36-pt Message pill (#386). */
+const MESSAGE_HIT = hitV(36)
+
 function HostLine({ h, title, sub, size, onOpenProfile, onMessage }: { h: EventHostNoteProps['hosts'][number]; title: string; sub: string; size: number; onOpenProfile: (id: string) => void; onMessage: (id: string) => void }) {
   return (
     <View style={shared.evHostRow}>
@@ -133,8 +137,8 @@ function HostLine({ h, title, sub, size, onOpenProfile, onMessage }: { h: EventH
         </View>
       </TouchableOpacity>
       {!h.isMe && (
-        <TouchableOpacity onPress={() => onMessage(h.id)} style={shared.evMessage} accessibilityRole="button" accessibilityLabel={`Message ${h.name}`}>
-          <Text style={shared.evMessageText}>Message</Text>
+        <TouchableOpacity onPress={() => onMessage(h.id)} style={MESSAGE_HIT} accessibilityRole="button" accessibilityLabel={`Message ${h.name}`}>
+          <View style={shared.evMessage}><Text style={shared.evMessageText}>Message</Text></View>
         </TouchableOpacity>
       )}
     </View>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { Text } from '../ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Button } from '../Button'
@@ -10,17 +10,21 @@ import { profileDisplayName } from '../../utils'
 import { MAX_COHOSTS } from '../../hooks/event'
 import type { CohostsApi } from '../../types'
 import { Spinner } from '../ui/Spinner'
+import { BottomSheet } from '../ui/BottomSheet'
+import { hitSquare } from '../../utils/hitArea'
 
 type Props = { cohosts: CohostsApi }
 
-/** Host's "Manage Co-hosts": current co-hosts with remove, and member search to add (max 3). */
+const REMOVE_HIT = hitSquare(18)
+
+/**
+ * Host's "Manage Co-hosts": current co-hosts with remove, and member search to add (max 3).
+ * A bottom sheet (#389): it is a list to work through, not a yes/no.
+ */
 export function CohostsDialog({ cohosts: c }: Props) {
   return (
-    <Modal visible={c.visible} transparent animationType="fade" onRequestClose={c.close}>
-      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={c.close}>
-        <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+    <BottomSheet visible={c.visible} onDismiss={c.close} title="Manage Co-hosts" maxWidth={560}>
           <View style={styles.card}>
-            <Text style={styles.title}>Manage Co-hosts</Text>
             <Text style={styles.body}>
               Up to 3 co-hosts. They can post announcements, edit the event, manage teams, and remove attendees.
             </Text>
@@ -32,7 +36,13 @@ export function CohostsDialog({ cohosts: c }: Props) {
                   return (
                     <View key={row.user_id} style={styles.cohostRow}>
                       <Text style={styles.name} numberOfLines={1}>{profileDisplayName(row.profiles as Profile)}</Text>
-                      <TouchableOpacity onPress={() => c.remove(row.user_id)} hitSlop={8} disabled={removing}>
+                      <TouchableOpacity
+                        onPress={() => c.remove(row.user_id)}
+                        disabled={removing}
+                        style={[REMOVE_HIT, { alignItems: 'center', justifyContent: 'center' }]}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove co-host ${profileDisplayName(row.profiles as Profile)}`}
+                      >
                         {removing
                           ? <Spinner size="small" color={theme.colors.subtext} />
                           : <Ionicons name="close" size={18} color={theme.colors.subtext} />}
@@ -70,23 +80,12 @@ export function CohostsDialog({ cohosts: c }: Props) {
 
             <Button label="Done" onPress={c.close} />
           </View>
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </Modal>
+    </BottomSheet>
   )
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.overlayLight },
-  card: {
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.radius.lg,
-    padding: theme.spacing.xl,
-    width: 320,
-    maxWidth: '92%',
-    gap: theme.spacing.md,
-  },
-  title: { fontSize: theme.font.size.lg, fontWeight: theme.font.weight.semibold, color: theme.colors.text },
+  card: { gap: theme.spacing.md },
   body: { fontSize: theme.font.size.sm, color: theme.colors.subtext },
   name: { flex: 1, fontSize: theme.font.size.md, color: theme.colors.text },
   cohostRow: {

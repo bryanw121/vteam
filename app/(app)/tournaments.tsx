@@ -111,7 +111,7 @@ function TournamentRow({ item, onPress }: { item: TournamentListItem; onPress: (
  */
 export default function TournamentsScreen() {
   const router = useRouter()
-  const { userId, isGuest } = useSession()
+  const { userId, isGuest, loading: sessionLoading } = useSession()
   const requireSignIn = useRequireSignIn()
   // Upcoming / Past and the organizer chip are in the URL (`?view=past&host=NAGVA`).
   const [tab, setTab] = useUrlParam('view', VIEW.tournaments.view)
@@ -191,7 +191,11 @@ export default function TournamentsScreen() {
             </View>
           )}
         />
-        {isGuest ? (
+        {sessionLoading ? (
+          // Until we know whether this is a guest, draw neither layout: guessing "signed in" then
+          // switching to the guest prompt pushed the list down 40-100 px on reload (#387).
+          <Spinner label="Loading tournaments" style={{ marginVertical: theme.spacing.lg }} color={theme.colors.primaryText} />
+        ) : isGuest ? (
           <ScrollView contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: theme.spacing.xl }}>
             <EmptyState
               icon="trophy-outline"

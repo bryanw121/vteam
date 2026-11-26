@@ -649,7 +649,7 @@ export const shared = StyleSheet.create({
   signInButton: {
     minHeight: 38,
     paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -839,7 +839,7 @@ export const shared = StyleSheet.create({
   evIconTile: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   evTileMain: { fontFamily: fonts.bodyBold, fontSize: font.size.base, color: colors.text },
   evTileSub: { fontFamily: fonts.body, fontSize: font.size.smd, color: colors.subtext, flexShrink: 1 },
-  evTileLink: { marginTop: 2, minHeight: 28, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  evTileLink: { marginTop: -6, marginBottom: -8, minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 4 }, // 44-pt tap, laid out as 28 (#386)
   evTileLinkText: { fontFamily: fonts.bodySemiBold, fontSize: font.size.md, color: colors.primaryText },
   evCard: { backgroundColor: colors.card, borderRadius: 18, padding: 14, gap: 10, marginBottom: 12 },
   evCardHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -862,7 +862,7 @@ export const shared = StyleSheet.create({
   evHostWho: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   evMessage: { minHeight: 36, paddingHorizontal: 14, borderRadius: radius.full, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   evMessageText: { fontFamily: fonts.bodySemiBold, fontSize: font.size.sm, color: colors.text },
-  evMore: { alignSelf: 'flex-start', minHeight: 28, justifyContent: 'center' },
+  evMore: { alignSelf: 'flex-start', minHeight: 44, minWidth: 44, marginVertical: -8, justifyContent: 'center' }, // 44-pt tap, laid out as 28 (#386)
   evNote: { fontFamily: fonts.body, fontSize: font.size.md, lineHeight: 21, color: colors.subtextStrong },
   evChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   evChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: radius.full },
@@ -1474,8 +1474,9 @@ export const shared = StyleSheet.create({
     position: 'absolute', left: theme.spacing.md, right: theme.spacing.md,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
+  // "Add cover": the 44-pt touchable sits where the pill was (bottom-right of the cover, #386); the pill is its child.
+  clubCoverEditHit: { position: 'absolute', bottom: theme.spacing.sm - 11, right: theme.spacing.md, paddingVertical: 11 },
   clubCoverEditBtn: {
-    position: 'absolute', bottom: theme.spacing.sm, right: theme.spacing.md,
     flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs,
     backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: theme.radius.full,
     paddingHorizontal: theme.spacing.sm, paddingVertical: theme.spacing.xs,
@@ -1742,7 +1743,7 @@ export const shared = StyleSheet.create({
   ecOverflowTextHero: { fontFamily: fonts.body, fontSize: font.size.xs, fontWeight: '700', color: colors.subtext },
   ecOverflowTextRow: { fontFamily: fonts.body, fontSize: font.size.xs, fontWeight: '700', color: colors.subtext },
   ecRsvpHero: { paddingHorizontal: 18, minHeight: 40, justifyContent: 'center', borderRadius: radius.full, borderWidth: 1 },
-  ecRsvpRow: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, flexShrink: 0, borderWidth: 1 },
+  ecRsvpRow: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.full, flexShrink: 0, borderWidth: 1 },
   ecRsvpOff: { backgroundColor: colors.card, borderColor: colors.border },
   ecRsvpTextHero: { fontFamily: fonts.displaySemiBold, fontSize: font.size.sm, letterSpacing: 0.2 },
   ecRsvpTextRow: { fontFamily: fonts.displaySemiBold, fontSize: font.size.xs },

@@ -1661,6 +1661,8 @@ export type ConfirmDialogProps = {
   onConfirm: () => void
   onCancel: () => void
   loading?: boolean
+  /** Confirm can't be pressed yet (e.g. a required field is empty). */
+  confirmDisabled?: boolean
   /** Extra content between the body and the buttons (e.g. the leave sheet's lines and reason chips). */
   children?: import('react').ReactNode
   /** Card width on wide screens (default 320; it never exceeds 92% of the window). */

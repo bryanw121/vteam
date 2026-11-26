@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Modal, ScrollView, TouchableOpacity, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 import { Text, TextInput } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import { supabase } from '../../../../lib/supabase'
 import { getSessionUser } from '../../../../lib/sessionUser'
 import { emailFeedback } from '../../../../lib/feedback'
+import { toast } from '../../../../lib/toast'
 import { Button } from '../../../../components/Button'
 import { Input } from '../../../../components/Input'
 import { shared, theme } from '../../../../constants'
@@ -25,7 +26,6 @@ export default function FeedbackScreen() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const [feedbackError, setFeedbackError] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   // Shown under each field (#228: an alert here did nothing on the web, so Submit looked broken).
@@ -86,7 +86,7 @@ export default function FeedbackScreen() {
       setDeviceType('')
       setTitle('')
       setDescription('')
-      setFeedbackSubmitted(true)
+      toast.show({ title: 'Thanks for making vteam better!', message: 'Your feedback reached the team. We read every one.', variant: 'success' })
     } catch (e: any) {
       setFeedbackError(GENERIC_ERROR_MESSAGE)
     } finally {
@@ -96,19 +96,6 @@ export default function FeedbackScreen() {
 
   return (
     <View style={shared.screen}>
-      <Modal visible={feedbackSubmitted} transparent animationType="none" onRequestClose={() => setFeedbackSubmitted(false)}>
-        <TouchableOpacity style={shared.modalOverlay} onPress={() => setFeedbackSubmitted(false)}>
-          <View style={shared.modalCard}>
-            <Text style={shared.modalEmoji}>🏐</Text>
-            <Text style={shared.modalTitle}>Thanks for making vteam better!</Text>
-            <Text style={shared.modalBody}>Your feedback reached the team. We read every one.</Text>
-            <TouchableOpacity style={shared.modalButton} onPress={() => setFeedbackSubmitted(false)}>
-              <Text style={shared.modalButtonText}>Done</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
       <ScrollView
         contentContainerStyle={shared.scrollContentSubpage}
         refreshControl={
