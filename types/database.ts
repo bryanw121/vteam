@@ -2211,6 +2211,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tournament_clubs: {
+        Row: {
+          club_id: string
+          created_at: string
+          tournament_id: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          tournament_id: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          tournament_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_clubs_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_clubs_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_comments: {
         Row: {
           body: string
@@ -2936,7 +2969,7 @@ export type Database = {
           bracket_type: string | null
           break_duration_minutes: number
           cancelled_at: string | null
-          club_id: string
+          club_id: string | null
           created_at: string
           created_by: string
           description: string | null
@@ -2971,7 +3004,7 @@ export type Database = {
           bracket_type?: string | null
           break_duration_minutes?: number
           cancelled_at?: string | null
-          club_id: string
+          club_id?: string | null
           created_at?: string
           created_by: string
           description?: string | null
@@ -3006,7 +3039,7 @@ export type Database = {
           bracket_type?: string | null
           break_duration_minutes?: number
           cancelled_at?: string | null
-          club_id?: string
+          club_id?: string | null
           created_at?: string
           created_by?: string
           description?: string | null
@@ -3750,12 +3783,22 @@ export type Database = {
         Args: { p_event_id: string; p_user_id: string; p_value: boolean }
         Returns: undefined
       }
+      tournament_open_to_me: { Args: { p_id: string }; Returns: boolean }
       tournament_registration_check: {
         Args: {
           p_player: string
           p_tournament: Database["public"]["Tables"]["tournaments"]["Row"]
         }
         Returns: undefined
+      }
+      update_tournament: {
+        Args: {
+          p_id: string
+          p_new_host?: string
+          p_rules?: Json
+          p_tournament?: Json
+        }
+        Returns: number
       }
       valid_phase_rules: { Args: { p: Json }; Returns: Json }
       vote_club_poll: {

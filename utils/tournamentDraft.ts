@@ -4,19 +4,22 @@
  * (`app/(app)/tournament/create.tsx`) and its step sections only draw them.
  */
 import { DEFAULT_TIEBREAKERS } from '../lib/tournamentStandings'
-import { phaseRulesArgs } from './tournamentPhases'
+import { phaseDiffers, phaseRulesArgs, phasesFor, rulesForPhase } from './tournamentPhases'
 
 /** The wizard's list: the standard four, then sets won, so a host can move it up (a new tournament only reaches it when the others leave a tie). */
 const DRAFT_TIEBREAKERS = [...DEFAULT_TIEBREAKERS, 'sets_won'] as const
 import { cleanDate } from './index'
-import type { TournamentDraft, TournamentFormat, TournamentFormatOption, TournamentSaveStatus } from '../types'
+import type {
+  Tournament, TournamentDraft, TournamentFormat, TournamentFormatOption, TournamentPlayerOption, TournamentRules,
+  TournamentSaveStatus, TournamentTeamWithRoster,
+} from '../types'
 
 export const TOURNAMENT_STEP_LABELS = ['Basics', 'Format', 'Registration', 'Rules', 'Preview'] as const
 export const TOURNAMENT_TOTAL_STEPS = TOURNAMENT_STEP_LABELS.length
 
 export const DEFAULT_TOURNAMENT_DRAFT: TournamentDraft = {
   title: '',
-  clubId: '',
+  clubIds: [],
   location: '',
   skillLevels: [],
   startDate: null,
@@ -46,7 +49,7 @@ export const DEFAULT_TOURNAMENT_DRAFT: TournamentDraft = {
 
 /** A fresh draft, with its own tiebreaker list. */
 export function newTournamentDraft(): TournamentDraft {
-  return { ...DEFAULT_TOURNAMENT_DRAFT, tiebreakers: [...DRAFT_TIEBREAKERS], phaseRules: {} }
+  return { ...DEFAULT_TOURNAMENT_DRAFT, clubIds: [], tiebreakers: [...DRAFT_TIEBREAKERS], phaseRules: {} }
 }
 
 export const TOURNAMENT_FORMAT_OPTIONS: readonly TournamentFormatOption[] = [
@@ -75,7 +78,6 @@ export function formatHasPools(format: TournamentFormat): boolean {
 export function validateTournamentStep(step: number, draft: TournamentDraft): string | null {
   if (step === 0) {
     if (!draft.title.trim()) return 'Please enter a tournament name.'
-    if (!draft.clubId) return 'Please select a club.'
     if (!draft.startDate) return 'Please set a start date.'
   }
   if (step === 2) {
@@ -115,7 +117,8 @@ export function saveTournamentArgs(draft: TournamentDraft, status: TournamentSav
   const solo = draft.teamMode === 'solo'
   return {
     p_tournament: {
-      club_id:                draft.clubId,
+      club_id:                draft.clubIds[0] ?? null,
+      club_ids:               draft.clubIds,
       title:                  draft.title.trim(),
       description:            draft.description.trim() || null,
       location:               draft.location.trim() || null,
@@ -149,4 +152,83 @@ export function saveTournamentArgs(draft: TournamentDraft, status: TournamentSav
       phase_rules:        phaseRulesArgs(draft),
     },
   }
+}
+
+/**
+ * A saved tournament as a wizard draft, for editing it (#402). Phases with their own
+ * rules come back as full scoring (the wizard's shape); the rest follow the base.
+ */
+export function draftFromTournament(t: Tournament, rules: TournamentRules | null, clubIds: readonly string[]): TournamentDraft {
+  const base = newTournamentDraft()
+  const solo = t.team_mode === 'solo'
+  const draft: TournamentDraft = {
+    ...base,
+    title: t.title,
+    clubIds: clubIds.length ? [...clubIds] : t.club_id ? [t.club_id] : [],
+    location: t.location ?? '',
+    skillLevels: (t.skill_levels ?? []) as TournamentDraft['skillLevels'],
+    startDate: t.start_date ? new Date(t.start_date) : null,
+    registrationDeadline: t.registration_deadline ? new Date(t.registration_deadline) : null,
+    description: t.description ?? '',
+    format: t.format,
+    bracketType: t.bracket_type ?? base.bracketType,
+    teamsAdvancePerPool: t.teams_advance_per_pool ?? base.teamsAdvancePerPool,
+    teamMode: solo ? 'solo' : 'captains',
+    teamSize: solo && t.team_size ? t.team_size : base.teamSize,
+    maxTeams: t.max_teams,
+    minRosterSize: t.min_roster_size,
+    maxRosterSize: t.max_roster_size,
+    hasRefs: t.has_refs,
+    price: Number(t.price ?? 0),
+    venmoHandle: t.venmo_handle ?? '',
+  }
+  if (!rules) return draft
+  const withRules: TournamentDraft = {
+    ...draft,
+    startingScore: rules.starting_score,
+    winningScore: rules.winning_score,
+    decidingSetScore: rules.deciding_set_score,
+    winByMargin: rules.win_by_margin,
+    pointCap: rules.point_cap,
+    setsToWin: rules.sets_to_win,
+    tiebreakers: rules.tiebreakers?.length ? [...rules.tiebreakers] as TournamentDraft['tiebreakers'] : base.tiebreakers,
+    thirdPlaceMatch: !!rules.third_place_match,
+    phaseRules: {},
+  }
+  for (const tab of phasesFor(withRules.format, withRules.bracketType)) {
+    if (tab.key !== 'base' && phaseDiffers(rules, tab.key)) withRules.phaseRules[tab.key] = rulesForPhase(rules, tab.key)
+  }
+  return withRules
+}
+
+/** What `update_tournament` takes (#402): the same columns and rules as a create, minus the status, plus who hosts next. */
+export function updateTournamentArgs(id: string, draft: TournamentDraft, newHostId: string | null) {
+  const { p_tournament, p_rules } = saveTournamentArgs(draft, 'draft')
+  const { status: _status, ...tournament } = p_tournament
+  return { p_id: id, p_tournament: tournament, p_rules, p_new_host: newHostId }
+}
+
+/** Everyone on a team or signed up solo, once each, not `excludeId` (the host), by name (#402). */
+export function tournamentPlayers(teams: readonly TournamentTeamWithRoster[], excludeId: string | null): TournamentPlayerOption[] {
+  const seen = new Map<string, string>()
+  for (const team of teams) {
+    for (const m of team.members ?? []) {
+      if (!m.user_id || m.user_id === excludeId || seen.has(m.user_id)) continue
+      const p = m.profiles
+      const name = p ? ([p.first_name, p.last_name].filter(Boolean).join(' ') || p.username || 'Player') : 'Player'
+      seen.set(m.user_id, name)
+    }
+    if (team.captain_user_id && team.captain_user_id !== excludeId && !seen.has(team.captain_user_id)) seen.set(team.captain_user_id, 'Captain')
+  }
+  return [...seen].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/** Owners and admins run a club; those clubs are listed first in the picker. */
+export function isClubRunner(role: string | null | undefined): boolean {
+  return role === 'owner' || role === 'admin'
+}
+
+/** The picker's order: clubs the player runs, then the rest, each by name. */
+export function sortTournamentClubs<T extends { name: string; role?: string | null }>(clubs: readonly T[]): T[] {
+  return [...clubs].sort((a, b) => Number(isClubRunner(b.role)) - Number(isClubRunner(a.role)) || a.name.localeCompare(b.name))
 }
