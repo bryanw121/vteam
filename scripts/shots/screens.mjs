@@ -174,8 +174,8 @@ export const SCREENS = {
   // #402: the host's edit, seeded from the saved tournament; then its last step (host picker, Save and tell N players).
   'tournament-edit': { route: `/tournament/edit/${T.upcoming}`, ready: 'Clubs (optional)', sources: ['app/(app)/tournament/create.tsx', 'app/(app)/tournament/edit/[id].tsx', 'components/tournament/create/**', 'hooks/tournament/useTournamentDraft.ts', 'hooks/tournament/useTournamentEdit.ts', 'utils/tournamentDraft.ts'] },
   'tournament-edit-save': {
-    route: `/tournament/edit/${T.upcoming}`, ready: 'Clubs (optional)', fullPage: true,
-    actions: [{ click: 'Continue' }, { wait: 200 }, { click: 'Continue' }, { wait: 200 }, { click: 'Continue' }, { wait: 200 }, { click: 'Continue' }, { wait: 400 }],
+    route: `/tournament/edit/${T.upcoming}`, ready: 'Clubs (optional)',
+    actions: [{ click: 'Continue' }, { wait: 200 }, { click: 'Continue' }, { wait: 200 }, { click: 'Continue' }, { wait: 200 }, { click: 'Continue' }, { wait: 400 }, { scroll: 4000 }, { wait: 300 }],
     sources: ['app/(app)/tournament/create.tsx', 'app/(app)/tournament/edit/[id].tsx', 'components/tournament/create/**', 'hooks/tournament/useTournamentDraft.ts', 'hooks/tournament/useTournamentEdit.ts', 'utils/tournamentDraft.ts'],
   },
   'tournament-solo-overview': { route: `/tournament/${T.open}`, ready: 'Winter 4s Shuffle', sources: [...TOURNAMENT_DETAIL, 'utils/soloTeams.ts'] },
