@@ -21,6 +21,8 @@ declare
   v jsonb;
   f text;
   n numeric;
+  lo numeric;
+  hi numeric;
 begin
   if p is null or p = 'null'::jsonb then return '{}'::jsonb; end if;
   if jsonb_typeof(p) <> 'object' then
@@ -42,8 +44,10 @@ begin
         raise exception 'phase_rules: %.% must be a number', k, f using errcode = '22023';
       end if;
       n := (v->>f)::numeric;
-      if n <> trunc(n) or n < case f when 'win_by_margin' then 1 when 'sets_to_win' then 1 when 'starting_score' then 0 else 5 end
-         or n > case f when 'starting_score' then 20 when 'win_by_margin' then 5 when 'sets_to_win' then 3 else 60 end then
+      -- Bounds first: PL/pgSQL ends an IF condition at its first THEN, so no CASE inside one.
+      lo := case f when 'win_by_margin' then 1 when 'sets_to_win' then 1 when 'starting_score' then 0 else 5 end;
+      hi := case f when 'starting_score' then 20 when 'win_by_margin' then 5 when 'sets_to_win' then 3 else 60 end;
+      if n <> trunc(n) or n < lo or n > hi then
         raise exception 'phase_rules: %.% out of range', k, f using errcode = '22023';
       end if;
     end loop;
