@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { View, FlatList, TouchableOpacity, Modal, Pressable, Platform } from 'react-native'
+import { View, FlatList, TouchableOpacity, Modal, ScrollView, StyleSheet } from 'react-native'
 import { Text, TextInput } from '../../../../components/ui/Text'
 import { RefreshControl } from '../../../../components/RefreshControl'
 import { Image } from 'expo-image'
@@ -22,6 +22,7 @@ import { SignInPrompt } from '../../../../components/SignInPrompt'
 import { ScreenHeader, ScreenState } from '../../../../components/ui'
 import { DELETED_USER_LABEL } from '../../../../constants/copy'
 import { Spinner } from '../../../../components/ui/Spinner'
+import { ClubChatTile, ConversationListRow } from '../../../../components/chat/ChatListParts'
 
 function conversationTitle(row: ConversationRow): string {
   if (row.type === 'club') return row.club_name ?? 'Club Chat'
@@ -204,91 +205,49 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
     )
   }
 
-  function renderRow({ item }: { item: ConversationRow }) {
+  function rowProps(item: ConversationRow) {
     const title = conversationTitle(item)
-    const preview = lastMessagePreview(item, myId, silencedUserIds)
-    const time = timeAgo(item.last_message_at)
-    const hasUnread = (item.unread_count ?? 0) > 0
-    const avatarUrl = profileAvatarSmallUri(item.type === 'dm' ? item.other_user_avatar_url : item.club_avatar_url, 120)
-    const isClub = item.type === 'club'
-
     const canSilenceDm = item.type === 'dm' && item.other_user_id && item.other_user_id !== myId
-
-    return (
-      <Pressable
-        testID="conversation-row"
-        accessibilityRole="button"
-        onPress={() => openConversation(item)}
-        onLongPress={canSilenceDm ? () => confirmSilenceFromList(item.other_user_id!, conversationTitle(item)) : undefined}
-        {...(Platform.OS === 'web' && canSilenceDm
-          ? {
-              onContextMenu: (e: { preventDefault?: () => void }) => {
-                e.preventDefault?.()
-                confirmSilenceFromList(item.other_user_id!, conversationTitle(item))
-              },
-            }
-          : {})}
-        delayLongPress={480}
-        style={({ pressed }) => ({
-          flexDirection: 'row', alignItems: 'center',
-          paddingHorizontal: theme.spacing.lg,
-          paddingVertical: theme.spacing.md,
-          gap: theme.spacing.md,
-          borderBottomWidth: 1, borderBottomColor: theme.colors.border,
-          opacity: pressed ? 0.88 : 1,
-        })}
-      >
-        {/* Avatar */}
-        <View style={{
-          width: 52, height: 52, borderRadius: isClub ? 14 : 26,
-          backgroundColor: theme.colors.border,
-          alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-          flexShrink: 0,
-        }}>
-          {avatarUrl ? (
-            <Image source={{ uri: avatarUrl }} style={{ width: 52, height: 52 }} contentFit="cover" transition={150} />
-          ) : (
-            <Ionicons name={isClub ? 'people' : 'person'} size={26} color={theme.colors.subtext} />
-          )}
-        </View>
-
-        {/* Content */}
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <Text
-              style={{ fontFamily: hasUnread ? theme.fonts.displaySemiBold : theme.fonts.displayMedium, fontSize: theme.font.size.md, color: theme.colors.text, flex: 1 }}
-              numberOfLines={1}
-            >
-              {title}
-            </Text>
-            <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.xs, color: hasUnread ? theme.colors.primaryText : theme.colors.subtext, flexShrink: 0 }}>
-              {time}
-            </Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
-            <Text
-              style={{ flex: 1, fontFamily: hasUnread ? theme.fonts.bodyMedium : theme.fonts.body, fontSize: theme.font.size.sm, color: hasUnread ? theme.colors.text : theme.colors.subtext }}
-              numberOfLines={1}
-            >
-              {preview}
-            </Text>
-            {hasUnread && (
-              <View testID="conversation-unread" style={{
-                minWidth: 20, height: 20, borderRadius: 10,
-                backgroundColor: theme.colors.primary,
-                alignItems: 'center', justifyContent: 'center',
-                paddingHorizontal: 5, flexShrink: 0,
-              }}>
-                <Text style={{ fontFamily: theme.fonts.bodyBold, fontSize: theme.font.size.xs, color: theme.colors.white }}>
-                  {item.unread_count > 99 ? '99+' : item.unread_count}
-                </Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </Pressable>
-    )
+    return {
+      row: item,
+      title,
+      preview: lastMessagePreview(item, myId, silencedUserIds),
+      time: timeAgo(item.last_message_at),
+      avatarUri: item.type === 'dm' ? profileAvatarSmallUri(item.other_user_avatar_url, 120) : null,
+      onPress: () => openConversation(item),
+      onSilence: canSilenceDm ? () => confirmSilenceFromList(item.other_user_id!, title) : undefined,
+    }
   }
+
+  // Club chats as tiles on top, direct messages below (Party invite layout).
+  const clubChats = visibleConversations.filter(r => r.type === 'club')
+  const directChats = visibleConversations.filter(r => r.type !== 'club')
+
+  const listHeader = (
+    <>
+      {clubChats.length > 0 && (
+        <>
+          <Text style={styles.section} accessibilityRole="header">Club chats</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tiles} testID="club-chats">
+            {clubChats.map(r => <ClubChatTile key={r.conversation_id} {...rowProps(r)} />)}
+          </ScrollView>
+        </>
+      )}
+      {directChats.length > 0 && clubChats.length > 0 && (
+        <Text style={styles.section} accessibilityRole="header">Messages</Text>
+      )}
+      {visibleConversations.length === 0 && (
+        <View style={[shared.centered, { paddingTop: 60 }]}>
+          <Ionicons name="chatbubbles-outline" size={48} color={theme.colors.border} />
+          <Text style={[shared.body, { marginTop: theme.spacing.md, color: theme.colors.subtext, textAlign: 'center', paddingHorizontal: theme.spacing.xl }]}>
+            {conversations.length > 0
+              ? 'No conversations here. Direct chats with people you silenced stay hidden until you unsilence them under Profile → Silenced people.'
+              : 'No messages yet.\nTap New to start a conversation.'}
+          </Text>
+        </View>
+      )}
+    </>
+  )
 
   return (
     <View style={[shared.screen, { paddingTop: insets.top }]}>
@@ -299,34 +258,19 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
         right={
           <TouchableOpacity
             onPress={() => setNewDMVisible(true)}
-            hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="New message"
-            style={{
-              width: 38, height: 38, borderRadius: 12,
-              backgroundColor: theme.colors.primary,
-              alignItems: 'center', justifyContent: 'center',
-            }}
+            style={styles.newButton}
           >
-            <Ionicons name="add" size={22} color={theme.colors.white} />
+            <Ionicons name="add" size={20} color={theme.colors.white} />
+            <Text style={styles.newText}>New</Text>
           </TouchableOpacity>
         }
       />
-      <View style={{ paddingHorizontal: theme.spacing.lg, paddingBottom: 4 }}>
-        {/* Search bar */}
-        <TouchableOpacity
-          onPress={() => setNewDMVisible(true)}
-          style={{
-            flexDirection: 'row', alignItems: 'center', gap: 8,
-            backgroundColor: theme.colors.card,
-            borderWidth: 1, borderColor: theme.colors.border,
-            borderRadius: 12,
-            paddingHorizontal: 12, paddingVertical: 10,
-            marginTop: theme.spacing.xs,
-          }}
-        >
-          <Ionicons name="search-outline" size={16} color={theme.colors.subtext} />
-          <Text style={{ fontFamily: theme.fonts.body, fontSize: theme.font.size.smd, color: theme.colors.subtext }}>Search people</Text>
+      <View style={{ paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.sm }}>
+        <TouchableOpacity onPress={() => setNewDMVisible(true)} accessibilityRole="button" accessibilityLabel="Search people" style={styles.search}>
+          <Ionicons name="search-outline" size={18} color={theme.colors.subtext} />
+          <Text style={styles.searchText}>Search people</Text>
         </TouchableOpacity>
       </View>
 
@@ -337,10 +281,10 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
         onRetry={() => void handleChatListRefresh()}
       >
         <FlatList
-          data={visibleConversations}
+          data={directChats}
           keyExtractor={r => r.conversation_id}
-          renderItem={renderRow}
-          contentContainerStyle={{ paddingBottom: tabBarHeight + 16 }}
+          renderItem={({ item }) => <ConversationListRow {...rowProps(item)} />}
+          contentContainerStyle={{ paddingHorizontal: theme.spacing.md, paddingBottom: tabBarHeight + 16 }}
           refreshControl={
             <RefreshControl
               refreshing={listRefreshing}
@@ -348,16 +292,7 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
               tintColor={theme.colors.primary}
             />
           }
-          ListHeaderComponent={(visibleConversations.length === 0 ? (
-            <View style={[shared.centered, { paddingTop: 60 }]}>
-              <Ionicons name="chatbubbles-outline" size={48} color={theme.colors.border} />
-              <Text style={[shared.body, { marginTop: theme.spacing.md, color: theme.colors.subtext, textAlign: 'center', paddingHorizontal: theme.spacing.xl }]}>
-                {conversations.length > 0
-                  ? 'No conversations here. Direct chats with people you silenced stay hidden until you unsilence them under Profile → Silenced people.'
-                  : 'No messages yet.\nTap the icon above to start a conversation.'}
-              </Text>
-            </View>
-          ) : null) ?? undefined}
+          ListHeaderComponent={listHeader}
         />
       </ScreenState>
 
@@ -387,3 +322,36 @@ export default function ChatScreen() {
   }
   return <ChatScreenSignedIn myId={userId} />
 }
+
+const styles = StyleSheet.create({
+  newButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primary,
+  },
+  newText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.smd, color: theme.colors.white },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 48,
+    paddingHorizontal: 16,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.card,
+    marginTop: theme.spacing.xs,
+  },
+  searchText: { fontFamily: theme.fonts.body, fontSize: theme.font.size.base, color: theme.colors.subtext },
+  section: {
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.size.lg,
+    color: theme.colors.text,
+    paddingHorizontal: theme.spacing.sm,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+  },
+  tiles: { gap: 12, paddingHorizontal: theme.spacing.sm, paddingBottom: theme.spacing.xs },
+})
