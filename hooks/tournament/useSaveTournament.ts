@@ -7,8 +7,9 @@ import { supabase } from '../../lib/supabase'
 import { queryKey, useMutation } from '../../lib/query'
 import { Sentry } from '../../lib/sentry'
 import { toast } from '../../lib/toast'
-import { saveTournamentArgs } from '../../utils/tournamentDraft'
-import type { SaveTournamentInput } from '../../types'
+import { saveTournamentArgs, updateTournamentArgs } from '../../utils/tournamentDraft'
+import { tournamentKeys } from './api'
+import type { SaveTournamentInput, UpdateTournamentInput } from '../../types'
 
 export async function saveTournament({ draft, status }: SaveTournamentInput): Promise<string> {
   // Cast until types/database.ts is regenerated from live with save_tournament (applied when #325 merges).
@@ -24,6 +25,24 @@ export function useSaveTournament() {
     onError: e => {
       Sentry.captureException(e)
       toast.error('Could not save tournament', e)
+    },
+  })
+}
+
+/** The host's edit (#402): one `update_tournament` call; it returns how many players were told. */
+export async function updateTournament({ id, draft, newHostId }: UpdateTournamentInput): Promise<number> {
+  // p_tournament is a partial row the function merges over the saved one (jsonb).
+  const { data, error } = await supabase.rpc('update_tournament', updateTournamentArgs(id, draft, newHostId) as never)
+  if (error) throw error
+  return typeof data === 'number' ? data : 0
+}
+
+export function useUpdateTournament(id: string) {
+  return useMutation<UpdateTournamentInput, number>(updateTournament, {
+    invalidates: [queryKey('tournaments'), tournamentKeys.all(id)],
+    onError: e => {
+      Sentry.captureException(e)
+      toast.error('Could not save changes', e)
     },
   })
 }

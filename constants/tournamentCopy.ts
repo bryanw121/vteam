@@ -64,3 +64,13 @@ export function publicViewCopy(clubName: string | null, isGuest: boolean): { bod
     ? { body: `You're viewing this as a guest. Sign in to register a team.`, action: 'Sign in', discussion: `Sign in and join ${club} to read and post in the discussion.` }
     : { body: `Members of ${club} can register and chat.`, action: 'View club', discussion: `Join ${club} to read and post in the discussion.` }
 }
+
+/** Basics step, clubs (#401): what linking a club does. */
+export const TOURNAMENT_CLUBS_OPEN_HINT = 'No club needed. Leave these off and anyone on vteam can find it.'
+export const TOURNAMENT_CLUBS_LINKED_HINT = 'Only members of the clubs you pick can see it.'
+/** Edit (#402): what Save does. */
+export const tournamentSaveLabel = (players: number) =>
+  players === 0 ? 'Save changes' : `Save and tell ${players} ${players === 1 ? 'player' : 'players'}`
+export const TOURNAMENT_EDIT_NOTE = 'Everyone signed up gets a message saying what changed.'
+export const tournamentSavedMessage = (told: number) =>
+  told === 0 ? 'Changes saved.' : `Changes saved. We told ${told} ${told === 1 ? 'player' : 'players'}.`

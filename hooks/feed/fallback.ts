@@ -5,13 +5,13 @@ import {
   EXTERNAL_SESSION_SELECT,
 } from '../../constants'
 import { supabase } from '../../lib/supabase'
+import { TOURNAMENT_FEED_SELECT } from '../../constants/selects'
 import { getSessionUser } from '../../lib/sessionUser'
 import type { EventWithDetails, ExternalSession } from '../../types'
 
 // The feed without get_feed_span (#343: moved from hooks/useMonthEvents.ts unchanged).
 
-export const TOURNAMENT_FEED_SELECT =
-  'id, created_by, club_id, title, location, start_date, max_teams, price, skill_levels, status, created_at, profiles!tournaments_created_by_fkey(id, username, first_name, last_name, avatar_url), clubs!tournaments_club_id_fkey(id, name, avatar_url)'
+export { TOURNAMENT_FEED_SELECT } from '../../constants/selects'
 
 /** Previous path, kept as the fallback: one range query per table, previews fetched afterwards. */
 export async function fetchFeedSpanQueries(

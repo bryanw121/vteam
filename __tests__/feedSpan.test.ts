@@ -3,6 +3,7 @@ import { join } from 'path'
 import { isFeedRpcUnavailable, parseFeedSpan } from '../utils/feedSpan'
 import { previewsFromRows } from '../utils/eventCardPreviews'
 import { EXTERNAL_SESSION_SELECT, EVENT_LIST_EVENT_COLUMNS } from '../constants/events'
+import { TOURNAMENT_FEED_SELECT } from '../constants/selects'
 
 jest.mock('../lib/supabase', () => ({ supabase: {} }))
 
@@ -64,9 +65,7 @@ describe('get_feed_span migration matches the client selects', () => {
   })
 
   it('builds every TOURNAMENT_FEED_SELECT column', () => {
-    const hook = readFileSync(join(__dirname, '..', 'hooks/feed/fallback.ts'), 'utf8')
-    const select = /TOURNAMENT_FEED_SELECT =\s*'([^']+)'/.exec(hook)![1]
-    keys(select.split(', profiles!')[0]).forEach(has)
+    keys(TOURNAMENT_FEED_SELECT.split(', profiles!')[0]).forEach(has)
   })
 
   it('runs as the caller, read-only, and is callable by guests', () => {

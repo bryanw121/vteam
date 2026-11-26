@@ -175,7 +175,14 @@ export const SCREENS = {
   // The public, read-only page (#282): a guest, and a signed-in player outside the club.
   'tournament-public-guest': { route: `/tournament/${T.shared}`, signedIn: false, ready: 'Halloween Sand Classic', sources: [...TOURNAMENT_DETAIL, 'utils/publicTournament.ts'] },
   'tournament-public-member-of-none': { route: `/tournament/${T.shared}`, ready: 'Halloween Sand Classic', actions: [{ tap: 'tournament-tab-teams', text: 'Teams' }], sources: [...TOURNAMENT_DETAIL, 'utils/publicTournament.ts'] },
-  'tournament-create': { route: '/tournament/create', sources: ['app/(app)/tournament/create.tsx'] },
+  'tournament-create': { route: '/tournament/create', ready: 'Clubs (optional)', sources: ['app/(app)/tournament/create.tsx', 'app/(app)/tournament/edit/[id].tsx', 'components/tournament/create/**', 'hooks/tournament/useTournamentDraft.ts', 'hooks/tournament/useTournamentEdit.ts', 'utils/tournamentDraft.ts'] },
+  // #402: the host's edit, seeded from the saved tournament; then its last step (host picker, Save and tell N players).
+  'tournament-edit': { route: `/tournament/edit/${T.upcoming}`, ready: 'Clubs (optional)', sources: ['app/(app)/tournament/create.tsx', 'app/(app)/tournament/edit/[id].tsx', 'components/tournament/create/**', 'hooks/tournament/useTournamentDraft.ts', 'hooks/tournament/useTournamentEdit.ts', 'utils/tournamentDraft.ts'] },
+  'tournament-edit-save': {
+    route: `/tournament/edit/${T.upcoming}`, ready: 'Clubs (optional)',
+    actions: [{ click: 'Continue' }, { wait: 200 }, { click: 'Continue' }, { wait: 200 }, { click: 'Continue' }, { wait: 200 }, { click: 'Continue' }, { wait: 400 }, { scroll: 4000 }, { wait: 300 }],
+    sources: ['app/(app)/tournament/create.tsx', 'app/(app)/tournament/edit/[id].tsx', 'components/tournament/create/**', 'hooks/tournament/useTournamentDraft.ts', 'hooks/tournament/useTournamentEdit.ts', 'utils/tournamentDraft.ts'],
+  },
   'tournament-solo-overview': { route: `/tournament/${T.open}`, ready: 'Winter 4s Shuffle', sources: [...TOURNAMENT_DETAIL, 'utils/soloTeams.ts'] },
   'tournament-make-teams': { route: `/tournament/make-teams/${T.open}`, ready: 'Emma', sources: ['app/(app)/tournament/make-teams/[id].tsx', 'utils/soloTeams.ts'] },
   'tournament-make-teams-drawn': { route: `/tournament/make-teams/${T.open}`, ready: 'Emma', actions: [{ tap: 'shuffle-teams', text: 'Shuffle teams' }, { wait: 400 }], sources: ['app/(app)/tournament/make-teams/[id].tsx', 'utils/soloTeams.ts'] },
