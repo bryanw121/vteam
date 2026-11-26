@@ -14,6 +14,8 @@
     },
     { "src": "/sw.js", "headers": { "cache-control": "no-cache", "service-worker-allowed": "/" }, "continue": true },
     { "src": "/manifest.webmanifest", "headers": { "content-type": "application/manifest+json", "cache-control": "public, max-age=3600" }, "continue": true },
+    { "src": "/(tournaments|leagues)?/?", "has": [{ "type": "query", "key": "program" }], "dest": "/api/outside-page" },
+    { "src": "/", "has": [{ "type": "query", "key": "session" }], "dest": "/api/outside-page" },
     { "handle": "filesystem" },
     { "src": "/(_expo/static|assets)/.*", "status": 404, "headers": { "cache-control": "no-store" } },
     { "src": "/event/(?<id>[0-9a-fA-F-]{36})/?", "dest": "/api/event-page?id=$id" },
@@ -22,6 +24,10 @@
   "functions": {
     "api/tunnel.ts": {
       "memory": 128
+    },
+    "api/outside-page.ts": {
+      "memory": 128,
+      "includeFiles": "dist/index.html"
     },
     "api/event-page.ts": {
       "memory": 128,
