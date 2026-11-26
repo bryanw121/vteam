@@ -28,9 +28,10 @@ test('"Already booked?" opens the host form prefilled with the venue and surface
   await expect(page.getByTestId('location-picker-trigger').first()).toContainText(target.name, { timeout: 20_000 })
   // React Native Web doesn't put Chip's selected state on a role=button in the
   // DOM, so compare looks: the prefilled surface's chip is filled (active) and
-  // differs from the others, which all share the inactive style.
+  // differs from the others, which all share the inactive style. The pill is the
+  // first child of the chip's 44-pt touchable (#386).
   const background = (surface: string) =>
-    page.getByTestId(`event-surface-${surface}`).first().evaluate(el => getComputedStyle(el).backgroundColor)
+    page.getByTestId(`event-surface-${surface}`).first().evaluate(el => getComputedStyle(el.firstElementChild ?? el).backgroundColor)
   const others = ['indoor', 'sand', 'grass'].filter(s => s !== target.surface)
   const inactive = await background(others[0])
   for (const other of others.slice(1)) {
