@@ -106,7 +106,7 @@ $function$;
 
 revoke all on function public.save_tournament(jsonb, jsonb) from public, anon;
 grant execute on function public.save_tournament(jsonb, jsonb) to authenticated;
-drop function if exists public.tournament_open_to_me(uuid);
 drop table if exists public.tournament_clubs;
+drop function if exists public.tournament_open_to_me(uuid);
 delete from public.tournaments where club_id is null;
 alter table public.tournaments alter column club_id set not null;
