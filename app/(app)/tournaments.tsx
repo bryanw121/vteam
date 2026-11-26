@@ -16,6 +16,7 @@ import { splitTournaments } from '../../utils/tournamentList'
 import { useFreeAgentCounts } from '../../hooks/useFreeAgents'
 import { ProgramSection } from '../../components/programs/ProgramSection'
 import { useExternalPrograms } from '../../hooks/useExternalPrograms'
+import { useProgramSheet } from '../../hooks/useProgramSheet'
 import { useFeedRegion } from '../../hooks/useFeedCity'
 import { PROGRAMS_SOURCE_NOTE } from '../../constants/copy'
 import { ProgramHostChips } from '../../components/programs/ProgramHostChips'
@@ -121,6 +122,8 @@ export default function TournamentsScreen() {
   const split = useMemo(() => splitTournaments(list.data ?? [], new Date()), [list.data])
   const items = tab === 'upcoming' ? split.upcoming : split.past
   const programs = useExternalPrograms()
+  // An outside tournament's sheet (#395): `?program=<id>`, what sharing one sends.
+  const programSheet = useProgramSheet('tournaments')
   const region = useFeedRegion()
   const outside = tab === 'upcoming' ? programs.data : null
   const outsideAll = useMemo(() => [...(outside?.tournaments ?? []), ...(outside?.elsewhere ?? [])], [outside])
@@ -133,8 +136,8 @@ export default function TournamentsScreen() {
   const outsideNode = outsideCount ? (
     <View style={{ marginTop: theme.spacing.sm }}>
       <ProgramHostChips programs={outsideAll} host={host} onSelect={setHost} />
-      <ProgramSection title={`Around ${city}`} programs={byHost(outside!.tournaments, host)} freeAgentCounts={freeAgentCounts} testID="tournaments-around" />
-      <ProgramSection title="Elsewhere in the state" programs={byHost(outside!.elsewhere, host)} freeAgentCounts={freeAgentCounts} testID="tournaments-elsewhere" />
+      <ProgramSection title={`Around ${city}`} programs={byHost(outside!.tournaments, host)} freeAgentCounts={freeAgentCounts} onOpen={programSheet.openProgram} testID="tournaments-around" />
+      <ProgramSection title="Elsewhere in the state" programs={byHost(outside!.elsewhere, host)} freeAgentCounts={freeAgentCounts} onOpen={programSheet.openProgram} testID="tournaments-elsewhere" />
       <Text style={[shared.caption, { marginTop: theme.spacing.md }]}>{PROGRAMS_SOURCE_NOTE}</Text>
     </View>
   ) : null
@@ -227,6 +230,7 @@ export default function TournamentsScreen() {
           </>
         )}
       </ScreenContainer>
+      {programSheet.sheet}
     </View>
   )
 }

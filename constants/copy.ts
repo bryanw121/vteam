@@ -269,6 +269,15 @@ export const OUTSIDE_SESSION_COPY = {
   loading: 'Loading the session',
 } as const
 
+/** The sheet for an outside tournament or league (#395). */
+export const PROGRAM_SHEET_COPY = {
+  directions: 'Directions',
+  findTeam: 'Find a team',
+  scores: 'Scores & brackets',
+  gone: "That one isn't listed anymore",
+  cardAction: 'Details & sign-up',
+} as const
+
 /** The loading screen (components/splash): a line under the logo, and tips that rotate while it waits. */
 export const SPLASH_CAPTION = 'Finding games near you…'
 export const SPLASH_TIPS = [

@@ -8,6 +8,7 @@ import { ScreenContainer, ScreenHeader, ScreenState } from '../../components/ui'
 import { useFreeAgentCounts } from '../../hooks/useFreeAgents'
 import { ProgramSection } from '../../components/programs/ProgramSection'
 import { useExternalPrograms } from '../../hooks/useExternalPrograms'
+import { useProgramSheet } from '../../hooks/useProgramSheet'
 import { useToday } from '../../hooks/useToday'
 import { byHost, programUrgency } from '../../utils/externalPrograms'
 import { ShareLinkButton } from '../../components/ShareLinkButton'
@@ -26,6 +27,8 @@ export default function LeaguesScreen() {
   const router = useRouter()
   const today = useToday()
   const programs = useExternalPrograms()
+  // A league's sheet (#395): `?program=<id>`, what sharing one sends.
+  const programSheet = useProgramSheet('leagues')
   const [refreshing, setRefreshing] = useState(false)
   const all = programs.data?.leagues ?? []
   const freeAgentCounts = useFreeAgentCounts(all.map(p => p.id))
@@ -79,13 +82,14 @@ export default function LeaguesScreen() {
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { void refresh() }} tintColor={theme.colors.primary} />}
           >
             <ProgramHostChips programs={all} host={host} onSelect={setHost} />
-            <ProgramSection title="Closing this week" programs={groups.soon} freeAgentCounts={freeAgentCounts} hot testID="leagues-soon" />
-            <ProgramSection title="Open" programs={groups.open} freeAgentCounts={freeAgentCounts} testID="leagues-open" />
-            <ProgramSection title="Not open yet, full or closed" programs={groups.later} freeAgentCounts={freeAgentCounts} testID="leagues-later" />
+            <ProgramSection title="Closing this week" programs={groups.soon} freeAgentCounts={freeAgentCounts} onOpen={programSheet.openProgram} hot testID="leagues-soon" />
+            <ProgramSection title="Open" programs={groups.open} freeAgentCounts={freeAgentCounts} onOpen={programSheet.openProgram} testID="leagues-open" />
+            <ProgramSection title="Not open yet, full or closed" programs={groups.later} freeAgentCounts={freeAgentCounts} onOpen={programSheet.openProgram} testID="leagues-later" />
             <Text style={[shared.caption, { marginTop: theme.spacing.lg }]}>{PROGRAMS_SOURCE_NOTE}</Text>
           </ScrollView>
         </ScreenState>
       </ScreenContainer>
+      {programSheet.sheet}
     </View>
   )
 }
