@@ -20,6 +20,7 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationPrefType, string> = {
   bring_item_uncovered: 'Gear still needed (hosts)',
   new_game: 'New game posted',
   club_poll: 'Club polls',
+  tournament_updated: 'Tournament changes',
   friend_request: 'Friend requests',
   friend_accepted: 'Friend request accepted',
 }

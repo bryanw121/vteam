@@ -11,7 +11,7 @@ export function ProgramSection({ title, programs, hot = false, testID, freeAgent
   return (
     <View testID={testID}>
       <Text accessibilityRole="header" style={[shared.programSectionTitle, hot && shared.programSectionTitleHot]}>
-        {title} · {programs.length}
+        {title}
       </Text>
       {programs.map(p => <ExternalProgramCard key={p.id} program={p} compact freeAgentCount={freeAgentCounts ? freeAgentCounts.get(p.id) ?? 0 : null} onOpen={onOpen} />)}
     </View>

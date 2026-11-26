@@ -4,10 +4,10 @@
  */
 import {
   DEFAULT_TOURNAMENT_DRAFT, firstInvalidStep, formatHasBracket, formatHasPools, moveItem, newTournamentDraft,
-  saveTournamentArgs, validateTournamentStep,
+  saveTournamentArgs, validateTournamentStep, sortTournamentClubs, draftFromTournament, updateTournamentArgs, tournamentPlayers,
 } from '../utils/tournamentDraft'
 import { DEFAULT_TIEBREAKERS } from '../lib/tournamentStandings'
-import type { TournamentDraft } from '../types'
+import type { Tournament, TournamentDraft, TournamentRules, TournamentTeamWithRoster } from '../types'
 
 const mockRpc = jest.fn()
 jest.mock('../lib/supabase', () => ({ supabase: { rpc: (...a: unknown[]) => mockRpc(...a) } }))
@@ -15,7 +15,7 @@ jest.mock('../lib/supabase', () => ({ supabase: { rpc: (...a: unknown[]) => mock
 const ready = (patch: Partial<TournamentDraft> = {}): TournamentDraft => ({
   ...newTournamentDraft(),
   title: '  Summer Slam ',
-  clubId: 'club-1',
+  clubIds: ['club-1'],
   startDate: new Date('2026-12-05T15:00:42.123Z'),
   ...patch,
 })
@@ -28,10 +28,10 @@ describe('tournament draft rules', () => {
     expect(DEFAULT_TOURNAMENT_DRAFT.tiebreakers).toEqual([...DEFAULT_TIEBREAKERS, 'sets_won'])
   })
 
-  it('step 1 needs a name, a club and a start date', () => {
+  it('step 1 needs a name and a start date; clubs are optional (#401)', () => {
     expect(validateTournamentStep(0, newTournamentDraft())).toBe('Please enter a tournament name.')
     expect(validateTournamentStep(0, ready({ title: '   ' }))).toBe('Please enter a tournament name.')
-    expect(validateTournamentStep(0, ready({ clubId: '' }))).toBe('Please select a club.')
+    expect(validateTournamentStep(0, ready({ clubIds: [] }))).toBeNull()
     expect(validateTournamentStep(0, ready({ startDate: null }))).toBe('Please set a start date.')
     expect(validateTournamentStep(0, ready())).toBeNull()
   })
@@ -116,5 +116,65 @@ describe('saveTournament', () => {
     const { saveTournament } = require('../hooks/tournament/useSaveTournament') as typeof import('../hooks/tournament/useSaveTournament')
     mockRpc.mockResolvedValue({ data: null, error: { code: '42501', message: 'save_tournament: not a member of that club' } })
     await expect(saveTournament({ draft: ready(), status: 'published' })).rejects.toMatchObject({ code: '42501' })
+  })
+})
+
+describe('clubs (#401)', () => {
+  it('saves no club, or every linked club with the first as club_id', () => {
+    expect(saveTournamentArgs(ready({ clubIds: [] }), 'draft').p_tournament).toMatchObject({ club_id: null, club_ids: [] })
+    expect(saveTournamentArgs(ready({ clubIds: ['a', 'b'] }), 'draft').p_tournament).toMatchObject({ club_id: 'a', club_ids: ['a', 'b'] })
+  })
+
+  it('lists clubs the player runs first', () => {
+    const sorted = sortTournamentClubs([
+      { id: '1', name: 'Zeta', role: 'owner' }, { id: '2', name: 'Alpha', role: 'member' }, { id: '3', name: 'Beta', role: 'admin' },
+    ])
+    expect(sorted.map(c => c.name)).toEqual(['Beta', 'Zeta', 'Alpha'])
+  })
+})
+
+describe('editing (#402)', () => {
+  const tournament = {
+    id: 't1', club_id: 'c1', created_by: 'host', title: 'Fall Slam', description: 'Bring water', location: 'Gym',
+    skill_levels: ['open', 'a'], start_date: '2026-12-05T15:00:00.000Z', registration_deadline: '2026-12-01T05:00:00.000Z',
+    status: 'published', format: 'pool_bracket', bracket_type: 'double', max_teams: 12, min_roster_size: 6, max_roster_size: 9,
+    teams_advance_per_pool: 0, has_refs: true, price: 20, venmo_handle: '@host', team_mode: 'captains', team_size: null,
+  } as unknown as Tournament
+  const rules = {
+    tournament_id: 't1', starting_score: 4, winning_score: 25, deciding_set_score: 15, win_by_margin: 2, point_cap: null,
+    sets_to_win: 2, tiebreakers: ['point_diff'], third_place_match: false, phase_rules: { final: { starting_score: 0, point_cap: 27 } },
+  } as unknown as TournamentRules
+
+  it('turns a saved tournament back into the draft it came from', () => {
+    const d = draftFromTournament(tournament, rules, ['c1', 'c2'])
+    expect(d).toMatchObject({
+      title: 'Fall Slam', clubIds: ['c1', 'c2'], location: 'Gym', format: 'pool_bracket', bracketType: 'double',
+      teamsAdvancePerPool: 0, price: 20, venmoHandle: '@host', startingScore: 4, tiebreakers: ['point_diff'],
+    })
+    expect(d.startDate?.toISOString()).toBe('2026-12-05T15:00:00.000Z')
+    expect(d.phaseRules.final).toMatchObject({ startingScore: 0, pointCap: 27, winningScore: 25 })
+    expect(d.phaseRules.bracket).toBeUndefined()
+    // Saved again unchanged, it sends the same phase rules.
+    expect(updateTournamentArgs('t1', d, null).p_rules.phase_rules).toEqual({ final: { starting_score: 0, point_cap: 27 } })
+  })
+
+  it('falls back to the one club before clubs could be linked', () => {
+    expect(draftFromTournament(tournament, null, []).clubIds).toEqual(['c1'])
+  })
+
+  it('sends no status, and who hosts next', () => {
+    const args = updateTournamentArgs('t1', draftFromTournament(tournament, rules, ['c1']), 'p2')
+    expect(args.p_id).toBe('t1')
+    expect(args.p_new_host).toBe('p2')
+    expect(args.p_tournament).not.toHaveProperty('status')
+  })
+
+  it('counts each player once and leaves out the host', () => {
+    const member = (user_id: string, first_name: string) => ({ user_id, profiles: { first_name, last_name: null, username: first_name.toLowerCase() } })
+    const teams = [
+      { captain_user_id: 'host', members: [member('host', 'Host'), member('p1', 'Ana')] },
+      { captain_user_id: 'p2', members: [member('p2', 'Ben'), member('p1', 'Ana')] },
+    ] as unknown as TournamentTeamWithRoster[]
+    expect(tournamentPlayers(teams, 'host')).toEqual([{ id: 'p1', name: 'Ana' }, { id: 'p2', name: 'Ben' }])
   })
 })
