@@ -8,7 +8,7 @@ import React, { useState, useRef, useCallback, memo, useLayoutEffect } from 'rea
 import { View, TouchableOpacity, PanResponder, Animated, StyleSheet } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../ui/Text'
-import { COMPACT_TEXT_SCALE, SWIPE_NAVIGATION, TIGHT_TEXT_SCALE, shared, theme } from '../../constants'
+import { COMPACT_TEXT_SCALE, SWIPE_NAVIGATION, TIGHT_TEXT_SCALE, theme } from '../../constants'
 import { useTextScale } from '../../contexts/textScale'
 import { useToday } from '../../hooks/useToday'
 import { weekMonthLabel } from '../../utils/monthKeys'
@@ -146,7 +146,7 @@ const WeekStripContent = memo(function WeekStripContent({ weekDays, selectedDate
 // Custom month calendar built from plain Views — no third-party library,
 // no remounting, no loading flash. Same interaction model as WeekStripContent.
 
-export const MonthGridContent = memo(function MonthGridContent({ month, selectedDate, markedDates, onSelectDate, onPrevMonth, onNextMonth, counts, inViewDate }: MonthGridContentProps) {
+export const MonthGridContent = memo(function MonthGridContent({ month, selectedDate, markedDates, onSelectDate, onPrevMonth, onNextMonth, inViewDate }: MonthGridContentProps) {
   const today = useToday()
   const [year, mon] = month.split('-').map(Number)
   const monthLabel  = formatDate(new Date(year, mon - 1, 15), { month: 'long', year: 'numeric' })
@@ -192,7 +192,6 @@ export const MonthGridContent = memo(function MonthGridContent({ month, selected
             const isSelected = dateStr === selectedDate
             const isToday    = dateStr === today
             const hasEvent   = !!markedDates[dateStr]?.marked
-            const count      = counts?.get(dateStr) ?? 0
             const inView     = !isSelected && inViewDate === dateStr
             return (
               <TouchableOpacity
@@ -200,7 +199,6 @@ export const MonthGridContent = memo(function MonthGridContent({ month, selected
                 onPress={() => onSelectDate(dateStr)}
                 style={{ flex: 1, alignItems: 'center', paddingVertical: 3 }}
                 testID={`calendar-day-${dateStr}`}
-                accessibilityLabel={counts ? `${dateStr}${count ? `, ${count} ${count === 1 ? 'game' : 'games'}` : ''}` : undefined}
               >
                 <View style={{
                   width: 34, height: 34, borderRadius: 10,
@@ -216,19 +214,11 @@ export const MonthGridContent = memo(function MonthGridContent({ month, selected
                     {day}
                   </Text>
                 </View>
-                {counts ? (
-                  <View style={{ height: 15, marginTop: 1, alignItems: 'center', justifyContent: 'center' }}>
-                    {count > 0 && (
-                      <Text style={shared.calendarDayCount} maxFontSizeMultiplier={TIGHT_TEXT_SCALE}>{count}</Text>
-                    )}
-                  </View>
-                ) : (
                 <View style={{ height: 5, marginTop: 1, alignItems: 'center', justifyContent: 'center' }}>
                   {hasEvent && (
                     <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: isSelected ? theme.colors.white : theme.colors.primary, opacity: isSelected ? 0.8 : 1 }} />
                   )}
                 </View>
-                )}
               </TouchableOpacity>
             )
           })}
