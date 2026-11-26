@@ -77,23 +77,15 @@
   },
   "club-detail": {
     "mobile": {},
-    "desktop": {
-      "color-contrast": 1
-    }
+    "desktop": {}
   },
   "club-detail-guest": {
-    "mobile": {
-      "color-contrast": 1
-    },
-    "desktop": {
-      "color-contrast": 2
-    }
+    "mobile": {},
+    "desktop": {}
   },
   "clubs-list": {
     "mobile": {},
-    "desktop": {
-      "color-contrast": 1
-    }
+    "desktop": {}
   },
   "event-bring-list": {
     "mobile": {},

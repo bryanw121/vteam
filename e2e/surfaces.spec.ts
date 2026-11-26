@@ -32,17 +32,17 @@ test.afterAll(async () => {
   await cleanupSurfaceFixtures()
 })
 
-test('Clubs: the joined list shows my club and opens its page', async ({ page }) => {
-  const card = visibleText(page, CLUB_NAME)
+test('Clubs: Your clubs shows my club and opens its page', async ({ page }) => {
+  const card = page.getByTestId(`club-tile-${fixtures.clubId}`).filter({ visible: true }).first()
   await gotoReady(page, `${BASE_URL}/clubs`, card)
-  await expect(visibleText(page, 'Joined')).toBeVisible()
+  await expect(visibleText(page, 'Your clubs')).toBeVisible()
   await card.click()
   await expect(page).toHaveURL(new RegExp(`/club/${fixtures.clubId}`), { timeout: 15_000 })
   await expect(visibleText(page, CLUB_NAME)).toBeVisible({ timeout: 20_000 })
 })
 
 test('Clubs: search finds the club by name', async ({ page }) => {
-  const search = page.getByPlaceholder(/Search all clubs/).filter({ visible: true }).first()
+  const search = page.getByPlaceholder(/Find a club/).filter({ visible: true }).first()
   await gotoReady(page, `${BASE_URL}/clubs`, search)
   await search.fill(CLUB_NAME)
   await expect(visibleText(page, CLUB_NAME)).toBeVisible({ timeout: 15_000 })
