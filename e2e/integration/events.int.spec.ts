@@ -7,18 +7,21 @@
 import { test, expect } from '@playwright/test'
 import { BUDDY_ID, RUN, daysFromNow, ok, refused, signIn, sweep, type Me } from './helpers'
 
+/** This file's rows (see sweep). */
+const MINE = `${RUN} events`
+
 test.describe.configure({ mode: 'serial' })
 
 let me: Me
 let eventId = ''
-const TITLE = `${RUN} Pickup`
+const TITLE = `${MINE} Pickup`
 
 test.beforeAll(async () => {
   me = await signIn()
-  await sweep(me, 'events', 'title', 'created_by')
+  await sweep(me, 'events', 'title', 'created_by', MINE)
 })
 test.afterAll(async () => {
-  if (me) await sweep(me, 'events', 'title', 'created_by', false)
+  if (me) await sweep(me, 'events', 'title', 'created_by', MINE, false)
   await me?.db.auth.signOut({ scope: 'local' })
 })
 
@@ -62,7 +65,7 @@ test("can't RSVP someone else", async () => {
 
 test('comments: post, read back, delete', async () => {
   test.skip(!eventId)
-  const c = await ok('comment', () => me.db.from('event_comments').insert({ event_id: eventId, user_id: me.id, body: `${RUN} see you there` }).select('id').single()) as { id: string }
+  const c = await ok('comment', () => me.db.from('event_comments').insert({ event_id: eventId, user_id: me.id, body: `${MINE} see you there` }).select('id').single()) as { id: string }
   const list = await ok('read comments', () => me.db.from('event_comments').select('id, body').eq('event_id', eventId))
   expect((list as { id: string }[]).map(r => r.id)).toContain(c.id)
   await ok('delete comment', () => me.db.from('event_comments').delete().eq('id', c.id))

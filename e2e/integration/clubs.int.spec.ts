@@ -7,20 +7,23 @@
 import { test, expect } from '@playwright/test'
 import { RUN, ok, refused, signIn, sweep, type Me } from './helpers'
 
+/** This file's rows (see sweep). */
+const MINE = `${RUN} clubs`
+
 test.describe.configure({ mode: 'serial' })
 
 let me: Me
 let clubId = ''
 let postId = ''
 let pollId = ''
-const NAME = `${RUN} Club`
+const NAME = `${MINE} Club`
 
 test.beforeAll(async () => {
   me = await signIn()
-  await sweep(me, 'clubs', 'name', 'created_by')
+  await sweep(me, 'clubs', 'name', 'created_by', MINE)
 })
 test.afterAll(async () => {
-  if (me) await sweep(me, 'clubs', 'name', 'created_by', false)
+  if (me) await sweep(me, 'clubs', 'name', 'created_by', MINE, false)
   await me?.db.auth.signOut({ scope: 'local' })
 })
 
@@ -36,7 +39,7 @@ test('create a club: the creator is its owner', async () => {
 
 test('post, comment and like an update', async () => {
   test.skip(!clubId)
-  const post = await ok('post', () => me.db.from('club_posts').insert({ club_id: clubId, created_by: me.id, body: `${RUN} nets up at 4` }).select('id').single()) as { id: string }
+  const post = await ok('post', () => me.db.from('club_posts').insert({ club_id: clubId, created_by: me.id, body: `${MINE} nets up at 4` }).select('id').single()) as { id: string }
   postId = post.id
   await ok('comment', () => me.db.from('club_post_comments').insert({ club_post_id: postId, user_id: me.id, body: 'On my way' }))
   await ok('like', () => me.db.from('club_post_likes').insert({ club_post_id: postId, user_id: me.id }))
@@ -51,7 +54,7 @@ test('post, comment and like an update', async () => {
 test('a poll: the owner posts it, a member votes, a new vote replaces the old one', async () => {
   test.skip(!clubId)
   pollId = await ok('create_club_poll', () => me.db.rpc('create_club_poll', {
-    p_club_id: clubId, p_question: `${RUN} Which night?`, p_kind: 'text',
+    p_club_id: clubId, p_question: `${MINE} Which night?`, p_kind: 'text',
     p_options: [{ label: 'Tuesday' }, { label: 'Thursday' }], p_multi: false, p_notify: false,
   })) as string
   const options = await ok('options', () => me.db.from('club_poll_options').select('id, label').eq('post_id', pollId).order('position')) as { id: string; label: string }[]
@@ -76,7 +79,7 @@ test("the club chat exists and the owner can post in it", async () => {
   test.skip(!clubId)
   const conv = await ok('club conversation', () => me.db.from('conversations').select('id').eq('club_id', clubId).maybeSingle()) as { id: string } | null
   test.skip(!conv, 'this club has no chat on beta')
-  await ok('message', () => me.db.from('messages').insert({ conversation_id: conv!.id, sender_id: me.id, content: `${RUN} hello club` }))
+  await ok('message', () => me.db.from('messages').insert({ conversation_id: conv!.id, sender_id: me.id, content: `${MINE} hello club` }))
   const list = await ok('conversations', () => me.db.rpc('get_my_conversations')) as { id?: string; conversation_id?: string }[]
   expect(list.some(c => (c.id ?? c.conversation_id) === conv!.id)).toBe(true)
 })

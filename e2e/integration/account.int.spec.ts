@@ -7,22 +7,25 @@
 import { test, expect } from '@playwright/test'
 import { BUDDY_ID, RUN, ok, refused, signIn, sweep, type Me } from './helpers'
 
+/** This file's rows (see sweep). */
+const MINE = `${RUN} account`
+
 test.describe.configure({ mode: 'serial' })
 
 let me: Me
 
 test.beforeAll(async () => {
   me = await signIn()
-  await sweep(me, 'user_event_templates', 'name', 'user_id')
+  await sweep(me, 'user_event_templates', 'name', 'user_id', MINE)
 })
 test.afterAll(async () => {
-  if (me) await sweep(me, 'user_event_templates', 'name', 'user_id', false)
+  if (me) await sweep(me, 'user_event_templates', 'name', 'user_id', MINE, false)
   await me?.db.auth.signOut({ scope: 'local' })
 })
 
 test('settings: hidden feed and seen banners save and come back, then are restored', async () => {
   const before = await ok('read settings', () => me.db.from('user_settings').select('hidden_feed, seen_banners').eq('user_id', me.id).maybeSingle()) as { hidden_feed: unknown[]; seen_banners: string[] } | null
-  const hidden = [{ kind: 'venue', key: `${RUN} venue`, label: 'Integration venue' }]
+  const hidden = [{ kind: 'venue', key: `${MINE} venue`, label: 'Integration venue' }]
   const banners = [...(before?.seen_banners ?? []), `${RUN}-banner`]
   await ok('write settings', () => me.db.from('user_settings').upsert({ user_id: me.id, hidden_feed: hidden, seen_banners: banners }))
   const after = await ok('read back', () => me.db.from('user_settings').select('hidden_feed, seen_banners').eq('user_id', me.id).single()) as { hidden_feed: unknown[]; seen_banners: string[] }
@@ -37,7 +40,7 @@ test("settings are private: no other player's row is readable", async () => {
 })
 
 test('host templates: save, list, delete', async () => {
-  const t = await ok('save template', () => me.db.from('user_event_templates').insert({ user_id: me.id, name: `${RUN} Tuesday 6s`, title: 'Tuesday 6s', max_attendees: 12 }).select('id').single()) as { id: string }
+  const t = await ok('save template', () => me.db.from('user_event_templates').insert({ user_id: me.id, name: `${MINE} Tuesday 6s`, title: 'Tuesday 6s', max_attendees: 12 }).select('id').single()) as { id: string }
   const list = await ok('list', () => me.db.from('user_event_templates').select('id').eq('user_id', me.id))
   expect((list as { id: string }[]).map(r => r.id)).toContain(t.id)
   await ok('delete', () => me.db.from('user_event_templates').delete().eq('id', t.id))

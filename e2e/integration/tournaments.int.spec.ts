@@ -9,6 +9,9 @@
 import { test, expect } from '@playwright/test'
 import { BUDDY_ID, RUN, daysFromNow, ok, refused, signIn, sweep, type Me } from './helpers'
 
+/** This file's rows (see sweep). */
+const MINE = `${RUN} tournaments`
+
 test.describe.configure({ mode: 'serial' })
 
 let me: Me
@@ -17,17 +20,17 @@ let tid = ''
 let teamA = ''
 let teamB = ''
 let matchId = ''
-const TITLE = `${RUN} Cup`
+const TITLE = `${MINE} Cup`
 
 test.beforeAll(async () => {
   me = await signIn()
-  await sweep(me, 'clubs', 'name', 'created_by')
+  await sweep(me, 'clubs', 'name', 'created_by', MINE)
   const city = await ok('a city', () => me.db.from('major_cities').select('id').limit(1).single()) as { id: string }
-  const club = await ok('club', () => me.db.from('clubs').insert({ name: `${RUN} Tournament Club`, created_by: me.id, major_city_id: city.id, membership_type: 'open' }).select('id').single()) as { id: string }
+  const club = await ok('club', () => me.db.from('clubs').insert({ name: `${MINE} Tournament Club`, created_by: me.id, major_city_id: city.id, membership_type: 'open' }).select('id').single()) as { id: string }
   clubId = club.id
 })
 test.afterAll(async () => {
-  if (me) await sweep(me, 'clubs', 'name', 'created_by', false)
+  if (me) await sweep(me, 'clubs', 'name', 'created_by', MINE, false)
   await me?.db.auth.signOut({ scope: 'local' })
 })
 
@@ -53,10 +56,10 @@ test('prizes: the organizer adds one', async () => {
 
 test('register: a team I captain (with me on the roster) and a second team', async () => {
   test.skip(!tid)
-  const a = await ok('team A', () => me.db.from('tournament_teams').insert({ tournament_id: tid, name: `${RUN} Diggers`, captain_user_id: me.id, status: 'registered', is_approved: true }).select('id').single()) as { id: string }
+  const a = await ok('team A', () => me.db.from('tournament_teams').insert({ tournament_id: tid, name: `${MINE} Diggers`, captain_user_id: me.id, status: 'registered', is_approved: true }).select('id').single()) as { id: string }
   teamA = a.id
   await ok('me on team A', () => me.db.from('tournament_team_members').insert({ team_id: teamA, user_id: me.id, is_captain: true }))
-  const b = await ok('team B', () => me.db.from('tournament_teams').insert({ tournament_id: tid, name: `${RUN} Rivals`, status: 'registered', is_approved: true }).select('id').single()) as { id: string }
+  const b = await ok('team B', () => me.db.from('tournament_teams').insert({ tournament_id: tid, name: `${MINE} Rivals`, status: 'registered', is_approved: true }).select('id').single()) as { id: string }
   teamB = b.id
   const teams = await ok('teams', () => me.db.from('tournament_teams').select('id').eq('tournament_id', tid))
   expect(teams).toHaveLength(2)
@@ -72,9 +75,9 @@ test('invite buddy to my team, then withdraw the invite', async () => {
 
 test('discussion: post and read a comment', async () => {
   test.skip(!tid)
-  await ok('comment', () => me.db.from('tournament_comments').insert({ tournament_id: tid, user_id: me.id, body: `${RUN} check-in at 8:30` }))
+  await ok('comment', () => me.db.from('tournament_comments').insert({ tournament_id: tid, user_id: me.id, body: `${MINE} check-in at 8:30` }))
   const list = await ok('read', () => me.db.from('tournament_comments').select('body').eq('tournament_id', tid))
-  expect((list as { body: string }[]).map(c => c.body)).toContain(`${RUN} check-in at 8:30`)
+  expect((list as { body: string }[]).map(c => c.body)).toContain(`${MINE} check-in at 8:30`)
 })
 
 test('schedule: one pool with both teams and their game', async () => {
@@ -126,5 +129,5 @@ test('guests read it through get_public_tournament, with teams and the result', 
   await expect.poll(async () => {
     const pub = await ok('get_public_tournament', () => me.db.rpc('get_public_tournament', { p_id: tid } as never)) as { title?: string; teams?: { name: string }[] } | null
     return { title: pub?.title, teams: (pub?.teams ?? []).map(t => t.name).sort() }
-  }, { timeout: 25_000, intervals: [2_000, 5_000] }).toEqual({ title: TITLE, teams: [`${RUN} Diggers`, `${RUN} Rivals`] })
+  }, { timeout: 25_000, intervals: [2_000, 5_000] }).toEqual({ title: TITLE, teams: [`${MINE} Diggers`, `${MINE} Rivals`] })
 })

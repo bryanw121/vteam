@@ -1,7 +1,7 @@
 /**
  * The flows that need two signed-in people: the e2e account ("host") and e2efriend
  * ("friend", e2e/integration/friend.ts). Skipped until e2efriend exists on beta.
- *  - waitlist: a full game waitlists the friend, and moves them up when a spot opens
+ *  - waitlist: a full game waitlists the friend; the host moves them up, or adds a spot
  *  - approval: the friend asks to join an approval-only game, the host approves
  *  - tournaments: the friend accepts the captain's invite; a join request is approved
  *  - chat: a message from the friend is unread for the host until read
@@ -12,6 +12,9 @@ import { test, expect } from '@playwright/test'
 import { RUN, daysFromNow, ok, refused, signIn, sweep, type Me } from './helpers'
 import { signInFriend } from './friend'
 
+/** This file's rows (see sweep). */
+const MINE = `${RUN} two`
+
 test.describe.configure({ mode: 'serial' })
 
 let host: Me
@@ -21,13 +24,13 @@ let clubId = ''
 test.beforeAll(async () => {
   host = await signIn()
   friend = await signInFriend()
-  await sweep(host, 'events', 'title', 'created_by')
-  await sweep(host, 'clubs', 'name', 'created_by')
+  await sweep(host, 'events', 'title', 'created_by', MINE)
+  await sweep(host, 'clubs', 'name', 'created_by', MINE)
 })
 test.afterAll(async () => {
   if (host) {
-    await sweep(host, 'events', 'title', 'created_by', false)
-    await sweep(host, 'clubs', 'name', 'created_by', false)
+    await sweep(host, 'events', 'title', 'created_by', MINE, false)
+    await sweep(host, 'clubs', 'name', 'created_by', MINE, false)
   }
   await host?.db.auth.signOut({ scope: 'local' })
   await friend?.db.auth.signOut({ scope: 'local' })
@@ -46,21 +49,38 @@ async function hostGame(title: string, extra: Record<string, unknown>): Promise<
 const statusOf = async (me: Me, eventId: string) =>
   (await ok('my row', () => me.db.from('event_attendees').select('status').eq('event_id', eventId).eq('user_id', me.id).maybeSingle()) as { status: string } | null)?.status ?? null
 
-test('waitlist: a full game waitlists the friend, and a freed spot moves them up with a notification', async () => {
+test('waitlist: a full game waitlists the friend; the host moves them up, or adds a spot and the game does', async () => {
   test.skip(!friend, 'e2efriend does not exist on beta yet')
-  const id = await hostGame(`${RUN} Full game`, { max_attendees: 1 })
+  // Moved up by the host ("Add from waitlist"): the update fires the waitlist_promoted notification.
+  const id = await hostGame(`${MINE} Full game`, { max_attendees: 1 })
   await ok('host joins', () => host.db.from('event_attendees').insert({ event_id: id, user_id: host.id }))
   await ok('friend joins', () => friend!.db.from('event_attendees').insert({ event_id: id, user_id: friend!.id }))
   expect(await statusOf(friend!, id)).toBe('waitlisted')
   await ok('host leaves', () => host.db.from('event_attendees').delete().eq('event_id', id).eq('user_id', host.id))
+  // Leaving doesn't move anyone up by itself today: the host does (or adds a spot, below).
+  expect(await statusOf(friend!, id)).toBe('waitlisted')
+  await ok('host adds them from the waitlist', () => host.db.from('event_attendees').update({ status: 'attending' }).eq('event_id', id).eq('user_id', friend!.id))
   expect(await statusOf(friend!, id)).toBe('attending')
-  const note = await ok('promotion notification', () => friend!.db.from('notifications').select('notification_type, data').eq('user_id', friend!.id).eq('notification_type', 'waitlist_promoted').order('created_at', { ascending: false }).limit(1)) as { data: { event_id?: string } }[]
+  const note = await ok('promotion notification', () => friend!.db.from('notifications').select('data').eq('user_id', friend!.id).eq('notification_type', 'waitlist_promoted').order('created_at', { ascending: false }).limit(1)) as { data: { event_id?: string } }[]
   expect(note[0]?.data?.event_id).toBe(id)
+
+  // Moved up by the game: raising the cap through save_event promotes the oldest waitlisted player.
+  const id2 = await hostGame(`${MINE} Full game 2`, { max_attendees: 1 })
+  await ok('host joins 2', () => host.db.from('event_attendees').insert({ event_id: id2, user_id: host.id }))
+  await ok('friend joins 2', () => friend!.db.from('event_attendees').insert({ event_id: id2, user_id: friend!.id }))
+  expect(await statusOf(friend!, id2)).toBe('waitlisted')
+  await ok('host adds a spot', () => host.db.rpc('save_event', {
+    p_edit_id: id2,
+    p_event: { title: `${MINE} Full game 2`, description: 'Integration two-person game.', location: 'Integration Gym', duration_minutes: 120, max_attendees: 2, price: 0, requires_approval: false, surface: 'indoor', club_id: null },
+    p_dates: [daysFromNow(6)],
+    p_tag_ids: [],
+  } as never))
+  expect(await statusOf(friend!, id2)).toBe('attending')
 })
 
 test('approval: the friend asks to join, only the host can approve, and then they are in', async () => {
   test.skip(!friend, 'e2efriend does not exist on beta yet')
-  const id = await hostGame(`${RUN} Approval game`, { requires_approval: true, max_attendees: 6 })
+  const id = await hostGame(`${MINE} Approval game`, { requires_approval: true, max_attendees: 6 })
   await ok('friend requests', () => friend!.db.from('event_attendees').insert({ event_id: id, user_id: friend!.id, status: 'requested' }))
   expect(await statusOf(friend!, id)).toBe('requested')
   // The friend can't approve themselves.
@@ -73,14 +93,14 @@ test('approval: the friend asks to join, only the host can approve, and then the
 test('tournaments: the friend accepts the captain invite, and a join request is approved onto a team', async () => {
   test.skip(!friend, 'e2efriend does not exist on beta yet')
   const city = await ok('a city', () => host.db.from('major_cities').select('id').limit(1).single()) as { id: string }
-  clubId = (await ok('club', () => host.db.from('clubs').insert({ name: `${RUN} Two-person Club`, created_by: host.id, major_city_id: city.id, membership_type: 'open' }).select('id').single()) as { id: string }).id
+  clubId = (await ok('club', () => host.db.from('clubs').insert({ name: `${MINE} Two-person Club`, created_by: host.id, major_city_id: city.id, membership_type: 'open' }).select('id').single()) as { id: string }).id
   // On main a tournament is visible to its club's members, so the friend joins the club.
   await ok('friend joins club', () => friend!.db.from('club_members').insert({ club_id: clubId, user_id: friend!.id, role: 'member' }))
   const tid = await ok('save_tournament', () => host.db.rpc('save_tournament', {
-    p_tournament: { title: `${RUN} Two-person Cup`, club_id: clubId, start_date: daysFromNow(12, 15), status: 'published', format: 'pool_play', min_roster_size: 1, max_roster_size: 6 },
+    p_tournament: { title: `${MINE} Two-person Cup`, club_id: clubId, start_date: daysFromNow(12, 15), status: 'published', format: 'pool_play', min_roster_size: 1, max_roster_size: 6 },
     p_rules: {},
   } as never)) as string
-  const team = await ok('host team', () => host.db.from('tournament_teams').insert({ tournament_id: tid, name: `${RUN} Hosts`, captain_user_id: host.id, status: 'registered', is_approved: true }).select('id').single()) as { id: string }
+  const team = await ok('host team', () => host.db.from('tournament_teams').insert({ tournament_id: tid, name: `${MINE} Hosts`, captain_user_id: host.id, status: 'registered', is_approved: true }).select('id').single()) as { id: string }
   await ok('host on roster', () => host.db.from('tournament_team_members').insert({ team_id: team.id, user_id: host.id, is_captain: true }))
 
   const inv = await ok('invite friend', () => host.db.from('tournament_team_invitations').insert({ tournament_id: tid, team_id: team.id, inviter_id: host.id, invitee_id: friend!.id }).select('id').single()) as { id: string }
@@ -89,7 +109,7 @@ test('tournaments: the friend accepts the captain invite, and a join request is 
   expect(roster.map(r => r.user_id).sort()).toEqual([host.id, friend!.id].sort())
 
   // A second team; the friend leaves the first and asks to join it, the organizer approves.
-  const other = await ok('second team', () => host.db.from('tournament_teams').insert({ tournament_id: tid, name: `${RUN} Others`, status: 'registered', is_approved: true }).select('id').single()) as { id: string }
+  const other = await ok('second team', () => host.db.from('tournament_teams').insert({ tournament_id: tid, name: `${MINE} Others`, status: 'registered', is_approved: true }).select('id').single()) as { id: string }
   await ok('friend leaves team', () => friend!.db.from('tournament_team_members').delete().eq('team_id', team.id).eq('user_id', friend!.id))
   const req = await ok('join request', () => friend!.db.from('tournament_team_join_requests').insert({ tournament_id: tid, team_id: other.id, requester_id: friend!.id }).select('id').single()) as { id: string }
   await refused('friend approves their own request', () => friend!.db.from('tournament_team_join_requests').update({ status: 'approved' }).eq('id', req.id).select('id').single())
@@ -102,7 +122,7 @@ test('tournaments: the friend accepts the captain invite, and a join request is 
 test('chat: the friend messages the host, it is unread for the host until read', async () => {
   test.skip(!friend, 'e2efriend does not exist on beta yet')
   const dm = await ok('friend opens a DM', () => friend!.db.rpc('find_or_create_dm', { other_user_id: host.id })) as string
-  const msg = await ok('friend sends', () => friend!.db.from('messages').insert({ conversation_id: dm, sender_id: friend!.id, content: `${RUN} you up for Tuesday?` }).select('id').single()) as { id: string }
+  const msg = await ok('friend sends', () => friend!.db.from('messages').insert({ conversation_id: dm, sender_id: friend!.id, content: `${MINE} you up for Tuesday?` }).select('id').single()) as { id: string }
   const before = await ok('host list', () => host.db.rpc('get_my_conversations')) as { conversation_id: string; last_message_id: string; unread_count?: number }[]
   const row = before.find(c => c.conversation_id === dm)
   expect(row?.last_message_id).toBe(msg.id)

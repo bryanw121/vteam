@@ -64,8 +64,12 @@ export const daysFromNow = (d: number, hour = 18) => {
 
 const staleBefore = () => new Date(Date.now() - STALE_FIXTURE_HOURS * 3600_000).toISOString()
 
-/** Delete this run's rows (or any "[int" row past the stale age) that the account owns. */
-export async function sweep(me: Me, table: 'events' | 'clubs' | 'user_event_templates', column: 'title' | 'name', ownerColumn: 'created_by' | 'user_id', staleToo = true) {
-  await me.db.from(table).delete().eq(ownerColumn, me.id).like(column, `${RUN}%`)
+/**
+ * Delete rows named with `prefix` (one file's own, e.g. `${RUN} events`: files run at
+ * the same time, so a sweep must never reach another file's rows), plus any "[int"
+ * row past the stale age, that the account owns.
+ */
+export async function sweep(me: Me, table: 'events' | 'clubs' | 'user_event_templates', column: 'title' | 'name', ownerColumn: 'created_by' | 'user_id', prefix: string, staleToo = true) {
+  await me.db.from(table).delete().eq(ownerColumn, me.id).like(column, `${prefix}%`)
   if (staleToo) await me.db.from(table).delete().eq(ownerColumn, me.id).like(column, '[int%').lt('created_at', staleBefore())
 }
