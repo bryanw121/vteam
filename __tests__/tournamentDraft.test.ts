@@ -72,7 +72,7 @@ describe('saveTournamentArgs', () => {
     expect(args.p_tournament).not.toHaveProperty('created_by')
     expect(args.p_rules).toEqual({
       starting_score: 0, winning_score: 25, deciding_set_score: 15, win_by_margin: 2, point_cap: null, sets_to_win: 2,
-      tiebreakers: [...DEFAULT_TIEBREAKERS, 'sets_won'], third_place_match: false,
+      tiebreakers: [...DEFAULT_TIEBREAKERS, 'sets_won'], third_place_match: false, phase_rules: {},
     })
   })
 

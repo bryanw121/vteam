@@ -139,7 +139,8 @@ export function ResultsTab(p: Props) {
           rows={t.rows}
           teamName={id => p.teamName(id)}
           myTeamId={p.myTeam?.id}
-          advanceCount={p.tournament.format === 'pool_bracket' ? p.tournament.teams_advance_per_pool : undefined}
+          // 0 = every team goes on (#403): no cut line to draw.
+          advanceCount={p.tournament.format === 'pool_bracket' && p.tournament.teams_advance_per_pool > 0 ? p.tournament.teams_advance_per_pool : undefined}
           testID={`standings-${t.name}`}
         />
       ))}
