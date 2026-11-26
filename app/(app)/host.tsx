@@ -18,11 +18,10 @@ import { ApprovalSection } from '../../components/host/ApprovalSection'
 import { RepeatSection } from '../../components/host/RepeatSection'
 import { ClubSection } from '../../components/host/ClubSection'
 import { SaveTemplateSection } from '../../components/host/SaveTemplateSection'
-import { HostResultModal } from '../../components/host/HostResultModal'
 import { HostSubmitButton } from '../../components/host/HostSubmitButton'
 import { ScreenState } from '../../components/ui'
 import { BackButton } from '../../components/ui'
-import { shared, theme, GENERIC_ERROR_MESSAGE } from '../../constants'
+import { shared, theme, GENERIC_ERROR_MESSAGE, HOST_SAVE_FAILED_MESSAGE } from '../../constants'
 import { routes } from '../../utils/routes'
 import { useSession } from '../../contexts/session'
 import { useHostContext } from '../../hooks/host/useHostContext'
@@ -68,10 +67,6 @@ export default function HostEventScreen() {
   const saveMutation = useSaveEvent()
 
   const [loading, setLoading] = useState(false)
-  const [successModal, setSuccessModal] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
-  /** Drives the result modal's body copy and whether it reads as a failure. */
-  const [saveOutcome, setSaveOutcome] = useState<HostSaveOutcome>('saved')
   const [saveAsTemplate, setSaveAsTemplate] = useState(false)
   const [templateName, setTemplateName] = useState('')
   const [hostPullRefreshing, setHostPullRefreshing] = useState(false)
@@ -97,16 +92,24 @@ export default function HostEventScreen() {
     setView('form')
   }
 
+  /**
+   * What happened to a save, as a toast (#389): saved goes straight back to where the
+   * host came from with the toast on top; failed stays on the form with Try again.
+   * save_event is one transaction, so it is all or nothing.
+   */
   function showResult(outcome: HostSaveOutcome, message: string) {
-    setSaveOutcome(outcome)
-    setSuccessMessage(message)
-    setSuccessModal(true)
+    if (outcome === 'failed') {
+      toast.show({ title: message, message: HOST_SAVE_FAILED_MESSAGE, variant: 'error', action: { label: 'Try again', onPress: () => void handleSubmit() } })
+      return
+    }
+    toast.show({ title: message, message: isEdit ? 'Your changes have been saved.' : 'Your event is now live for members to join.', variant: 'success' })
+    goBack()
   }
 
   async function handleSubmit() {
     if (!userId) return
     if (!isEdit && eventDates(form, recurrence).length === 0) {
-      showResult('failed', 'The recurrence settings produced no valid dates. Check the end date.')
+      toast.show({ title: "Couldn't create these games", message: 'The repeat settings give no dates. Check the end date.', variant: 'error' })
       return
     }
     setLoading(true)
@@ -215,14 +218,6 @@ export default function HostEventScreen() {
   return (
     <>
       <Stack.Screen options={backHeaderOptions} />
-      <HostResultModal
-        visible={successModal}
-        outcome={saveOutcome}
-        message={successMessage}
-        isEdit={isEdit}
-        onClose={() => setSuccessModal(false)}
-        onDone={goBack}
-      />
 
       <ScrollView
         style={shared.screen}
