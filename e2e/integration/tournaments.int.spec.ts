@@ -122,7 +122,9 @@ test('finish: complete_tournament sets the podium, and my team wins me a trophy'
 
 test('guests read it through get_public_tournament, with teams and the result', async () => {
   test.skip(!tid)
-  const pub = await ok('get_public_tournament', () => me.db.rpc('get_public_tournament', { p_id: tid } as never)) as { title?: string; teams?: { name: string }[] } | null
-  expect(pub?.title).toBe(TITLE)
-  expect((pub?.teams ?? []).map(t => t.name).sort()).toEqual([`${RUN} Diggers`, `${RUN} Rivals`])
+  // The public copy is a saved snapshot rebuilt at most every 15 s, so wait for one taken after the teams.
+  await expect.poll(async () => {
+    const pub = await ok('get_public_tournament', () => me.db.rpc('get_public_tournament', { p_id: tid } as never)) as { title?: string; teams?: { name: string }[] } | null
+    return { title: pub?.title, teams: (pub?.teams ?? []).map(t => t.name).sort() }
+  }, { timeout: 25_000, intervals: [2_000, 5_000] }).toEqual({ title: TITLE, teams: [`${RUN} Diggers`, `${RUN} Rivals`] })
 })
