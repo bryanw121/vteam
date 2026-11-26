@@ -1,9 +1,6 @@
 import React, { useState } from 'react'
-import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { Text } from '../ui/Text'
-import { Button } from '../Button'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
 import { Input } from '../Input'
-import { theme } from '../../constants'
 
 type Props = {
   visible: boolean
@@ -28,36 +25,20 @@ export function AddGuestDialog({ visible, adding, onDismiss, onSubmit }: Props) 
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
-      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onDismiss}>
-        <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-          <View style={styles.card}>
-            <Text style={styles.title}>Add a +1</Text>
-            <Input placeholder="First name" value={firstName} onChangeText={setFirstName} autoCapitalize="words" />
-            <Input placeholder="Last name" value={lastName} onChangeText={setLastName} autoCapitalize="words" />
-            <View style={styles.actions}>
-              <View style={{ flex: 1 }}>
-                <Button label="Cancel" onPress={() => { clear(); onDismiss() }} variant="secondary" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label="Add"
-                  onPress={() => { void submit() }}
-                  loading={adding}
-                  disabled={!firstName.trim() || !lastName.trim()}
-                />
-              </View>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </Modal>
+    <ConfirmDialog
+      visible={visible}
+      title="Add a +1"
+      confirmLabel="Add"
+      loading={adding}
+      confirmDisabled={!firstName.trim() || !lastName.trim()}
+      onConfirm={() => { void submit() }}
+      // The backdrop and back keep the draft (onDismiss); Cancel is the same here: a
+      // half-typed name stays until it's saved or the event page closes.
+      onCancel={onDismiss}
+      testIDPrefix="add-guest-dialog"
+    >
+      <Input placeholder="First name" value={firstName} onChangeText={setFirstName} autoCapitalize="words" />
+      <Input placeholder="Last name" value={lastName} onChangeText={setLastName} autoCapitalize="words" />
+    </ConfirmDialog>
   )
 }
-
-const styles = StyleSheet.create({
-  overlay: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.overlayLight },
-  card: { backgroundColor: theme.colors.card, borderRadius: theme.radius.lg, padding: theme.spacing.xl, width: 300, gap: theme.spacing.md },
-  title: { fontSize: theme.font.size.lg, fontWeight: theme.font.weight.semibold, color: theme.colors.text },
-  actions: { flexDirection: 'row', gap: theme.spacing.sm },
-})

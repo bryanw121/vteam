@@ -16,12 +16,27 @@ export const RULES = {
   'font-token': 'A font size that is not a theme.font token (size, heading, emoji, watermark) at the default text size.',
   'tap-target-44': `On a phone, a button or link smaller than ${TAP_MIN} pt in either direction (inline text links excepted).`,
   'page-overflow': 'The page scrolls sideways (wider than the viewport).',
+  'button-shape': 'A filled action (primary, ink or lavender fill, up to 60 pt tall, with a label) that is not a pill. Use Button, or radius.full on the drawn control.',
 }
 
 /** Icon fonts draw glyphs, not text: their family and size aren't type choices. */
 const ICON_FONT = /^(ionicons|material|materialcommunityicons|fontawesome|feather|entypo|antdesign|octicons|simplelineicons|foundation|evilicons|zocial)/i
 /** Fixed-width text (scoresheet numbers, code) is allowed off the Outfit family. */
 const MONO = /mono|courier|consolas|menlo/i
+
+/** The light palette's action fills (primary, ink text, primarySoft) as computed-style rgb() strings (#388). */
+export function actionFillsFrom(themeSource) {
+  const at = themeSource.indexOf('lightColors')
+  if (at < 0) throw new Error('constants/theme.ts: no lightColors')
+  const block = themeSource.slice(at, themeSource.indexOf('\n}', at))
+  const rgb = name => {
+    const m = block.match(new RegExp(`\\n\\s+${name}:\\s*'#([0-9a-fA-F]{6})'`))
+    if (!m) throw new Error(`constants/theme.ts: no lightColors.${name}`)
+    const n = parseInt(m[1], 16)
+    return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`
+  }
+  return ['primary', 'text', 'primarySoft'].map(rgb)
+}
 
 /** Every number inside the `size`, `heading`, `emoji` and `watermark` blocks of theme.ts's `font`. */
 export function fontTokensFrom(themeSource) {
@@ -48,7 +63,7 @@ export function fontTokensFrom(themeSource) {
  * Counts per rule for one measured screen (`m` from MEASURE_IN_PAGE), with a few
  * examples each for the summary. `viewport` is 'mobile' or 'desktop'.
  */
-export function judge(m, { viewport, tokens }) {
+export function judge(m, { viewport, tokens, actionFills = [] }) {
   const counts = {}
   const examples = {}
   // Each distinct instance counts once (the same label on ten roster rows is one finding), so a
@@ -77,6 +92,12 @@ export function judge(m, { viewport, tokens }) {
       if (c.inline) continue
       if (c.w < TAP_MIN || c.h < TAP_MIN) add('tap-target-44', `"${c.label}" ${c.w}×${c.h}`)
     }
+  }
+  for (const c of m.controls ?? []) {
+    const f = c.fill
+    // radius 0: a strip joined to a card's edge (Find a team, a poll's tally bar), not a free-standing button.
+    if (!f || !c.label || c.choice || f.radius === 0 || f.h > 60 || f.h <= 0 || !actionFills.includes(f.bg)) continue
+    if (f.radius < f.h / 2 - 1) add('button-shape', `"${c.label}" ${f.h} tall, radius ${f.radius}`)
   }
   if (m.docWidth > m.viewportWidth + 1) add('page-overflow', `${m.docWidth}px wide at ${m.viewportWidth}`)
   return { counts, examples }
@@ -176,7 +197,14 @@ export const MEASURE_IN_PAGE = () => {
     const b = el.getBoundingClientRect()
     // A link inside running text: its box is the words, by design.
     const inline = getComputedStyle(el).display === 'inline' || !!el.closest('p')
-    controls.push({ label: label(el), w: Math.round(b.width), h: Math.round(b.height), inline })
+    // What it looks like: the control itself, or the drawn control inside a 44-pt touchable (#386).
+    const filled = [el, el.firstElementChild].find(x => x && getComputedStyle(x).backgroundColor !== 'rgba(0, 0, 0, 0)')
+    const fb = filled?.getBoundingClientRect()
+    const fill = filled ? { bg: getComputedStyle(filled).backgroundColor, h: Math.round(fb.height), radius: parseFloat(getComputedStyle(filled).borderTopLeftRadius) || 0 } : null
+    // A choice (tab, radio, a picked tile) is filled to show it is picked, and a disabled one
+    // (a pinned player) to show it is held: neither asks for a tap.
+    const choice = /^(tab|radio|checkbox|switch)$/.test(el.getAttribute('role') || '') || ['aria-selected', 'aria-checked', 'aria-pressed'].some(a => el.hasAttribute(a)) || el.getAttribute('aria-disabled') === 'true'
+    controls.push({ label: label(el), w: Math.round(b.width), h: Math.round(b.height), inline, fill, choice })
   }
   const backs = controls.filter(c => /^(back|go back|back to )/i.test(c.label))
 

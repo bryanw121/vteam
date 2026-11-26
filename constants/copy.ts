@@ -22,6 +22,8 @@ export const EVENT_JUST_FILLED_BODY =
 
 /** Alert body for a failed write that is almost certainly a connectivity problem. */
 export const NETWORK_ERROR_MESSAGE = 'Check your connection and try again.'
+/** Body of the toast when save_event fails: it is one transaction, so nothing landed (#389). */
+export const HOST_SAVE_FAILED_MESSAGE = 'Nothing was saved. Check your connection and try again.'
 /** A write failed because vteam's server isn't answering (timeouts, gateway errors: #289), not the player's connection. */
 export const SERVER_DOWN_MESSAGE = "vteam's server isn't answering, so nothing was saved. Try again in a minute."
 /** ServerStatusBar and the server-down screen state (#289). */
@@ -64,8 +66,9 @@ export const UPDATE_COPY = {
 export const FEED_STALE_NOTICE = "Couldn't refresh. These may be out of date. Tap to retry."
 
 /** Display label per skill tier, lowest to highest (insertion order is the display order). `open` is tournament-only. */
+/** Skill levels, best first (Open, AA+, A, BB, B, C, D): pickers and chips list them in this order (#401). */
 export const SKILL_LEVEL_LABELS: Record<string, string> = {
-  d: 'D', c: 'C', b: 'B', bb: 'BB', a: 'A', aa_plus: 'AA+', open: 'Open',
+  open: 'Open', aa_plus: 'AA+', a: 'A', bb: 'BB', b: 'B', c: 'C', d: 'D',
 }
 
 /** Approval-gated events: told to the player before they tap (event page, feed card) and echoed in the host form. */

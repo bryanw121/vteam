@@ -41,7 +41,7 @@ export function fakeSession(now) {
 }
 
 const FEED_EVENT_SELECT = 'id, created_by, club_id, title, location, event_date, duration_minutes, max_attendees, created_at, price, requires_approval, surface, profiles!events_created_by_fkey(id, username, first_name, last_name, avatar_url), event_attendees_attending(count), event_guests_attending(count), event_attendees_waitlisted(count), event_tags(tag_id, tags(id, name, category, display_order)), clubs(id, name, avatar_url)'
-const FEED_TOURNAMENT_SELECT = 'id, created_by, club_id, title, location, start_date, max_teams, price, skill_levels, status, created_at, profiles!tournaments_created_by_fkey(id, username, first_name, last_name, avatar_url), clubs(id, name, avatar_url)'
+const FEED_TOURNAMENT_SELECT = 'id, created_by, club_id, title, location, start_date, max_teams, price, skill_levels, status, created_at, profiles!tournaments_created_by_fkey(id, username, first_name, last_name, avatar_url), clubs!tournaments_club_id_fkey(id, name, avatar_url)'
 const FEED_EXTERNAL_SELECT = 'id, source_id, region, title, venue, city, surface, session_type, level, price, starts_at, ends_at, signup_url, signup_label, note, verified_at'
 
 function rpcHandlers(db, signedIn, now) {

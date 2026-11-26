@@ -90,21 +90,24 @@ describe('EmptyState', () => {
   })
 })
 
+/** The drawn control inside a touchable that carries the 44-pt tap target (#386). */
+const drawn = (el: ReturnType<typeof screen.getByTestId>) => el.children[0] as ReturnType<typeof screen.getByTestId>
+
 describe('Chip', () => {
   it('styles active vs inactive and reports selection state', () => {
     const { rerender } = render(<Chip label="All" onPress={() => {}} testID="chip" />)
-    expect(flat(screen.getByTestId('chip')).backgroundColor).toBe(theme.colors.card)
+    expect(flat(drawn(screen.getByTestId('chip'))).backgroundColor).toBe(theme.colors.card)
     expect(screen.getByTestId('chip').props.accessibilityState).toEqual({ selected: false })
 
     rerender(<Chip label="All" active onPress={() => {}} testID="chip" />)
-    expect(flat(screen.getByTestId('chip')).backgroundColor).toBe(theme.colors.primary)
+    expect(flat(drawn(screen.getByTestId('chip'))).backgroundColor).toBe(theme.colors.primary)
     expect(flat(screen.getByText('All')).color).toBe(theme.colors.onPrimary)
     expect(screen.getByTestId('chip').props.accessibilityState).toEqual({ selected: true })
   })
 
   it('tint variant uses a translucent primary wash with readable primary text', () => {
     render(<Chip label="Joined" active variant="tint" onPress={() => {}} testID="chip" />)
-    expect(flat(screen.getByTestId('chip')).backgroundColor).toBe(theme.colors.primary + '24')
+    expect(flat(drawn(screen.getByTestId('chip'))).backgroundColor).toBe(theme.colors.primary + '24')
     // Text uses primaryText (#134: primary itself is under 4.5:1 on the dark background).
     expect(flat(screen.getByText('Joined')).color).toBe(theme.colors.primaryText)
   })
@@ -128,14 +131,14 @@ describe('IconButton', () => {
     const onPress = jest.fn()
     render(<IconButton icon="notifications-outline" label="Notifications" onPress={onPress} testID="bell" />)
     const btn = screen.getByLabelText('Notifications')
-    expect(flat(btn)).toMatchObject({ width: 38, height: 38, borderRadius: theme.radius.md })
+    expect(flat(drawn(btn))).toMatchObject({ width: 38, height: 38, borderRadius: theme.radius.md })
     fireEvent.press(btn)
     expect(onPress).toHaveBeenCalled()
   })
 
   it('supports the 44pt size and the unread dot', () => {
     render(<IconButton icon="notifications" label="Bell" size={44} badge active onPress={() => {}} testID="bell" />)
-    expect(flat(screen.getByTestId('bell'))).toMatchObject({ width: 44, height: 44 })
+    expect(flat(drawn(screen.getByTestId('bell')))).toMatchObject({ width: 44, height: 44 })
     expect(screen.getByTestId('bell-badge')).toBeTruthy()
   })
 

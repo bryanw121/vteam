@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { Modal, TouchableOpacity, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text, TextInput } from '../ui/Text'
 import { DatePickerField } from '../DatePickerField'
 import { LocationPickerField } from '../LocationPickerField'
+import { BottomSheet } from '../ui/BottomSheet'
 import { DURATION_OPTIONS, shared, theme } from '../../constants'
 import type { HostBasicsSectionProps } from '../../types'
 
@@ -58,27 +59,30 @@ export function BasicsSection({ form, setField, userId, recentVenues, onChangeDa
           </Text>
           <Ionicons name="chevron-down" size={16} color={theme.colors.subtext} />
         </TouchableOpacity>
-        <Modal visible={durationModalOpen} transparent animationType="fade" onRequestClose={() => setDurationModalOpen(false)}>
-          <TouchableOpacity style={shared.modalOverlay} activeOpacity={1} onPress={() => setDurationModalOpen(false)}>
-            <View style={[shared.modalCard, { paddingVertical: 0, paddingHorizontal: 0, overflow: 'hidden', minWidth: 200 }]}>
-              {DURATION_OPTIONS.map((opt, i) => {
-                const active = form.durationMinutes === opt.minutes
-                return (
-                  <TouchableOpacity
-                    key={opt.minutes}
-                    onPress={() => { setField('durationMinutes', opt.minutes); setDurationModalOpen(false) }}
-                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: theme.colors.border }}
-                  >
-                    <Text style={{ fontSize: theme.font.size.md, color: active ? theme.colors.primaryText : theme.colors.text, fontWeight: active ? theme.font.weight.semibold : theme.font.weight.regular }}>
-                      {opt.label}
-                    </Text>
-                    {active && <Ionicons name="checkmark" size={16} color={theme.colors.primaryText} />}
-                  </TouchableOpacity>
-                )
-              })}
-            </View>
-          </TouchableOpacity>
-        </Modal>
+        {/* A list of choices: a bottom sheet, like every other picker (#389). */}
+        <BottomSheet visible={durationModalOpen} onDismiss={() => setDurationModalOpen(false)} title="Duration" maxWidth={560}>
+          <View accessibilityRole="radiogroup">
+            {DURATION_OPTIONS.map((opt, i) => {
+              const active = form.durationMinutes === opt.minutes
+              return (
+                <TouchableOpacity
+                  key={opt.minutes}
+                  testID={`duration-option-${opt.minutes}`}
+                  onPress={() => { setField('durationMinutes', opt.minutes); setDurationModalOpen(false) }}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: active }}
+                  aria-checked={active}
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48, paddingVertical: theme.spacing.md, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: theme.colors.border }}
+                >
+                  <Text style={{ fontSize: theme.font.size.md, color: active ? theme.colors.primaryText : theme.colors.text, fontWeight: active ? theme.font.weight.semibold : theme.font.weight.regular }}>
+                    {opt.label}
+                  </Text>
+                  {active && <Ionicons name="checkmark" size={16} color={theme.colors.primaryText} />}
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        </BottomSheet>
       </View>
     </>
   )

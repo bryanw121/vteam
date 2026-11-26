@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { View } from 'react-native'
 import { Text } from './ui/Text'
 import Ionicons from '@expo/vector-icons/Ionicons'
@@ -76,7 +77,21 @@ const css = `
   }
 `
 
+/**
+ * Open the browser's calendar. A date input otherwise opens it only from its small icon, and a tap
+ * on the month, day or year starts typing into that part instead (#401). `showPicker` needs a tap
+ * and may throw (older browsers, cross-origin frames): then the input behaves as before.
+ */
+function openPicker(input: HTMLInputElement | null) {
+  try {
+    (input as (HTMLInputElement & { showPicker?: () => void }) | null)?.showPicker?.()
+  } catch {
+    // Not allowed here: the browser's own handling stays.
+  }
+}
+
 export function DatePickerField({ value: date, onChange, placeholder }: Props) {
+  const dateInput = useRef<HTMLInputElement | null>(null)
   // When null, provide a default so controls can render; onChange fires immediately on interaction
   const effective = date ?? (() => {
     const d = new Date()
@@ -128,10 +143,11 @@ export function DatePickerField({ value: date, onChange, placeholder }: Props) {
       {/* @ts-ignore */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
         {/* @ts-ignore */}
-        <div className="vteam-field-wrap">
+        <div className="vteam-field-wrap" onClick={() => openPicker(dateInput.current)}>
           <Ionicons name="calendar-outline" size={16} color={date ? theme.colors.text : theme.colors.subtext} />
           {/* @ts-ignore */}
           <input
+            ref={dateInput}
             type="date"
             aria-label="Date"
             className="vteam-date-input"
