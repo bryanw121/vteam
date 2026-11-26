@@ -60,7 +60,9 @@ export function TournamentWizard({ editId = null }: TournamentWizardProps) {
     const told = await saveEdit.mutate({ id: editId, draft, newHostId })
     if (told === undefined) return
     toast.show({ message: tournamentSavedMessage(told), variant: 'success' })
-    router.replace(routes.tournament(editId))
+    // Back to the tournament page the edit was opened from (it refetches); a replace would leave two copies of it.
+    if (router.canGoBack()) router.back()
+    else router.replace(routes.tournament(editId))
   }
 
   if (editId && (edit.loading || edit.error || edit.notFound || edit.notHost)) {

@@ -48,8 +48,8 @@ export function BasicsStep({ draft, update, clubs, clubsLoading, clubsError, onR
                   <TouchableOpacity
                     key={c.id}
                     testID="tournament-club-option"
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked: on }}
+                    role="checkbox"
+                    aria-checked={on}
                     onPress={() => update({ clubIds: on ? draft.clubIds.filter(id => id !== c.id) : [...draft.clubIds, c.id] })}
                     style={{
                       flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44,
