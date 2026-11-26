@@ -3,6 +3,7 @@ import { useFocusEffect, Stack, usePathname, useRouter, useSegments } from "expo
 import { Animated, Platform, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Text } from "../../../components/ui/Text";
 import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Slot } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -27,6 +28,9 @@ import { TOUR_TARGETS } from "../../../constants";
 
 // The bottom bar renders TABS (constants/navigation.ts) in pager order, with the
 // create button inserted before the Chat tab.
+/** How far above the pill the feed fades out (part of tabBarHeight, so content still clears the bar). */
+const NAV_FADE = 20;
+
 const noopSetTabBarHidden = (_hidden: boolean) => {};
 
 export default function TabsLayout() {
@@ -307,22 +311,31 @@ export default function TabsLayout() {
             setTabBarHeight(h);
           }}
         >
-          {/* Bottom padding spacer — counted in tabBarHeight for content offset */}
-          <View style={{ paddingBottom: Math.max(bottomInset, 10) + 10, backgroundColor: theme.colors.background }}>
+          {/* Bottom padding spacer — counted in tabBarHeight for content offset.
+              No solid band: the feed fades out behind the pill instead of stopping in a hard line. */}
+          <View style={{ paddingTop: NAV_FADE, paddingBottom: Math.max(bottomInset, 10) + 10 }}>
+            <LinearGradient
+              pointerEvents="none"
+              colors={[theme.colors.background + '00', theme.colors.background + 'E6', theme.colors.background]}
+              locations={[0, 0.5, 1]}
+              style={StyleSheet.absoluteFill}
+            />
             <View style={{
               flexDirection: "row",
               marginHorizontal: 14,
-              // Party invite: a light lavender pill, not a dark bar
+              // Party invite: a lavender pill that floats above the feed (outline + lift so cards don't blend into it)
               backgroundColor: theme.colors.navPill,
               borderRadius: theme.radius.full,
+              borderWidth: 1,
+              borderColor: theme.colors.primary + '33',
               paddingVertical: 8,
               paddingHorizontal: 10,
               alignItems: 'center',
               shadowColor: theme.colors.text,
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.08,
-              shadowRadius: 14,
-              elevation: 4,
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.16,
+              shadowRadius: 18,
+              elevation: 8,
             }}>
               {TABS.map(tab => {
                 const active = activeTabIndex === tab.pageIndex;
