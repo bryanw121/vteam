@@ -187,6 +187,11 @@
       "tap-target-44": 3
     }
   },
+  "tournaments-program-sheet": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
   "tournaments-list": {
     "mobile": {
       "tap-target-44": 2

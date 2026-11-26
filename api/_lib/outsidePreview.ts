@@ -13,7 +13,7 @@ type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
 
 /** A Skelly id from a link (slugs, not uuids), or null when it isn't one. */
 export function outsideId(raw: unknown): string | null {
-  const id = rowId.parse(typeof raw === 'string' ? raw : null)
+  const id = rowId.parse(typeof raw === 'string' ? raw : undefined)
   return id || null
 }
 

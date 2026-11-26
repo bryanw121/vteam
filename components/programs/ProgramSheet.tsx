@@ -46,7 +46,7 @@ function ProgramDetails({ program: p, onFindTeam, onScores }: Omit<ProgramSheetP
             onPress={() => openInMaps(place)}
             accessibilityRole="link"
             accessibilityLabel={`${PROGRAM_SHEET_COPY.directions} to ${place}`}
-            style={{ alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center' }}
+            style={{ alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' }}
           >
             <Text style={shared.sessionSheetLink}>{PROGRAM_SHEET_COPY.directions} ↗</Text>
           </TouchableOpacity>
