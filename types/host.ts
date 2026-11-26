@@ -73,16 +73,6 @@ export type SaveEventInput = {
   clubId: string | null
 }
 
-export type HostResultModalProps = {
-  visible: boolean
-  outcome: HostSaveOutcome
-  message: string
-  isEdit: boolean
-  onClose: () => void
-  /** "Done" after a successful save. */
-  onDone: () => void
-}
-
 export type HostSubmitButtonProps = {
   disabled: boolean
   busy: boolean

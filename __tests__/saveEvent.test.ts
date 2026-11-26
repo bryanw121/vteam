@@ -79,7 +79,8 @@ describe('the host screen saves through save_event only', () => {
 
   it('has two outcomes: saved, or nothing saved', () => {
     expect(host).not.toMatch(/TagWriteError|tags-failed|tags-uncertain/)
-    expect(read('components/host/HostResultModal.tsx')).toMatch(/Nothing was saved/)
+    expect(host).toMatch(/HOST_SAVE_FAILED_MESSAGE/)
+    expect(read('constants/copy.ts')).toMatch(/HOST_SAVE_FAILED_MESSAGE = 'Nothing was saved/)
   })
 })
 

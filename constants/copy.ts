@@ -22,6 +22,8 @@ export const EVENT_JUST_FILLED_BODY =
 
 /** Alert body for a failed write that is almost certainly a connectivity problem. */
 export const NETWORK_ERROR_MESSAGE = 'Check your connection and try again.'
+/** Body of the toast when save_event fails: it is one transaction, so nothing landed (#389). */
+export const HOST_SAVE_FAILED_MESSAGE = 'Nothing was saved. Check your connection and try again.'
 /** A write failed because vteam's server isn't answering (timeouts, gateway errors: #289), not the player's connection. */
 export const SERVER_DOWN_MESSAGE = "vteam's server isn't answering, so nothing was saved. Try again in a minute."
 /** ServerStatusBar and the server-down screen state (#289). */
