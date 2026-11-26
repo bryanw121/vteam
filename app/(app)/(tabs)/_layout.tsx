@@ -30,6 +30,8 @@ import { TOUR_TARGETS } from "../../../constants";
 // create button inserted before the Chat tab.
 /** How far above the pill the feed fades out (part of tabBarHeight, so content still clears the bar). */
 const NAV_FADE = 20;
+/** The pill's own height on web (68 + its 1 px outline top and bottom); with the fade and bottom padding it gives the first-paint estimate of the bar. */
+const NAV_PILL_HEIGHT = 70;
 
 const noopSetTabBarHidden = (_hidden: boolean) => {};
 
@@ -62,8 +64,10 @@ export default function TabsLayout() {
   const bottomInset = isWebBrowser ? 0 : (insets.bottom || theme.spacing.md)
 
   const tabBarTranslateY = useRef(new Animated.Value(0)).current;
-  const tabBarNaturalHeight = useRef(60);
-  const [tabBarHeight, setTabBarHeight] = useState(60);
+  // Start from the bar's real size, not a guess: content padded by a wrong first height moves once the bar is measured.
+  const tabBarEstimate = NAV_FADE + NAV_PILL_HEIGHT + Math.max(bottomInset, 10) + 10;
+  const tabBarNaturalHeight = useRef(tabBarEstimate);
+  const [tabBarHeight, setTabBarHeight] = useState(tabBarEstimate);
   const tabBarHiddenRef = useRef(false);
   const setTabBarHidden = useCallback((hidden: boolean) => {
     if (tabBarHiddenRef.current === hidden) return;
