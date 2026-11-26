@@ -644,10 +644,10 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | Join intent (#229) | [`PendingAction`](../types/index.ts#L2511), [`PendingActionTake`](../types/index.ts#L2514), [`JoinOffer`](../types/index.ts#L2517), [`JoinIntentOutcome`](../types/index.ts#L2520) |
 | View state in the URL (utils/urlState, hooks/useUrlParam) | [`UrlCodec`](../types/index.ts#L2525), [`FeedbackFieldErrors`](../types/index.ts#L2531), [`ReportReason`](../types/index.ts#L2534), [`ReportContextKind`](../types/index.ts#L2535), [`ReportStatus`](../types/index.ts#L2536), [`ReportAction`](../types/index.ts#L2537), [`ReportUserInput`](../types/index.ts#L2539), [`AdminReport`](../types/index.ts#L2548), [`ReportSheetTarget`](../types/index.ts#L2567), [`ReportSheetProps`](../types/index.ts#L2570), [`EventSeed`](../types/index.ts#L2586), [`MemberSearchResult`](../types/index.ts#L2598) |
 | What to bring (#256) | [`BringClaimer`](../types/index.ts#L2604), [`BringItem`](../types/index.ts#L2614), [`BringItemDraft`](../types/index.ts#L2625), [`BringItemAction`](../types/index.ts#L2635), [`BringViewer`](../types/index.ts#L2644), [`SaveBringItemsArgs`](../types/index.ts#L2652), [`ClaimBringItemArgs`](../types/index.ts#L2656), [`ReleaseBringItemArgs`](../types/index.ts#L2657), [`StartupConfig`](../types/index.ts#L2660), [`MyGameRecap`](../types/index.ts#L2667), [`YourGameCardProps`](../types/index.ts#L2669), [`RecapFooterProps`](../types/index.ts#L2678), [`RecapShareTarget`](../types/index.ts#L2689) |
-| Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2693), [`WeekStripContentProps`](../types/index.ts#L2695), [`MonthGridContentProps`](../types/index.ts#L2704), [`WeekPagerProps`](../types/index.ts#L2717), [`CrashMarker`](../types/index.ts#L2731), [`CrashReport`](../types/index.ts#L2734), [`ActiveMention`](../types/index.ts#L2736), [`ChatRoomHeaderProps`](../types/index.ts#L2739), [`ChatComposerBandProps`](../types/index.ts#L2748), [`ChatComposerProps`](../types/index.ts#L2757), [`ImageViewerProps`](../types/index.ts#L2765), [`FeedPrefetchTiming`](../types/index.ts#L2768) |
-| Court queue for open play (#333) | [`CourtQueueRule`](../types/index.ts#L2779), [`CourtQueueGame`](../types/index.ts#L2781), [`CourtQueueState`](../types/index.ts#L2783), [`CourtQueueSnapshot`](../types/index.ts#L2792), [`CourtQueuePlace`](../types/index.ts#L2794), [`CourtQueue`](../types/index.ts#L2796), [`CourtQueueTally`](../types/index.ts#L2805), [`DesktopFeedDay`](../types/index.ts#L2808), [`DesktopFeedMonth`](../types/index.ts#L2815), [`ColorScheme`](../types/index.ts#L2819), [`AppearancePref`](../types/index.ts#L2821), [`AppearanceApplied`](../types/index.ts#L2823) |
-| Sign in / sign up (Nov 2026 redesign) | [`AuthTab`](../types/index.ts#L2827), [`AuthScreenProps`](../types/index.ts#L2828), [`AuthCtaProps`](../types/index.ts#L2836), [`GoogleButtonProps`](../types/index.ts#L2843), [`VteamMarkProps`](../types/index.ts#L2844) |
-| Event page (Party invite layout) | [`EventHeroProps`](../types/index.ts#L2851), [`EventWhenWhereProps`](../types/index.ts#L2856), [`EventWhoIsInProps`](../types/index.ts#L2860), [`EventHostNoteProps`](../types/index.ts#L2869), [`EventFactChipsProps`](../types/index.ts#L2875) |
+| Events calendar (components/events/CalendarPagers.tsx, utils/calendarWeeks.ts, #217) | [`MarkedDates`](../types/index.ts#L2693), [`WeekStripContentProps`](../types/index.ts#L2695), [`MonthGridContentProps`](../types/index.ts#L2704), [`WeekPagerProps`](../types/index.ts#L2715), [`CrashMarker`](../types/index.ts#L2729), [`CrashReport`](../types/index.ts#L2732), [`ActiveMention`](../types/index.ts#L2734), [`ChatRoomHeaderProps`](../types/index.ts#L2737), [`ChatComposerBandProps`](../types/index.ts#L2746), [`ChatComposerProps`](../types/index.ts#L2755), [`ImageViewerProps`](../types/index.ts#L2763), [`FeedPrefetchTiming`](../types/index.ts#L2766) |
+| Court queue for open play (#333) | [`CourtQueueRule`](../types/index.ts#L2777), [`CourtQueueGame`](../types/index.ts#L2779), [`CourtQueueState`](../types/index.ts#L2781), [`CourtQueueSnapshot`](../types/index.ts#L2790), [`CourtQueuePlace`](../types/index.ts#L2792), [`CourtQueue`](../types/index.ts#L2794), [`CourtQueueTally`](../types/index.ts#L2803), [`DesktopFeedDay`](../types/index.ts#L2806), [`DesktopFeedMonth`](../types/index.ts#L2813), [`ColorScheme`](../types/index.ts#L2817), [`AppearancePref`](../types/index.ts#L2819), [`AppearanceApplied`](../types/index.ts#L2821) |
+| Sign in / sign up (Nov 2026 redesign) | [`AuthTab`](../types/index.ts#L2825), [`AuthScreenProps`](../types/index.ts#L2826), [`AuthCtaProps`](../types/index.ts#L2834), [`GoogleButtonProps`](../types/index.ts#L2841), [`VteamMarkProps`](../types/index.ts#L2842) |
+| Event page (Party invite layout) | [`EventHeroProps`](../types/index.ts#L2849), [`EventWhenWhereProps`](../types/index.ts#L2854), [`EventWhoIsInProps`](../types/index.ts#L2858), [`EventHostNoteProps`](../types/index.ts#L2867), [`EventFactChipsProps`](../types/index.ts#L2873) |
 
 ### Constrained string values
 
@@ -657,20 +657,20 @@ TypeScript `enum` keyword.
 | Type or field | Values | Source |
 |---|---|---|
 | `AccountDeletionBlock` | `reauth_required`, `plan_changed` | [`types/index.ts:2415`](../types/index.ts#L2415) |
-| `AppearanceApplied` | `unchanged`, `reloading`, `next-launch` | [`types/index.ts:2823`](../types/index.ts#L2823) |
-| `AppearancePref` | `system`, `light`, `dark` | [`types/index.ts:2821`](../types/index.ts#L2821) |
-| `AuthTab` | `login`, `register` | [`types/index.ts:2827`](../types/index.ts#L2827) |
+| `AppearanceApplied` | `unchanged`, `reloading`, `next-launch` | [`types/index.ts:2821`](../types/index.ts#L2821) |
+| `AppearancePref` | `system`, `light`, `dark` | [`types/index.ts:2819`](../types/index.ts#L2819) |
+| `AuthTab` | `login`, `register` | [`types/index.ts:2825`](../types/index.ts#L2825) |
 | `BackButtonProps.variant` | `row`, `pill` | [`types/index.ts:1650`](../types/index.ts#L1650) |
 | `BadgeStat` | `events_attended_past`, `events_hosted_past`, `cheers_received_total`, `cheers_given_events`, `spike_cheers`, `serve_cheers`, `block_cheers`, `set_cheers`, `dig_pass_cheers`, `communication_cheers`, `beta_active`, `tournament_hosted`, `profile_complete`, `vex_member` | [`constants/badges.ts:43`](../constants/badges.ts#L43) |
 | `BadgeType` | `event_attendee`, `event_host`, `cheers_received`, `cheers_given`, `spike_cheer`, `serve_cheer`, `block_cheer`, `set_cheer`, `dig_pass_cheer`, `communication_cheer`, `beta_tester`, `tournament_director`, `profile_complete`, `vex_spirit` | [`types/index.ts:1316`](../types/index.ts#L1316) |
 | `CardBgType` | `ember`, `frost`, `aurora` | [`types/index.ts:1314`](../types/index.ts#L1314) |
-| `ChatComposerBandProps.icon` | `return-down-back`, `pencil-outline` | [`types/index.ts:2749`](../types/index.ts#L2749) |
+| `ChatComposerBandProps.icon` | `return-down-back`, `pencil-outline` | [`types/index.ts:2747`](../types/index.ts#L2747) |
 | `CheerType` | `spike`, `block`, `serve`, `dig`, `set`, `pass`, `communication` | [`types/index.ts:234`](../types/index.ts#L234) |
 | `ChipProps.role` | `button`, `radio` | [`types/index.ts:1605`](../types/index.ts#L1605) |
 | `ChipProps.size` | `default`, `touch` | [`types/index.ts:1607`](../types/index.ts#L1607) |
 | `ChipVariant` | `solid`, `tint` | [`types/index.ts:1596`](../types/index.ts#L1596) |
 | `ClubPollKind` | `text`, `time` | [`types/index.ts:897`](../types/index.ts#L897) |
-| `ColorScheme` | `light`, `dark` | [`types/index.ts:2819`](../types/index.ts#L2819) |
+| `ColorScheme` | `light`, `dark` | [`types/index.ts:2817`](../types/index.ts#L2817) |
 | `ConversationType` | `dm`, `club` | [`types/index.ts:1149`](../types/index.ts#L1149) |
 | `CreateMenuSectionKey` | `vteam`, `venue` | [`types/index.ts:2338`](../types/index.ts#L2338) |
 | `EventCardRsvpHandler` | `join`, `leave` | [`types/index.ts:2110`](../types/index.ts#L2110) |
