@@ -1,0 +1,60 @@
+# The integration suite (e2e/integration): every feature's server side, called the
+# way the app calls it, against the vteam beta project with the e2e account. No
+# browser. It is not a PR check: it runs twice a day and on demand, and on PRs that
+# change the suite itself. A failure emails the owner (GitHub's scheduled-run mail)
+# and the job summary lists each failing step with the server's own error.
+name: Integration
+
+on:
+  schedule:
+    - cron: '23 7,19 * * *' # 1:23 AM and 1:23 PM Central
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'e2e/integration/**'
+      - '.github/workflows/integration.yml'
+
+permissions:
+  contents: read
+
+# Shares the account with CI's API shard: never at the same time as it.
+concurrency:
+  group: e2e-beta-supabase-api
+  cancel-in-progress: false
+
+env:
+  EXPO_PUBLIC_SUPABASE_URL: https://uifolvbwtrbcmfrvelnl.supabase.co
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpZm9sdmJ3dHJiY21mcnZlbG5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NTY2OTUsImV4cCI6MjEwODUzMjY5NX0.8CcvfSOI3LNZ8KQ9OadOyN2dVy8lYiBeSVFzfC5ihh8
+
+jobs:
+  integration:
+    name: Integration (beta)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      E2E_RUN_TAG: i${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Run the integration suite
+        run: npx playwright test --project=integration --reporter=list,github,json
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: integration.json
+      - name: Summary
+        if: always()
+        run: node scripts/integration-summary.mjs integration.json >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-report
+          path: |
+            integration.json
+            playwright-report/
+          retention-days: 14
