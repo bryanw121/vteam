@@ -3,7 +3,7 @@ import { View } from 'react-native'
 import { useRouter, useSegments } from 'expo-router'
 import { WebStackContentTransition } from '../../../../components/WebStackContentTransition'
 import { ScreenHeader } from '../../../../components/ui'
-import { SETTINGS_KICKER, SETTINGS_SCREENS, shared } from '../../../../constants'
+import { SETTINGS_SCREENS, shared } from '../../../../constants'
 import { routes } from '../../../../utils/routes'
 import { settingsScreenKey } from '../../../../utils/settingsScreens'
 
@@ -18,7 +18,8 @@ export default function SettingsLayout() {
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(routes.profile()))
   return (
     <View style={shared.screen}>
-      {screen && <ScreenHeader kicker={screen.kicker ?? SETTINGS_KICKER} title={screen.title} onBack={goBack} />}
+      {/* Party invite layout: Back pill and a centred title, no SETTINGS label above it. */}
+      {screen && <ScreenHeader compact title={screen.title} onBack={goBack} />}
       <WebStackContentTransition />
     </View>
   )

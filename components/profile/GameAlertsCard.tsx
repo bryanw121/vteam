@@ -67,6 +67,7 @@ export function GameAlertsCard() {
         label="From my clubs"
         subtitle="Mute one club with the bell on its page"
         value={draft.clubs}
+        icon="home-outline"
         onValueChange={v => change({ ...draft, clubs: v }, 'clubs')}
         testID="game-alerts-clubs"
       />
@@ -74,6 +75,8 @@ export function GameAlertsCard() {
         label="From hosts I've played with"
         subtitle="Hosts whose games you went to twice in the last 6 months"
         value={draft.hosts}
+        icon="people-outline"
+        iconColor={theme.colors.hot}
         onValueChange={v => change({ ...draft, hosts: v }, 'hosts')}
         testID="game-alerts-hosts"
       />

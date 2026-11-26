@@ -60,6 +60,8 @@ export const ANALYTICS_EVENTS = {
   outsideLinkOpened: 'outside_link_opened',
   /** Opened an outside session's sheet (#348). props: { surface (indoor | sand | grass | none), has_note, source: card | search | link } */
   outsideSessionOpened: 'outside_session_opened',
+  /** An outside tournament's or league's sheet opened (#395): {kind, org, source: card | link}. */
+  outsideProgramOpened: 'outside_program_opened',
   /** Find a team (#304): put themselves on a program's list. props: { want: partner | team | players } */
   freeAgentListed: 'free_agent_listed',
   /** Find a team: tapped Message on someone's row. props: {} */
