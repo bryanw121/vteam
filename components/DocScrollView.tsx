@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+import React, { useCallback, useLayoutEffect, useRef } from 'react'
 import { Platform, ScrollView, ScrollViewProps, StyleProp, View, ViewStyle } from 'react-native'
 import type { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControlProps } from 'react-native'
 import { DocPullToRefresh } from './RefreshControl'
@@ -46,21 +46,14 @@ export function DocScrollView({ docScroll, memoryKey, children, style, contentCo
 
   const scrollNode = () => (scrollRef.current as unknown as WebScrollableRef)?.getScrollableNode?.() ?? null
 
-  // Record every scroll position straight from the element. onScroll alone is throttled
-  // (scrollEventThrottle 16): when the last bit of a scroll lands inside the window it is
-  // dropped, and Back restored the offset before it (#399: 67 px instead of 128).
-  useEffect(() => {
-    if (!remember || !memoryKey || docScroll) return
-    const node = scrollNode() as (HTMLElement & { addEventListener?: unknown }) | null
-    if (!node || typeof node.addEventListener !== 'function') return
-    const onNativeScroll = () => { if (isShown(node)) rememberScroll(memoryKey, node.scrollTop) }
-    node.addEventListener('scroll', onNativeScroll, { passive: true })
-    return () => node.removeEventListener('scroll', onNativeScroll)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
-  }, [remember, memoryKey, docScroll])
+  // True while a remembered offset is being put back. The browser clamps it while the
+  // content is still short, and the scroll event for that clamped offset must not replace
+  // the remembered one, or the next restore (the tab shown again) puts back the wrong
+  // place (#399: the event page came back at 67 px instead of 128).
+  const restoring = useRef(false)
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (remember && memoryKey && isShown(scrollNode())) rememberScroll(memoryKey, e.nativeEvent.contentOffset.y)
+    if (remember && memoryKey && !restoring.current && isShown(scrollNode())) rememberScroll(memoryKey, e.nativeEvent.contentOffset.y)
     onScroll?.(e)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
   }, [remember, memoryKey, onScroll])
@@ -94,12 +87,13 @@ export function DocScrollView({ docScroll, memoryKey, children, style, contentCo
     const y = recallScroll(memoryKey)
     if (!cameBack) return
     if (y <= 0) { reveal(); return }
+    restoring.current = true
     restoreWhenReady({
       y,
       ready: () => isShown(scrollNode()),
       apply: to => scrollRef.current?.scrollTo({ y: to, animated: false }),
       current: () => scrollNode()?.scrollTop ?? y,
-      onDone: reveal,
+      onDone: () => { restoring.current = false; reveal() },
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- refs are stable
   }, [remember, memoryKey, onLayout])
