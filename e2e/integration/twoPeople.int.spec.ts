@@ -9,7 +9,7 @@
  *    accept, then unfriend
  */
 import { test, expect } from '@playwright/test'
-import { RUN, daysFromNow, ok, signIn, sweep, type Me } from './helpers'
+import { RUN, daysFromNow, ok, refused, signIn, sweep, type Me } from './helpers'
 import { signInFriend } from './friend'
 
 /** This file's rows (see sweep). */
@@ -104,6 +104,8 @@ test('tournaments: the friend accepts the captain invite, and a join request is 
   await ok('host on roster', () => host.db.from('tournament_team_members').insert({ team_id: team.id, user_id: host.id, is_captain: true }))
 
   const inv = await ok('invite friend', () => host.db.from('tournament_team_invitations').insert({ tournament_id: tid, team_id: team.id, inviter_id: host.id, invitee_id: friend!.id }).select('id').single()) as { id: string }
+  // An invite is for one team and one player: neither side re-points it (#413).
+  await refused('friend re-points the invite', () => friend!.db.from('tournament_team_invitations').update({ invitee_id: host.id }).eq('id', inv.id))
   await ok('friend accepts', () => friend!.db.rpc('accept_tournament_invite', { p_invite_id: inv.id }))
   const roster = await ok('roster', () => host.db.from('tournament_team_members').select('user_id').eq('team_id', team.id)) as { user_id: string }[]
   expect(roster.map(r => r.user_id).sort()).toEqual([host.id, friend!.id].sort())
@@ -111,7 +113,12 @@ test('tournaments: the friend accepts the captain invite, and a join request is 
   // A second team; the friend leaves the first and asks to join it, the organizer approves.
   const other = await ok('second team', () => host.db.from('tournament_teams').insert({ tournament_id: tid, name: `${MINE} Others`, status: 'registered', is_approved: true }).select('id').single()) as { id: string }
   await ok('friend leaves team', () => friend!.db.from('tournament_team_members').delete().eq('team_id', team.id).eq('user_id', friend!.id))
+  // Without an invite, nobody puts themselves on someone else's roster (#413).
+  await refused('friend adds themselves to a team', () => friend!.db.from('tournament_team_members').insert({ team_id: other.id, user_id: friend!.id, is_captain: false }))
   const req = await ok('join request', () => friend!.db.from('tournament_team_join_requests').insert({ tournament_id: tid, team_id: other.id, requester_id: friend!.id }).select('id').single()) as { id: string }
+  // Only the captain or the organizer answers it; the requester can't approve it or move it (#413).
+  await refused('friend approves their own request', () => friend!.db.from('tournament_team_join_requests').update({ status: 'approved' }).eq('id', req.id))
+  await refused('friend moves their request', () => friend!.db.from('tournament_team_join_requests').update({ team_id: team.id }).eq('id', req.id))
   await ok('organizer adds them', () => host.db.from('tournament_team_members').upsert({ team_id: other.id, user_id: friend!.id, is_captain: false }, { onConflict: 'team_id,user_id', ignoreDuplicates: true }))
   await ok('organizer closes the request', () => host.db.from('tournament_team_join_requests').update({ status: 'approved' }).eq('id', req.id))
   const otherRoster = await ok('second roster', () => host.db.from('tournament_team_members').select('user_id').eq('team_id', other.id)) as { user_id: string }[]
