@@ -106,6 +106,10 @@ const isMissingSchema = (e: { code?: string } | null) => e?.code === '42703' || 
  * the settings take their defaults, so the page keeps working.
  */
 async function fetchRules(id: string): Promise<TournamentRules | null> {
+  // With each later phase's own rules (#404); before that migration, the rules without them.
+  const withPhases = await supabase.from('tournament_rules').select(`${RULES_COLUMNS}, phase_rules`).eq('tournament_id', id).maybeSingle()
+  if (!withPhases.error) return withPhases.data as TournamentRules | null
+  if (!isMissingSchema(withPhases.error)) throw withPhases.error
   const res = await supabase.from('tournament_rules').select(RULES_COLUMNS).eq('tournament_id', id).maybeSingle()
   if (!res.error) return res.data as TournamentRules | null
   if (!isMissingSchema(res.error)) throw res.error

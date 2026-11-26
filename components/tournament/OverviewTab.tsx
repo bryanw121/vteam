@@ -10,13 +10,14 @@ import { formatDateTime } from '../../utils/dateFormat'
 import { soloTeamCount } from '../../utils/soloTeamCount'
 import { Button } from '../Button'
 import type {
-  Tournament, TournamentCommentWithAuthor, TournamentPrize, TournamentRules, TournamentTeam, TournamentTeamWithRoster,
+  Tournament, TournamentBracketType, TournamentCommentWithAuthor, TournamentFormat, TournamentPrize, TournamentRules, TournamentTeam, TournamentTeamWithRoster,
 } from '../../types'
 import type { PendingInvite } from '../../types'
 import { MiniButton } from './TournamentBits'
 import { ts } from './tournamentStyles'
 import { VenmoPayButton } from '../VenmoPayButton'
 import { Spinner } from '../ui/Spinner'
+import { describeScoring, phaseDiffers, phasesFor, rulesForPhase } from '../../utils/tournamentPhases'
 
 type Props = {
   /** Pull-to-refresh for the whole tournament page. */
@@ -60,6 +61,7 @@ export function OverviewTab(p: Props) {
   const solo = tournament.team_mode === 'solo'
   const soloSignups = solo ? p.teams.filter(t => t.status === 'free_agent').length : 0
   const soloSize = tournament.team_size ?? 6
+  const phases = phasesFor(tournament.format as TournamentFormat, tournament.bracket_type as TournamentBracketType | null)
   return (
     <ScrollView contentContainerStyle={ts.scrollContent} showsVerticalScrollIndicator={false} refreshControl={p.refreshControl}>
 
@@ -267,16 +269,25 @@ export function OverviewTab(p: Props) {
         </View>
       )}
 
-      {/* Scoring rules */}
+      {/* Scoring rules (per phase, #404) */}
       {rules && (
         <View style={ts.card}>
           <Text style={[ts.sectionTitle, { marginBottom: 8 }]}>Scoring Rules</Text>
           {[
+            ...(phases.length > 1 ? [{ label: 'Rules for', value: phases[0].label }] : []),
+            { label: 'Starts at',    value: `${rules.starting_score}–${rules.starting_score}` },
             { label: 'Win to',       value: `${rules.winning_score} pts` },
             { label: 'Deciding set', value: `${rules.deciding_set_score} pts` },
             { label: 'Win by',       value: `${rules.win_by_margin}` },
             { label: 'Sets to win',  value: String(rules.sets_to_win) },
             { label: 'Point cap',    value: rules.point_cap ? String(rules.point_cap) : 'None' },
+            // Later phases with their own rules (#404), each in one line.
+            ...phases.slice(1).filter(t => t.key !== 'base' && phaseDiffers(rules, t.key)).map(t => ({
+              label: t.label, value: describeScoring(rulesForPhase(rules, t.key)),
+            })),
+            ...(tournament.format === 'pool_bracket'
+              ? [{ label: 'After pools', value: tournament.teams_advance_per_pool > 0 ? `Top ${tournament.teams_advance_per_pool} of each pool advance` : 'Every team plays the bracket' }]
+              : []),
             { label: 'Ties broken by', value: rules.tiebreakers.map(k => TIEBREAKER_LABELS[k]).join(', ') },
             ...(tournament.bracket_type === 'single' && tournament.format !== 'round_robin' && tournament.format !== 'pool_play'
               ? [{ label: 'Third place', value: rules.third_place_match ? 'Playoff match' : 'Shared by semifinal losers' }]
