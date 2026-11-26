@@ -500,6 +500,8 @@ export type ExternalProgramCardProps = {
   menuInset?: boolean
   /** Find a team (#304): players looking for this program; undefined/null when the list has no counts. */
   freeAgentCount?: number | null
+  /** Open the program's sheet (#395) instead of the organizer's page; without it the card links out. */
+  onOpen?: (program: ExternalProgram) => void
 }
 
 /** Props of SheetTeamsView. `team` '' shows the list; onSelectTeam('') goes back to it. */
@@ -536,6 +538,8 @@ export type ProgramSectionProps = {
   testID?: string
   /** Find a team counts for these programs (#304), from one call per screen. */
   freeAgentCounts?: Map<string, number> | null
+  /** Open a program's sheet (#395); without it cards link out to the organizer. */
+  onOpen?: (program: ExternalProgram) => void
 }
 
 /** Outside programs grouped for one viewer's region (utils/externalPrograms). */
@@ -729,6 +733,10 @@ export type NotificationSettingRowProps = {
   disabled?: boolean
   onValueChange: (v: boolean) => void
   testID?: string
+  /** A coloured icon tile before the label (Party invite layout). */
+  icon?: IoniconName
+  /** The icon's colour; its tile is a tint of it. Default the purple text colour. */
+  iconColor?: string
 }
 
 /** Title and body of an event reminder (`event_reminder_text` in the database; `utils/reminders.ts` mirrors it). */
@@ -1005,6 +1013,8 @@ export type FeedCardContext = {
   onUnhide: (event: EventWithDetails) => void
   /** Open an outside session's sheet (#348). */
   onOpenSession: (session: ExternalSession) => void
+  /** Open an outside tournament's sheet (#395). */
+  onOpenProgram: (program: ExternalProgram) => void
 }
 /** What both Events layouts take from the screen (#217 part 4). The screen builds the shared pieces once. */
 type EventsFeedLayoutBase = {
@@ -1375,7 +1385,7 @@ export type MakeTeamsData = {
 export type SoloTeamDraft = { name: string; members: string[]; captain: string | null }
 
 /** `tiebreakers` holds only TiebreakerKey values (CHECK constraint). */
-export type TournamentRules = Override<Tables<'tournament_rules'>, { tiebreakers: TiebreakerKey[] }>
+export type TournamentRules = Override<Tables<'tournament_rules'>, { tiebreakers: TiebreakerKey[]; phase_rules?: TournamentPhaseRules }>
 
 export type TournamentTeam = Override<Tables<'tournament_teams'>, { status: TournamentTeamStatus }>
 
@@ -1429,7 +1439,28 @@ export type TournamentDraft = {
   tiebreakers: TiebreakerKey[]
   /** Single elimination: play off third place (otherwise both semifinal losers share it). */
   thirdPlaceMatch: boolean
+  /** Rules for later phases that differ from the base (#404); a phase not here plays by the base. */
+  phaseRules: Partial<Record<TournamentPhase, PhaseScoring>>
 }
+
+/** A phase after the first with its own scoring rules (#404). */
+export type TournamentPhase = 'bracket' | 'losers' | 'final'
+
+/** One phase's scoring, as the wizard holds it. */
+export type PhaseScoring = {
+  startingScore: number
+  winningScore: number
+  decidingSetScore: number
+  winByMargin: number
+  pointCap: number | null
+  setsToWin: number
+}
+
+/** `tournament_rules.phase_rules`: per later phase, only the fields that differ from the base. */
+export type TournamentPhaseRules = Partial<Record<TournamentPhase, Partial<{
+  starting_score: number; winning_score: number; deciding_set_score: number; win_by_margin: number
+  point_cap: number | null; sets_to_win: number
+}>>>
 
 /** How a new tournament is saved from the wizard's last step. */
 export type TournamentSaveStatus = 'draft' | 'published'
@@ -1636,6 +1667,8 @@ export type ScreenHeaderProps = {
   backLabel?: string
   /** Add the top safe-area inset to the header's top padding. Default false. */
   safeTop?: boolean
+  /** One row: Back pill, centred title, right slot (Settings pages). No kicker. */
+  compact?: boolean
 }
 
 /**
@@ -2873,3 +2906,27 @@ export type EventHostNoteProps = {
   onMessage: (userId: string) => void
 }
 export type EventFactChipsProps = { event: EventWithDetails }
+
+/** What `useShareLink` shares: an in-app path (`routes.*`), its title, an optional line to go with it. */
+export type ShareLinkInput = {
+  /** The in-app path of the view to share, built with `routes.*` (filters included). */
+  path: string
+  /** What the link is, for the share sheet ("Zilker Sand Classic on vteam"). */
+  title: string
+  /** A line sent with the link ("Sand open play at Zilker Park, Sat, Nov 28 at 10:00 AM."). */
+  text?: string
+  /** For metrics: which screen shared. */
+  screen: string
+  /** Whether the link carries filters or a tab (metrics only). */
+  filtered?: boolean
+}
+
+/** Props of ProgramSheet (#395): an outside tournament or league, or null when closed. */
+export type ProgramSheetProps = {
+  program: ExternalProgram | null
+  onDismiss: () => void
+  /** The sheet has finished closing (navigate from here, not while it is open). */
+  onClosed?: () => void
+  onFindTeam: (program: ExternalProgram) => void
+  onScores: (program: ExternalProgram) => void
+}

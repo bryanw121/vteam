@@ -152,7 +152,9 @@ export function crossPoolCompare(a: StandingRow, b: StandingRow): number {
  */
 export function seedsFromPools(pools: readonly { poolKey: string; rows: readonly StandingRow[] }[], perPool: number): string[] {
   const seeds: string[] = []
-  for (let place = 0; place < perPool; place++) {
+  // 0 = every team goes to the bracket, seeded by its pool place (#403).
+  const places = perPool > 0 ? perPool : Math.max(0, ...pools.map(p => p.rows.length))
+  for (let place = 0; place < places; place++) {
     const tier = pools.map(p => p.rows[place]).filter((r): r is StandingRow => !!r)
     tier.sort(crossPoolCompare)
     seeds.push(...tier.map(r => r.teamId))

@@ -62,6 +62,11 @@
       "tap-target-44": 2
     }
   },
+  "tournaments-program-sheet": {
+    "mobile": {
+      "tap-target-44": 1
+    }
+  },
   "tournament-discussion": {
     "mobile": {
       "tap-target-44": 1

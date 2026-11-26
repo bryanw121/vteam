@@ -6,14 +6,14 @@ import { ExternalProgramCard } from '../ExternalProgramCard'
 import type { ProgramSectionProps } from '../../types'
 
 /** A titled group of outside leagues or tournaments (Leagues and Tournaments screens). Nothing when empty. */
-export function ProgramSection({ title, programs, hot = false, testID, freeAgentCounts }: ProgramSectionProps) {
+export function ProgramSection({ title, programs, hot = false, testID, freeAgentCounts, onOpen }: ProgramSectionProps) {
   if (!programs.length) return null
   return (
     <View testID={testID}>
       <Text accessibilityRole="header" style={[shared.programSectionTitle, hot && shared.programSectionTitleHot]}>
         {title} · {programs.length}
       </Text>
-      {programs.map(p => <ExternalProgramCard key={p.id} program={p} compact freeAgentCount={freeAgentCounts ? freeAgentCounts.get(p.id) ?? 0 : null} />)}
+      {programs.map(p => <ExternalProgramCard key={p.id} program={p} compact freeAgentCount={freeAgentCounts ? freeAgentCounts.get(p.id) ?? 0 : null} onOpen={onOpen} />)}
     </View>
   )
 }

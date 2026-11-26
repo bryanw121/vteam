@@ -47,7 +47,7 @@ function DesktopFeedItem({ item, cards }: { item: EventWithDetails; cards: FeedC
   const card = item._external
     ? <ExternalSessionCard session={item._external} menuInset={withMenu} hideDate onOpen={cards.onOpenSession} />
     : item._program
-      ? <ExternalProgramCard program={item._program} menuInset={withMenu} />
+      ? <ExternalProgramCard program={item._program} menuInset={withMenu} onOpen={cards.onOpenProgram} />
       : <RowCard event={item} cards={cards} menuInset={withMenu} />
   return (
     <>

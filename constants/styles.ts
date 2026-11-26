@@ -460,6 +460,18 @@ export const shared = StyleSheet.create({
     fontSize: theme.font.size.sm,
     color: theme.colors.subtext,
   },
+  /** Share on an outside card (#395): over its bottom-right corner, a sibling of the card's button. */
+  outsideShare: {
+    position: 'absolute',
+    right: theme.spacing.sm,
+    bottom: theme.spacing.sm,
+    width: 44,
+    height: 44,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   externalSignup: {
     alignSelf: 'flex-start',
     flexDirection: 'row',
@@ -756,6 +768,33 @@ export const shared = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   screenHeaderText:  { flexShrink: 1 },
+  // ScreenHeader `compact` (Settings): Back pill | centred title | right slot, one row.
+  screenHeaderCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.sm,
+    minHeight: 60,
+  },
+  screenHeaderCompactSide: { minWidth: 44, minHeight: 44, alignItems: 'flex-end', justifyContent: 'center' },
+  screenHeaderCompactTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontFamily: theme.fonts.display,
+    fontSize: theme.font.size.lg,
+    color: theme.colors.text,
+  },
+  // Settings rows (Party invite layout): optional icon tile, label and subtitle, a control on the right.
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    minHeight: 56,
+    paddingVertical: theme.spacing.sm,
+  },
+  settingRowIcon: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  settingRowLabel: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.md, color: theme.colors.text },
   screenHeaderKicker: {
     fontFamily: theme.fonts.bodySemiBold,
     fontSize: font.size.xs,
