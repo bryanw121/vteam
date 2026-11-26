@@ -66,8 +66,9 @@ export const UPDATE_COPY = {
 export const FEED_STALE_NOTICE = "Couldn't refresh. These may be out of date. Tap to retry."
 
 /** Display label per skill tier, lowest to highest (insertion order is the display order). `open` is tournament-only. */
+/** Skill levels, best first (Open, AA+, A, BB, B, C, D): pickers and chips list them in this order (#401). */
 export const SKILL_LEVEL_LABELS: Record<string, string> = {
-  d: 'D', c: 'C', b: 'B', bb: 'BB', a: 'A', aa_plus: 'AA+', open: 'Open',
+  open: 'Open', aa_plus: 'AA+', a: 'A', bb: 'BB', b: 'B', c: 'C', d: 'D',
 }
 
 /** Approval-gated events: told to the player before they tap (event page, feed card) and echoed in the host form. */
