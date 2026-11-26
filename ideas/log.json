@@ -703,5 +703,29 @@
     "status": "approved",
     "summary": "scripts/shots/ui-consistency-flow.mjs with a shrink-only baseline (titles, back, 44-pt targets, font tokens/family, primary buttons, width) in Browser: flows; then one BackButton and ScreenHeader on settings/notifications/create (7 Back shapes, 5 under 44 pt today).",
     "issue": 377
+  },
+  {
+    "date": "2026-11-26",
+    "n": 1,
+    "title": "A red check means this PR broke something: fix #413's overlapping scroll restores, a data-dependent e2e spec, and drift's merge window",
+    "bucket": "testing",
+    "status": "proposed",
+    "summary": "17 of 48 CI runs red in 26 h, 4 caused by PRs. Stability 9 (#413: overlapping restoreWhenReady passes save the clamped 67 over 128; one restore at a time, no saving while restoring, re-apply on content growth), scrollRestore e2e 3 (needs a long beta feed; seed 8 events), drift 2 (merged-not-on-live is a notice for 3 h). Adds scripts/ci-failures.mjs tally."
+  },
+  {
+    "date": "2026-11-26",
+    "n": 2,
+    "title": "Every \"when\" reads the same: Today 8:00 AM, Yesterday, Mon, Sat, Nov 14",
+    "bucket": "end-user-experience",
+    "status": "proposed",
+    "summary": "64 of 150 on-screen dates lack a weekday; 5 formatters (timeAgo, MessageBubble.formatTime with 24h 'today', formatCommentTime, ClubPostCard.formatPostTime, formatShortTime). One pure whenLabel(iso, now, full|short) in utils/dateFormat, used by chat, comments, posts, notifications; a date-weekday UI rule."
+  },
+  {
+    "date": "2026-11-26",
+    "n": 3,
+    "title": "Tournament screens on the stylesheet: 421 inline styles into ts",
+    "bucket": "refactor",
+    "status": "proposed",
+    "summary": "27 files, 4,196 lines: 421 style={{}} objects, 348 literal spacing numbers, muted text in 46 variants (shared.caption used 3x vs 170 elsewhere). 3 zero-diff PRs moving styles to ts/shared, then one caption/tab-label pass; shrink-only inline-style count test; after #409/#412."
   }
 ]
