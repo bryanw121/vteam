@@ -25,14 +25,15 @@ create policy "invitee can join the inviting team" on public.tournament_team_mem
 
 create or replace function public.tournament_join_request_guard() returns trigger
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 declare
   v_uid uuid := auth.uid();
   v_staff boolean;
 begin
-  -- Server-side writers (definer functions, the service role) are trusted.
+  -- Runs as the caller (security invoker), so current_user tells a player (authenticated)
+  -- from server-side writers (definer functions, the service role), which are trusted.
   if v_uid is null or current_user not in ('authenticated', 'anon') then
     return new;
   end if;
@@ -48,7 +49,6 @@ begin
   return new;
 end;
 $$;
-revoke all on function public.tournament_join_request_guard() from public, anon, authenticated;
 drop trigger if exists tournament_join_request_guard on public.tournament_team_join_requests;
 create trigger tournament_join_request_guard
   before update on public.tournament_team_join_requests
@@ -56,7 +56,7 @@ create trigger tournament_join_request_guard
 
 create or replace function public.tournament_invitation_guard() returns trigger
 language plpgsql
-security definer
+security invoker
 set search_path = public
 as $$
 declare
@@ -85,7 +85,6 @@ begin
   raise exception 'Only the invited player can answer an invite' using errcode = '42501';
 end;
 $$;
-revoke all on function public.tournament_invitation_guard() from public, anon, authenticated;
 drop trigger if exists tournament_invitation_guard on public.tournament_team_invitations;
 create trigger tournament_invitation_guard
   before update on public.tournament_team_invitations
