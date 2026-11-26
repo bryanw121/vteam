@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { hitV } from '../../utils/hitArea'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { Text } from '../ui/Text'
 import { BottomSheet, Spinner } from '../ui'
@@ -42,6 +43,9 @@ export function FeedCityLine({ style }: FeedCityLineProps) {
  * "Austin ▾": the same control as FeedCityLine, small enough for the row above the phone
  * feed's days (Party invite). Same test id and spoken label, so the city flow checks either.
  */
+/** 44-pt tap target around the 36-pt city pill (#386). */
+const PILL_HIT = hitV(36)
+
 export function FeedCityPill() {
   const city = useFeedCity()
   const [open, setOpen] = useState(false)
@@ -49,15 +53,17 @@ export function FeedCityPill() {
     <>
       <TouchableOpacity
         onPress={() => setOpen(true)}
-        style={styles.pill}
+        style={PILL_HIT}
         hitSlop={{ top: 6, bottom: 6 }}
         accessibilityRole="button"
         accessibilityLabel={`${FEED_CITY_COPY.line} ${city.name}. ${FEED_CITY_COPY.change}`}
         testID="feed-city"
       >
+        <View style={styles.pill}>
         <Ionicons name="location-outline" size={15} color={theme.colors.primaryText} />
         <Text style={styles.pillText} numberOfLines={1}>{city.name}</Text>
         <Ionicons name="chevron-down" size={14} color={theme.colors.subtext} />
+        </View>
       </TouchableOpacity>
       <FeedCitySheet visible={open} onDismiss={() => setOpen(false)} city={city} />
     </>

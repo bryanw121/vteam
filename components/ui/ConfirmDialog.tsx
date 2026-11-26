@@ -11,7 +11,7 @@ import type { ConfirmDialogProps } from '../../types'
  */
 export function ConfirmDialog({
   visible, title, body, confirmLabel, cancelLabel = 'Cancel',
-  destructive, onConfirm, onCancel, loading, children, width, testIDPrefix = 'confirm-dialog',
+  destructive, onConfirm, onCancel, loading, confirmDisabled, children, width, testIDPrefix = 'confirm-dialog',
 }: ConfirmDialogProps) {
   const dismiss = () => { if (!loading) onCancel() }
   return (
@@ -40,6 +40,7 @@ export function ConfirmDialog({
                 variant={destructive ? 'danger' : 'primary'}
                 onPress={onConfirm}
                 loading={loading}
+                disabled={confirmDisabled}
                 testID={`${testIDPrefix}-confirm`}
               />
             </View>

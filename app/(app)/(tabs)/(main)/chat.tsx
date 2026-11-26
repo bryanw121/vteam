@@ -16,6 +16,7 @@ import { timeAgo, lastMessagePreview } from '../../../../utils/chatUtils'
 import { profileAvatarSmallUri, profileDisplayName, confirmDestructive } from '../../../../utils'
 import { searchMembers } from '../../../../lib/memberSearch'
 import { routes } from '../../../../utils/routes'
+import { hitSquare } from '../../../../utils/hitArea'
 import type { ConversationRow, Profile } from '../../../../types'
 import { useSession } from '../../../../contexts/session'
 import { SignInPrompt } from '../../../../components/SignInPrompt'
@@ -302,13 +303,15 @@ function ChatScreenSignedIn({ myId }: { myId: string }) {
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="New message"
-            style={{
-              width: 38, height: 38, borderRadius: 12,
+            style={hitSquare(38)}
+          >
+            <View style={{
+              width: 38, height: 38, borderRadius: 19,
               backgroundColor: theme.colors.primary,
               alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            <Ionicons name="add" size={22} color={theme.colors.white} />
+            }}>
+              <Ionicons name="add" size={22} color={theme.colors.white} />
+            </View>
           </TouchableOpacity>
         }
       />

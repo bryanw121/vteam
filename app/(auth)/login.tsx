@@ -11,6 +11,7 @@ import { Input } from '../../components/Input'
 import { shared } from '../../constants'
 import { INCORRECT_EMAIL_OR_PASSWORD } from '../../constants/copy'
 import { routes } from '../../utils/routes'
+import { hitV } from '../../utils/hitArea'
 import { AgreementLine } from '../../components/legal/AgreementLine'
 import { AuthScreen } from '../../components/auth/AuthScreen'
 import { AuthCta, AuthLink, GoogleButton, OrWithEmail } from '../../components/auth/AuthBits'
@@ -262,6 +263,7 @@ export default function Login() {
             accessibilityRole="button"
             accessibilityLabel="Forgot password?"
             hitSlop={12}
+            style={hitV(16)}
             testID="login-forgot"
           >
             <Text style={shared.authForgot}>Forgot?</Text>

@@ -35,7 +35,9 @@ export function FeedItemShell({ children, onMore, moreLabel, hidden, onUnhide }:
           testID="feed-item-more"
           style={styles.more}
         >
-          <Ionicons name="ellipsis-horizontal" size={18} color={theme.colors.subtext} />
+          <View style={styles.moreDot}>
+            <Ionicons name="ellipsis-horizontal" size={18} color={theme.colors.subtext} />
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -94,10 +96,9 @@ export function HideFeedSheet({ visible, itemTitle, options, onPick, onDismiss }
 }
 
 const styles = StyleSheet.create({
-  more: {
-    position: 'absolute',
-    top: theme.spacing.sm,
-    right: theme.spacing.sm,
+  // The ⋯ is drawn 32 pt; its touchable reaches 44 pt and sits 6 pt further out so the dot stays put (#386).
+  more: { position: 'absolute', top: theme.spacing.sm - 6, right: theme.spacing.sm - 6, padding: 6 },
+  moreDot: {
     width: 32,
     height: 32,
     borderRadius: theme.radius.full,

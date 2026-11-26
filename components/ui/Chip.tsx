@@ -1,7 +1,10 @@
-import { TouchableOpacity } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import { Text } from './Text'
 import { shared } from '../../constants'
+import { hitV } from '../../utils/hitArea'
 import type { ChipProps } from '../../types'
+
+const CHIP_HIT = hitV(32)
 
 /** Pill filter chip. `solid` fills with primary when active (feed); `tint` uses a 14% wash (clubs-style). */
 export function Chip({ label, active = false, onPress, badge, variant = 'solid', role = 'button', size = 'default', testID }: ChipProps) {
@@ -17,11 +20,14 @@ export function Chip({ label, active = false, onPress, badge, variant = 'solid',
       testID={testID}
       onPress={onPress}
       {...a11y}
-      style={[shared.chip, size === 'touch' && shared.chipTouch, active && (tint ? shared.chipActiveTint : shared.chipActive)]}
+      // 44-pt tap target around the 32-pt pill (#386); the pill is the child, so it looks the same.
+      style={size === 'touch' ? undefined : CHIP_HIT}
     >
-      <Text style={[shared.chipLabel, active && (tint ? shared.chipLabelActiveTint : shared.chipLabelActive)]}>
-        {hasBadge ? `${label} ${badge}` : label}
-      </Text>
+      <View style={[shared.chip, size === 'touch' && shared.chipTouch, active && (tint ? shared.chipActiveTint : shared.chipActive)]}>
+        <Text style={[shared.chipLabel, active && (tint ? shared.chipLabelActiveTint : shared.chipLabelActive)]}>
+          {hasBadge ? `${label} ${badge}` : label}
+        </Text>
+      </View>
     </TouchableOpacity>
   )
 }
