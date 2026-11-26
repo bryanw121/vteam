@@ -59,6 +59,11 @@ export const SCREENS = {
     route: `/?session=${IDS.external.sandOpenPlay}`, signedIn: false, ready: 'Also on',
     sources: ['components/events/OutsideSessionSheet.tsx', 'hooks/useOutsideSessionSheet.tsx', 'hooks/useOutsideSession.ts', 'utils/outsideSession.ts', 'components/ExternalSessionCard.tsx', 'components/ui/BottomSheet.tsx'],
   },
+  // An outside tournament's sheet from a shared link (#395): when, where, price and deadline, sign-up, Find a team, Share.
+  'tournaments-program-sheet': {
+    route: '/tournaments?program=shots-program-4', signedIn: false, ready: 'Sign up with ACES',
+    sources: ['components/programs/ProgramSheet.tsx', 'hooks/useProgramSheet.tsx', 'utils/outsideShare.ts', 'components/ExternalProgramCard.tsx', 'components/OutsideShareButton.tsx'],
+  },
   'events-feed-guest': {
     route: '/', signedIn: false, ready: 'Lunchtime Pepper',
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'hooks/useFeedDay.ts', 'hooks/useFeedHiding.ts', 'components/events/**', 'components/EventCard.tsx', 'components/ExternalSessionCard.tsx', 'components/SignInButton.tsx', 'hooks/feed/**', 'utils/feed*.ts'],

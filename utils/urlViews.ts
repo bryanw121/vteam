@@ -24,6 +24,8 @@ export const VIEW = {
     day: text(10),
     /** An outside session's sheet over the feed (#348): `/?session=<external_sessions.id>`. */
     session: rowId,
+    /** An outside tournament's sheet over the feed (#395): `/?program=<external_programs.id>`. */
+    program: rowId,
   },
   /** `r=1`: opened from a shared game recap (#227), counted once as `recap_link_opened`. */
   event: { tab: tabIndexCodec(EVENT_TAB_LABELS), r: flag },
@@ -32,8 +34,11 @@ export const VIEW = {
     view: oneOf(['upcoming', 'past'] as const, 'upcoming'),
     /** An organizer's name as listed; one no longer listed shows everyone. */
     host: text(60),
+    /** An outside tournament's sheet (#395): `/tournaments?program=<external_programs.id>`, what a shared link opens. */
+    program: rowId,
   },
-  leagues: { host: text(60) },
+  /** `/leagues?host=ACES&program=<id>`: a league's sheet (#395). */
+  leagues: { host: text(60), program: rowId },
   /** Live scores from a tournament's Google Sheet: `/scores/<program id>?view=brackets&division=Gold`. */
   scores: {
     view: oneOf(['live', 'pools', 'brackets', 'teams'] as const, 'live'),

@@ -9,6 +9,7 @@ import { OUTSIDE_SESSION_COPY } from '../../constants/copy'
 import { routes } from '../../utils/routes'
 import { formatDate } from '../../utils/dateFormat'
 import { formatSessionTimeRange, signupHost } from '../../utils/feedItems'
+import { sessionShareText } from '../../utils/outsideShare'
 import { directionsQuery, listedLine, signupButtonLabel } from '../../utils/outsideSession'
 import { sessionConfirmation } from '../../utils/externalFreshness'
 import { describeNewTime } from '../../lib/schelagg'
@@ -34,7 +35,7 @@ function noticeCopy(notice: SessionLinkNotice, host: string) {
   }
 }
 
-function Row({ icon, iconColor, main, sub, mainColor, children, testID }: {
+export function SheetRow({ icon, iconColor, main, sub, mainColor, children, testID }: {
   icon: IoniconName; iconColor?: string; main: string; sub?: string | null; mainColor?: string; children?: React.ReactNode; testID?: string
 }) {
   return (
@@ -90,7 +91,7 @@ function SessionDetails({ session, alsoOn, onPickOther, onHide }: {
         </Text>
       ) : null}
       {place ? (
-        <Row icon="location-outline" main={session.venue} sub={session.city}>
+        <SheetRow icon="location-outline" main={session.venue} sub={session.city}>
           <TouchableOpacity
             onPress={() => openInMaps(place)}
             accessibilityRole="link"
@@ -100,25 +101,25 @@ function SessionDetails({ session, alsoOn, onPickOther, onHide }: {
           >
             <Text style={shared.sessionSheetLink}>{OUTSIDE_SESSION_COPY.directions} ↗</Text>
           </TouchableOpacity>
-        </Row>
+        </SheetRow>
       ) : null}
       {session.price || session.level ? (
-        <Row icon="pricetag-outline" main={session.price ?? session.level ?? ''} sub={session.price ? session.level : null} />
+        <SheetRow icon="pricetag-outline" main={session.price ?? session.level ?? ''} sub={session.price ? session.level : null} />
       ) : null}
       {note ? (
-        <Row icon="information-circle-outline" main={note} testID="outside-session-note" />
+        <SheetRow icon="information-circle-outline" main={note} testID="outside-session-note" />
       ) : null}
       {confirmation.note ? (
-        <Row icon="alert-circle-outline" iconColor={theme.colors.warning} main={confirmation.note} mainColor={theme.colors.warning} />
+        <SheetRow icon="alert-circle-outline" iconColor={theme.colors.warning} main={confirmation.note} mainColor={theme.colors.warning} />
       ) : null}
       {alsoOn.length ? (
-        <Row icon="repeat-outline" main={OUTSIDE_SESSION_COPY.alsoOn}>
+        <SheetRow icon="repeat-outline" main={OUTSIDE_SESSION_COPY.alsoOn}>
           <View style={shared.sessionSheetDates}>
             {alsoOn.map(s => (
               <Chip key={s.id} label={dateLabel(s.starts_at)} onPress={() => onPickOther(s)} variant="tint" testID="outside-session-also-on" />
             ))}
           </View>
-        </Row>
+        </SheetRow>
       ) : null}
       {signup ? (
         <Button
@@ -134,6 +135,7 @@ function SessionDetails({ session, alsoOn, onPickOther, onHide }: {
         <ShareLinkButton
           path={routes.events({ session: session.id })}
           title={`${session.title} at ${session.venue}`}
+          text={sessionShareText(session)}
           screen="outside_session"
           testID="outside-session-share"
         />
