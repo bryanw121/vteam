@@ -733,6 +733,10 @@ export type NotificationSettingRowProps = {
   disabled?: boolean
   onValueChange: (v: boolean) => void
   testID?: string
+  /** A coloured icon tile before the label (Party invite layout). */
+  icon?: IoniconName
+  /** The icon's colour; its tile is a tint of it. Default the purple text colour. */
+  iconColor?: string
 }
 
 /** Title and body of an event reminder (`event_reminder_text` in the database; `utils/reminders.ts` mirrors it). */
@@ -1663,6 +1667,8 @@ export type ScreenHeaderProps = {
   backLabel?: string
   /** Add the top safe-area inset to the header's top padding. Default false. */
   safeTop?: boolean
+  /** One row: Back pill, centred title, right slot (Settings pages). No kicker. */
+  compact?: boolean
 }
 
 /**

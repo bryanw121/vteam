@@ -101,6 +101,8 @@ export default function NotificationSettingsScreen() {
                 label="Before events I'm going to"
                 subtitle="In your inbox, and as a push on your phone"
                 value={remindersOn}
+                icon="alarm-outline"
+                iconColor={theme.colors.warning}
                 onValueChange={v => void toggle('in_app', 'event_reminder', v)}
                 testID="reminders-toggle"
               />
