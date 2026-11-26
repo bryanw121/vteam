@@ -7,12 +7,16 @@ import { useHiddenFeed } from '../../../../hooks/useHiddenFeed'
 import { shared, theme } from '../../../../constants'
 import { HIDDEN_FEED_GROUPS, pruneHidden } from '../../../../utils/hiddenFeed'
 import { formatEventDate } from '../../../../utils'
+import { hitV } from '../../../../utils/hitArea'
 
 /**
  * Settings → Hidden in feed: everything the player hid from the Events feed,
  * grouped by what it covers, each with Unhide. Hiding happens from a feed
  * card's ⋯ menu.
  */
+/** 44-pt tap target around the 40-pt Unhide pill (#388). */
+const UNHIDE_HIT = hitV(40)
+
 export default function HiddenFeedScreen() {
   const { isLoading, error } = useUserSettings()
   const { entries, unhide, restore } = useHiddenFeed()
@@ -64,10 +68,10 @@ export default function HiddenFeedScreen() {
                             accessibilityRole="button"
                             accessibilityLabel={`Unhide ${row.label}`}
                             hitSlop={6}
-                            style={({ pressed }) => [styles.unhide, pressed && styles.pressed]}
+                            style={({ pressed }) => [UNHIDE_HIT, pressed && styles.pressed]}
                             testID="hidden-feed-unhide"
                           >
-                            <Text style={styles.unhideLabel}>Unhide</Text>
+                            <View style={styles.unhide}><Text style={styles.unhideLabel}>Unhide</Text></View>
                           </Pressable>
                         </View>
                       ))}
@@ -118,7 +122,7 @@ const styles = StyleSheet.create({
   unhide: {
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primarySoft,
     minHeight: 40,
     justifyContent: 'center',

@@ -656,7 +656,7 @@ export const shared = StyleSheet.create({
   signInButton: {
     minHeight: 38,
     paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.full,
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1750,7 +1750,7 @@ export const shared = StyleSheet.create({
   ecOverflowTextHero: { fontFamily: fonts.body, fontSize: font.size.xs, fontWeight: '700', color: colors.subtext },
   ecOverflowTextRow: { fontFamily: fonts.body, fontSize: font.size.xs, fontWeight: '700', color: colors.subtext },
   ecRsvpHero: { paddingHorizontal: 18, minHeight: 40, justifyContent: 'center', borderRadius: radius.full, borderWidth: 1 },
-  ecRsvpRow: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, flexShrink: 0, borderWidth: 1 },
+  ecRsvpRow: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.full, flexShrink: 0, borderWidth: 1 },
   ecRsvpOff: { backgroundColor: colors.card, borderColor: colors.border },
   ecRsvpTextHero: { fontFamily: fonts.displaySemiBold, fontSize: font.size.sm, letterSpacing: 0.2 },
   ecRsvpTextRow: { fontFamily: fonts.displaySemiBold, fontSize: font.size.xs },

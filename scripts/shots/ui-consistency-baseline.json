@@ -2,22 +2,7 @@
   "_notes": {
     "about": "Accepted UI consistency findings (#377): screen → viewport → rule → count. Shrink-only: run `npm run ui:baseline` after a fix; never raise a count to get a PR through."
   },
-  "events-feed": {
-    "mobile": {
-      "tap-target-44": 1
-    }
-  },
-  "events-feed-link": {
-    "mobile": {
-      "tap-target-44": 1
-    }
-  },
   "events-session-sheet": {
-    "mobile": {
-      "tap-target-44": 2
-    }
-  },
-  "events-feed-guest": {
     "mobile": {
       "tap-target-44": 1
     }
@@ -52,11 +37,6 @@
       "tap-target-44": 2
     }
   },
-  "chat-list": {
-    "mobile": {
-      "tap-target-44": 1
-    }
-  },
   "chat-club": {
     "mobile": {
       "tap-target-44": 1
@@ -80,11 +60,6 @@
   "settings-history": {
     "mobile": {
       "tap-target-44": 2
-    }
-  },
-  "settings-hidden": {
-    "mobile": {
-      "tap-target-44": 3
     }
   },
   "tournament-discussion": {
