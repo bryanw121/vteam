@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { baselineFrom, diffBaseline, fontTokensFrom, judge, renderMarkdown, RULES } from './lib/uiConsistency.mjs'
+import { actionFillsFrom, baselineFrom, diffBaseline, fontTokensFrom, judge, renderMarkdown, RULES } from './lib/uiConsistency.mjs'
 
 const tokens = [11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28, 32, 34]
 
@@ -90,4 +90,26 @@ test('the summary names the rule, screen and fix for each new finding', () => {
   assert.match(md, /❌ UI consistency: 1 new finding/)
   assert.match(md, /\| screen-title \| notifications \| mobile \| 1 \(0\) \|/)
   assert.ok(md.includes(RULES['screen-title']))
+})
+
+test('action fills come from the light palette', () => {
+  const fills = actionFillsFrom(readFileSync(new URL('../../constants/theme.ts', import.meta.url), 'utf8'))
+  assert.equal(fills.length, 3)
+  for (const f of fills) assert.match(f, /^rgb\(\d+, \d+, \d+\)$/)
+})
+
+test('button-shape: a filled action must be a pill; tiles, chips of other colours, picked choices, card strips and big pads are not actions', () => {
+  const purple = 'rgb(116, 69, 247)'
+  const m = { controls: [
+    { label: 'Send', w: 44, h: 44, fill: { bg: purple, h: 44, radius: 10 } },
+    { label: 'Join', w: 62, h: 44, fill: { bg: purple, h: 28, radius: 999 } },
+    { label: 'Player', w: 147, h: 36, fill: { bg: 'rgb(247, 243, 255)', h: 36, radius: 10 } },
+    { label: 'Point Team A', w: 300, h: 260, fill: { bg: purple, h: 260, radius: 24 } },
+    { label: '', w: 40, h: 40, fill: { bg: purple, h: 40, radius: 4 } },
+    { label: 'Overview', w: 90, h: 44, choice: true, fill: { bg: purple, h: 44, radius: 12 } },
+    { label: 'Find a team', w: 340, h: 44, fill: { bg: purple, h: 44, radius: 0 } },
+  ], docWidth: 0, viewportWidth: 0 }
+  const { counts, examples } = judge(m, { viewport: 'desktop', tokens, actionFills: [purple] })
+  assert.deepEqual(counts, { 'button-shape': 1 })
+  assert.match(examples['button-shape'][0], /Send/)
 })

@@ -3,6 +3,7 @@ import { TouchableOpacity, View } from 'react-native'
 import { Text } from '../ui/Text'
 import { Spinner } from '../ui/Spinner'
 import { shared, theme } from '../../constants'
+import { hitV } from '../../utils/hitArea'
 import type { EventCardVariant } from '../../types'
 
 type Props = {
@@ -13,6 +14,9 @@ type Props = {
   loading: boolean
   onToggle: () => void
 }
+
+const HIT_HERO = hitV(40)
+const HIT_ROW = hitV(28)
 
 /** The card's Join / Going ✓ button (the same word as the event page's footer), or the status pill that replaces it. */
 export function RsvpButton({ variant, isAttending, awaiting, loading, onToggle }: Props) {
@@ -41,11 +45,14 @@ export function RsvpButton({ variant, isAttending, awaiting, loading, onToggle }
       accessibilityRole="button"
       accessibilityState={{ disabled: loading, busy: loading }}
       activeOpacity={0.75}
-      style={[box, isAttending ? shared.ecRsvpOff : { backgroundColor: onFill, borderColor: onFill }]}
+      // 44-pt tap target around the drawn pill (#386, #388).
+      style={hero ? HIT_HERO : HIT_ROW}
     >
-      {loading
-        ? <Spinner size="small" color={ink} />
-        : <Text style={[text, { color: ink }]}>{isAttending ? 'Going ✓' : 'Join'}</Text>}
+      <View style={[box, isAttending ? shared.ecRsvpOff : { backgroundColor: onFill, borderColor: onFill }]}>
+        {loading
+          ? <Spinner size="small" color={ink} />
+          : <Text style={[text, { color: ink }]}>{isAttending ? 'Going ✓' : 'Join'}</Text>}
+      </View>
     </TouchableOpacity>
   )
 }

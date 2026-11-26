@@ -1,14 +1,6 @@
 {
   "_notes": {
-    "about": "Accepted findings for scripts/shots/stability-flow.mjs (#255): check → screen → viewport → kind → largest value. Shrink-only: lower or remove an entry when a fix lands (npm run stability:baseline); never raise one to get a PR through.",
-    "event-people": "#376 added the People-tab Back case; its desktop reload shows a 0.024 shift of the roster's middle column (407 → 333 px wide, under the splash) that predates #376. Accepted until it is fixed; remove this entry then."
+    "about": "Accepted findings for scripts/shots/stability-flow.mjs (#255): check → screen → viewport → kind → largest value. Shrink-only: lower or remove an entry when a fix lands (npm run stability:baseline); never raise one to get a PR through."
   },
-  "scroll": {
-    "event-people": {
-      "desktop": {
-        "reload:layout-shift": 0.024,
-        "reload:layout-shift@slow": 0.024
-      }
-    }
-  }
+  "scroll": {}
 }
