@@ -28,33 +28,38 @@ export function clubInitials(name: string): string {
   return words.slice(0, 2).map(w => w[0]!.toUpperCase()).join('') || '?'
 }
 
-/** The same fill for a club everywhere, from its name. */
-function clubTileColor(name: string): string {
+/** The same fill for a club (or a person without a photo) everywhere, from its name. */
+export function nameColor(name: string): string {
   let h = 0
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffffff
   return CLUB_TILE_COLORS[Math.abs(h) % CLUB_TILE_COLORS.length]
 }
 
-/** The club's picture, or its initials on its colour, as a rounded square. */
-export function ClubAvatarTile({ club, size, radius }: { club: ClubListItem; size: number; radius: number }) {
+/** A picture, or the name's initials on the name's colour: rounded square (clubs) or, with radius size / 2, a circle (people). */
+export function InitialsTile({ name, uri, size, radius }: { name: string; uri: string | null; size: number; radius: number }) {
+  const initialsSize = size > TILE / 2 ? theme.font.heading.hero : theme.font.heading.sm
+  return (
+    <View style={{ width: size, height: size, borderRadius: radius, overflow: 'hidden', flexShrink: 0, backgroundColor: nameColor(name), alignItems: 'center', justifyContent: 'center' }}>
+      {uri ? (
+        <Image source={{ uri }} style={{ width: size, height: size }} contentFit="cover" transition={150} />
+      ) : (
+        <Text style={{ fontFamily: theme.fonts.display, fontSize: initialsSize, color: theme.colors.white }} maxFontSizeMultiplier={1}>
+          {clubInitials(name)}
+        </Text>
+      )}
+    </View>
+  )
+}
+
+/** The club's picture (resolved from storage), or its initials on its colour, as a rounded square. */
+export function ClubAvatarTile({ club, size, radius }: { club: Pick<ClubListItem, 'name' | 'avatar_url'>; size: number; radius: number }) {
   const [uri, setUri] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
     resolveClubAvatarUri(club.avatar_url).then(u => { if (!cancelled) setUri(u) })
     return () => { cancelled = true }
   }, [club.avatar_url])
-  const initialsSize = size > TILE / 2 ? theme.font.heading.hero : theme.font.heading.sm
-  return (
-    <View style={{ width: size, height: size, borderRadius: radius, overflow: 'hidden', flexShrink: 0, backgroundColor: clubTileColor(club.name), alignItems: 'center', justifyContent: 'center' }}>
-      {uri ? (
-        <Image source={{ uri }} style={{ width: size, height: size }} contentFit="cover" transition={150} />
-      ) : (
-        <Text style={{ fontFamily: theme.fonts.display, fontSize: initialsSize, color: theme.colors.white }} maxFontSizeMultiplier={1}>
-          {clubInitials(club.name)}
-        </Text>
-      )}
-    </View>
-  )
+  return <InitialsTile name={club.name} uri={uri} size={size} radius={radius} />
 }
 
 /** One of your clubs: a big tile, its name, and your role or its size. */
