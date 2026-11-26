@@ -11,12 +11,13 @@ export const VOLLEYBALL_POSITION_OPTIONS: { value: VolleyballPosition; label: st
 ]
 
 export const VOLLEYBALL_SKILL_LEVEL_OPTIONS: { value: VolleyballSkillLevel; label: string }[] = [
-  { value: 'd',       label: 'D (Newbie)' },
-  { value: 'c',       label: SKILL_LEVEL_LABELS.c },
-  { value: 'b',       label: SKILL_LEVEL_LABELS.b },
-  { value: 'bb',      label: SKILL_LEVEL_LABELS.bb },
-  { value: 'a',       label: SKILL_LEVEL_LABELS.a },
+  // Best first, like every level list (#401).
   { value: 'aa_plus', label: SKILL_LEVEL_LABELS.aa_plus },
+  { value: 'a',       label: SKILL_LEVEL_LABELS.a },
+  { value: 'bb',      label: SKILL_LEVEL_LABELS.bb },
+  { value: 'b',       label: SKILL_LEVEL_LABELS.b },
+  { value: 'c',       label: SKILL_LEVEL_LABELS.c },
+  { value: 'd',       label: 'D (Newbie)' },
 ]
 
 /**
