@@ -1,9 +1,9 @@
 import { STALE } from '../constants/cache'
+import { TOURNAMENT_LIST_SELECT } from '../constants/selects'
 import { queryKey, useFocusRefetch, useQuery } from '../lib/query'
 import { supabase } from '../lib/supabase'
 import type { Tournament, TournamentListItem } from '../types'
 
-const LIST_SELECT = 'id, title, location, start_date, status, format, club_id, max_teams, clubs(name), tournament_teams(count)'
 
 /** How many tournaments the list reads (newest start dates first, then split client-side). */
 const LIST_LIMIT = 200
@@ -20,7 +20,7 @@ export function useTournamentList(userId: string | null) {
   const q = useQuery(key, async (): Promise<TournamentListItem[]> => {
     const { data, error } = await supabase
       .from('tournaments')
-      .select(LIST_SELECT)
+      .select(TOURNAMENT_LIST_SELECT)
       .eq('tournament_teams.status', 'registered')
       .order('start_date', { ascending: false })
       .limit(LIST_LIMIT)
