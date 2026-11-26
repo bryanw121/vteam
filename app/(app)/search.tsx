@@ -17,6 +17,7 @@ import { useOutsideSessionSheet } from '../../hooks/useOutsideSessionSheet'
 import { track } from '../../lib/analytics'
 import { profileDisplayName } from '../../utils'
 import { routes } from '../../utils/routes'
+import { hitSquare } from '../../utils/hitArea'
 import { VIEW } from '../../utils/urlViews'
 import { SEARCH_MAX_CHARS, isSearchable, searchResultCount } from '../../utils/search'
 import type { SearchClubRowProps, SearchHostRowProps, SearchScope } from '../../types'
@@ -116,7 +117,7 @@ export default function SearchScreen() {
               onKeyPress={e => { if (Platform.OS === 'web' && (e.nativeEvent as { key?: string }).key === 'Escape') setText('') }}
             />
             {text ? (
-              <TouchableOpacity onPress={() => { setText(''); inputRef.current?.focus() }} hitSlop={12} accessibilityRole="button" accessibilityLabel="Clear search" testID="search-clear">
+              <TouchableOpacity onPress={() => { setText(''); inputRef.current?.focus() }} hitSlop={12} style={hitSquare(18)} accessibilityRole="button" accessibilityLabel="Clear search" testID="search-clear">
                 <Ionicons name="close-circle" size={18} color={theme.colors.subtext} />
               </TouchableOpacity>
             ) : null}

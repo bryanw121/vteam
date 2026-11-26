@@ -180,7 +180,6 @@ export const EventsFeedDesktop = memo(function EventsFeedDesktop(p: EventsFeedDe
     }
     setInViewDate(prev => (prev === current ? prev : current))
   }, [dayDates])
-  const counts = useMemo(() => new Map(p.sections.filter(s => s.data.length > 0).map(s => [s.date, s.data.length])), [p.sections])
 
   return (
     <View style={{ flex: 1, flexDirection: 'row', backgroundColor: theme.colors.background }}>
@@ -256,7 +255,6 @@ export const EventsFeedDesktop = memo(function EventsFeedDesktop(p: EventsFeedDe
               onSelectDate={p.onSelectDate}
               onPrevMonth={p.onPrevMonth}
               onNextMonth={p.onNextMonth}
-              counts={counts}
               inViewDate={inViewDate}
             />
           </TourTarget>}

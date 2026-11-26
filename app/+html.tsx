@@ -79,7 +79,15 @@ export default function Root({ children }: { children: React.ReactNode }) {
           expo-font (theme.font.*). font-display: swap, so text paints at once in
           a fallback face and the root layout doesn't wait on fonts on web.
         */}
+        {/*
+          Every weight the app draws is preloaded (each ~14 KB): a weight fetched only when first
+          used swaps in after its text painted, and the new metrics moved the sidebar and lists on
+          reload (#387; since #385 all text is Outfit, mostly 500-700).
+        */}
         <link rel="preload" href="/fonts/outfit-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/outfit-latin-500-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/outfit-latin-600-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/outfit-latin-700-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/outfit-latin-800-normal.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         {/* @ts-ignore */}
         <style dangerouslySetInnerHTML={{ __html: WEB_FONT_FACES }} />

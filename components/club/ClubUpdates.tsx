@@ -5,8 +5,11 @@ import { Spinner } from '../ui/Spinner'
 import { ClubPostCard, ClubPostComposerModal } from '../ClubPostCard'
 import { PollComposerSheet } from './PollComposerSheet'
 import { shared, theme } from '../../constants'
+import { hitV } from '../../utils/hitArea'
 import type { ClubUpdatesProps } from '../../types'
 
+/** 44-pt tap target around a one-line text link (#386). */
+const LINK_HIT = hitV(15)
 const HIT = { top: 12, bottom: 12, left: 12, right: 12 }
 
 /** "Club updates" (members only): owners post and start polls (#175); everyone reads, likes and comments. */
@@ -18,10 +21,10 @@ export function ClubUpdates({ clubId, posts, likedPostIds, loading, userId, memb
         <Text style={shared.subheading}>Club updates</Text>
         {owner && (
           <View style={{ flexDirection: 'row', gap: theme.spacing.lg }}>
-            <TouchableOpacity onPress={() => setComposer('poll')} hitSlop={HIT} accessibilityRole="button" testID="club-new-poll">
+            <TouchableOpacity onPress={() => setComposer('poll')} hitSlop={HIT} style={LINK_HIT} accessibilityRole="button" testID="club-new-poll">
               <Text style={shared.clubLinkLabel}>New poll</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setComposer('post')} hitSlop={HIT} accessibilityRole="button" testID="club-new-post">
+            <TouchableOpacity onPress={() => setComposer('post')} hitSlop={HIT} style={LINK_HIT} accessibilityRole="button" testID="club-new-post">
               <Text style={shared.clubLinkLabel}>New post</Text>
             </TouchableOpacity>
           </View>

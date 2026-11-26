@@ -52,7 +52,12 @@ export function Pager({ page, onPageChange, children, swipeEnabled = SWIPE_NAVIG
 function SwipePager({ page, onPageChange, children, swipeEnabled = SWIPE_NAVIGATION.tabs, pagerBlockedRef }: Omit<Props, 'staticRender' | 'autoHeight'>) {
   const count = (children as React.ReactNode[]).length
   const [containerWidth, setContainerWidth] = useState(Dimensions.get('window').width)
-  const translateX = useRef(new Animated.Value(-page * containerWidth)).current
+  // Until the first layout measures the pager, pages are sized in % of it (the window width is
+  // wider than the pager next to the desktop sidebar: the roster laid out 1232 px wide, then
+  // 1008, a visible shift on reload, #387). Same views either way, so nothing remounts.
+  const [measured, setMeasured] = useState(false)
+  const measuredRef = useRef(false)
+  const translateX = useRef(new Animated.Value(0)).current
   const activePage = useRef(page)
 
   // Keep refs current so panResponder closures always see the latest values.
@@ -73,6 +78,8 @@ function SwipePager({ page, onPageChange, children, swipeEnabled = SWIPE_NAVIGAT
 
   useEffect(() => {
     activePage.current = page
+    // Before the first layout the % offset places the page; the layout sets translateX.
+    if (!measuredRef.current) return
     Animated.spring(translateX, {
       toValue: -page * widthRef.current,
       useNativeDriver: true,
@@ -123,10 +130,12 @@ function SwipePager({ page, onPageChange, children, swipeEnabled = SWIPE_NAVIGAT
       style={{ flex: 1, overflow: 'hidden' }}
       onLayout={(e) => {
         const w = e.nativeEvent.layout.width
-        if (w > 0 && w !== widthRef.current) {
+        if (w > 0 && (w !== widthRef.current || !measured)) {
           widthRef.current = w
           setContainerWidth(w)
           translateX.setValue(-activePage.current * w)
+          measuredRef.current = true
+          setMeasured(true)
         }
       }}
       {...panResponder.panHandlers}
@@ -134,11 +143,12 @@ function SwipePager({ page, onPageChange, children, swipeEnabled = SWIPE_NAVIGAT
       <Animated.View style={{
         flex: 1,
         flexDirection: 'row',
-        width: containerWidth * count,
+        width: measured ? containerWidth * count : `${count * 100}%`,
+        marginLeft: measured ? 0 : `${-page * 100}%`,
         transform: [{ translateX }],
       }}>
         {(children as React.ReactNode[]).map((child, i) => (
-          <View key={i} style={{ width: containerWidth, flex: 1 }}>
+          <View key={i} style={{ width: measured ? containerWidth : `${100 / count}%`, flex: 1 }}>
             {child}
           </View>
         ))}

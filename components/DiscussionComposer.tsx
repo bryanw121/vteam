@@ -235,7 +235,7 @@ export function DiscussionComposer({
           accessibilityLabel={isEditing ? 'Save edit' : 'Send comment'}
           style={{
             width: 44, height: 44,
-            borderRadius: 10,
+            borderRadius: 22,
             backgroundColor: theme.colors.primary,
             alignItems: 'center', justifyContent: 'center',
             opacity: !draft.trim() || posting ? 0.4 : 1,

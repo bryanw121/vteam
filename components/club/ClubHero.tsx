@@ -45,11 +45,13 @@ export function ClubHero({ club, coverUri, avatarUri, topInset, owner, editing, 
         </View>
 
         {owner && (
-          <TouchableOpacity onPress={() => onPickImage('cover')} style={shared.clubCoverEditBtn} disabled={uploading.cover} accessibilityRole="button">
-            {uploading.cover
-              ? <Spinner size="small" color={theme.colors.white} />
-              : <Ionicons name="camera-outline" size={14} color={theme.colors.white} />}
-            <Text style={shared.clubCoverEditLabel}>{coverUri ? 'Edit cover' : 'Add cover'}</Text>
+          <TouchableOpacity onPress={() => onPickImage('cover')} style={shared.clubCoverEditHit} disabled={uploading.cover} accessibilityRole="button">
+            <View style={shared.clubCoverEditBtn}>
+              {uploading.cover
+                ? <Spinner size="small" color={theme.colors.white} />
+                : <Ionicons name="camera-outline" size={14} color={theme.colors.white} />}
+              <Text style={shared.clubCoverEditLabel}>{coverUri ? 'Edit cover' : 'Add cover'}</Text>
+            </View>
           </TouchableOpacity>
         )}
       </View>
