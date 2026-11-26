@@ -1,4 +1,4 @@
-import { darkColors, lightColors } from '../constants/theme'
+import { CLUB_TILE_COLORS, darkColors, lightColors } from '../constants/theme'
 import { DOCUMENT_BACKGROUND } from '../constants/colorScheme'
 
 // Every text colour of both palettes stays readable (WCAG AA, 4.5:1) on the
@@ -50,4 +50,8 @@ it('the page background before the app loads matches each palette', () => {
 
 it('both palettes have every token', () => {
   expect(Object.keys(darkColors).sort()).toEqual(Object.keys(lightColors).sort())
+})
+
+test.each([...CLUB_TILE_COLORS])('white text on the club and tournament cover fill %s reads at 4.5:1', fill => {
+  expect(contrast('#FFFFFF', fill)).toBeGreaterThanOrEqual(4.5)
 })

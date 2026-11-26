@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     ...theme.shadow.card,
   },
   cover: { height: 92, paddingHorizontal: 14, paddingVertical: 12, justifyContent: 'space-between' },
-  coverPill: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: theme.radius.full, backgroundColor: theme.colors.white + '38' },
+  coverPill: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: theme.radius.full, backgroundColor: theme.colors.black + '33' },
   coverPillText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.xs, color: theme.colors.white },
   coverTitle: { fontFamily: theme.fonts.display, fontSize: theme.font.size.lg, letterSpacing: -0.3, color: theme.colors.white },
   body: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 12, gap: 6 },
