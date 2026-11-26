@@ -57,6 +57,9 @@ async function openTab(page: Page, tab: string) {
   await press(page, `tournament-tab-${tab}`)
 }
 
+/** What the edit test writes into the description (#402). */
+const EDITED_NOTE = 'Edited by the e2e host: bring water.'
+
 test.describe('Tournament flow', () => {
   let tournamentUrl = ''
 
@@ -105,6 +108,23 @@ test.describe('Tournament flow', () => {
     }
     await openTab(page, 'teams')
     await expect(page.getByText(MY_TEAM, { exact: true }).first()).toBeVisible({ timeout: 15_000 })
+  })
+
+  test('host edits the tournament: same wizard, filled in, one Save that tells the players (#402)', async ({ page }) => {
+    test.skip(!tournamentUrl, 'needs the tournament from the previous tests')
+    await gotoReady(page, tournamentUrl, page.getByTestId('tournament-edit-button'))
+    await press(page, 'tournament-edit-button')
+    const description = page.getByPlaceholder('What should players know?')
+    await expect(page.getByText('Edit tournament', { exact: true })).toBeVisible({ timeout: 20_000 })
+    // Seeded from the saved tournament, not a blank draft.
+    await expect(page.getByPlaceholder('e.g. Summer Slam 2026')).toHaveValue(TOURNAMENT_TITLE, { timeout: 20_000 })
+    await description.fill(EDITED_NOTE)
+    for (let i = 0; i < 4; i++) await page.getByText('Continue', { exact: true }).click({ force: true })
+    const saved = page.waitForResponse(r => r.url().includes('/rest/v1/rpc/update_tournament') && r.ok(), { timeout: 20_000 })
+    await pressWhenEnabled(page, 'tournament-edit-save')
+    await saved
+    await expect(page).toHaveURL(/\/tournament\/[0-9a-f-]{36}$/, { timeout: 20_000 })
+    await expect(page.getByText(EDITED_NOTE).first()).toBeVisible({ timeout: 15_000 })
   })
 
   test('schedule generates a bracket; recording the final completes the tournament', async ({ page }) => {

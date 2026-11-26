@@ -66,3 +66,13 @@ export const EVENT_EDIT_SELECT =
 /** Event detail: the row, its host, every attendee with profile, and its tags. */
 export const EVENT_DETAIL_SELECT =
   `${EVENT_DETAIL_COLUMNS}, profiles!events_created_by_fkey (${PROFILE_BRIEF}), event_attendees (${ATTENDEE_SELECT}), event_tags (tag_id, tags (id, name, category, display_order))`
+
+/**
+ * Tournaments reach clubs through club_id and through tournament_clubs (#401), so an
+ * embed must name the foreign key or PostgREST refuses it (PGRST201). Both selects
+ * live here so e2e/rls.spec.ts can run them against beta exactly as the app does.
+ */
+export const TOURNAMENT_LIST_SELECT =
+  'id, title, location, start_date, status, format, club_id, max_teams, clubs!tournaments_club_id_fkey(name), tournament_teams(count)'
+export const TOURNAMENT_FEED_SELECT =
+  'id, created_by, club_id, title, location, start_date, max_teams, price, skill_levels, status, created_at, profiles!tournaments_created_by_fkey(id, username, first_name, last_name, avatar_url), clubs!tournaments_club_id_fkey(id, name, avatar_url)'

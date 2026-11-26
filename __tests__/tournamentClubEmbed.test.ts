@@ -6,12 +6,12 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-const FILES = ['hooks/useTournamentList.ts', 'hooks/feed/fallback.ts']
+const FILES = ['constants/selects.ts']
 
 describe('tournament → clubs embeds', () => {
   it.each(FILES)('%s names tournaments_club_id_fkey', file => {
     const src = readFileSync(join(__dirname, '..', file), 'utf8')
-    const tournamentSelects = src.split('\n').filter(l => /tournament/i.test(l) && /clubs\s*[(!]/.test(l))
+    const tournamentSelects = src.split('\n').filter(l => !/^\s*(\*|\/)/.test(l) && /tournament/i.test(l) && /clubs\s*[(!]/.test(l))
     expect(tournamentSelects.length).toBeGreaterThan(0)
     for (const line of tournamentSelects) expect(line).not.toMatch(/clubs\s*\(/)
   })

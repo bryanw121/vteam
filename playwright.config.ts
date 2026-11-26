@@ -46,8 +46,14 @@ export default defineConfig({
       testMatch: ['**/guest.spec.ts', '**/*.guest.spec.ts'],
     },
     {
+      // The scheduled integration suite (.github/workflows/integration.yml): API only, no
+      // browser or stored session; each file signs the e2e account in itself.
+      name: 'integration',
+      testMatch: '**/integration/*.int.spec.ts',
+    },
+    {
       name: 'chromium',
-      testIgnore: ['**/*.setup.ts', '**/auth.verify.ts', '**/guest.spec.ts', '**/*.guest.spec.ts'],
+      testIgnore: ['**/*.setup.ts', '**/auth.verify.ts', '**/guest.spec.ts', '**/*.guest.spec.ts', '**/integration/**'],
       use: { storageState: AUTH_FILE },
       dependencies: ['auth-check'],
     },
