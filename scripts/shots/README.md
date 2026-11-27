@@ -141,7 +141,9 @@ add its link case.
 ## Adding a screen
 
 Add an entry to `SCREENS` in `screens.mjs`: `route`, `signedIn` (default true),
-`ready` (text that appears once data has loaded), optional `actions`
+`ready` (text that only the screen's own state shows, once data has loaded; not an
+input's value, which text search doesn't see) or `readyTestId` (a testID that must be
+visible), optional `actions`
 (`{ tap: testID, text }` with `text` as the fallback for older refs, `{ click: text }`, `{ scroll: px }`, `{ wait: ms }`), and
 `sources`, the globs of files that change it. In globs only `**`, `*`, `?` and
 `{a,b}` are special, so route files are written as they are
@@ -149,6 +151,12 @@ Add an entry to `SCREENS` in `screens.mjs`: `route`, `signedIn` (default true),
 `lib`, `contexts`) select `DEFAULT_SCREENS`. If the screen reads a table the
 fixtures don't have, add rows to `fixtures/index.mjs`; if it calls a new RPC,
 add a handler in `lib/supabaseMock.mjs`.
+
+A screen that never shows its `ready` state fails `capture.mjs`, `a11y.mjs` and the UI
+consistency check (#421): they would otherwise judge some other state (a loading screen, or
+the no-show card instead of the recap, which hid the recap from every check for weeks).
+Pick ready text that doesn't depend on the date: the nightly stability job captures every
+screen on the 10th and the 28th of the month (`--now`), when the phone feed holds different months.
 
 `node --test scripts/shots/*.test.mjs` covers the PostgREST mock, the glob
 matching and the fixtures (run in CI next to the other script tests).

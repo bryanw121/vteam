@@ -4,7 +4,9 @@
  *   name: {
  *     route,       path to open (fixture ids from fixtures/index.mjs)
  *     signedIn,    capture with the fake session (default true)
- *     ready,       text that must be on screen before the shot (best effort; a miss is reported, not fatal)
+ *     ready,       text that must be on screen before the shot; a miss fails capture, axe and the UI check (#421),
+ *                  since they would judge some other state. Pick text the screen's own state shows, not an input's value
+ *     readyTestId, or a testID that must be visible (when no text is specific to the state)
  *     actions,     steps after load: { tap: testID, text? } (text: fallback when an older ref lacks the testID)
  *                  | { click: text } | { scroll: px } | { wait: ms }
  *     fullPage,    capture the whole scroll height instead of the viewport
@@ -51,7 +53,8 @@ export const SCREENS = {
   },
   // Shareable links: each opens straight on the view it names.
   'events-feed-link': {
-    route: '/?type=tournament&surface=sand', ready: 'Lunchtime Pepper', fullPage: true,
+    // The feed under a link's filters: whatever the month holds, the list itself is the state (#421).
+    route: '/?type=tournament&surface=sand', readyTestId: 'events-feed', fullPage: true,
     sources: ['app/(app)/(tabs)/(main)/index.tsx', 'hooks/useUrlParam.ts', 'utils/urlState.ts', 'utils/urlViews.ts', 'components/ShareLinkButton.tsx'],
   },
   // An outside session's sheet from a shared link (#348): note, directions, Also on, sign-up.
@@ -70,7 +73,8 @@ export const SCREENS = {
   },
   'event-details': { route: `/event/${E.sundaySand}`, ready: 'Butler Park', sources: EVENT_DETAIL },
   // Game recap (#227): a finished game the viewer played (Your game, Share), and a guest's view of it (the host's next game).
-  'event-past-recap': { route: `/event/${E.pastIndoor}`, ready: 'Your game', sources: [...EVENT_DETAIL, 'components/event/RecapFooter.tsx', 'components/event/YourGameCard.tsx', 'hooks/useMyGameRecap.ts', 'hooks/useHostNextGame.ts', 'utils/recap.ts'] },
+  // pastSand: the viewer attended and wasn't flagged (pastIndoor is the no-show screen's, #421).
+  'event-past-recap': { route: `/event/${E.pastSand}`, ready: 'Your game', sources: [...EVENT_DETAIL, 'components/event/RecapFooter.tsx', 'components/event/YourGameCard.tsx', 'hooks/useMyGameRecap.ts', 'hooks/useHostNextGame.ts', 'utils/recap.ts'] },
   'event-past-guest': { route: `/event/${E.pastIndoor}`, signedIn: false, ready: 'plays again', sources: [...EVENT_DETAIL, 'components/event/RecapFooter.tsx', 'hooks/useHostNextGame.ts'] },
   // No-show flag (#151): what a flagged player sees on Details.
   'event-details-noshow': { route: `/event/${E.pastIndoor}`, ready: 'Marked as a no-show', sources: EVENT_DETAIL },
@@ -125,7 +129,7 @@ export const SCREENS = {
     route: '/profile', ready: 'Maya',
     sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/**', 'components/ProfileAvatar.tsx', 'components/BadgeIcon.tsx', 'hooks/useMyProfile.ts', 'hooks/useAdminMetrics.ts', 'hooks/useBadges.ts', 'constants/badges.ts', 'constants/badgeArtwork.ts', 'assets/badges/**'],
   },
-  'profile-edit-link': { route: '/profile?edit=1', ready: 'Maya', sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/EditProfileForm.tsx', 'hooks/useUrlParam.ts'] },
+  'profile-edit-link': { route: '/profile?edit=1', ready: 'First Name', sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/profile/EditProfileForm.tsx', 'hooks/useUrlParam.ts'] },
   'profile-own-guest': { route: '/profile', signedIn: false, sources: ['app/(app)/(tabs)/(main)/profile/**', 'components/SignInPrompt.tsx'] },
   'chat-guest': { route: '/chat', signedIn: false, ready: 'Chat with your club', sources: ['app/(app)/(tabs)/(main)/chat.tsx', 'components/SignInPrompt.tsx'] },
   'profile-other': {

@@ -30,6 +30,31 @@ export function alsoOn(session: ExternalSession, sessions: readonly ExternalSess
     .slice(0, max)
 }
 
+/**
+ * Whether the sheet should read later dates itself (#421): the loaded feed found fewer than
+ * `max`. On phones the feed holds only the current week's months, so in the last week of a
+ * month next month's dates aren't loaded; a link from another region has none loaded at all.
+ */
+export function alsoOnNeedsRead(foundInFeed: number, max = ALSO_ON_MAX): boolean {
+  return foundInFeed < max
+}
+
+/**
+ * "Also on" from the loaded feed plus rows read for this session's source (#421). Read rows
+ * the feed would hide (a scraped source not confirmed for a week) stay out, as they would
+ * in the feed. `today` is the viewer's local date key.
+ */
+export function mergeAlsoOn(
+  session: ExternalSession,
+  loaded: readonly ExternalSession[],
+  read: readonly ExternalSession[],
+  today: string,
+  max = ALSO_ON_MAX,
+): ExternalSession[] {
+  const shown = read.filter(s => sessionConfirmation(s, today).state !== 'hidden')
+  return alsoOn(session, [...loaded, ...shown], max)
+}
+
 /** What to search for in a maps app: the venue and its city. */
 export function directionsQuery(session: Pick<ExternalSession, 'venue' | 'city'>): string {
   return [session.venue, session.city].map(s => s?.trim()).filter(Boolean).join(', ')

@@ -2,7 +2,8 @@ name: Stability (nightly, full)
 
 # The full stability check (#255) on main: every tour × filter state, every
 # long screen on refresh and Back (guest and signed in), every shareable link,
-# each at normal speed and again with every Supabase response delayed 800 ms.
+# each at normal speed and again with every Supabase response delayed 800 ms,
+# and every shots screen reaching its ready state on the 10th and the 28th (#421).
 # PRs run the smaller set in ci.yml's a11y job. Against the mocked export, so
 # no secrets and no database. GitHub emails the owner when a scheduled run fails.
 on:
@@ -47,6 +48,19 @@ jobs:
         run: scripts/ci/install-playwright-deps.sh
       - name: Stability check (full)
         run: node scripts/shots/stability-flow.mjs --dist dist-mock --out stability-report --full
+      # Every screen reaches its ready state on a mid-month day and in a month's last week (#421):
+      # what a screen shows can depend on the date (on phones the feed loads only the current week's
+      # months), so a check that passes on the 10th can be judging another state on the 28th.
+      - name: Every screen ready, mid-month and month end
+        if: always()
+        run: |
+          for day in 10 28; do
+            now=$(node -e "const d=new Date(); console.log(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), $day, 16)).toISOString())")
+            echo "::group::Screens at $now"
+            node scripts/shots/capture.mjs --dist dist-mock --out "screens-$day" --desktop --now "$now" > /dev/null || failed=1
+            echo "::endgroup::"
+          done
+          exit ${failed:-0}
       - name: Job summary
         if: always() && hashFiles('stability-report/summary.md') != ''
         run: cat stability-report/summary.md >> "$GITHUB_STEP_SUMMARY"

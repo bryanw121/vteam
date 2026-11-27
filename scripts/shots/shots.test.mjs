@@ -181,3 +181,30 @@ test('startup: over budget, a new duplicate and slow paint fail; fewer reads onl
   assert.match(fewer.notes[0], /lower it/)
   assert.match(compareStartup({}, { x: { paintMs: 1, requests: 1, duplicates: [], requestList: [] } }).notes[0], /no budget yet/)
 })
+
+// #421: a screen that never shows its ready state is a failure, not a pass.
+import { readyFailures } from './capture.mjs'
+
+test('readyFailures names every screen that never reached its ready state', () => {
+  const results = [
+    { screen: 'event-past-recap', size: 'mobile', ready: false },
+    { screen: 'event-past-recap', size: 'desktop', ready: true },
+    { screen: 'events-feed-link', size: 'desktop', ready: false },
+    { screen: 'profile-own-guest', size: 'mobile', ready: null },
+  ]
+  assert.deepEqual(readyFailures(results), [
+    `event-past-recap (mobile): never showed "${SCREENS['event-past-recap'].ready}"`,
+    `events-feed-link (desktop): never showed testID "${SCREENS['events-feed-link'].readyTestId}"`,
+  ])
+})
+
+test('every screen waits for one thing: ready text or a testID, not both', () => {
+  for (const [name, s] of Object.entries(SCREENS)) {
+    assert.ok(!(s.ready && s.readyTestId), `${name} has both ready and readyTestId`)
+    if (s.ready !== undefined) assert.ok(typeof s.ready === 'string' && s.ready.trim(), `${name}: empty ready text`)
+  }
+})
+
+test('the recap screen is not the no-show screen (#421: they shared an event, so the recap was never shown)', () => {
+  assert.notEqual(SCREENS['event-past-recap'].route, SCREENS['event-details-noshow'].route)
+})

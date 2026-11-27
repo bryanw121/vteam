@@ -132,7 +132,9 @@ export async function visitScreen(browser, baseUrl, name, screen, size, opts, on
     if (seed) await page.addInitScript(entries => { for (const [k, v] of Object.entries(entries)) sessionStorage.setItem(k, v) }, seed)
     await page.goto(baseUrl + screen.route, { waitUntil: 'load', timeout: 30000 })
     const loadedAt = Date.now()
-    if (screen.ready) {
+    if (screen.readyTestId) {
+      result.ready = await page.getByTestId(screen.readyTestId).first().waitFor({ state: 'visible', timeout: 15000 }).then(() => true, () => false)
+    } else if (screen.ready) {
       result.ready = await page.getByText(screen.ready, { exact: false }).first().waitFor({ state: 'visible', timeout: 15000 }).then(() => true, () => false)
     } else {
       await page.waitForTimeout(1500)
@@ -154,6 +156,33 @@ export async function visitScreen(browser, baseUrl, name, screen, size, opts, on
     await context.close()
   }
   return result
+}
+
+/**
+ * Screens that never showed what they wait for (`ready` text or `readyTestId`, #421): every
+ * check that judged them looked at some other state (a loading screen, a no-show card instead
+ * of the recap), so callers fail on these rather than pass them. Pure.
+ * @param {{ screen: string, size: string, ready: boolean | null }[]} results
+ * @returns {string[]} one line per miss: "<screen> (<size>): never showed <what>"
+ */
+export function readyFailures(results) {
+  return results
+    .filter(r => r.ready === false)
+    .map(r => {
+      const s = SCREENS[r.screen] ?? {}
+      const what = s.readyTestId ? `testID "${s.readyTestId}"` : `"${s.ready}"`
+      return `${r.screen} (${r.size}): never showed ${what}`
+    })
+}
+
+/** Print `readyFailures` (and GitHub annotations in CI); returns whether there were any. */
+export function reportReadyFailures(results, label) {
+  const misses = readyFailures(results)
+  for (const m of misses) {
+    process.stderr.write(`[${label}] FAIL ${m}\n`)
+    if (process.env.GITHUB_ACTIONS) console.log(`::error title=${label}: screen not ready::${m} (fix its ready text in scripts/shots/screens.mjs, or the fixtures)`)
+  }
+  return misses.length > 0
 }
 
 /** The screenshot `onReady`: writes <out>/<screen>[-desktop]<suffix>.png. */
@@ -241,4 +270,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     scheme: args.scheme === 'dark' ? 'dark' : 'light',
   })
   console.log(JSON.stringify(results.map(r => ({ screen: r.screen, size: r.size, file: r.file, ready: r.ready, misses: r.misses, errors: r.errors })), null, 2))
+  if (reportReadyFailures(results, 'shots')) process.exit(1)
 }

@@ -21,7 +21,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { parseArgs, visitScreens } from './capture.mjs'
+import { parseArgs, readyFailures, reportReadyFailures, visitScreens } from './capture.mjs'
 import { SCREENS } from './screens.mjs'
 import { baselineFrom, diffBaseline, renderHtml, renderMarkdown } from './lib/a11yBaseline.mjs'
 
@@ -56,7 +56,7 @@ export async function runA11y(o) {
   )
   const scans = results.map(r => ({
     screen: r.screen, size: r.size, ready: r.ready, misses: r.misses,
-    // A screen whose ready text never showed is still scanned (as the shots tool shoots it); only a failed load counts as an error.
+    // A screen whose ready text never showed is still scanned, and then fails the run (#421); a failed load is a scan error.
     errors: r.output ? [] : r.errors, pageErrors: r.output ? r.errors : [],
     violations: r.output ?? [],
   }))
@@ -83,7 +83,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   })
   const baseline = existsSync(BASELINE_FILE) ? JSON.parse(readFileSync(BASELINE_FILE, 'utf8')) : {}
 
+  const notReady = reportReadyFailures(scans, 'a11y')
   if (args['update-baseline']) {
+    if (notReady) { process.stderr.write('[a11y] baseline not written: a screen never reached its ready state\n'); process.exit(1) }
     const failed = scans.filter(s => s.errors.length)
     let next = baselineFrom(scans, baseline)
     // A full run drops screens that no longer exist.
@@ -102,7 +104,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   mkdirSync(out, { recursive: true })
   writeFileSync(join(out, 'a11y-report.json'), JSON.stringify({ axeVersion: AXE_VERSION, tags: AXE_TAGS, seconds, ok: diff.ok, failures: diff.failures, improvements: diff.improvements, stale: diff.stale, results: scans }, null, 2))
   writeFileSync(join(out, 'index.html'), renderHtml(scans, diff, meta))
-  const md = renderMarkdown(scans, diff, meta)
+  const notReadyLines = readyFailures(scans)
+  const md = renderMarkdown(scans, diff, meta) + (notReadyLines.length ? `\n**Screens that never reached their ready state** (fix \`ready\` in scripts/shots/screens.mjs or the fixtures):\n\n${notReadyLines.map(l => `- ${l}`).join('\n')}\n` : '')
   writeFileSync(join(out, 'summary.md'), md)
   // What `a11y:baseline` would write from this scan. CI's fonts can move a few contrast nodes
   // on wide screens: copy this file from the CI artifact rather than regenerating locally.
@@ -114,5 +117,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     // GitHub shows these on the PR's checks (the first 10 per step).
     if (process.env.GITHUB_ACTIONS) console.log(`::error title=a11y ${f.rule ?? 'scan error'}::${msg.replace(/\n/g, ' ')}`)
   }
-  process.exit(diff.ok ? 0 : 1)
+  process.exit(diff.ok && !notReady ? 0 : 1)
 }

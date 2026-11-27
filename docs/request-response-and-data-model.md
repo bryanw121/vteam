@@ -438,7 +438,7 @@ types fall into four groups:
 > Do not edit this section by hand. Run `npm run docs:update` and commit the
 > result. CI runs `npm run docs:check` and blocks a merge if it is stale.
 >
-> Inventory fingerprint: `aa9845ed6279`
+> Inventory fingerprint: `387fa86c5181`
 
 This inventory is generated from the repository's TypeScript and SQL. It is the
 fast lookup layer; the surrounding prose explains intent and relationships.
@@ -474,7 +474,7 @@ fast lookup layer; the surrounding prose explains intent and relationships.
 | `event_payments` | [`hooks/event/useEventPayments.ts:13`](../hooks/event/useEventPayments.ts#L13) |
 | `events` | [`hooks/event/useDeleteEvent.ts:14`](../hooks/event/useDeleteEvent.ts#L14)<br>[`hooks/event/useEventData.ts:31`](../hooks/event/useEventData.ts#L31)<br>[`hooks/feed/fallback.ts:26`](../hooks/feed/fallback.ts#L26)<br>[`hooks/host/useHostContext.ts:44`](../hooks/host/useHostContext.ts#L44)<br>[`hooks/host/useHostForm.ts:63`](../hooks/host/useHostForm.ts#L63)<br>[`hooks/useClub.ts:46`](../hooks/useClub.ts#L46)<br>+5 more files |
 | `external_programs` | [`hooks/useExternalPrograms.ts:17`](../hooks/useExternalPrograms.ts#L17) |
-| `external_sessions` | [`hooks/feed/fallback.ts:62`](../hooks/feed/fallback.ts#L62)<br>[`hooks/useOutsideSession.ts:17`](../hooks/useOutsideSession.ts#L17) |
+| `external_sessions` | [`hooks/feed/fallback.ts:62`](../hooks/feed/fallback.ts#L62)<br>[`hooks/useOutsideSession.ts:17`](../hooks/useOutsideSession.ts#L17)<br>[`utils/alsoOnQuery.ts:21`](../utils/alsoOnQuery.ts#L21) |
 | `feedback_submissions` | [`app/(app)/(tabs)/settings/feedback.tsx:71`](../app/%28app%29/%28tabs%29/settings/feedback.tsx#L71)<br>[`supabase/functions/send-feedback-email/handler.ts:88`](../supabase/functions/send-feedback-email/handler.ts#L88) |
 | `friend_requests` | [`hooks/useFriends.ts:37`](../hooks/useFriends.ts#L37) |
 | `friendships` | [`hooks/useFriends.ts:36`](../hooks/useFriends.ts#L36) |

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useUrlParam } from './useUrlParam'
 import { useOutsideSession } from './useOutsideSession'
+import { useAlsoOn } from './useAlsoOn'
 import { OutsideSessionSheet } from '../components/events/OutsideSessionSheet'
 import { VIEW } from '../utils/urlViews'
-import { alsoOn } from '../utils/outsideSession'
 import { track } from '../lib/analytics'
 import { toast } from '../lib/toast'
 import { ANALYTICS_EVENTS } from '../constants/analytics'
@@ -82,7 +82,7 @@ export function useOutsideSessionSheet({ events = NO_EVENTS, sessions: given, on
     if (item && onHide) onHide(item)
   }, [onHide])
 
-  const others = useMemo(() => (session ? alsoOn(session, sessions) : []), [session, sessions])
+  const others = useAlsoOn(session, sessions)
 
   const sheet = (
     <OutsideSessionSheet
