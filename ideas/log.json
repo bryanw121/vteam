@@ -733,8 +733,9 @@
     "n": 1,
     "title": "Screens that prove what they show: a shots screen that never gets ready fails, and the four stale ones are fixed",
     "bucket": "testing",
-    "status": "proposed",
-    "summary": "7 screen×viewport pairs never reach their ready text and screenshots/axe/UI checks pass them anyway; fail on a ready miss, fix event-past-recap (no-show fixture hides the recap card), feed-link, profile-edit and session sheet, and fix 'Also on' missing next month's dates on phones in the last week of every month; nightly capture at two clocks."
+    "status": "approved",
+    "summary": "7 screen×viewport pairs never reach their ready text and screenshots/axe/UI checks pass them anyway; fail on a ready miss, fix event-past-recap (no-show fixture hides the recap card), feed-link, profile-edit and session sheet, and fix 'Also on' missing next month's dates on phones in the last week of every month; nightly capture at two clocks.",
+    "issue": 421
   },
   {
     "date": "2026-11-27",
