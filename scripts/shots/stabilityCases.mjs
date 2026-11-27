@@ -56,6 +56,7 @@ export const LINK_CASES = [
   // No Sheet URL in the mock, so the scores screen draws its empty state: the link is only checked to stay.
   { view: 'scores', path: '/scores/texasao-2026-11-14?view=brackets&division=Gold', keep: { view: 'brackets', division: 'Gold' } },
   { view: 'login', path: '/login?mode=reset', guest: true, keep: { mode: 'reset' } },
+  { view: 'scorekeeper', path: '/scorekeeper?mode=official', keep: { mode: 'official' }, change: { testId: 'scorekeeper-mode-simple' }, after: { mode: null } },
 ]
 
 const TYPES = ['all', 'open_play', 'tournament']

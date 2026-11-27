@@ -13,7 +13,6 @@ import { ProfileMenu } from '../../../../../components/profile/ProfileMenu'
 import { useTour } from '../../../../../contexts/tour'
 import { EditProfileForm } from '../../../../../components/profile/EditProfileForm'
 import { TrophyCase } from '../../../../../components/profile/TrophyCase'
-import { AppearanceSwitch } from '../../../../../components/profile/AppearanceSwitch'
 import { useUserTrophies } from '../../../../../hooks/useUserTrophies'
 import { useAvatarUploader } from '../../../../../components/profile/useAvatarUploader'
 import { PROFILE_TAB_INDEX, shared, theme } from '../../../../../constants'
@@ -149,7 +148,6 @@ function MyProfileBody({ profile, totalCheers, totalPoints, badges, saving, upda
         {section === 'menu' ? (
           <>
             <TrophyCase trophies={trophies.data ?? []} own />
-            <AppearanceSwitch />
             <ProfileMenu
               onOpen={s => router.push(routes.settings(s))}
               onTakeTour={() => tour.start('intro', 'profile_menu')}

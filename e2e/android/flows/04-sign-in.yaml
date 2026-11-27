@@ -46,6 +46,8 @@ tags: [signed-in]
 - tapOn:
     id: experiment-scorekeeper
 - tapOn:
+    id: scorekeeper-mode-official
+- tapOn:
     id: open-example
 - extendedWaitUntil:
     visible:
