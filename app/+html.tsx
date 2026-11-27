@@ -43,6 +43,14 @@ export default function Root({ children }: { children: React.ReactNode }) {
           a dark page flashes the light background while the scripts download.
         */}
         <script dangerouslySetInnerHTML={{ __html: COLOR_SCHEME_SCRIPT }} />
+        {/*
+          Browser tab title, in the HTML itself. Expo Router's head manager only sets
+          it once the scripts have run (the export's headNodes carry no <title>), so
+          without this a tab reads "Untitled" while vteam loads, and for good when the
+          browser restores or keeps a tab without running it. api/event-page.ts
+          replaces it with the event's title for shared links.
+        */}
+        <title>{APP_NAME}</title>
         {/* PWA / Add to Home Screen */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
