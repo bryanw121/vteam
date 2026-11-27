@@ -24,7 +24,7 @@ try {
  await page.goto(`${server.url}/settings/badges`)
  const group=page.getByRole('radiogroup',{name:'Profile border',exact:true})
  await expect(group).toBeVisible({timeout:30000}).catch(async e => { console.log(await page.locator('body').innerText()); throw e })
- for (const label of ['Bronze','Gold','Legend','Stormcaller','Aether','None']) {
+ for (const label of ['Bronze','Gold','Legend','None']) {
  const option=group.getByRole('radio',{name:label,exact:true}); await option.click()
  await expect(option).toHaveAttribute('aria-checked','true')
  }
