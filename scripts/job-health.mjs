@@ -29,18 +29,20 @@ const HOUR = 60 * MIN
  * How long each pg_cron job may go without a successful run before it counts
  * as broken: about two missed runs plus slack. A new cron job needs an entry
  * here (CI fails until it has one). `only` limits a job to one project.
+ * `betaMaxAgeMs` is the limit on vteam beta, which runs some timers less often
+ * (scripts/beta-cron-schedules.sql: a free server that only serves CI).
  */
 export const EXPECTATIONS = {
-  'award-event-points': { maxAgeMs: 45 * MIN, what: 'points after games (every 15 min)' },
-  'event-reminders': { maxAgeMs: 30 * MIN, what: 'event reminders (every 10 min)' },
-  'new-game-alerts': { maxAgeMs: 30 * MIN, what: 'new game alerts (every 10 min)' },
+  'award-event-points': { maxAgeMs: 45 * MIN, betaMaxAgeMs: 2.5 * HOUR, what: 'points after games (every 15 min)' },
+  'event-reminders': { maxAgeMs: 30 * MIN, betaMaxAgeMs: 2.5 * HOUR, what: 'event reminders (every 10 min)' },
+  'new-game-alerts': { maxAgeMs: 30 * MIN, betaMaxAgeMs: 2.5 * HOUR, what: 'new game alerts (every 10 min)' },
   'ingest-schelagg-feed': { maxAgeMs: 2.5 * HOUR, what: 'outside sessions import (hourly)' },
   'ingest-schelagg-programs': { maxAgeMs: 4.5 * HOUR, what: 'leagues and tournaments import (every 2 h)' },
   'kudos-reminders': { maxAgeMs: 30 * MIN, what: 'kudos reminders (every 10 min)', only: 'live' },
   'prune-app-events': { maxAgeMs: 26 * HOUR, what: 'usage metrics rollup and prune (daily)' },
   'prune-app-online': { maxAgeMs: 26 * HOUR, what: 'online-now rollup and prune (daily)' },
-  'prune-rate-limits': { maxAgeMs: 2.5 * HOUR, what: 'rate limit cleanup (hourly)' },
-  'sample-app-online': { maxAgeMs: 10 * MIN, what: 'online-now sample (every minute)' },
+  'prune-rate-limits': { maxAgeMs: 2.5 * HOUR, betaMaxAgeMs: 13 * HOUR, what: 'rate limit cleanup (hourly)' },
+  'sample-app-online': { maxAgeMs: 10 * MIN, betaMaxAgeMs: 75 * MIN, what: 'online-now sample (every minute)' },
   'vclub-maintenance-cleanup': { maxAgeMs: 26 * HOUR, what: 'maintenance cleanup (daily)' },
 }
 
@@ -80,7 +82,8 @@ export function evaluate(project, rows, { now = Date.now(), expectations = EXPEC
       const since = age(row.last_ok_at, now)
       const problems = []
       if (row.ok === false) problems.push('inactive')
-      if (since > exp.maxAgeMs) problems.push(`no successful run within ${formatAge(exp.maxAgeMs).replace(' ago', '')}`)
+      const maxAgeMs = project === 'beta' && exp.betaMaxAgeMs ? exp.betaMaxAgeMs : exp.maxAgeMs
+      if (since > maxAgeMs) problems.push(`no successful run within ${formatAge(maxAgeMs).replace(' ago', '')}`)
       if ((row.failures_24h ?? 0) >= MAX_FAILURES_24H) problems.push(`${row.failures_24h} failed runs in 24h`)
       out.push({
         check: name,
