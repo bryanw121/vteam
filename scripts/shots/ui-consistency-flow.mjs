@@ -14,7 +14,7 @@
 import { mkdir, readFile, writeFile, appendFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { parseArgs, visitScreens } from './capture.mjs'
+import { parseArgs, readyFailures, reportReadyFailures, visitScreens } from './capture.mjs'
 import { MEASURE_IN_PAGE, actionFillsFrom, baselineFrom, diffBaseline, fontTokensFrom, judge, renderMarkdown } from './lib/uiConsistency.mjs'
 
 const args = parseArgs(process.argv.slice(2))
@@ -36,6 +36,8 @@ const { results: visits } = await visitScreens(
   },
 )
 
+// A screen that never showed its ready state was judged in some other state: it fails (#421).
+const notReady = reportReadyFailures(visits, 'ui')
 const skipped = []
 const results = []
 for (const v of visits) {
@@ -55,7 +57,7 @@ if (args['update-baseline']) {
   const notes = previous._notes ?? { about: 'Accepted UI consistency findings (#377): screen → viewport → rule → count. Shrink-only: run `npm run ui:baseline` after a fix; never raise a count to get a PR through.' }
   await writeFile(BASELINE, JSON.stringify({ _notes: notes, ...next }, null, 2) + '\n')
   console.log(`Baseline written: ${Object.keys(next).length} screens with findings.`)
-  process.exit(0)
+  process.exit(notReady ? 1 : 0)
 }
 
 const baseline = existsSync(BASELINE) ? JSON.parse(await readFile(BASELINE, 'utf8')) : {}
@@ -87,7 +89,8 @@ for (const f of diff.failures) {
   const r = results.find(x => x.screen === f.screen && x.viewport === f.viewport)
   if (r?.png) await writeFile(join(out, `${f.screen}-${f.viewport}.png`), r.png)
 }
-const md = renderMarkdown({ results: plain, diff, skipped })
+const notReadyLines = readyFailures(visits)
+const md = renderMarkdown({ results: plain, diff, skipped }) + (notReadyLines.length ? `\n**Screens that never reached their ready state** (fix \`ready\` in scripts/shots/screens.mjs or the fixtures):\n\n${notReadyLines.map(l => `- ${l}`).join('\n')}\n` : '')
 await writeFile(join(out, 'summary.md'), md)
 if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, md)
 
@@ -95,4 +98,4 @@ console.log(`UI consistency: ${diff.judged} judged, ${diff.failures.length} new,
 for (const f of diff.failures) console.log(`  NEW ${f.rule} ${f.screen} ${f.viewport}: ${f.count} (baseline ${f.base}) ${f.examples.join('; ')}`)
 // The counts this run saw, so a baseline can be taken from CI's environment (the artifact has results.json too).
 if (diff.failures.length || diff.improved.length) console.log(`Counts: ${JSON.stringify(plain.filter(r => Object.keys(r.counts).length).map(r => [r.screen, r.viewport, r.counts]))}`)
-process.exit(diff.failures.length ? 1 : 0)
+process.exit(diff.failures.length || notReady ? 1 : 0)
