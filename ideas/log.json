@@ -741,15 +741,17 @@
     "n": 2,
     "title": "Games when you can play: a \"When\" pill on Events (Any time, Weekday evenings, Weekday daytime, Weekends)",
     "bucket": "competitor-gap",
-    "status": "proposed",
-    "summary": "Meetup-style time filter reusing GAME_ALERT_TIME_BUCKETS; one pill beside the city pill, same sheet pattern, ?when= in the URL, saved on the device, applies to feed, calendar and week-strip dots; no backend."
+    "status": "approved",
+    "summary": "Meetup-style time filter reusing GAME_ALERT_TIME_BUCKETS; one pill beside the city pill, same sheet pattern, ?when= in the URL, saved on the device, applies to feed, calendar and week-strip dots; no backend.",
+    "issue": 419
   },
   {
     "date": "2026-11-27",
     "n": 3,
     "title": "One name everywhere: VTeam (or vteam), never both",
     "bucket": "end-user-experience",
-    "status": "proposed",
-    "summary": "APP_NAME/card/manifest say VTeam; 44 strings in 26 files, Terms (42), link previews and app.json say vteam. Pick one, build every sentence from APP_NAME, guard with a unit test."
+    "status": "approved",
+    "summary": "APP_NAME/card/manifest say VTeam; 44 strings in 26 files, Terms (42), link previews and app.json say vteam. Pick one, build every sentence from APP_NAME, guard with a unit test.",
+    "issue": 420
   }
 ]
