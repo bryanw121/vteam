@@ -107,3 +107,13 @@ test('app crashes (#316) pass or fail as job_health() judged them, with its coun
   assert.match(b.detail, /4 people in 24h; 3 in 3h/)
   assert.equal(evaluate('beta', [spike], { now: NOW, expectationsOnly: true }).some(r => r.check === 'app: crashes'), false)
 })
+
+test('beta runs some timers less often, so it gets their longer limit (live keeps its own)', () => {
+  const late = project => healthy(project).map(r => r.check_name === 'cron: sample-app-online' ? { ...r, last_ok_at: ago(40 * MIN) } : r)
+  assert.equal(evaluate('beta', late('beta'), { now: NOW }).find(r => r.check === 'cron: sample-app-online').ok, true)
+  assert.equal(evaluate('live', late('live'), { now: NOW }).find(r => r.check === 'cron: sample-app-online').ok, false)
+  const stale = healthy('beta').map(r => r.check_name === 'cron: sample-app-online' ? { ...r, last_ok_at: ago(2 * 60 * MIN) } : r)
+  const row = evaluate('beta', stale, { now: NOW }).find(r => r.check === 'cron: sample-app-online')
+  assert.equal(row.ok, false)
+  assert.match(row.detail, /1\.3 h/)
+})
