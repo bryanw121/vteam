@@ -206,17 +206,17 @@ export default function TournamentsScreen() {
           </ScrollView>
         ) : (
           <>
-            <View style={styles.segments} role="tablist">
+            <View style={[shared.segments, styles.segments]} role="tablist">
               {(['upcoming', 'past'] as const).map(t => (
                 <TouchableOpacity
                   key={t}
                   role="tab"
                   aria-selected={tab === t}
                   onPress={() => setTab(t)}
-                  style={[styles.segment, tab === t && styles.segmentOn]}
+                  style={[shared.segment, tab === t && shared.segmentOn]}
                   testID={`tournaments-${t}`}
                 >
-                  <Text style={[styles.segmentText, tab === t && styles.segmentTextOn]}>
+                  <Text style={[shared.segmentText, tab === t && shared.segmentTextOn]}>
                     {t === 'upcoming' ? 'Upcoming' : 'Past'}{(t === 'upcoming' ? split.upcoming.length : split.past.length) ? ` ${t === 'upcoming' ? split.upcoming.length : split.past.length}` : ''}
                   </Text>
                 </TouchableOpacity>
@@ -243,28 +243,7 @@ export default function TournamentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  segments: {
-    flexDirection: 'row',
-    gap: 4,
-    padding: 4,
-    marginHorizontal: theme.spacing.md,
-    marginTop: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
-    borderRadius: theme.radius.full,
-    backgroundColor: theme.colors.card,
-  },
-  segment: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: theme.radius.full,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentOn: { backgroundColor: theme.colors.primarySoft, borderColor: theme.colors.primaryText },
-  segmentText: { fontFamily: theme.fonts.bodySemiBold, fontSize: theme.font.size.base, color: theme.colors.subtext },
-  segmentTextOn: { color: theme.colors.primaryText },
+  segments: { marginHorizontal: theme.spacing.md, marginTop: theme.spacing.sm, marginBottom: theme.spacing.sm },
   card: {
     borderRadius: theme.radius.xl,
     overflow: 'hidden',

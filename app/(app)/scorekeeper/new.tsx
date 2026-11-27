@@ -171,7 +171,7 @@ export default function NewScoreMatchScreen() {
     RULE_OPTIONS.find(o => o.key === preset)?.label,
   ].filter(Boolean).join(' · ')
   const missingTotal = gridIssues(teams.A).missingCourt + gridIssues(teams.B).missingCourt
-  const back = () => (step === 'serve' ? setStep('numbers') : router.canGoBack() ? router.back() : router.replace(routes.scorekeeper()))
+  const back = () => (step === 'serve' ? setStep('numbers') : router.canGoBack() ? router.back() : router.replace(routes.scorekeeper({ mode: 'official' })))
 
   return (
     <View style={shared.screen}>

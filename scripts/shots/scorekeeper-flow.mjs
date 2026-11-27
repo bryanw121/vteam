@@ -61,6 +61,10 @@ try {
 
   // 2. Scorekeeper home → New match
   await tap(page, 'experiment-scorekeeper')
+  // Simple is the default tab; the official scoresheet is the other one.
+  await page.getByTestId('simple-point-A').waitFor()
+  await shot(page, 'scorekeeper-simple-tab')
+  await tap(page, 'scorekeeper-mode-official')
   await page.getByTestId('new-match').waitFor()
   await shot(page, 'scorekeeper-empty')
 

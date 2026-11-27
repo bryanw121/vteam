@@ -39,6 +39,8 @@ export const VIEW = {
   },
   /** `/leagues?host=ACES&program=<id>`: a league's sheet (#395). */
   leagues: { host: text(60), program: rowId },
+  /** Scorekeeper home: `/scorekeeper?mode=official`. Simple (the default) is the plain point counter, Official the USAV / NAGVA scoresheet. */
+  scorekeeper: { mode: oneOf(['simple', 'official'] as const, 'simple') },
   /** Live scores from a tournament's Google Sheet: `/scores/<program id>?view=brackets&division=Gold`. */
   scores: {
     view: oneOf(['live', 'pools', 'brackets', 'teams'] as const, 'live'),
